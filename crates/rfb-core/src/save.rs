@@ -388,6 +388,8 @@ pub(crate) fn item_from_dto(
         item.origin_kind,
         item.damage_dice_override,
         item.discount_percent,
+        item.intrinsic_weapon_traits
+            .contains(&rfb_protocol::WeaponTraitDto::Blessed),
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
@@ -486,6 +488,8 @@ fn inventory_item_from_dto_at(
         item.origin_kind,
         item.damage_dice_override,
         item.discount_percent,
+        item.intrinsic_weapon_traits
+            .contains(&rfb_protocol::WeaponTraitDto::Blessed),
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
@@ -567,6 +571,8 @@ pub(crate) fn equipment_item_from_dto(
         item.origin_kind,
         item.damage_dice_override,
         item.discount_percent,
+        item.intrinsic_weapon_traits
+            .contains(&rfb_protocol::WeaponTraitDto::Blessed),
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
@@ -645,6 +651,8 @@ pub(crate) fn carried_item_from_dto(
         item.origin_kind,
         item.damage_dice_override,
         item.discount_percent,
+        item.intrinsic_weapon_traits
+            .contains(&rfb_protocol::WeaponTraitDto::Blessed),
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
@@ -952,11 +960,15 @@ fn validate_item_creation_state(
     origin_kind: Option<ItemOriginKindDto>,
     damage_dice_override: Option<u16>,
     discount_percent: u8,
+    blessed_weapon: bool,
 ) -> Result<(), CoreError> {
     let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
-    // cast_enchantment discounts nameless equipment while preserving its origin.
+    // cast_enchantment discounts nameless equipment; bless_weapon can also
+    // discount fixed weapons, retaining a persisted Blessed trait and origin.
     let discounted_equipment = discount_percent == 99
-        && definition.artifact_generation.is_none()
+        && (definition.artifact_generation.is_none()
+            || blessed_weapon
+                && (definition.melee_profile.is_some() || definition.projectile_profile.is_some()))
         && (definition.melee_profile.is_some()
             || definition
                 .tags

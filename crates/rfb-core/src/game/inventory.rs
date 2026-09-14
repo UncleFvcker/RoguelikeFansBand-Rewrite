@@ -1921,7 +1921,7 @@ impl Game {
         }
     }
 
-    fn blast_item(&mut self, index: usize) {
+    pub(super) fn blast_item(&mut self, index: usize) {
         let definition = self.content.item(&self.items[index].kind_id).unwrap();
         // blast_object clears object flags but deliberately retains the shared pval.
         let pval = self.items[index]

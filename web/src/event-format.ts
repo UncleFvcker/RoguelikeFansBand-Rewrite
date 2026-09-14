@@ -409,6 +409,8 @@ export function createPresentationFormatter(
           ability: contentName(event.args.source),
           amount: event.args.amount ?? "?",
         });
+      case "equipment-regenerated":
+        return localization.format("equipment-regenerated", { amount: event.args.amount ?? "?" });
       case "ability-resource-converted":
       case "ability-resource-conversion-failed":
         return localization.format(`message-${event.messageKey}`, {
@@ -2008,6 +2010,9 @@ export function createPresentationFormatter(
     }
     if (statusId === "rfb.status.haste") {
       return localization.format("status-haste-name");
+    }
+    if (statusId === "rfb.status.light-speed") {
+      return localization.format("device-activation-e5-light-speed-name");
     }
     if (statusId === "rfb.status.slow") {
       return localization.format("status-slow-name");

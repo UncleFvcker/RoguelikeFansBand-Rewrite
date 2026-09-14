@@ -1,0 +1,112 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.great-maul-of-vice",
+  "nameKey": "item-demo-great-maul-of-vice-name",
+  "descriptionKey": "item-demo-great-maul-of-vice-description",
+  "glyph": "\\",
+  "generationLevel": 60,
+  "weightTenthsPound": 700,
+  "baseValue": 500000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 279,
+    "baseItemKindId": "demo.item.great-hammer",
+    "instant": false,
+    "rarityOneIn": 88
+  },
+  "weaponProficiencyBaseItemId": "demo.item.great-hammer",
+  "rfbValue": {
+    "flags": [
+      "BRAND_ELEC",
+      "BRAND_POIS",
+      "BRAND_VAMP",
+      "CHR",
+      "CON",
+      "FREE_ACT",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_FEAR",
+      "RES_NETHER",
+      "RES_NEXUS"
+    ],
+    "pval": 2,
+    "toArmor": 8
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 8,
+    "damageSides": 8,
+    "toHit": 8,
+    "toDamage": 8
+  },
+  "modifiers": {
+    "defense": 8,
+    "constitution": 2,
+    "charisma": 2
+  },
+  "passives": [
+    "hold-life",
+    "vampiric"
+  ],
+  "resistances": {
+    "nether": "resistant",
+    "nexus": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.fear",
+    "rfb.status.paralysis"
+  ],
+  "brands": [
+    "electricity",
+    "poison"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.great-maul-of-vice",
+        "nameKey": "device-activation-e5-light-speed-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 40,
+        "rfbValue": 13000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.great-maul-of-vice-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 8880
+    }
+  }
+}

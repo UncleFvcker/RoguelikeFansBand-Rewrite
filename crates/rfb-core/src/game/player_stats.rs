@@ -742,6 +742,13 @@ impl Game {
         self.player
             .statuses
             .iter()
+            .filter(|status| {
+                !self.player_has_equipped_artifact(362)
+                    || !matches!(
+                        status.kind_id.as_str(),
+                        "rfb.status.invulnerability" | "rfb.status.wild-invulnerability"
+                    )
+            })
             .map(|status| status.incoming_damage_percent)
             .min()
             .unwrap_or(100)
@@ -1922,7 +1929,7 @@ impl Game {
                                     .item(&ammunition.kind_id)
                                     .and_then(|definition| definition.ammunition_profile.as_ref())
                                     .is_some_and(|ammo| {
-                                        ammo.ammunition_type == profile.ammunition_type
+                                        ammo.ammunition_type == profile.ammunition_type || self.item_is_fixed_artifact(item, 381)
                                     })
                         })
                         .min_by(|left, right| left.id.cmp(&right.id));
@@ -2114,7 +2121,7 @@ impl Game {
                         ammo_item_id: ammunition.map(|item| item.id.clone()),
                         ammo_kind_id: ammo_definition.id.clone(),
                         ammunition_weight_tenths_pound: ammunition.map_or(ammo_definition.weight_tenths_pound, |item| self.item_instance_weight(item)),
-                        ammunition_type: profile.ammunition_type,
+                        ammunition_type: ammo_profile.ammunition_type,
                         ammo_break_chance_percent,
                         base_shot,
                         energy_cost,
@@ -2204,6 +2211,13 @@ impl Game {
             .item(&item.kind_id)
             .and_then(|kind| kind.artifact_generation.as_ref())
             .is_some_and(|artifact| artifact.source_index == source_index)
+    }
+
+    pub(super) fn player_has_equipped_artifact(&self, source_index: u32) -> bool {
+        self.items.iter().any(|item| {
+            matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+                && self.item_is_fixed_artifact(item, source_index)
+        })
     }
 
     pub(super) fn player_dexterity_to_hit(&self) -> i32 {
@@ -3052,6 +3066,10 @@ impl Game {
         for rolled in &item.rolled_affixes {
             apply(&rolled.properties.slays, &rolled.properties.brands);
         }
+        if self.item_is_fixed_artifact(item, 74) && definition.id == "demo.actor.fafner-the-dragon"
+        {
+            multiplier = multiplier.max(slay_multiplier(SlayTarget::Dragon, SlayLevel::Kill) * 3);
+        }
         multiplier
     }
 
@@ -3121,6 +3139,12 @@ impl Game {
             if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
                 multiplier = multiplier.max(24);
             }
+        }
+        if profile.ammo_kind_id == "demo.item.bard-black-arrow"
+            && definition.id == "demo.actor.smaug-the-golden"
+            && self.player_has_equipped_artifact(125)
+        {
+            multiplier = multiplier.max(slay_multiplier(SlayTarget::Dragon, SlayLevel::Kill) * 5);
         }
         multiplier
     }
@@ -3607,6 +3631,18 @@ impl Game {
                 }
             }
             let mut digging_equipment = ("rfb.digging-equipment".to_owned(), 0);
+            if self.equipped_melee_weapons().chunks_exact(2).any(|pair| {
+                self.item_is_fixed_artifact(pair[0], 174)
+                    && self.item_is_fixed_artifact(pair[1], 175)
+            }) {
+                add_equipment_stat(&mut pipeline, StatKind::Speed, "demo.item.littlethorn", 7);
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::ArmorClass,
+                    "demo.item.littlethorn",
+                    10,
+                );
+            }
             for item in self
                 .items
                 .iter()

@@ -201,9 +201,14 @@ impl Game {
             return 1000;
         }
         let item = weapons[hand];
+        let right = weapons[pair_start];
+        let left = weapons[pair_start + 1];
+        let musashi_pair =
+            self.item_is_fixed_artifact(right, 171) && self.item_is_fixed_artifact(left, 172);
         let genji = self
             .player_equipment_passives()
-            .contains(&EquipmentPassive::DualWielding);
+            .contains(&EquipmentPassive::DualWielding)
+            || (self.item_is_fixed_artifact(right, 174) && self.item_is_fixed_artifact(left, 175));
         let mut weight = i32::from(self.item_instance_weight(item));
         let mut percent = 650 * i32::from(self.progress.dual_wielding_proficiency) / 8000;
         if genji {
@@ -223,6 +228,11 @@ impl Game {
         if self
             .content
             .item(&weapons[pair_start + 1].kind_id)
+            .and_then(|item| {
+                item.weapon_proficiency_base_item_id
+                    .as_deref()
+                    .map_or(Some(item), |id| self.content.item(id))
+            })
             .and_then(|item| item.rfb_base_kind)
             .is_some_and(|base| base.tval == 23 && matches!(base.sval, 5 | 13))
         {
@@ -232,11 +242,23 @@ impl Game {
         if self
             .content
             .item(&item.kind_id)
+            .and_then(|item| {
+                item.weapon_proficiency_base_item_id
+                    .as_deref()
+                    .map_or(Some(item), |id| self.content.item(id))
+            })
             .and_then(|item| item.rfb_base_kind)
             .is_some_and(|base| base.tval == 22)
             && self.item_instance_weight(item) > 100
         {
             percent -= 50;
+        }
+        if musashi_pair {
+            percent = 1000;
+        } else if (hand == pair_start && self.item_is_fixed_artifact(item, 171))
+            || (hand == pair_start + 1 && self.item_is_fixed_artifact(item, 172))
+        {
+            percent = percent.max(750);
         }
         let percent = percent.clamp(100, 1000);
         if hand >= 2 {

@@ -4,6 +4,7 @@ use super::*;
 use crate::game::inventory::RemoveEquippedCursesRequest;
 use rfb_content::AmmunitionTypeDefinition;
 mod n2;
+mod n3;
 
 const REMAINING_N1: &[u32] = &[
     35, 58, 71, 72, 77, 81, 87, 90, 91, 134, 137, 140, 142, 154, 155, 156, 158, 160, 161, 165, 167,

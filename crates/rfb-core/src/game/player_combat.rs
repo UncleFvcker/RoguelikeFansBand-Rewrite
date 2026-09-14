@@ -362,6 +362,7 @@ struct ProjectileShotOutcome {
     trace: ProjectileTrace,
     hit_body: bool,
     fatal: bool,
+    hit_actor_id: Option<String>,
 }
 
 #[derive(Default)]
@@ -722,7 +723,60 @@ impl Game {
                 changed,
                 removed_entities,
             )?;
-            if let Some(ammunition) = ammunition {
+            if let Some(mut ammunition) = ammunition {
+                if (self.item_is_fixed_artifact(&ammunition, 153)
+                    || self.item_is_fixed_artifact(&ammunition, 270))
+                    && let Some(index) = outcome
+                        .hit_actor_id
+                        .as_ref()
+                        .and_then(|id| self.entities.iter().position(|actor| &actor.id == id))
+                {
+                    let mut stick = self.rng.bounded(2) == 0;
+                    let unique = self
+                        .actor_runtime_definition(&self.entities[index])
+                        .unwrap()
+                        .tags
+                        .iter()
+                        .any(|tag| tag == "unique");
+                    if self.item_is_fixed_artifact(&ammunition, 270)
+                        && !unique
+                        && !self.monster_saves_against_attribute(
+                            index,
+                            crate::stats::AttributeKind::Charisma,
+                        )
+                    {
+                        let second_save = self.monster_saves_against_attribute(
+                            index,
+                            crate::stats::AttributeKind::Charisma,
+                        );
+                        let actor = &mut self.entities[index];
+                        if !second_save && actor.controller_id.as_deref() != Some(&self.player.id) {
+                            actor.controller_id = Some(self.player.id.clone());
+                            actor.pack = None;
+                            stick = false;
+                            events.push(DomainEvent::ItemSpecialMessage {
+                                message_key: "item-cupid-charmed".to_owned(),
+                            });
+                        } else if !actor.friendly && (!second_save || actor.controller_id.is_none())
+                        {
+                            actor.friendly = true;
+                            stick = false;
+                            events.push(DomainEvent::ItemSpecialMessage {
+                                message_key: "item-cupid-friendly".to_owned(),
+                            });
+                        }
+                    }
+                    if stick {
+                        ammunition.location = ItemLocation::CarriedBy {
+                            actor_id: self.entities[index].id.clone(),
+                        };
+                        self.items.push(ammunition);
+                        events.push(DomainEvent::ItemSpecialMessage {
+                            message_key: "item-artifact-arrow-stuck".to_owned(),
+                        });
+                        continue;
+                    }
+                }
                 let break_chance_percent = if ammunition.is_artifact(&self.content) {
                     0
                 } else {
@@ -793,6 +847,7 @@ impl Game {
         let mut collided = false;
         let mut broke_wall = false;
         let mut fatal = false;
+        let mut hit_actor_id = None;
         for (path_index, position) in path.iter().copied().enumerate() {
             impact = position;
             let Some(terrain_index) = self.index(position) else {
@@ -866,6 +921,7 @@ impl Game {
                 landing,
                 traversed: traversed.clone(),
             };
+            let target_entity_id = self.entities[target_index].id.clone();
             let outcome = self.resolve_player_projectile_collision(
                 target_index,
                 profile,
@@ -882,6 +938,9 @@ impl Game {
                 landing = knockback_landing;
             }
             fatal = outcome.fatal;
+            if outcome.hit && !outcome.fatal {
+                hit_actor_id = Some(target_entity_id);
+            }
             if self.player_is_dead()
                 || (outcome.hit
                     && profile.ammunition_behavior == Some(AmmunitionBehaviorDefinition::Exploding))
@@ -917,6 +976,7 @@ impl Game {
             trace,
             hit_body: collided || broke_wall,
             fatal,
+            hit_actor_id,
         })
     }
 
@@ -1563,7 +1623,8 @@ impl Game {
         item.quantity > 0
             && (item.location == ItemLocation::Inventory
                 || (matches!(item.location, ItemLocation::Equipped { .. })
-                    && self.item_is_fixed_artifact(item, 136)))
+                    && (self.item_is_fixed_artifact(item, 136)
+                        || self.item_is_fixed_artifact(item, 208))))
     }
 
     pub(super) fn item_throw_target_spec(
@@ -1603,7 +1664,8 @@ impl Game {
             return Ok(());
         }
         let item = &self.items[item_index];
-        let boomerang = self.item_is_fixed_artifact(item, 136);
+        let boomerang =
+            self.item_is_fixed_artifact(item, 136) || self.item_is_fixed_artifact(item, 208);
         let (range, damage_multiplier) = self.item_throw_parameters(item);
         let profile = self
             .item_throw_profile(item)
@@ -2162,7 +2224,26 @@ impl Game {
         let mut touched_surviving_target = false;
         let mut allow_criticals = true;
         let mut impact_earthquake_item_id = None;
+        let sleeping_at_start = self.entity_is_visible_to_player(&self.entities[index])
+            && self.entities[index]
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_SLEEP);
         'profiles: for (hand, (profile, profile_attacks)) in profiles.into_iter().enumerate() {
+            let artifact_index = profile
+                .source_item_id
+                .as_ref()
+                .and_then(|id| self.items.iter().find(|item| &item.id == id))
+                .and_then(|item| self.content.item(&item.kind_id))
+                .and_then(|item| item.artifact_generation.as_ref())
+                .map(|artifact| artifact.source_index);
+            if artifact_index == Some(341) && definition.glyph == "B" {
+                events.push(DomainEvent::ItemSpecialMessage {
+                    message_key: "item-skynail-refuses".to_owned(),
+                });
+                continue;
+            }
+            let assassination = artifact_index == Some(275) && sleeping_at_start;
             if (profile_attacks > 0 || profile.source_item_id.is_none())
                 && self.duelist_auto_challenge(
                     index,
@@ -2203,7 +2284,11 @@ impl Game {
                 strike_mode,
             );
             let mut stop_attacking = false;
-            for attack_number in 1..=profile_attacks {
+            for attack_number in 1..=if assassination {
+                profile_attacks.min(1)
+            } else {
+                profile_attacks
+            } {
                 attacks_used = attacks_used.saturating_add(1);
                 self.apply_easy_tiring_fatigue(50);
                 let perfect_strike = duelist_attack && self.rng.bounded(2) == 0;
@@ -2279,7 +2364,9 @@ impl Game {
                         }));
                 let stun = has_trait(WeaponTraitDto::Stun);
                 let wild = has_trait(WeaponTraitDto::Wild);
-                let vorpal_chance = if has_trait(WeaponTraitDto::Vorpal2) {
+                let vorpal_chance = if artifact_index == Some(150) && definition.glyph == "j" {
+                    None
+                } else if has_trait(WeaponTraitDto::Vorpal2) {
                     Some(2_u64)
                 } else if has_trait(WeaponTraitDto::Vorpal) {
                     Some(4_u64)
@@ -2325,7 +2412,15 @@ impl Game {
                 if impact_triggered {
                     impact_earthquake_item_id = profile.source_item_id.clone();
                 }
-                let weapon_stun = impact_triggered && base_damage > 50
+                let time_brand_damage = base_damage;
+                let weapon_stun = (artifact_index == Some(335)
+                    && matches!(
+                        target_kind.as_str(),
+                        "demo.actor.werewolf"
+                            | "demo.actor.draugluin-sire-of-all-werewolves"
+                            | "demo.actor.carcharoth-the-jaws-of-thirst"
+                    ))
+                    || impact_triggered && base_damage > 50
                     || stun
                         && self.rng.bounded(100) + 1
                             < u64::try_from(base_damage.max(0)).unwrap_or(u64::MAX);
@@ -2335,6 +2430,13 @@ impl Game {
                 if let Some(chance) = vorpal_chance
                     && self.rng.bounded(chance.saturating_mul(3).saturating_div(2)) == 0
                 {
+                    if artifact_index == Some(85) && self.rng.bounded(2) != 0 {
+                        self.chainsword_noise(events);
+                    } else if artifact_index == Some(92) {
+                        events.push(DomainEvent::ItemSpecialMessage {
+                            message_key: "item-vorpal-blade-snicker".to_owned(),
+                        });
+                    }
                     let mut multiplier = 2;
                     while self.rng.bounded(chance) == 0 {
                         multiplier += 1;
@@ -2365,6 +2467,28 @@ impl Game {
                         },
                         events,
                     );
+                }
+                if assassination {
+                    rolled_damage = if definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
+                        || self.duelist_monster_saves(index)
+                    {
+                        rolled_damage
+                            .saturating_mul(5)
+                            .max(self.entities[index].hp / 2)
+                    } else {
+                        self.entities[index].hp.saturating_add(1)
+                    };
+                }
+                if artifact_index == Some(150) && definition.glyph == "j" {
+                    rolled_damage = 0;
+                    events.push(DomainEvent::ItemSpecialMessage {
+                        message_key: "item-zantetsuken-elastic".to_owned(),
+                    });
+                } else if artifact_index == Some(179) && definition.glyph == "S" {
+                    rolled_damage /= 2;
                 }
                 let rolled_damage = if duelist_attack {
                     rolled_damage
@@ -2566,6 +2690,29 @@ impl Game {
                     break;
                 }
                 touched_surviving_target = true;
+                if artifact_index == Some(294) {
+                    let position = self.entities[index].position;
+                    self.resolve_ability_damage_to_entity(
+                        index, "demo.item.eternal-blade", DamageType::Time, time_brand_damage,
+                        ProjectileTrace { origin: self.player.position, impact: position, landing: position, traversed: vec![position] },
+                        events, changed, removed_entities,
+                    )?;
+                    if !self.entities.iter().any(|actor| actor.id == target_entity_id) {
+                        killed = true;
+                        break 'profiles;
+                    }
+                } else if artifact_index == Some(195)
+                    && let Some(held) = self.items.iter().position(|item| {
+                        matches!(&item.location, ItemLocation::CarriedBy { actor_id } if actor_id == &target_entity_id)
+                    })
+                {
+                    // pack_carry transfers the real held object; a full pack leaves it at our feet.
+                    let item_id = self.items[held].id.clone();
+                    self.items[held].location = ItemLocation::Ground(self.player.position);
+                    changed.insert(self.player.position);
+                    let outcome = self.pick_up_item_at_player(Some(&item_id))?;
+                    self.record_pick_up_outcome(outcome, events, changed);
+                }
                 self.resolve_confusing_strike(index, &definition, events);
                 // cmd1.c returns on a slain target before this Duelist branch.
                 if self.player_is_duelist()

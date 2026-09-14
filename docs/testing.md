@@ -108,6 +108,8 @@ node e2e/asgard-standalone.e2e.mjs
 
 ## 常规装备底材桌面验收
 
+N3使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --non-quest-n3`。复用同一普通Tauri与隔离目录，ignored导出从正常Mage新档准备50级、属性潜力、满HP、火把、无敌和睡眠战熊。四件代表分别验证追加时间伤害、弩发射普通箭、罪恶巨锤激活及金币消耗、丘比特魅惑；每步正常保存恢复并核对哈希。准备失败种子被排除，证据目录`test-results/non-quest-n3/`；不是自然练级、取得或完整源规则一致的证明。
+
 N2使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --non-quest-n2`。正常Mage新档经ignored导出用例准备50级、局部地格、无敌、睡眠目标／水格及真实普通或instant生成的五件神器；UI逐件拾取、装备、激活、等待，每步正常保存恢复并核对哈希。太公望激活前通过CDP暂停浏览器计时器，以固定自动钓鱼之间的保存检查点，后续手动等待仍执行正式核心命令；自动继续钓鱼另有输入控制器覆盖。证据目录`test-results/non-quest-n2/`，仍使用下述隔离构建目录；不代表自然取得、练级或全部源规则一致。
 
 N1使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --non-quest-n1`。普通Tauri新建人类Mage后，ignored核心导出用例准备50级、局部地格、无敌及通过真实底材／稀有度生成的四件神器；Hellfire另配普通弩矢／火把，两件武器保留相邻源怪物并选击杀种子。UI拾取、装备、近战／射击／等待，14次操作每次保存恢复并核对哈希，证据在`test-results/non-quest-n1/`。不是自然获取或练级证明。脚本尊重`CARGO_TARGET_DIR`，本次产物在`target/n1-validation/debug/rfb-tauri.exe`；构建和导出共用隔离的`CARGO_BUILD_BUILD_DIR=.../target/n1-validation-build`，避免共享工作树缓存。Windows上先结束同一路径的测试EXE，再重链接或执行导出。

@@ -549,7 +549,9 @@ impl Game {
             .statuses
             .iter()
             .any(|status| status.kind_id == crate::effect::STATUS_INVULNERABILITY);
-        let pierces = pierces || (damage > 0 && invulnerable && self.rng.bounded(13) == 0);
+        let pierces = pierces
+            || self.player_has_equipped_artifact(362)
+            || (damage > 0 && invulnerable && self.rng.bounded(13) == 0);
         self.entities[index]
             .statuses
             .iter()
@@ -562,6 +564,7 @@ impl Game {
     pub(super) fn player_spell_damage_percent(&mut self, kind: DamageType, damage: i32) -> u8 {
         let invulnerable = self.player_has_status_kind(crate::effect::STATUS_INVULNERABILITY);
         let pierces = kind == DamageType::PsySpear
+            || self.player_has_equipped_artifact(362)
             || damage >= 9000
             || (damage > 0 && invulnerable && self.rng.bounded(13) == 0);
         self.player

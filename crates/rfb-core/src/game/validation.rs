@@ -201,7 +201,11 @@ pub(super) fn item_creation_state_is_valid(
         return false;
     }
     let discounted_equipment = item.discount_percent == 99
-        && definition.artifact_generation.is_none()
+        && (definition.artifact_generation.is_none()
+            || item
+                .intrinsic_weapon_traits
+                .contains(&rfb_protocol::WeaponTraitDto::Blessed)
+                && (definition.melee_profile.is_some() || definition.projectile_profile.is_some()))
         && (definition.melee_profile.is_some()
             || definition
                 .tags

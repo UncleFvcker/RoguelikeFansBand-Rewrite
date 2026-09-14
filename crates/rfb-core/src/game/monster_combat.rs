@@ -629,6 +629,26 @@ impl Game {
         damage_type: DamageType,
         events: &mut Vec<DomainEvent>,
     ) -> AbilityEffectResolutionDto {
+        // gf.c GF_ARROW: blindness hides the projectile and prevents cutting it.
+        if self.player_has_equipped_artifact(150)
+            && !self.player_has_status_kind(STATUS_BLINDNESS)
+            && self
+                .content
+                .ability(ability_id)
+                .is_some_and(|ability| ability.tags.iter().any(|tag| tag == "monster-arrow"))
+        {
+            events.push(DomainEvent::ItemSpecialMessage {
+                message_key: "item-zantetsuken-arrow".to_owned(),
+            });
+            return AbilityEffectResolutionDto::Damage {
+                effect_index,
+                resolution: resolve_damage(
+                    DamagePacket::new(0, damage_type),
+                    ResistanceLevel::Normal,
+                )
+                .into(),
+            };
+        }
         let raw_damage = self.scale_monster_damage(source_entity_id, raw_damage);
         let prepared_damage = self.scale_monster_damage(source_entity_id, prepared_damage);
         let magic_resistance = if self.monster_ability_is_innate(ability_id) {
@@ -739,26 +759,27 @@ impl Game {
 
     fn monster_ability_is_innate(&self, ability_id: &str) -> bool {
         self.content.ability(ability_id).is_some_and(|ability| {
-            ability
-                .effect
-                .ordered_effects()
-                .iter()
-                .any(|effect| match effect {
-                    AbilityEffectDefinition::BreathDamage { .. } => true,
-                    AbilityEffectDefinition::AreaDamage {
-                        damage_dice,
-                        damage_sides,
-                        damage_type: ActorDamageType::Shards,
-                        ..
-                    }
-                    | AbilityEffectDefinition::Damage {
-                        damage_dice,
-                        damage_sides,
-                        damage_type: ActorDamageType::Physical,
-                        ..
-                    } => *damage_dice == 1 && *damage_sides == 1,
-                    _ => false,
-                })
+            ability.tags.iter().any(|tag| tag == "monster-arrow")
+                || ability
+                    .effect
+                    .ordered_effects()
+                    .iter()
+                    .any(|effect| match effect {
+                        AbilityEffectDefinition::BreathDamage { .. } => true,
+                        AbilityEffectDefinition::AreaDamage {
+                            damage_dice,
+                            damage_sides,
+                            damage_type: ActorDamageType::Shards,
+                            ..
+                        }
+                        | AbilityEffectDefinition::Damage {
+                            damage_dice,
+                            damage_sides,
+                            damage_type: ActorDamageType::Physical,
+                            ..
+                        } => *damage_dice == 1 && *damage_sides == 1,
+                        _ => false,
+                    })
         })
     }
 

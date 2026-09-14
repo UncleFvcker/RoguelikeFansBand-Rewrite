@@ -164,6 +164,13 @@ impl Game {
         let valid = match ability.effect {
             E::BlessWeapon => definition
                 .rfb_base_kind
+                .or_else(|| {
+                    definition
+                        .artifact_generation
+                        .as_ref()
+                        .and_then(|artifact| self.content.item(&artifact.base_item_kind_id))
+                        .and_then(|base| base.rfb_base_kind)
+                })
                 .is_some_and(|base| (19..=23).contains(&base.tval)),
             E::CraftEnchant { .. } => {
                 definition.rfb_base_kind.is_some_and(|base| {

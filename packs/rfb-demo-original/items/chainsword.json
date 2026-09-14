@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.chainsword",
+  "nameKey": "item-demo-chainsword-name",
+  "descriptionKey": "item-demo-chainsword-description",
+  "glyph": "|",
+  "generationLevel": 50,
+  "weightTenthsPound": 130,
+  "baseValue": 66666,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 85,
+    "baseItemKindId": "demo.item.broad-sword",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "weaponProficiencyBaseItemId": "demo.item.broad-sword",
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "DEC_CHR",
+      "DEC_DEX",
+      "ESP_HUMAN",
+      "ESP_ORC",
+      "ESP_TROLL",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_HUMAN",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "VORPAL",
+      "VORPAL2"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 9,
+    "damageSides": 6,
+    "toHit": -30,
+    "toDamage": 7
+  },
+  "modifiers": {
+    "dexterity": -2,
+    "charisma": -2
+  },
+  "passives": [
+    "esp-human",
+    "esp-orc",
+    "esp-troll",
+    "see-invisible"
+  ],
+  "slays": {
+    "human": "slay",
+    "orc": "slay",
+    "troll": "slay"
+  },
+  "vorpal": true
+}

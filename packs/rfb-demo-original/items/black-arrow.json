@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "ammunitionProfile": {
+    "ammunitionType": "arrow",
+    "damageDice": 3,
+    "damageSides": 4,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "baseValue": 1,
+  "breakChancePercent": 20,
+  "descriptionKey": "item-demo-black-arrow-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 35,
+  "glyph": "{",
+  "id": "demo.item.black-arrow",
+  "maxStack": 99,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-black-arrow-name",
+  "rfbBaseKind": {
+    "sourceIndex": 179,
+    "sval": 10,
+    "tval": 17
+  },
+  "rfbValue": {
+    "flags": [
+      "INSTA_ART",
+      "SHOW_MODS"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "ammunition",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 2
+}

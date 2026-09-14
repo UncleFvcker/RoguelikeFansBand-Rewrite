@@ -24,6 +24,21 @@ const helpers = {
 };
 const formatter = createPresentationFormatter(localization, () => state, helpers);
 
+test("Vice light speed has a localized name in the status panel and events", () => {
+  for (const [locale, expected] of [["en-US", "light speed"], ["zh-CN", "光速"]]) {
+    localization.setLocale(locale);
+    assert.equal(formatter.statusName("rfb.status.light-speed"), expected);
+  }
+});
+
+test("equipment regeneration includes the actual healed amount in both languages", () => {
+  for (const locale of ["en-US", "zh-CN"]) {
+    localization.setLocale(locale);
+    assert.equal(formatter.formatEvent({ messageKey: "equipment-regenerated", args: { amount: "2" } }),
+      localization.format("equipment-regenerated", { amount: "2" }));
+  }
+});
+
 test("equipment activation logs resolve the projected item without exposing unknown identity", () => {
   const item = { id: "generated.item.208", kindId: "demo.item.narya", displayNameKey: "item-demo-narya-name", activation: { profileId: "demo.item-activation.narya" } };
   const projected = createPresentationFormatter(localization, () => ({ ...state, currentEquipment: [item] }), helpers);

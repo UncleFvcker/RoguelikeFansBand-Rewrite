@@ -1,0 +1,16 @@
+{
+  "formatVersion": 1,
+  "id": "demo.effect.great-maul-of-vice-activation",
+  "input": "self",
+  "steps": [
+    {
+      "type": "apply-status",
+      "statusKindId": "rfb.status.light-speed",
+      "durationDice": 1,
+      "durationSides": 1,
+      "durationBonus": 15,
+      "stacking": "keep-strongest"
+    }
+  ],
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json"
+}

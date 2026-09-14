@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.musashi-wakizashi",
+  "nameKey": "item-demo-musashi-wakizashi-name",
+  "descriptionKey": "item-demo-musashi-wakizashi-description",
+  "glyph": "|",
+  "generationLevel": 50,
+  "weightTenthsPound": 90,
+  "baseValue": 60000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 172,
+    "baseItemKindId": "demo.item.wakizashi",
+    "instant": false,
+    "rarityOneIn": 5
+  },
+  "weaponProficiencyBaseItemId": "demo.item.wakizashi",
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SHOW_MODS",
+      "SUST_DEX"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 5,
+    "toHit": 28,
+    "toDamage": 17
+  },
+  "modifiers": {
+    "dexterity": 3
+  },
+  "passives": [
+    "sustain-dexterity"
+  ]
+}

@@ -371,6 +371,12 @@ impl Game {
             };
         }
         alignment
+            - 1000
+                * self
+                    .equipped_melee_weapons()
+                    .iter()
+                    .filter(|item| self.item_is_fixed_artifact(item, 173))
+                    .count() as i32
             + match self
                 .character_definitions()
                 .map(|(_, race, _, _)| race.id.as_str())

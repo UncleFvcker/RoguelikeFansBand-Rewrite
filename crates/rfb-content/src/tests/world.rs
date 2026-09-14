@@ -2517,7 +2517,7 @@ fn early_monster_profiles_keep_existing_traits() {
             ability_ids("demo.actor.drider"),
             [
                 "rfb-legacy.ability.bolt-physical-2d6-4",
-                "rfb-legacy.ability.bolt-physical-3d6",
+                "rfb-legacy.ability.arrow-physical-3d6",
                 "rfb-legacy.ability.confuse",
                 "rfb-legacy.ability.curse-3d8",
                 "rfb-legacy.ability.darkness",
@@ -2554,7 +2554,7 @@ fn early_monster_profiles_keep_existing_traits() {
         );
         assert_eq!(
             ability_ids("demo.actor.black-orc"),
-            ["rfb-legacy.ability.bolt-physical-2d7"]
+            ["rfb-legacy.ability.arrow-physical-2d7"]
                 .into_iter()
                 .collect()
         );
@@ -2643,7 +2643,7 @@ fn early_monster_profiles_keep_existing_traits() {
         );
         assert_eq!(
             ability_ids("demo.actor.orcish-artillery"),
-            ["rfb-legacy.ability.bolt-physical-3d6"]
+            ["rfb-legacy.ability.arrow-physical-3d6"]
                 .into_iter()
                 .collect()
         );
@@ -2893,7 +2893,7 @@ fn monster_projectile_parameters_match_source() {
         );
         assert_eq!(
             ability_ids("demo.actor.griffon"),
-            ["rfb-legacy.ability.bolt-physical-4d5"]
+            ["rfb-legacy.ability.arrow-physical-4d5"]
                 .into_iter()
                 .collect()
         );
@@ -2983,7 +2983,7 @@ fn monster_projectile_parameters_match_source() {
             );
             assert!(actor(id).movement.never_moves);
         }
-        assert_abilities("uruk", &["bolt-physical-3d5"]);
+        assert_abilities("uruk", &["arrow-physical-3d5"]);
         assert_abilities(
             "chaos-beastman",
             &[
@@ -2996,7 +2996,7 @@ fn monster_projectile_parameters_match_source() {
         assert_abilities("giant-bronze-dragon-fly", &["breath-confusion-17-400-r2"]);
         assert_abilities("stone-giant", &["bolt-physical-1d1-53"]);
         assert_abilities("snow-golem", &["ball-cold-1d1-17"]);
-        assert_abilities("bush-ranger", &["bolt-physical-8d6"]);
+        assert_abilities("bush-ranger", &["arrow-physical-8d6"]);
         assert_abilities(
             "frost-giant",
             &[
@@ -3021,11 +3021,11 @@ fn monster_projectile_parameters_match_source() {
 
         for (id, damage_type, dice, sides, bonus) in [
             ("bolt-cold-6d8-6", ActorDamageType::Cold, 6, 8, 6),
-            ("bolt-physical-3d5", ActorDamageType::Physical, 3, 5, 0),
+            ("arrow-physical-3d5", ActorDamageType::Physical, 3, 5, 0),
             ("bolt-physical-2d6-6", ActorDamageType::Physical, 2, 6, 6),
             ("bolt-fire-9d8-6", ActorDamageType::Fire, 9, 8, 6),
             ("bolt-physical-1d1-53", ActorDamageType::Physical, 1, 1, 53),
-            ("bolt-physical-8d6", ActorDamageType::Physical, 8, 6, 0),
+            ("arrow-physical-8d6", ActorDamageType::Physical, 8, 6, 0),
             ("bolt-physical-1d1-59", ActorDamageType::Physical, 1, 1, 59),
         ] {
             assert!(matches!(
@@ -3403,7 +3403,7 @@ fn midlevel_monster_profiles_keep_existing_traits() {
         );
         assert_eq!(
             ability_ids("demo.actor.orc-captain"),
-            ["rfb-legacy.ability.bolt-physical-3d6"]
+            ["rfb-legacy.ability.arrow-physical-3d6"]
                 .into_iter()
                 .collect()
         );
@@ -3824,7 +3824,7 @@ fn monster_support_and_summon_parameters_match_source() {
                 "blink",
                 "bolt-electricity-4d8-6",
                 "bolt-physical-2d6-6",
-                "bolt-physical-5d6",
+                "arrow-physical-5d6",
                 "summon-legacy-import-l20-1d1",
             ],
         );
@@ -3872,7 +3872,7 @@ fn monster_support_and_summon_parameters_match_source() {
             ));
         }
         assert!(matches!(
-            ability("bolt-physical-5d6").effect,
+            ability("arrow-physical-5d6").effect,
             AbilityEffectDefinition::Damage {
                 damage_dice: 5,
                 damage_sides: 6,

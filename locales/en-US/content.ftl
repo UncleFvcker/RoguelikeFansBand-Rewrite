@@ -10605,3 +10605,99 @@ item-demo-efki-description = Fixed artifact 363 from RFB; amulet.
 
 item-demo-surveillance-name = Amulet of Surveillance
 item-demo-surveillance-description = Fixed artifact 367 from RFB; amulet.
+
+item-demo-black-arrow-name = Black Arrow
+item-demo-black-arrow-description = Black arrow base reserved for instant artifacts.
+
+item-demo-feanor-name = Pair of Hard Leather Boots of Feanor
+item-demo-feanor-description = Fixed artifact 60 from RFB; pair of hard leather boots.
+
+item-demo-nothung-name = Broad Sword 'Nothung'
+item-demo-nothung-description = Fixed artifact 74 from RFB; broad sword.
+
+item-demo-chainsword-name = Broad Sword 'Chainsword'
+item-demo-chainsword-description = Fixed artifact 85 from RFB; broad sword.
+
+item-demo-vorpal-blade-name = Long Sword 'Vorpal Blade'
+item-demo-vorpal-blade-description = Fixed artifact 92 from RFB; long sword.
+
+item-demo-bard-long-bow-name = Long Bow of Bard
+item-demo-bard-long-bow-description = Fixed artifact 125 from RFB; long bow.
+
+item-demo-winblows-name = Flail 'Winblows'
+item-demo-winblows-description = Fixed artifact 139 from RFB; flail.
+
+item-demo-zantetsuken-name = Katana 'Zantetsuken'
+item-demo-zantetsuken-description = Fixed artifact 150 from RFB; katana.
+
+item-demo-bard-black-arrow-name = Black Arrow of Bard
+item-demo-bard-black-arrow-description = Fixed artifact 153 from RFB; black arrow.
+
+item-demo-musashi-katana-name = Katana of Musashi
+item-demo-musashi-katana-description = Fixed artifact 171 from RFB; katana.
+
+item-demo-musashi-wakizashi-name = Wakizashi of Musashi
+item-demo-musashi-wakizashi-description = Fixed artifact 172 from RFB; wakizashi.
+
+item-demo-iron-ball-name = Ball-and-Chain 'Iron ball'
+item-demo-iron-ball-description = Fixed artifact 173 from RFB; ball and chain.
+
+item-demo-littlethorn-name = Main Gauche 'Littlethorn'
+item-demo-littlethorn-description = Fixed artifact 175 from RFB; main gauche.
+
+item-demo-excalibur-jr-name = Small Sword 'Excalibur Jr.'
+item-demo-excalibur-jr-description = Fixed artifact 179 from RFB; small sword.
+
+item-demo-golden-hammer-name = Great Hammer 'Golden Hammer'
+item-demo-golden-hammer-description = Fixed artifact 195 from RFB; great hammer.
+
+item-demo-aegis-fang-name = War Hammer 'Aegis Fang'
+item-demo-aegis-fang-description = Fixed artifact 208 from RFB; war hammer.
+
+item-demo-cupids-arrow-name = Arrow 'Cupid's Arrow'
+item-demo-cupids-arrow-description = Fixed artifact 270 from RFB; arrow.
+
+item-demo-kamikaze-warrior-name = Robe of the Kamikaze Warrior
+item-demo-kamikaze-warrior-description = Fixed artifact 272 from RFB; robe.
+
+item-demo-assassinator-name = Dagger 'Assassinator'
+item-demo-assassinator-description = Fixed artifact 275 from RFB; dagger.
+
+item-demo-great-maul-of-vice-name = Great Hammer 'Great Maul of Vice'
+item-demo-great-maul-of-vice-description = Fixed artifact 279 from RFB; great hammer.
+
+item-demo-eternal-blade-name = Diamond Edge 'Eternal Blade'
+item-demo-eternal-blade-description = Fixed artifact 294 from RFB; diamond edge.
+
+item-demo-microsoft-edge-name = Diamond Edge 'Micro$oft Edge'
+item-demo-microsoft-edge-description = Fixed artifact 334 from RFB; diamond edge.
+
+item-demo-silver-hammer-name = Great Hammer 'Silver Hammer'
+item-demo-silver-hammer-description = Fixed artifact 335 from RFB; great hammer.
+
+item-demo-skynail-name = Broad Sword 'Skynail'
+item-demo-skynail-description = Fixed artifact 341 from RFB; broad sword.
+
+item-demo-dragonchip-name = Amulet 'Dragonchip'
+item-demo-dragonchip-description = Fixed artifact 362 from RFB; amulet.
+
+item-demo-moms-sniper-crossbow-name = Mom's Loving Modular Sniper Crossbow
+item-demo-moms-sniper-crossbow-description = Fixed artifact 381 from RFB; light crossbow.
+
+item-zantetsuken-elastic = 你无法切开如此有弹性的东西！
+item-zantetsuken-arrow = 你斩断了箭矢！
+item-skynail-refuses = 你的天之钉不愿攻击这只鸟！
+item-vorpal-blade-snicker = 你的斩首剑发出咔嚓咔嚓的声音！
+item-vice-low-gold = ***金币不足警告！！！***
+item-vice-gold-draining = 你感觉你的财富正在流失！
+item-vice-blasted = 可怕的黑色光环冲击了你的罪恶巨锤！
+monster-dawn-successor = 一位新的战士站了出来！
+item-cupid-charmed = 目标被魅惑了！
+item-cupid-friendly = 目标突然变得友好了。
+item-artifact-arrow-stuck = 箭矢粘在了目标身上！
+item-chainsword-noise-1 = KILL, KILL, KILL!
+item-chainsword-noise-2 = The Chainsword roars noisily!
+item-chainsword-noise-3 = VROOM! VROOM!
+item-chainsword-noise-4 = Kill, kill, kill, kill, kill, kill!
+item-chainsword-noise-5 = Blood, blood, blood!
+item-chainsword-noise-6 = Bloodbath!

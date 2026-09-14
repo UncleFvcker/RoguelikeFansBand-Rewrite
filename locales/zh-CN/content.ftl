@@ -10636,3 +10636,99 @@ item-demo-efki-description = 这件保护性的护身符上刻有强大的速度
 
 item-demo-surveillance-name = 监视之护身符
 item-demo-surveillance-description = 这个护身符能揭示世界上所有的秘密。你很高兴它没有落入不太负责任的人手中……
+
+item-demo-black-arrow-name = 支黑箭
+item-demo-black-arrow-description = 专用于固定神器的黑箭。
+
+item-demo-feanor-name = 费诺的硬皮靴
+item-demo-feanor-description = 这双神奇的皮靴曾加速了费诺——精灵宝钻的创造者，也是最强大的艾尔达精灵——让他跨过坚冰阵（Grinding Ice），最终抵达中土世界。
+
+item-demo-nothung-name = 『诺统』阔剑
+item-demo-nothung-description = 原版固定神器。
+
+item-demo-chainsword-name = 『链锯剑』阔剑
+item-demo-chainsword-description = 原版固定神器。
+
+item-demo-vorpal-blade-name = 『斩首剑』长剑
+item-demo-vorpal-blade-description = “一，二！一，二！斩首剑，进又出，咔嚓咔嚓响！”
+
+item-demo-bard-long-bow-name = 巴德的长弓
+item-demo-bard-long-bow-description = 面容冷峻的巴德使用的巨大紫杉木弓，他射出了歌曲中所记载的最强大的一箭。
+
+item-demo-winblows-name = 『温不倒』连枷
+item-demo-winblows-description = 原版固定神器。
+
+item-demo-zantetsuken-name = 『斩铁剑』打刀
+item-demo-zantetsuken-description = 原版固定神器。
+
+item-demo-bard-black-arrow-name = 巴德的支黑箭
+item-demo-bard-black-arrow-description = 最致命的箭矢，注入了元素力量，这支箭特别令龙族感到恐惧。
+
+item-demo-musashi-katana-name = 武藏的打刀
+item-demo-musashi-katana-description = 这是著名的二刀流剑术创造者宫本武藏的打刀，他在战斗中用右手挥舞它。
+
+item-demo-musashi-wakizashi-name = 武藏的胁差
+item-demo-musashi-wakizashi-description = 这是著名的二刀流剑术创造者宫本武藏的胁差，他在战斗中用左手挥舞它。
+
+item-demo-iron-ball-name = 『铁球』流星锤
+item-demo-iron-ball-description = 原版固定神器。
+
+item-demo-littlethorn-name = 『小刺』左手短剑
+item-demo-littlethorn-description = 原版固定神器。
+
+item-demo-excalibur-jr-name = 『王者之剑二世』小剑
+item-demo-excalibur-jr-description = 由一位传奇巫师打造，并由英雄皮普（Pip）挥舞了很长一段时间，这把剑具有强大的魔力，但它对蜘蛛的极度恐惧也是出了名的……
+
+item-demo-golden-hammer-name = 『金锤』巨锤
+item-demo-golden-hammer-description = 原版固定神器。
+
+item-demo-aegis-fang-name = 『神盾之牙』战锤
+item-demo-aegis-fang-description = 原版固定神器。
+
+item-demo-cupids-arrow-name = 『丘比特之箭』箭
+item-demo-cupids-arrow-description = 传统上，这支箭只能由胖胖的、衣着暴露的婴儿射出。
+
+item-demo-kamikaze-warrior-name = 神风武士的长袍
+item-demo-kamikaze-warrior-description = 这件长袍上沾满了许多倒下英雄的鲜血。这么多的死亡。这么大的破坏。到底是什么造成了这一切？
+
+item-demo-assassinator-name = 『暗杀者』匕首
+item-demo-assassinator-description = 它是喜欢在敌人熟睡时解决他们的刺客的终极武器。
+
+item-demo-great-maul-of-vice-name = 『罪恶巨锤』巨锤
+item-demo-great-maul-of-vice-description = 这件奇特的物品是各个种族许多女性的最爱。那些发现自己靠近它的人，似乎会不断地失去金钱，而且似乎无法离开它的存在。
+
+item-demo-eternal-blade-name = 『永恒之刃』钻石刃
+item-demo-eternal-blade-description = 原版固定神器。
+
+item-demo-microsoft-edge-name = 『微软 Edge』钻石刃
+item-demo-microsoft-edge-description = 它感觉太锋利（Edge）了，你可能会割伤自己。
+
+item-demo-silver-hammer-name = 『银锤』巨锤
+item-demo-silver-hammer-description = 你还以为那是他们瞎编的呢！
+
+item-demo-skynail-name = 『天之钉』阔剑
+item-demo-skynail-description = 一把极其坚固的闪亮剑刃，它甚至能把星星钉在原位。
+
+item-demo-dragonchip-name = 『幼龙碎片』护身符
+item-demo-dragonchip-description = 一个工艺无双的金色护身符，形状像一条飞龙，上面镶嵌着珍贵的宝石。它上面刻有强大的符文，无论是佩戴者的魔法还是敌人的魔法，在它附近都无法正常发挥作用。
+
+item-demo-moms-sniper-crossbow-name = 妈妈充满爱的模块化狙击弩
+item-demo-moms-sniper-crossbow-description = “老妈充满爱之武器公司（Mom's Loving Arms Company）”的伟大杰作，它能够发射任何弹药。
+
+item-zantetsuken-elastic = 你无法切开如此有弹性的东西！
+item-zantetsuken-arrow = 你斩断了箭矢！
+item-skynail-refuses = 一想到要伤害鸟类，你就退缩了！
+item-vorpal-blade-snicker = 你的斩首剑发出咔嚓咔嚓的声音！
+item-vice-low-gold = ***金币不足警告！！！***
+item-vice-gold-draining = 你感觉你的财富正在流失！
+item-vice-blasted = 可怕的黑色光环冲击了你的罪恶巨锤！
+monster-dawn-successor = 一位新的战士站了出来！
+item-cupid-charmed = 目标被魅惑了！
+item-cupid-friendly = 目标突然变得友好了。
+item-artifact-arrow-stuck = 箭矢粘在了目标身上！
+item-chainsword-noise-1 = KILL, KILL, KILL!
+item-chainsword-noise-2 = The Chainsword roars noisily!
+item-chainsword-noise-3 = VROOM! VROOM!
+item-chainsword-noise-4 = Kill, kill, kill, kill, kill, kill!
+item-chainsword-noise-5 = Blood, blood, blood!
+item-chainsword-noise-6 = Bloodbath!

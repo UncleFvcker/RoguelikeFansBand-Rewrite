@@ -106,6 +106,9 @@ pub(crate) enum BoltReflectionOutcome {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
+    ItemSpecialMessage {
+        message_key: String,
+    },
     MagicAbsorptionPending {
         item_id: String,
     },
@@ -1686,6 +1689,9 @@ pub(crate) enum DomainEvent {
 impl DomainEvent {
     pub(crate) fn into_dto(self) -> GameEventDto {
         match self {
+            Self::ItemSpecialMessage { message_key } => {
+                dto_without_args("item.special", &message_key)
+            }
             Self::PlayerLifeForceExhausted => {
                 dto_without_args("player.life-force-exhausted", "player-life-force-exhausted")
             }

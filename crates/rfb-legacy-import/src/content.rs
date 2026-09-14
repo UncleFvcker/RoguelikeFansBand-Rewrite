@@ -12875,14 +12875,28 @@ fn map_damage_spell_token(
     let sides = sides.clamp(1, 10_000);
     let bonus = bonus.min(10_000);
     let element = damage_type;
-    let mut suffix = format!("{}-{element}-{dice}d{sides}", shape.keyword());
+    // GF_ARROW must retain its identity: it can be cut by Zantetsuken,
+    // whereas GF_MISSILE and thrown rocks cannot (including equal dice).
+    let shape_keyword = if base == "SHOOT" {
+        "arrow"
+    } else {
+        shape.keyword()
+    };
+    let mut suffix = format!("{shape_keyword}-{element}-{dice}d{sides}");
     if bonus > 0 {
         suffix.push_str(&format!("-{bonus}"));
     }
     let id = format!("rfb-legacy.ability.{suffix}");
-    abilities
-        .entry(id.clone())
-        .or_insert_with(|| damage_spell_ability(shape, &suffix, damage_type, dice, sides, bonus));
+    abilities.entry(id.clone()).or_insert_with(|| {
+        let mut ability = damage_spell_ability(shape, &suffix, damage_type, dice, sides, bonus);
+        if base == "SHOOT" {
+            ability["tags"]
+                .as_array_mut()
+                .unwrap()
+                .push(serde_json::json!("monster-arrow"));
+        }
+        ability
+    });
     Some(id)
 }
 
@@ -30193,6 +30207,89 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
         }
     }
 
+    #[test]
+    fn n3_artifacts_match_source_parameters() {
+        check_n1_passive_artifact_source_parameters(
+            include_str!("testdata/n3-artifacts.txt"),
+            &[
+                (60, "feanor", "pair-of-hard-leather-boots"),
+                (74, "nothung", "broad-sword"),
+                (85, "chainsword", "broad-sword"),
+                (92, "vorpal-blade", "long-sword"),
+                (125, "bard-long-bow", "long-bow"),
+                (139, "winblows", "flail"),
+                (150, "zantetsuken", "katana"),
+                (153, "bard-black-arrow", "black-arrow"),
+                (171, "musashi-katana", "katana"),
+                (172, "musashi-wakizashi", "wakizashi"),
+                (173, "iron-ball", "ball-and-chain"),
+                (175, "littlethorn", "main-gauche"),
+                (179, "excalibur-jr", "small-sword"),
+                (195, "golden-hammer", "great-hammer"),
+                (208, "aegis-fang", "war-hammer"),
+                (270, "cupids-arrow", "arrow"),
+                (272, "kamikaze-warrior", "robe"),
+                (275, "assassinator", "dagger"),
+                (279, "great-maul-of-vice", "great-hammer"),
+                (294, "eternal-blade", "diamond-edge"),
+                (334, "microsoft-edge", "diamond-edge"),
+                (335, "silver-hammer", "great-hammer"),
+                (341, "skynail", "broad-sword"),
+                (362, "dragonchip", "amulet"),
+                (381, "moms-sniper-crossbow", "light-crossbow"),
+            ],
+        );
+        let root =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original/items");
+        for entry in parse_a_info(include_str!("testdata/n3-artifacts.txt")).unwrap() {
+            let Some(activation) = entry.activation else {
+                continue;
+            };
+            let slug = match entry.index {
+                60 => "feanor",
+                208 => "aegis-fang",
+                272 => "kamikaze-warrior",
+                279 => "great-maul-of-vice",
+                _ => unreachable!(),
+            };
+            let formal: serde_json::Value =
+                serde_json::from_slice(&fs::read(root.join(format!("{slug}.json"))).unwrap())
+                    .unwrap();
+            let device = &formal["deviceGeneration"];
+            assert_eq!(
+                device["activations"][0]["deviceCheckDifficulty"],
+                activation.power
+            );
+            assert_eq!(
+                device["recovery"]["intervalTicks"],
+                u32::from(activation.recovery_turns) * 10
+            );
+        }
+    }
+
+    #[test]
+    fn n3_arrows_keep_distinct_identity_from_equal_damage_rocks() {
+        let mut abilities = BTreeMap::new();
+        let arrow = map_damage_spell_token("SHOOT(75)", 25, 2, &mut abilities).unwrap();
+        let rock = map_damage_spell_token("THROW", 25, 2, &mut abilities).unwrap();
+        assert_ne!(arrow, rock);
+        assert_eq!(abilities[&arrow]["effect"], abilities[&rock]["effect"]);
+        assert!(
+            abilities[&arrow]["tags"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|tag| tag == "monster-arrow")
+        );
+        assert!(
+            !abilities[&rock]["tags"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|tag| tag == "monster-arrow")
+        );
+    }
+
     fn check_n1_passive_artifact_source_parameters(source: &str, identities: &[(u32, &str, &str)]) {
         let entries = parse_a_info(source).unwrap();
         assert_eq!(entries.len(), identities.len());
@@ -30289,6 +30386,7 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 }
                 for (flag, field, factor) in [
                     ("MAGIC_MASTERY", "deviceSkill", 8),
+                    ("MAGIC_RESISTANCE", "magicResistancePercent", 5),
                     ("WEAPONMASTERY", "weaponDiceBonus", 1),
                     ("XTRA_SHOTS", "baseShotDeltaPercent", 15),
                 ] {
@@ -30314,6 +30412,7 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                     ("WARNING", "warning"),
                     ("NO_TELE", "anti-teleport"),
                     ("ESP_DEMON", "esp-demon"),
+                    ("ESP_HUMAN", "esp-human"),
                     ("ESP_DRAGON", "esp-dragon"),
                     ("ESP_ANIMAL", "esp-animal"),
                     ("ESP_UNDEAD", "esp-undead"),
@@ -30330,7 +30429,7 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 if !passives.is_empty() {
                     imported["passives"] = serde_json::json!(passives);
                 }
-                if has("VORPAL") {
+                if has("VORPAL") || has("VORPAL2") {
                     imported["vorpal"] = serde_json::json!(true);
                 }
                 for (flag, severity) in [

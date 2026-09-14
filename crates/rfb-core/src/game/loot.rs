@@ -1476,8 +1476,14 @@ impl Game {
             .collect::<Vec<_>>();
         candidates.sort_by_key(|candidate| candidate.0);
 
-        for (_, kind_id, artifact_level, base_kind_id, rarity_one_in, candidate_instant) in
-            candidates
+        for (
+            source_index,
+            kind_id,
+            artifact_level,
+            base_kind_id,
+            rarity_one_in,
+            candidate_instant,
+        ) in candidates
         {
             if candidate_instant != instant
                 || self.generated_artifact_ids.contains(&kind_id)
@@ -1497,6 +1503,10 @@ impl Game {
                 }
             }
             if self.rng.bounded(u64::from(rarity_one_in)) != 0 {
+                continue;
+            }
+            // object2.c: Feanor's extra gate follows the ordinary rarity roll.
+            if !instant && source_index == 60 && self.rng.bounded(3) != 0 {
                 continue;
             }
             if instant {

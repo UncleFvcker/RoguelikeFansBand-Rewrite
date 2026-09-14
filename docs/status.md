@@ -12,7 +12,7 @@ QUESTITEM Q1–Q5：已接入44件当前身份奖励，累计70/83，余13件保
 
 Q1–Q5统一验证已完成：核心有效1826项（初轮1821通过、5处修复后定向复验）、内容177、本地化39、源参数5项、C估值与生成审计通过；26条契约仅刷新已解释的41处哈希至v333并通过。相关Clippy、Schema／协议生成物和lock检查通过；普通Tauri standalone已构建，Q1–Q5代表UI共20步，每步保存恢复通过。实际准备与保留限制见推进计划，不包含自然练级、完整通关或Android验收。
 
-非QUESTITEM按[推进计划](non-quest-artifact-plan.md)：N1全部65件已验收，N2的47件已接入普通／instant生成与装备激活，阶段验证见非QUESTITEM计划；吸取生命的怪物最大HP削减和Escape跨层确认仍未实现。非QUESTITEM已定义244/309、剩65件。正式物品753项、固定神器314/392，包／lock1.472.0。QUESTITEM仍为70/83，13件保留条件；19件非QUESTITEM仍缺底材。 本阶段补齐固定加强锋锐、随机诅咒生成和弓弩品牌／杀伤；保留现有REGEN、198传送适配及额外命名掉落队列。
+非QUESTITEM按[推进计划](non-quest-artifact-plan.md)：N1全部65件已验收；N2的47件、N3的25件已接入并完成阶段验证。N3涵盖祝福／生成概率、双持与弓箭组合、特殊命中、金币诅咒及无敌穿透，新增黑箭专用底材；四件桌面代表15步操作均保存恢复并核对哈希。非QUESTITEM已定义269/309、剩40件。正式物品779项、固定神器339/392，包／lock1.473.0。QUESTITEM仍为70/83，13件保留条件；18件非QUESTITEM仍缺底材。N2吸取生命最大HP削减／Escape确认，以及N3未开放身份、双持力量伤害上限／黎明召唤适配差异仍单列；REGEN等既有适配和额外命名掉落队列不因此关闭。
 
 ## 版本与源内容
 
@@ -24,7 +24,7 @@ Q1–Q5统一验证已完成：核心有效1826项（初轮1821通过、5处修�
 | 协议 | 1.266；绑定/Schema已同步 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 133 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 28 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 正式包／lock均为1.472.0，N2验收范围及未闭合源规则见非QUESTITEM计划 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 正式包／lock均为1.473.0，N3验收范围及未闭合源规则见非QUESTITEM计划 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
 | 契约政策 | contract-v333，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
 正式源目录含 14 个 Class、110 个 Build、57 个 Race、36 本能力书、1,915 个 ability、641 个 item、1,410 个 actor、169 个 affix、152 个 mutation。世界定义含 39 个 dungeon（含阿斯加德与须弥山神系入口）；城镇有 7 个 town、69 个 shop、68 个 townFacility。基础分配池为 424 行，固定神器定义映射 202/392；创角开放14职业、103个Build。这些是定义与入口数量，行为验收范围见下文。
