@@ -2009,6 +2009,7 @@ fn food_and_light_eating_consume_one_food_and_leave_one_light_fuel() {
     food.items.clear();
     give_inventory_item(&mut food, "test.rations", "demo.item.ration-of-food");
     food.items[0].quantity = 2;
+    food.rng = RfbRng::seeded(13);
     let mut events = Vec::new();
     food.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("food eating should resolve");

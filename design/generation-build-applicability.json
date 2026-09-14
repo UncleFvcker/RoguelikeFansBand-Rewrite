@@ -5,7 +5,7 @@
   "reviewedAt": "2026-09-14",
   "codeBaseline": "5c5f6f38b + cbc851b8e + d873743d6 integration",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
-  "scope": "Covers 129 creation builds and five generation areas per build. Existing nine realms now include seven High-Mage entries, sixteen Mage Craft pairs and three Paladin realms; source and acceptance scope: docs/existing-realms-opening.md. The audit CLI does not execute gameplay tests.",
+  "scope": "Covers 154 creation builds and five generation areas per build, including 25 Chaos combinations. Source and acceptance scope: docs/chaos-realm-plan.md. Evidence references are not test execution results.",
   "recordSemantics": {
     "implemented": "Reachable implementation exists; gapIds still block acceptance completion.",
     "no-special-difference": "Source and indirect consumers reviewed; shared path applies without an additional class generation branch.",
@@ -5786,6 +5786,1198 @@
             "crates/rfb-core/src/game/tests/items.rs#b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
             "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
             "crates/rfb-core/src/game/tests/existing_realms.rs#existing_realms_new_builds_generate_pick_up_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-chaos-life",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-life: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-chaos-life: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-life: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-life: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-life: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-life-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-life-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-life-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-life-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-life-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-life-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-chaos-sorcery",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-sorcery: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-chaos-sorcery: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-sorcery: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-sorcery: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-sorcery: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-sorcery-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-sorcery-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-sorcery-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-sorcery-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-sorcery-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-sorcery-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-chaos-nature",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-nature: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-chaos-nature: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-nature: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-nature: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-nature: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-nature-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-nature-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-nature-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-nature-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-nature-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-nature-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-chaos-death",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-death: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-chaos-death: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-death: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-death: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-death: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-death-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-death-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-death-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-death-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-death-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-death-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-chaos-arcane",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-arcane: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-chaos-arcane: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-arcane: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-arcane: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-arcane: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-arcane-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-arcane-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-arcane-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-arcane-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-arcane-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-arcane-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-chaos-craft",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-craft: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-chaos-craft: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-craft: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-craft: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-craft: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-craft-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-craft-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-craft-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-craft-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-craft-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-craft-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-chaos-daemon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-daemon: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-chaos-daemon: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-daemon: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-daemon: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-daemon: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-daemon-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-daemon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-daemon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-daemon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-daemon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-daemon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-chaos-crusade",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-crusade: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-chaos-crusade: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-crusade: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-crusade: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-crusade: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-crusade-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-crusade-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-crusade-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-crusade-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-crusade-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-crusade-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-chaos-armageddon",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-armageddon: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-chaos-armageddon: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-armageddon: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-armageddon: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-chaos-armageddon: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.mage-armageddon-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.mage-armageddon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.mage-armageddon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.mage-armageddon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.mage-armageddon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.mage-armageddon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.high-mage-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.high-mage-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared high-mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.high-mage-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared high-mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "demo.build.high-mage-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared high-mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.high-mage-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared high-mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#terror_mask_generation_uses_current_build_and_preserves_identity_after_save",
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.high-mage-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared high-mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_death_books_are_counted_studied_cast_and_restored",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_high_mage_device_is_usable_and_restores_its_charges",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.priest-life-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.priest-life-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.priest-life-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.priest-life-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.priest-life-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.priest-life-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.priest-crusade-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.priest-crusade-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.priest-crusade-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.priest-crusade-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.priest-crusade-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.priest-crusade-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.priest-death-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.priest-death-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.priest-death-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.priest-death-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.priest-death-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.priest-death-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.priest-daemon-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.priest-daemon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.priest-daemon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.priest-daemon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.priest-daemon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.priest-daemon-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared priest review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.warrior-mage-arcane-chaos",
+      "gapIds": [],
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "no-special-difference",
+          "reason": "demo.build.warrior-mage-arcane-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared warrior-mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "implementation": [
+            "crates/rfb-core/src/game/loot/allocation.rs",
+            "crates/rfb-core/src/game/player_abilities.rs#item_is_icky"
+          ],
+          "tests": [
+            "crates/rfb-core/src/game/loot/allocation.rs#ranger_and_priest_tailored_books_follow_current_realms_without_extra_preference_draws",
+            "crates/rfb-core/src/game/tests/items.rs#b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+            "crates/rfb-core/src/game/tests/items.rs#all_priest_builds_generate_tailored_hafted_weapons_equip_and_resume_generation",
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.warrior-mage-arcane-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared warrior-mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "implementation": [
+            "crates/rfb-core/src/game/ego/applicability.rs",
+            "crates/rfb-core/src/game/random_artifact/scheduling.rs"
+          ],
+          "tests": [
+            "crates/rfb-core/src/game/ego/applicability.rs#real_warrior_gets_mage_and_dwarf_themed_equipment_then_equips_and_restores",
+            "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_negative_power_reaches_a_cursed_equippable_instance",
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.warrior-mage-arcane-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared warrior-mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "implementation": [
+            "crates/rfb-core/src/game/random_artifact.rs#initial_bias"
+          ],
+          "tests": [
+            "crates/rfb-core/src/game/random_artifact/tests.rs#real_mindcrafter_bias_is_scroll_only_and_uses_source_conversion_boundary",
+            "crates/rfb-core/src/game/tests/items.rs#artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name",
+            "crates/rfb-core/src/game/random_artifact/scheduling/tests.rs#random_artifact_save_preserves_rejected_names_and_continued_generation",
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.warrior-mage-arcane-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared warrior-mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "implementation": [
+            "crates/rfb-core/src/game/tasks.rs",
+            "packs/rfb-demo-original/worlds/middle-earth.json",
+            "packs/rfb-demo-original/items/lohengrin.json",
+            "packs/rfb-demo-original/items/charmed-pendant.json"
+          ],
+          "tests": [
+            "crates/rfb-core/src/game/tests/warrior_mage/generation.rs#every_build_claims_and_uses_the_source_thieves_and_orc_rewards",
+            "crates/rfb-core/src/game/tests/warrior_mage/generation.rs#castle_choice_is_one_to_four_durable_and_duplicate_replacement_is_atomic",
+            "crates/rfb-core/src/game/tests/warrior_mage/generation.rs#fixed_rewards_generate_equip_activate_and_resume_source_cooldowns",
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.warrior-mage-arcane-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared warrior-mage review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "implementation": [
+            "crates/rfb-core/src/game/item_use.rs",
+            "crates/rfb-core/src/game/town.rs",
+            "crates/rfb-core/src/game/abilities/restoration.rs",
+            "web/src/status-panel.ts"
+          ],
+          "tests": [
+            "crates/rfb-core/src/game/tests/warrior_mage/generation.rs#every_build_pays_the_member_identification_price_and_restores_the_purchase",
+            "crates/rfb-core/src/game/tests/warrior_mage/generation.rs#realm_change_updates_book_inscriptions_and_realm_services_but_keeps_class_membership",
+            "crates/rfb-core/src/game/tests/warrior_mage/powers.rs#melee_conversion_book_cast_and_healing_continue_identically_after_loading",
+            "web/e2e/warrior-mage.e2e.mjs#runWarriorMageUiScenario",
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        }
+      ]
+    },
+    {
+      "buildId": "demo.build.ranger-nature-chaos",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "demo.build.ranger-nature-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared ranger review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: base-allocation-tailored.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "demo.build.ranger-nature-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared ranger review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: ego-negative.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "demo.build.ranger-nature-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared ranger review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: random-artifact.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "demo.build.ranger-nature-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared ranger review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: fixed-artifact-reward.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "demo.build.ranger-nature-chaos: Chaos changes current book membership, discovery counts and realm facility/inscription consumers; class, body, Ego weights, artifact biases and reward branches reuse the shared ranger review. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; see docs/chaos-realm-plan.md CH5. Area: use-save.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/chaos/ch5.rs#ch5_all_formal_builds_generate_study_cast_and_resume"
           ]
         }
       ],

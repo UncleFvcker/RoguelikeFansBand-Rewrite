@@ -30221,6 +30221,26 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
         let profiles = source["classProfiles"].as_array().unwrap();
         assert_eq!(profiles.len(), 5);
         for profile in profiles {
+            let class: serde_json::Value = serde_json::from_str(
+                &std::fs::read_to_string(root.join(format!(
+                        "classes/{}.json",
+                        profile["classId"]
+                            .as_str()
+                            .unwrap()
+                            .rsplit('.')
+                            .next()
+                            .unwrap()
+                    )))
+                .unwrap(),
+            )
+            .unwrap();
+            let formal = class["castingProfile"]["realmProfiles"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|p| p["realmId"] == "chaos")
+                .unwrap();
+            assert_eq!(formal["abilityOverrides"], profile["abilityOverrides"]);
             let original = parsed
                 .iter()
                 .find(|p| u64::from(p.class_index) == profile["sourceClassIndex"].as_u64().unwrap())

@@ -6404,6 +6404,10 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             ("demo.item.immortal-rituals", 1_350),
             ("demo.item.rites-of-initiation", 135),
             ("demo.item.ways-of-war", 1_350),
+            ("demo.item.handbook-for-pupils", 135),
+            ("demo.item.grade-holders-book", 1_350),
+            ("demo.item.sign-of-chaos", 135),
+            ("demo.item.chaos-mastery", 1_350),
         ])
     );
     let book = shop

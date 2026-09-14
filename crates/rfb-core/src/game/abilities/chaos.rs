@@ -273,7 +273,7 @@ impl Game {
             }
             .into(),
             intensity: 1,
-            duration_ticks: duration.max(remaining.min(u32::from(u16::MAX)) as u16),
+            duration_ticks: u32::from(duration).max(remaining),
             duration_dice: 0,
             duration_sides: 0,
             stacking: AbilityStatusStackingDefinition::Replace,

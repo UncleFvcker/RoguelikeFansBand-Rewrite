@@ -405,6 +405,8 @@ fn melee_conversion_book_cast_and_healing_continue_identically_after_loading() {
     game.debug_set_ability_casts_succeed(false);
     let mut restored = Game::from_save(game.to_save()).unwrap();
     for id in [spell, HP_TO_MP, MP_TO_HP] {
+        seed_cast(&mut game, id, true);
+        restored.rng = game.rng.clone();
         let command = GameCommand::CastAbility {
             ability_id: id.to_owned(),
             target: TargetSelection::SelfTarget,

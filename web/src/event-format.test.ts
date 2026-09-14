@@ -34,6 +34,16 @@ test("Sorcery monster detection describes creatures without exposing the categor
   }
 });
 
+test("temporary polymorph has its source name in both status panels", () => {
+  for (const [locale, expected] of [["en-US", "Polymorph Self"], ["zh-CN", "变形自身"]]) {
+    localization.setLocale(locale);
+    assert.equal(formatter.statusName("rfb.status.player-polymorph"), expected);
+    for (const [status, ability] of [["demon-lord-transformation", "daemon-polymorph-demonlord"], ["vampiric-transformation", "death-vampiric-transformation"]]) {
+      assert.equal(formatter.statusName(`rfb.status.${status}`), localization.format(`ability-demo-${ability}-name`));
+    }
+  }
+});
+
 test("Vice light speed has a localized name in the status panel and events", () => {
   for (const [locale, expected] of [["en-US", "light speed"], ["zh-CN", "光速"]]) {
     localization.setLocale(locale);

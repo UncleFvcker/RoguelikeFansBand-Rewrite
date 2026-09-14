@@ -33,6 +33,8 @@
         "friendly": false,
         "noPet": false,
         "noGenocide": false,
+        "cloned": false,
+        "noDestruction": false,
         "castingCooldownRemaining": 0
       }
     ]
@@ -62,8 +64,8 @@
         "y": 33
       },
       "revision": 1,
-      "rngDrawCounter": 202,
-      "stateHash": "2eaa934a0191a88d1b85fdf39820d886dd0dfa9e8f5263f137dad67d493b616d",
+      "rngDrawCounter": 204,
+      "stateHash": "2e9c63ed12e6ae3b62d4933e210d6e807dbc594a86eb6127376390003104a5dc",
       "turn": 1
     },
     "events": [

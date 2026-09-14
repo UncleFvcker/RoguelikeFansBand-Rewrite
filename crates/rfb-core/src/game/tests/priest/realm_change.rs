@@ -43,6 +43,7 @@ fn physical_books_and_projection_share_each_primary_realms_alignment_restriction
             "daemon",
             "crusade",
             "armageddon",
+            "chaos",
         ] {
             let id = book(&mut game, realm, 1);
             if realm == first || realm == "sorcery" {
@@ -80,7 +81,7 @@ fn physical_books_and_projection_share_each_primary_realms_alignment_restriction
         let projected = game.spell_realms_dto().unwrap();
         assert_eq!(projected.first_realm_id, first);
         assert_eq!(projected.second_realm_id, "sorcery");
-        assert_eq!(projected.change_books.len(), 5);
+        assert_eq!(projected.change_books.len(), 6);
         assert!(
             projected
                 .change_books

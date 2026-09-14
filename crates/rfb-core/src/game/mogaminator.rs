@@ -1275,6 +1275,8 @@ fn localized_realm_name(realm_id: &str, locale: Locale) -> String {
         ("daemon", Locale::EnUs) => "Daemon".to_owned(),
         ("crusade", Locale::ZhCn) => "圣战".to_owned(),
         ("crusade", Locale::EnUs) => "Crusade".to_owned(),
+        ("chaos", Locale::ZhCn) => "混沌".to_owned(),
+        ("chaos", Locale::EnUs) => "Chaos".to_owned(),
         ("armageddon", Locale::ZhCn) => "毁灭".to_owned(),
         ("armageddon", Locale::EnUs) => "Armageddon".to_owned(),
         ("death", Locale::ZhCn) => "死亡".to_owned(),

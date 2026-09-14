@@ -634,6 +634,7 @@ fn n3_bard_arrow_sticks_to_a_survivor_and_drops_on_its_death() {
             .iter()
             .any(|item| item.id == arrow && matches!(item.location, ItemLocation::Ground(_)))
     );
+    game.reveal_current_visibility();
     resume(&game);
 }
 
@@ -787,6 +788,7 @@ fn n3_silver_hammer_suppresses_phoenix_and_dawn_and_stuns_werewolves() {
                 .any(|a| a.kind_id == format!("demo.actor.{slug}") && a.hp > 0),
             "{slug}"
         );
+        protected.reveal_current_visibility();
         resume(&protected);
     }
 }

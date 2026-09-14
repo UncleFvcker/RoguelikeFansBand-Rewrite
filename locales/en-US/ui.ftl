@@ -106,10 +106,10 @@ session-career-label = Career
 session-first-realm-label = First realm
 session-second-realm-label = Second realm
 session-selection-pending = Selection incomplete
-session-mage-realms-help = Choose two different realms from the nine available. The first realm can reach Master proficiency; the second can reach Expert.
-session-ranger-realms-help = Nature is your fixed first realm. Choose Sorcery, Death, Arcane or Daemon as your second. Random book study starts at level 3 and shares one learning capacity across both realms. The first realm can reach Master proficiency; the second can reach Expert.
+session-mage-realms-help = Choose two different realms from the ten available. The first realm can reach Master proficiency; the second can reach Expert.
+session-ranger-realms-help = Nature is your fixed first realm. Choose Sorcery, Chaos, Death, Arcane or Daemon as your second. Random book study starts at level 3 and shares one learning capacity across both realms. The first realm can reach Master proficiency; the second can reach Expert.
 session-priest-realms-help = Cast with Wisdom and gain mana and random book study from level 1. Life or Crusade is a good primary realm; Death or Daemon is evil. Realms cannot repeat or oppose your alignment. Both share one learning capacity; the first can reach Master proficiency and the second Expert.
-session-warrior-mage-realms-help = Arcane is your fixed primary realm. Choose one of eight second realms, including Craft. Cast with Intelligence; choose and restudy spells from either realm's books using one shared learning capacity. Primary proficiency reaches Master, secondary Expert. Two resource conversion powers unlock at level 25.
+session-warrior-mage-realms-help = Arcane is your fixed primary realm. Choose one of nine second realms, including Craft and Chaos. Cast with Intelligence; choose and restudy spells from either realm's books using one shared learning capacity. Primary proficiency reaches Master, secondary Expert. Two resource conversion powers unlock at level 25.
 session-priest-first-realm-help = Your first realm is permanent and determines your alignment and class power. Confirm it to choose your second realm.
 session-priest-second-realm-help = Confirming a second-realm change through a real book clears the old secondary spell progress and immediately attempts random study. The change remains even if nothing can be learned, and spent learning capacity is not refunded.
 session-priest-good-help = Each unblessed sword or polearm gives a good Priest -2 to hit and damage and adds 25 percentage points to prayer failure. Bless Weapon becomes available at level 35; blessing removes these penalties without raising weapon proficiency caps.
@@ -1472,7 +1472,7 @@ casino-poker-no-pair = No winning hand
 
 session-career-craft-name = Craft
 realm-craft-name = Craft
-session-high-mage-available-realms = All nine existing realms are available.
+session-high-mage-available-realms = All ten existing realms are available.
 ability-target-element = Element
 ability-element-target = Choose an element
 item-crafting-quantity-confirm = This stack has more than 30 missiles. Crafting can fail and consume the cast. Continue?
@@ -1485,3 +1485,5 @@ object-list-open-chest = Open chest
 object-list-disarm-chest = Disarm chest
 
 item-use-unavailable-confused = You are too confused.
+
+realm-chaos-name = Chaos

@@ -13,6 +13,7 @@ import { selectCreationBuild, selectCreationRace } from "./character-creation.e2
 // Ordinary standalone binary and production UI/load/save commands. Preparation
 // is confined to the ignored core exporter; no WebDriver-only IPC is enabled.
 const root = fileURLToPath(new URL("../../", import.meta.url));
+const chaos = process.argv.includes("--chaos");
 const existingRealms = process.argv.includes("--existing-realms");
 const questItems = process.argv.includes("--quest-items");
 const questItemsAll = process.argv.includes("--quest-items-all");
@@ -20,7 +21,7 @@ const nonQuestN1 = process.argv.includes("--non-quest-n1");
 const nonQuestN3 = process.argv.includes("--non-quest-n3");
 const nonQuestN2 = process.argv.includes("--non-quest-n2");
 const executable = path.join(process.env.CARGO_TARGET_DIR ?? path.join(root, "target"), "debug/rfb-tauri.exe");
-const directory = path.join(root, existingRealms ? "test-results/existing-realms" : nonQuestN3 ? "test-results/non-quest-n3" : nonQuestN2 ? "test-results/non-quest-n2" : nonQuestN1 ? "test-results/non-quest-n1" : questItemsAll ? "test-results/quest-items-q2-q5" : questItems ? "test-results/quest-items-q1" : "test-results/ordinary-equipment");
+const directory = path.join(root, chaos ? "test-results/chaos" : existingRealms ? "test-results/existing-realms" : nonQuestN3 ? "test-results/non-quest-n3" : nonQuestN2 ? "test-results/non-quest-n2" : nonQuestN1 ? "test-results/non-quest-n1" : questItemsAll ? "test-results/quest-items-q2-q5" : questItems ? "test-results/quest-items-q1" : "test-results/ordinary-equipment");
 await mkdir(directory, { recursive: true });
 await mkdir(path.join(root, "target/e2e"), { recursive: true });
 const profile = await mkdtemp(path.join(root, "target/e2e/ordinary-equipment-"));
@@ -81,9 +82,9 @@ try {
   await driver.waitFor('return document.documentElement.lang==="zh-CN" && document.documentElement.dataset.appMode==="title" && !document.querySelector("#session-new-game").disabled', "Chinese title ready");
   await click("#session-new-game");
   await selectCreationRace(driver, "demo.race.rfb-human");
-  if (existingRealms) {
-    const { MAGE_REALMS } = await import("../src/character-creation.ts");
-    const ids = [...MAGE_REALMS.filter(r => !["death", "craft"].includes(r)).map(r => `demo.build.high-mage-${r}`), ...MAGE_REALMS.filter(r => r !== "craft").flatMap(r => [`demo.build.mage-craft-${r}`, `demo.build.mage-${r}-craft`]), ...["life", "crusade", "daemon"].map(r => `demo.build.paladin-${r}`)];
+  if (existingRealms || chaos) {
+    const { MAGE_REALMS, PLAYTEST_BUILD_IDS } = await import("../src/character-creation.ts");
+    const ids = chaos ? PLAYTEST_BUILD_IDS.filter(id => id.includes("-chaos")) : [...MAGE_REALMS.filter(r => !["death", "craft", "chaos"].includes(r)).map(r => `demo.build.high-mage-${r}`), ...MAGE_REALMS.filter(r => !["craft", "chaos"].includes(r)).flatMap(r => [`demo.build.mage-craft-${r}`, `demo.build.mage-${r}-craft`]), ...["life", "crusade", "daemon"].map(r => `demo.build.paladin-${r}`)];
     for (const locale of ["en-US", "zh-CN"]) {
       await driver.execute('localStorage.setItem("rfb.locale",arguments[0]);return true;', [locale]);
       await keyboard.reload();
@@ -96,13 +97,13 @@ try {
     }
     await selectCreationRace(driver, "demo.race.rfb-human");
   }
-  await selectCreationBuild(driver, nonQuestN1 || nonQuestN2 || nonQuestN3 ? "demo.build.mage-life-arcane" : "demo.build.warrior");
+  await selectCreationBuild(driver, chaos ? "demo.build.high-mage-chaos" : nonQuestN1 || nonQuestN2 || nonQuestN3 ? "demo.build.mage-life-arcane" : "demo.build.warrior");
   await driver.execute('for(const [id,value] of [["session-seed","511"],["session-character-name","常规装备验收"]]){const input=document.getElementById(id);input.value=value;input.dispatchEvent(new Event("input",{bubbles:true}));}return true;');
   await click("#session-start-game");
   await driver.waitFor('return document.documentElement.dataset.appMode==="playing" && document.querySelector("#connection-status").classList.contains("ready")', "fresh warrior", 30000);
   const input = path.join(directory, "new-game.rfbsave");
   await writeFile(input, Buffer.from(await save()));
-  const exporter = existingRealms ? "game::tests::existing_realms::export_existing_realms_desktop_saves" : nonQuestN3 ? "game::tests::non_quest_artifacts::n3::export_n3_desktop_saves" : nonQuestN2 ? "game::tests::non_quest_artifacts::n2::export_n2_desktop_saves" : nonQuestN1 ? "game::tests::non_quest_artifacts::export_n1_desktop_saves" : questItemsAll ? "game::tests::quest_items::desktop::export_quest_item_desktop_saves" : questItems ? "game::tests::quest_items::export_q1_desktop_save" : "game::tests::death_scythe::export_ordinary_equipment_desktop_saves";
+  const exporter = chaos ? "game::tests::chaos::ch5::export_chaos_desktop_saves" : existingRealms ? "game::tests::existing_realms::export_existing_realms_desktop_saves" : nonQuestN3 ? "game::tests::non_quest_artifacts::n3::export_n3_desktop_saves" : nonQuestN2 ? "game::tests::non_quest_artifacts::n2::export_n2_desktop_saves" : nonQuestN1 ? "game::tests::non_quest_artifacts::export_n1_desktop_saves" : questItemsAll ? "game::tests::quest_items::desktop::export_quest_item_desktop_saves" : questItems ? "game::tests::quest_items::export_q1_desktop_save" : "game::tests::death_scythe::export_ordinary_equipment_desktop_saves";
   const preparation = await promisify(execFile)("cargo", ["test", "-p", "rfb-core", "--lib", exporter, "--", "--ignored", "--exact"], {
     cwd: root, env: { ...process.env, ORDINARY_EQUIPMENT_INPUT: input }, windowsHide: true, timeout: 240000,
   });
@@ -116,10 +117,17 @@ try {
         await click("#player-ui-ability-open");
         if (command.type === "study-prayer") await click(`[data-book-item-id="${command.bookItemId}"] [data-ability-action="study-prayer"]`);
         else await click(`[data-ability-id="${command.abilityId}"] ${command.type === "study-ability" ? '[data-ability-action="study"]' : '.ability-cast-action'}`);
+        if (command.target?.type === "item") {
+          await driver.waitFor('return !!document.querySelector("dialog.item-target-dialog[open] select")', "spell item target");
+          await driver.execute('const dialog=document.querySelector("dialog.item-target-dialog[open]");const select=dialog.querySelector("select");select.value=arguments[0];select.dispatchEvent(new Event("change",{bubbles:true}));dialog.querySelector("button[type=submit]").click();return true;', [command.target.itemId]);
+        }
         if (command.target?.type === "direction") { await keyboard.key("6"); await keyboard.key("Enter"); }
         await readyHash(step.hash);
         await writeFile(path.join(directory, `${scenario.name}-${index}.png`), await keyboard.screenshot(), "base64");
         if (await driver.execute('return document.querySelector("#player-page-dialog").open')) await click("#player-page-close");
+      } else if (command.type === "resolve-ability-direction") {
+        await keyboard.key("6"); await keyboard.key("Enter");
+        await readyHash(step.hash);
       } else if (command.type === "equip") {
         await click("#player-ui-inventory-open");
         await click(`[data-item-id="${command.itemId}"] input[type="checkbox"]`);
@@ -162,7 +170,7 @@ try {
   assert.deepEqual(keyboard.errors, []);
   await writeFile(path.join(directory, "report.json"), JSON.stringify({
     executable, sha256: createHash("sha256").update(await readFile(executable)).digest("hex"),
-    preparation: existingRealms ? "All 26 added creation choices checked in both languages. Four fresh formal builds prepared to level50, source attribute potentials, full HP/MP, cleared actors and local source targets. Actual UI study/prayer, spell/class power and wait, with native save/load after each action. Successful RNG seeds explicitly selected; no natural leveling or all-spell playthrough claim." : nonQuestN3
+    preparation: chaos ? "All 25 Chaos creation choices checked in both languages. Fresh formal High-Mage Chaos builds prepared to level50, full resources, invulnerability and local targets. Ordinary UI spell casts, real staff recharge and weapon branding, temporary centaur form and expiry, random pending direction and native save/load after every action. Success seeds and advanced books explicitly prepared; no natural leveling or acquisition claim." : existingRealms ? "All 26 added creation choices checked in both languages. Four fresh formal builds prepared to level50, source attribute potentials, full HP/MP, cleared actors and local source targets. Actual UI study/prayer, spell/class power and wait, with native save/load after each action. Successful RNG seeds explicitly selected; no natural leveling or all-spell playthrough claim." : nonQuestN3
       ? "Fresh human Mage native save, controlled level50 and source attribute potentials, local floor, invulnerability, torch and sleeping source targets. Four N3 artifacts generated through base/rarity gates at controlled depth100; normal UI pickup, equipment, melee, arrow fired from crossbow, Cupid charm, Vice activation and gold drain. Successful seeds selected through real commands. Every action saved and restored; no natural leveling/acquisition claim."
       : nonQuestN2
       ? "Fresh human Mage native save, controlled level50, local floor, invulnerability and equipped torch. Five artifacts use real base/instant candidates and rarity at controlled depth100; unknown pickup, equip, activation and wait. Ball/drain targets are prepared adjacent sleeping source actors; fishing receives adjacent water. Successful activation seeds are selected through real checks. Browser timers are paused for the fishing activation/checkpoints, so automatic continuation cannot race explicit native save/load and manual wait. Every UI action is saved and restored through normal native commands. No natural acquisition or leveling claim."

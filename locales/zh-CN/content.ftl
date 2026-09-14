@@ -10855,3 +10855,78 @@ ability-demo-chaos-breathe-logrus-name = 喷吐洛格鲁斯
 ability-demo-chaos-breathe-logrus-description = 发射一颗威力极其强大的混沌球。
 ability-demo-chaos-call-the-void-name = 呼唤虚空
 ability-demo-chaos-call-the-void-description = 除非你不与任何墙壁相邻，否则向所有方向发射火箭、法力球和核废料球。否则将*摧毁*巨大的区域。
+
+build-demo-mage-chaos-life-name = 法师 · 混沌 / 生命
+build-demo-mage-chaos-life-description = 主领域为混沌，副领域为生命；携带对应第一册法术书开始冒险。
+
+build-demo-mage-life-chaos-name = 法师 · 生命 / 混沌
+build-demo-mage-life-chaos-description = 主领域为生命，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-sorcery-name = 法师 · 混沌 / 咒术
+build-demo-mage-chaos-sorcery-description = 主领域为混沌，副领域为咒术；携带对应第一册法术书开始冒险。
+
+build-demo-mage-sorcery-chaos-name = 法师 · 咒术 / 混沌
+build-demo-mage-sorcery-chaos-description = 主领域为咒术，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-nature-name = 法师 · 混沌 / 自然
+build-demo-mage-chaos-nature-description = 主领域为混沌，副领域为自然；携带对应第一册法术书开始冒险。
+
+build-demo-mage-nature-chaos-name = 法师 · 自然 / 混沌
+build-demo-mage-nature-chaos-description = 主领域为自然，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-death-name = 法师 · 混沌 / 死亡
+build-demo-mage-chaos-death-description = 主领域为混沌，副领域为死亡；携带对应第一册法术书开始冒险。
+
+build-demo-mage-death-chaos-name = 法师 · 死亡 / 混沌
+build-demo-mage-death-chaos-description = 主领域为死亡，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-arcane-name = 法师 · 混沌 / 奥秘
+build-demo-mage-chaos-arcane-description = 主领域为混沌，副领域为奥秘；携带对应第一册法术书开始冒险。
+
+build-demo-mage-arcane-chaos-name = 法师 · 奥秘 / 混沌
+build-demo-mage-arcane-chaos-description = 主领域为奥秘，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-craft-name = 法师 · 混沌 / 工艺
+build-demo-mage-chaos-craft-description = 主领域为混沌，副领域为工艺；携带对应第一册法术书开始冒险。
+
+build-demo-mage-craft-chaos-name = 法师 · 工艺 / 混沌
+build-demo-mage-craft-chaos-description = 主领域为工艺，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-daemon-name = 法师 · 混沌 / 恶魔
+build-demo-mage-chaos-daemon-description = 主领域为混沌，副领域为恶魔；携带对应第一册法术书开始冒险。
+
+build-demo-mage-daemon-chaos-name = 法师 · 恶魔 / 混沌
+build-demo-mage-daemon-chaos-description = 主领域为恶魔，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-crusade-name = 法师 · 混沌 / 圣战
+build-demo-mage-chaos-crusade-description = 主领域为混沌，副领域为圣战；携带对应第一册法术书开始冒险。
+
+build-demo-mage-crusade-chaos-name = 法师 · 圣战 / 混沌
+build-demo-mage-crusade-chaos-description = 主领域为圣战，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-armageddon-name = 法师 · 混沌 / 毁灭
+build-demo-mage-chaos-armageddon-description = 主领域为混沌，副领域为毁灭；携带对应第一册法术书开始冒险。
+
+build-demo-mage-armageddon-chaos-name = 法师 · 毁灭 / 混沌
+build-demo-mage-armageddon-chaos-description = 主领域为毁灭，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-high-mage-chaos-name = 高阶法师 · 混沌
+build-demo-high-mage-chaos-description = 主领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-priest-life-chaos-name = 牧师 · 生命 / 混沌
+build-demo-priest-life-chaos-description = 主领域为生命，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-priest-crusade-chaos-name = 牧师 · 圣战 / 混沌
+build-demo-priest-crusade-chaos-description = 主领域为圣战，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-priest-death-chaos-name = 牧师 · 死亡 / 混沌
+build-demo-priest-death-chaos-description = 主领域为死亡，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-priest-daemon-chaos-name = 牧师 · 恶魔 / 混沌
+build-demo-priest-daemon-chaos-description = 主领域为恶魔，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-warrior-mage-arcane-chaos-name = 战法师 · 奥秘 / 混沌
+build-demo-warrior-mage-arcane-chaos-description = 主领域为奥秘，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-ranger-nature-chaos-name = 游侠 · 自然 / 混沌
+build-demo-ranger-nature-chaos-description = 主领域为自然，副领域为混沌；携带对应第一册法术书开始冒险。

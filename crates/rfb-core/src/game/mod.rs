@@ -237,7 +237,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 133;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 134;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -1005,14 +1005,13 @@ impl Game {
         {
             return Err(CoreError::AbilityGlyphRequired);
         }
-        if let GameAction::ResolveAbilityGlyph { glyph } = &action {
-            if self.pending_ability_glyph.is_none()
+        if let GameAction::ResolveAbilityGlyph { glyph } = &action
+            && (self.pending_ability_glyph.is_none()
                 || glyph
                     .as_ref()
-                    .is_some_and(|g| g.chars().count() != 1 || g.chars().any(char::is_control))
-            {
-                return Err(CoreError::AbilityGlyphUnavailable);
-            }
+                    .is_some_and(|g| g.chars().count() != 1 || g.chars().any(char::is_control)))
+        {
+            return Err(CoreError::AbilityGlyphUnavailable);
         }
         if self.pending_ability_direction.is_some()
             && !maia_choice

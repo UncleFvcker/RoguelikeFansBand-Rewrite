@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::*;
 use crate::game::ability_scaling::spell_power_value;
-use rfb_protocol::{AbilityEffectResolutionDto, ItemChargesDto, VirtueKindDto};
+use rfb_protocol::{AbilityEffectResolutionDto, VirtueKindDto};
 
 pub(super) fn cast_where(
     base: &Game,
@@ -255,11 +255,8 @@ fn ch3_arcane_binding_spends_mana_on_real_recharge_success_and_failure() {
         .iter_mut()
         .find(|i| i.id == "test.device")
         .unwrap();
-    item.activation.as_mut().unwrap().device_check_difficulty = 120;
-    item.charges = Some(ItemChargesDto {
-        current: 10,
-        maximum: 100,
-    });
+    item.charges.as_mut().unwrap().current = 10;
+    let missing = item.charges.unwrap().maximum - 10;
     let mut cancelled = base.clone();
     let rng = cancelled.rng.clone();
     let resources = cancelled.resources.clone();
@@ -306,7 +303,7 @@ fn ch3_arcane_binding_spends_mana_on_real_recharge_success_and_failure() {
         let mana = &game.resources["demo.resource.mana"];
         assert_eq!(
             attempted,
-            90.min(spell_power_value(90, base.effective_player_spell_power_bonus()) as u32)
+            missing.min(spell_power_value(90, base.effective_player_spell_power_bonus()) as u32)
         );
         assert!(mana.maximum - mana.current > attempted);
     }
@@ -415,13 +412,7 @@ fn ch3_branding_uses_a_real_chaos_ego_and_cancel_still_pays() {
             item.location = ItemLocation::Inventory;
         }
     }
-    base.items
-        .iter_mut()
-        .find(|i| i.id == "test.weapon")
-        .unwrap()
-        .location = ItemLocation::Equipped {
-        slot_id: "weapon".into(),
-    };
+    base.equip_inventory_item("test.weapon", None).unwrap();
     target(&mut base);
     base.entities[0].position = Position { x: 11, y: 10 };
     let mut hit = false;
@@ -481,8 +472,11 @@ fn ch3_demon_summoning_preserves_pet_hostile_and_level_fifty_groups() {
         ch2::dungeon(&mut base);
         let id = learn(&mut base, "summon-demon");
         let (game, events) = cast_where(&base, &id, TargetSelection::SelfTarget, |_, events| {
-            events.iter().any(|e| matches!(e, DomainEvent::AbilitySummoned { resolution, .. }
-                if resolution.hostile == hostile && resolution.group == group && !resolution.entity_ids.is_empty()))
+            events.iter().any(|e| {
+                matches!(e, DomainEvent::AbilitySummoned { resolution, .. }
+                if resolution.hostile == hostile && resolution.group == group
+                    && resolution.entity_ids.len() >= if group { 2 } else { 1 })
+            })
         });
         let resolution = events
             .iter()

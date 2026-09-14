@@ -4976,12 +4976,20 @@ fn ready_armor_group_generates_equips_and_preserves_consumers_after_save() {
 fn a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save() {
     const BEAST: &str = "demo.actor.greater-hell-beast";
     const SHIRT: &str = "demo.item.legendary-lost-treasure";
-    // Seed 54 reaches GHB through the unmodified formal entrance/floor/ecology.
+    // Find the rare GHB through the unmodified formal entrance/floor/ecology.
     // Combat is shortened below; this is not a natural leveling test.
-    let mut game = Game::new_with_build(54, "demo.build.warrior").unwrap();
-    choose_human_talent_if_pending(&mut game);
-    place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
-    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    let mut game = (0..256)
+        .find_map(|seed| {
+            let mut game = Game::new_with_build(seed, "demo.build.warrior").unwrap();
+            choose_human_talent_if_pending(&mut game);
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+            dispatch_next(&mut game, GameCommand::TraverseStairs);
+            game.entities
+                .iter()
+                .any(|a| a.kind_id == BEAST)
+                .then_some(game)
+        })
+        .expect("GHB must remain reachable through ordinary first-floor ecology");
     assert_eq!(game.current_floor_id, "demo.floor.warrens-depth-1");
     let context = artifact_loot_context(100);
     let rng = game.rng.clone();
@@ -12754,7 +12762,7 @@ fn b4_pick_up_tailored_matching(game: &mut Game, accepts: impl Fn(&Game, &str) -
 #[test]
 fn all_priest_builds_generate_tailored_hafted_weapons_equip_and_resume_generation() {
     let builds = super::support::priest_build_ids();
-    assert_eq!(builds.len(), 24);
+    assert_eq!(builds.len(), 28);
     for build in builds
         .into_iter()
         .chain(super::support::warrior_mage_build_ids())

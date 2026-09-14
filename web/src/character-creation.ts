@@ -54,13 +54,13 @@ function singleRealmCaster<const S extends string, const R extends readonly stri
   })) };
 }
 
-export const MAGE_REALMS = ["life", "sorcery", "nature", "death", "arcane", "craft", "daemon", "crusade", "armageddon"] as const;
+export const MAGE_REALMS = ["life", "sorcery", "nature", "chaos", "death", "arcane", "craft", "daemon", "crusade", "armageddon"] as const;
 export const PALADIN_REALMS = ["life", "crusade", "death", "daemon"] as const;
 export const PRIEST_SECOND_REALMS = {
-  life: ["sorcery", "nature", "arcane", "craft", "crusade", "armageddon"],
-  crusade: ["life", "sorcery", "nature", "arcane", "craft", "armageddon"],
-  death: ["sorcery", "nature", "arcane", "craft", "daemon", "armageddon"],
-  daemon: ["sorcery", "nature", "death", "arcane", "craft", "armageddon"],
+  life: ["chaos", "sorcery", "nature", "arcane", "craft", "crusade", "armageddon"],
+  crusade: ["chaos", "life", "sorcery", "nature", "arcane", "craft", "armageddon"],
+  death: ["chaos", "sorcery", "nature", "arcane", "craft", "daemon", "armageddon"],
+  daemon: ["chaos", "sorcery", "nature", "death", "arcane", "craft", "armageddon"],
 } as const;
 const PRIEST = {
   ...career("priest"), id: "priest", childLabelKey: "session-first-realm-label",
@@ -76,8 +76,8 @@ const PRIEST = {
     })),
   })),
 } as const;
-export const RANGER_SECOND_REALMS = ["sorcery", "death", "arcane", "daemon"] as const;
-export const WARRIOR_MAGE_SECOND_REALMS = ["life", "sorcery", "nature", "death", "craft", "daemon", "crusade", "armageddon"] as const;
+export const RANGER_SECOND_REALMS = ["chaos", "sorcery", "death", "arcane", "daemon"] as const;
+export const WARRIOR_MAGE_SECOND_REALMS = ["life", "sorcery", "nature", "chaos", "death", "craft", "daemon", "crusade", "armageddon"] as const;
 const WARRIOR_MAGE = {
   ...career("warrior-mage"), id: "warrior-mage", childLabelKey: "session-second-realm-label",
   notes: ["session-warrior-mage-realms-help"],

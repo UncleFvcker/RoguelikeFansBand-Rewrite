@@ -727,6 +727,12 @@ impl Game {
             trace: None,
         });
         ability.effect = (*branch.effect).clone();
+        // Wonder's genocide branch collects its glyph only after paying and drawing.
+        // It has no projectile/self target to resolve during this first command.
+        if ability.id == "demo.ability.chaos-wonder" && branch_index == 20 {
+            *target_plan = AbilityTargetPlan::SelfTarget;
+            return branch_index;
+        }
         match branch.target {
             AbilityRandomTargetDefinition::CastTarget => {
                 if !matches!(ability.effect, AbilityEffectDefinition::NoOp { .. }) {
@@ -739,9 +745,15 @@ impl Game {
                 ability.target.modes = vec![AbilityTargetModeDefinition::SelfTarget];
                 ability.target.range = 0;
                 ability.target.requires_line_of_effect = false;
-                *target_plan = self
-                    .ability_target_plan(ability, &TargetSelection::SelfTarget)
-                    .expect("validated random branch must accept a self target");
+                // A paid random earthquake may land on a protected surface;
+                // its executor handles that no-effect result without rerolling.
+                *target_plan =
+                    if matches!(ability.effect, AbilityEffectDefinition::Earthquake { .. }) {
+                        AbilityTargetPlan::SelfTarget
+                    } else {
+                        self.ability_target_plan(ability, &TargetSelection::SelfTarget)
+                            .expect("validated random branch must accept a self target")
+                    };
             }
         }
         branch_index

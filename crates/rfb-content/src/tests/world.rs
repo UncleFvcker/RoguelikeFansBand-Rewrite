@@ -248,7 +248,16 @@ fn zul_node_maps_rewards_and_admission_references_match_source() {
             .find(|item| item.id == format!("demo.item.{book}"))
             .unwrap();
         assert_eq!(book.elemental_destruction_immunities.len(), 4);
-        assert_eq!(book.ability_book_id.is_some(), realm != "chaos");
+        assert_eq!(
+            book.ability_book_id.as_deref(),
+            Some(
+                format!(
+                    "demo.ability-book.{book_id}",
+                    book_id = book.id.strip_prefix("demo.item.").unwrap()
+                )
+                .as_str()
+            )
+        );
     }
     for invalid in [
         "no-facility",
@@ -13011,8 +13020,11 @@ fn town_stock_and_spellbook_tiers_match_source() {
                 "demo.item.book-of-elements",
                 "demo.item.call-of-the-wild",
                 "demo.item.cantrips-for-beginners",
+                "demo.item.chaos-mastery",
                 "demo.item.dark-incantations",
                 "demo.item.earth-wind-and-fire",
+                "demo.item.grade-holders-book",
+                "demo.item.handbook-for-pupils",
                 "demo.item.high-mass",
                 "demo.item.immortal-rituals",
                 "demo.item.major-arcana",
@@ -13021,6 +13033,7 @@ fn town_stock_and_spellbook_tiers_match_source() {
                 "demo.item.minor-arcana",
                 "demo.item.nature-mastery",
                 "demo.item.rites-of-initiation",
+                "demo.item.sign-of-chaos",
                 "demo.item.ways-of-war",
             ])
         );
@@ -13401,7 +13414,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 424);
+    assert_eq!(base_items.entries.len(), 427);
     // Source kind 245 retains its 1/255 allocation as integer weight zero.
     assert_eq!(
         base_items
@@ -13510,6 +13523,9 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
             "demo.item.rusty-chain-mail",
             "demo.item.adamantite-plate-mail",
             "demo.item.scythe",
+            "demo.item.sign-of-chaos",
+            "demo.item.chaos-mastery",
+            "demo.item.chaos-channels",
         ])
         .collect::<BTreeSet<_>>();
     let actual_item_ids = base_items
@@ -13517,7 +13533,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 390);
+    assert_eq!(expected_item_ids.len(), 393);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.

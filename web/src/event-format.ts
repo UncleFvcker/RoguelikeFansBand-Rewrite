@@ -2014,6 +2014,15 @@ export function createPresentationFormatter(
     if (statusId === "rfb.status.light-speed") {
       return localization.format("device-activation-e5-light-speed-name");
     }
+    if (statusId === "rfb.status.player-polymorph") {
+      return localization.format("ability-demo-chaos-polymorph-self-name");
+    }
+    if (statusId === "rfb.status.demon-lord-transformation") {
+      return localization.format("ability-demo-daemon-polymorph-demonlord-name");
+    }
+    if (statusId === "rfb.status.vampiric-transformation") {
+      return localization.format("ability-demo-death-vampiric-transformation-name");
+    }
     if (statusId === "rfb.status.slow") {
       return localization.format("status-slow-name");
     }

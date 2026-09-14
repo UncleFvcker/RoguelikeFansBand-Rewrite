@@ -35,7 +35,7 @@ const DEATH_VAMPIRIC_DRAIN_ABILITY_ID: &str = "demo.ability.death-vampiric-drain
 const DEATH_VAMPIRISM_TRUE_ABILITY_ID: &str = "demo.ability.death-vampirism-true";
 
 impl Game {
-    pub(super) fn resolve_player_chain_lightning_effect(
+    pub(in crate::game) fn resolve_player_chain_lightning_effect(
         &mut self,
         ability: &AbilityDefinition,
         events: &mut Vec<DomainEvent>,

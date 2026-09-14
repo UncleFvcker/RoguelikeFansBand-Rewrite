@@ -4,69 +4,17 @@ use super::*;
 
 const BOOK: &str = "demo.item.sign-of-chaos";
 
-// CH1–CH4 are internal realm milestones. Exercise formal effects with real class
-// profiles without publishing an incomplete realm in the creation catalog.
+// Real CH5 profiles and builds; only the target HP fixture differs from production.
 fn caster(class: &str, level: u16) -> Game {
     let root =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
     let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
-    let source: serde_json::Value = serde_json::from_str(
-        &std::fs::read_to_string(root.join("legacy-chaos-source.json")).unwrap(),
-    )
-    .unwrap();
-    let class_id = format!("demo.class.{class}");
-    let profile = source["classProfiles"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .find(|p| p["classId"] == class_id)
-        .unwrap();
-    let overrides = profile["abilityOverrides"].as_array().unwrap()[..32].to_vec();
-    artifact
-        .content
-        .classes
-        .iter_mut()
-        .find(|c| c.id == class_id)
-        .unwrap()
-        .casting_profile
-        .as_mut()
-        .unwrap()
-        .realm_profiles
-        .push(rfb_content::CastingRealmProfileDefinition {
-            realm_id: "chaos".into(),
-            ability_book_ids: vec![
-                "demo.ability-book.sign-of-chaos".into(),
-                "demo.ability-book.chaos-mastery".into(),
-                "demo.ability-book.chaos-channels".into(),
-                "demo.ability-book.armageddon-tome".into(),
-            ],
-            learning_capacity_bonus: 0,
-            ability_overrides: serde_json::from_value(serde_json::Value::Array(overrides)).unwrap(),
-        });
-    let original = match class {
-        "high-mage" => "demo.build.high-mage-death",
-        "mage" => "demo.build.mage-life-arcane",
-        "warrior-mage" => "demo.build.warrior-mage-arcane-life",
-        _ => panic!("unprepared CH1 caster"),
+    let build_id = match class {
+        "high-mage" => "demo.build.high-mage-chaos",
+        "mage" => "demo.build.mage-life-chaos",
+        "warrior-mage" => "demo.build.warrior-mage-arcane-chaos",
+        _ => panic!("unprepared Chaos caster"),
     };
-    let mut build = artifact
-        .content
-        .builds
-        .iter()
-        .find(|b| b.id == original)
-        .unwrap()
-        .clone();
-    build.id = format!("test.build.chaos-{class}");
-    if class == "high-mage" {
-        build.first_realm_id = Some("chaos".into());
-    } else {
-        build.second_realm_id = Some("chaos".into());
-    }
-    build
-        .starting_items
-        .retain(|i| i.item_kind_id != "demo.item.black-prayers");
-    let build_id = build.id.clone();
-    artifact.content.builds.push(build);
     let bear = artifact
         .content
         .actors
@@ -78,13 +26,15 @@ fn caster(class: &str, level: u16) -> Game {
     let content = Arc::new(rfb_content::ContentCatalog::from_artifact(
         rfb_content::encode_content(artifact.content).unwrap(),
     ));
-    let mut game =
-        Game::from_content_with_build(715, content, DEFAULT_WORLD_ID, &build_id).unwrap();
+    let mut game = Game::from_content_with_build(715, content, DEFAULT_WORLD_ID, build_id).unwrap();
     game.apply_player_experience(game.experience_required_for_level(level), &mut Vec::new());
     choose_human_talent_if_pending(&mut game);
     game.progress.attributes.intelligence = game.progress.attribute_potentials.intelligence;
     game.progress.maximum_attributes.intelligence = game.progress.attributes.intelligence;
     game.refresh_player_ability_state();
+    for resource in game.resources.values_mut() {
+        resource.current = resource.maximum;
+    }
     game.player.hp = game.effective_player_max_hp();
     clear_monsters(&mut game);
     game.player.position = Position { x: 10, y: 10 };
@@ -383,13 +333,11 @@ fn ch1_confusing_touch_survives_misses_and_is_consumed_by_a_real_melee_hit() {
         }
     }
     assert!(missed && applied && resisted);
-    let mut immune_target = base.generated_actor(
+    let immune_target = base.generated_actor(
         "test.chaos-target".into(),
         "demo.actor.adobe-golem",
         Position { x: 11, y: 10 },
     );
-    immune_target.hp = 10_000;
-    immune_target.max_hp = 10_000;
     base.entities[0] = immune_target;
     let immune = (0..2048)
         .find_map(|seed| {
@@ -440,3 +388,4 @@ fn ch1_invalid_target_does_not_arm_touch_or_spend_resources_or_rng() {
 mod ch2;
 mod ch3;
 mod ch4;
+mod ch5;

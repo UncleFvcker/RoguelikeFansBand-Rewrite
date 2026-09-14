@@ -1058,8 +1058,12 @@ fn ability_level_scaling_base_and_limit(
             AbilityLevelScalingField::IdentifyPower,
         ) => Some((u64::from(*full_identify_power), 1_000)),
         (
-            AbilityEffectDefinition::AreaDamage { radius, .. }
-            | AbilityEffectDefinition::LavaFlow { radius, .. }
+            // Invoke Logrus reaches radius 20 at the shared level-100 validation bound.
+            AbilityEffectDefinition::AreaDamage { radius, .. },
+            AbilityLevelScalingField::Radius,
+        ) => Some((u64::from(*radius), 32)),
+        (
+            AbilityEffectDefinition::LavaFlow { radius, .. }
             | AbilityEffectDefinition::InsanityCircle { radius, .. }
             | AbilityEffectDefinition::Hellfire { radius, .. }
             | AbilityEffectDefinition::LightArea { radius, .. }

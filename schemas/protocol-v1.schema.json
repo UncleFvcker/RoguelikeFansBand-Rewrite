@@ -523,6 +523,17 @@
         "id": {
           "type": "string"
         },
+        "itemSelectionCancelTarget": {
+          "description": "Submit this target when item selection is cancelled; absence means no cast.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TargetSelection"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "itemTargets": {
           "type": [
             "array",
@@ -1837,6 +1848,35 @@
             "swappedAttributes",
             "hpBefore",
             "hpAfter"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "clonedEntityId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "protected": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "clone-target"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "protected"
           ]
         },
         {
@@ -4339,6 +4379,42 @@
           "properties": {
             "type": {
               "type": "string",
+              "const": "clone-target"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "haste-target"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "heal-target"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
               "const": "swap-position"
             }
           },
@@ -4625,6 +4701,66 @@
             "entActorKindId",
             "radius",
             "durationTurns"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "chain-lightning"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "chaos-meteor-swarm"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "call-chaos"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "chaos-polymorph-self"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "call-void"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {
@@ -6248,6 +6384,30 @@
             "type",
             "statusKindId",
             "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "prepare-confusing-strike"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "destroy-adjacent-traps-and-doors"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {
@@ -9836,6 +9996,24 @@
             "type": {
               "type": "string",
               "const": "cancel-ability-direction"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "glyph": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "resolve-ability-glyph"
             }
           },
           "required": [
@@ -13844,6 +14022,17 @@
         "castResolution"
       ]
     },
+    "PendingAbilityGlyphDto": {
+      "type": "object",
+      "properties": {
+        "castResolution": {
+          "$ref": "#/$defs/AbilityCastResolutionDto"
+        }
+      },
+      "required": [
+        "castResolution"
+      ]
+    },
     "PendingMagicAbsorptionDto": {
       "type": "object",
       "properties": {
@@ -14287,6 +14476,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/PendingAbilityDirectionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pendingAbilityGlyph": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PendingAbilityGlyphDto"
             },
             {
               "type": "null"

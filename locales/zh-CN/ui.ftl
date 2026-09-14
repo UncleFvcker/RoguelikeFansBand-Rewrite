@@ -106,10 +106,10 @@ session-career-label = 职业
 session-first-realm-label = 第一领域
 session-second-realm-label = 第二领域
 session-selection-pending = 尚未完成选择
-session-mage-realms-help = 从现有九个领域中选择两个不同的领域。第一领域熟练度上限为大师，第二领域为专家。
-session-ranger-realms-help = 第一领域固定为自然，第二领域可选咒术、死亡、奥秘或恶魔。3级开始从书中随机学习法术，两个领域共用学习容量；第一领域熟练度上限为大师，第二领域为专家。
+session-mage-realms-help = 从现有十个领域中选择两个不同的领域。第一领域熟练度上限为大师，第二领域为专家。
+session-ranger-realms-help = 第一领域固定为自然，第二领域可选咒术、混沌、死亡、奥秘或恶魔。3级开始从书中随机学习法术，两个领域共用学习容量；第一领域熟练度上限为大师，第二领域为专家。
 session-priest-realms-help = 以感知施法，1级起拥有法力并从书中随机学习。生命或圣战为善良主领域，死亡或恶魔为邪恶主领域；两个领域不能重复或阵营相反。两个领域共用学习容量，第一领域熟练度上限为大师，第二领域为专家。
-session-warrior-mage-realms-help = 主领域固定为奥秘，第二领域可从含工艺在内的八个领域中选择。以智力施法，从双方书本中自主选择法术并重复研习，共用学习容量；主领域熟练度上限为大师，副领域为专家。25级开放两项生命与法力转换能力。
+session-warrior-mage-realms-help = 主领域固定为奥秘，第二领域可从含工艺、混沌在内的九个领域中选择。以智力施法，从双方书本中自主选择法术并重复研习，共用学习容量；主领域熟练度上限为大师，副领域为专家。25级开放两项生命与法力转换能力。
 session-priest-first-realm-help = 第一领域终身保留，决定善恶阵营与职业能力。确认后选择第二领域。
 session-priest-second-realm-help = 通过真实书本确认改换第二领域，会清除旧副领域的当前法术进度，并立即尝试随机学习。没有可学法术仍会保留改换，已消耗的学习容量不会返还。
 session-priest-good-help = 善良牧师使用未祝福的剑或长柄武器时，每把降低2点命中和伤害，并增加25个百分点的祈祷失败率。35级获得“祝福武器”；祝福可解除上述惩罚，但不提高武器熟练度上限。
@@ -1468,7 +1468,7 @@ casino-poker-no-pair = 无牌型
 
 session-career-craft-name = 工艺
 realm-craft-name = 工艺
-session-high-mage-available-realms = 当前可选九个领域。
+session-high-mage-available-realms = 当前可选十个领域。
 ability-target-element = 元素
 ability-element-target = 选择元素
 item-crafting-quantity-confirm = 这叠弹药数量超过 30，工艺有可能失败并消耗本次施法。继续吗？
@@ -1481,3 +1481,5 @@ object-list-open-chest = 开箱
 object-list-disarm-chest = 解除宝箱陷阱
 
 item-use-unavailable-confused = 你太混乱了！
+
+realm-chaos-name = 混沌

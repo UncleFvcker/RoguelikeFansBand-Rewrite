@@ -719,6 +719,10 @@ impl Game {
                         Some(self.magic_absorption_item_targets())
                     } else {
                         self.craft_ability_item_targets(&effective_ability)
+                            .map(|mut targets| {
+                                targets.sort_by(|left, right| left.item_id.cmp(&right.item_id));
+                                targets
+                            })
                     },
                     town_targets: matches!(ability.effect, AbilityEffectDefinition::TeleportTown)
                         .then(|| self.teleport_town_targets())

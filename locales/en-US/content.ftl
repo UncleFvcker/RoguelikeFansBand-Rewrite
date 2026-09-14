@@ -10824,3 +10824,78 @@ ability-demo-chaos-breathe-logrus-name = Breathe Logrus
 ability-demo-chaos-breathe-logrus-description = Fires a powerful ball of chaos.
 ability-demo-chaos-call-the-void-name = Call the Void
 ability-demo-chaos-call-the-void-description = Calls rockets, mana and nuclear waste in every direction; nearby walls can cause a destructive backlash.
+
+build-demo-mage-chaos-life-name = Mage · Chaos / Life
+build-demo-mage-chaos-life-description = Begin with Chaos and Life and their first spellbooks.
+
+build-demo-mage-life-chaos-name = Mage · Life / Chaos
+build-demo-mage-life-chaos-description = Begin with Life and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-sorcery-name = Mage · Chaos / Sorcery
+build-demo-mage-chaos-sorcery-description = Begin with Chaos and Sorcery and their first spellbooks.
+
+build-demo-mage-sorcery-chaos-name = Mage · Sorcery / Chaos
+build-demo-mage-sorcery-chaos-description = Begin with Sorcery and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-nature-name = Mage · Chaos / Nature
+build-demo-mage-chaos-nature-description = Begin with Chaos and Nature and their first spellbooks.
+
+build-demo-mage-nature-chaos-name = Mage · Nature / Chaos
+build-demo-mage-nature-chaos-description = Begin with Nature and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-death-name = Mage · Chaos / Death
+build-demo-mage-chaos-death-description = Begin with Chaos and Death and their first spellbooks.
+
+build-demo-mage-death-chaos-name = Mage · Death / Chaos
+build-demo-mage-death-chaos-description = Begin with Death and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-arcane-name = Mage · Chaos / Arcane
+build-demo-mage-chaos-arcane-description = Begin with Chaos and Arcane and their first spellbooks.
+
+build-demo-mage-arcane-chaos-name = Mage · Arcane / Chaos
+build-demo-mage-arcane-chaos-description = Begin with Arcane and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-craft-name = Mage · Chaos / Craft
+build-demo-mage-chaos-craft-description = Begin with Chaos and Craft and their first spellbooks.
+
+build-demo-mage-craft-chaos-name = Mage · Craft / Chaos
+build-demo-mage-craft-chaos-description = Begin with Craft and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-daemon-name = Mage · Chaos / Daemon
+build-demo-mage-chaos-daemon-description = Begin with Chaos and Daemon and their first spellbooks.
+
+build-demo-mage-daemon-chaos-name = Mage · Daemon / Chaos
+build-demo-mage-daemon-chaos-description = Begin with Daemon and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-crusade-name = Mage · Chaos / Crusade
+build-demo-mage-chaos-crusade-description = Begin with Chaos and Crusade and their first spellbooks.
+
+build-demo-mage-crusade-chaos-name = Mage · Crusade / Chaos
+build-demo-mage-crusade-chaos-description = Begin with Crusade and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-armageddon-name = Mage · Chaos / Armageddon
+build-demo-mage-chaos-armageddon-description = Begin with Chaos and Armageddon and their first spellbooks.
+
+build-demo-mage-armageddon-chaos-name = Mage · Armageddon / Chaos
+build-demo-mage-armageddon-chaos-description = Begin with Armageddon and Chaos and their first spellbooks.
+
+build-demo-high-mage-chaos-name = High-Mage · Chaos
+build-demo-high-mage-chaos-description = Begin with Chaos and their first spellbooks.
+
+build-demo-priest-life-chaos-name = Priest · Life / Chaos
+build-demo-priest-life-chaos-description = Begin with Life and Chaos and their first spellbooks.
+
+build-demo-priest-crusade-chaos-name = Priest · Crusade / Chaos
+build-demo-priest-crusade-chaos-description = Begin with Crusade and Chaos and their first spellbooks.
+
+build-demo-priest-death-chaos-name = Priest · Death / Chaos
+build-demo-priest-death-chaos-description = Begin with Death and Chaos and their first spellbooks.
+
+build-demo-priest-daemon-chaos-name = Priest · Daemon / Chaos
+build-demo-priest-daemon-chaos-description = Begin with Daemon and Chaos and their first spellbooks.
+
+build-demo-warrior-mage-arcane-chaos-name = Warrior-Mage · Arcane / Chaos
+build-demo-warrior-mage-arcane-chaos-description = Begin with Arcane and Chaos and their first spellbooks.
+
+build-demo-ranger-nature-chaos-name = Ranger · Nature / Chaos
+build-demo-ranger-nature-chaos-description = Begin with Nature and Chaos and their first spellbooks.

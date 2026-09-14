@@ -122,7 +122,7 @@ test("random session seeds combine two entropy words without truncation", () => 
 
 test("career leaves retain the existing class and realm mapping", () => {
   assert.equal(CAREER_GROUPS.length, 8);
-  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 129);
+  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 154);
   assert.equal(CAREER_GROUPS.find(group => group.id === "device").options[0].id, "demo.build.magic-eater");
   assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.berserker", "demo.build.duelist"]);
   assert.equal(CAREER_GROUPS.find(group => group.id === "mind").options[0].id, "demo.build.mindcrafter");
@@ -138,7 +138,7 @@ test("career leaves retain the existing class and realm mapping", () => {
       assert.equal(entry.nameKey, cls.nameKey);
       assert.equal(entry.descriptionKey, cls.descriptionKey);
       if ("children" in entry) {
-        assert.equal(leaves.length, entry.id === "mage" ? 72 : entry.id === "priest" ? 24 : entry.id === "warrior-mage" ? 8 : entry.id === "ranger" ? 4 : entry.id === "high-mage" ? 9 : entry.id === "paladin" ? 4 : 1);
+        assert.equal(leaves.length, entry.id === "mage" ? 90 : entry.id === "priest" ? 28 : entry.id === "warrior-mage" ? 9 : entry.id === "ranger" ? 5 : entry.id === "high-mage" ? 10 : entry.id === "paladin" ? 4 : 1);
         if (entry.id === "mage") {
           assert.ok(MAGE_REALMS.includes(build.firstRealmId));
           assert.ok(MAGE_REALMS.includes(build.secondRealmId));
@@ -168,25 +168,25 @@ test("Warrior-Mage hybrid menu matches all formal fixed-Arcane builds including 
   const entry = CAREER_GROUPS.find(group => group.id === "hybrid").options.find(entry => entry.id === "warrior-mage");
   const directory = new URL("../../packs/rfb-demo-original/builds/", import.meta.url);
   const formal = readdirSync(directory).filter(file => file.startsWith("warrior-mage-")).map(file => JSON.parse(readFileSync(new URL(file, directory), "utf8")));
-  assert.equal(formal.length, 8);
+  assert.equal(formal.length, 9);
   assert.deepEqual(creationLeaves([entry]).map(leaf => leaf.id).sort(), formal.map(build => build.id).sort());
-  for (const second of ["arcane", "chaos", "trump", "law"]) assert.equal(PLAYTEST_BUILD_IDS.includes(`demo.build.warrior-mage-arcane-${second}`), false);
+  for (const second of ["arcane", "trump", "law"]) assert.equal(PLAYTEST_BUILD_IDS.includes(`demo.build.warrior-mage-arcane-${second}`), false);
 });
 
-test("Priest menu exposes exactly the 24 formal pairs and excludes absent, repeated and opposing realms", () => {
+test("Priest menu exposes exactly the 28 formal pairs and excludes absent, repeated and opposing realms", () => {
   const priest = CAREER_GROUPS.find(group => group.id === "prayer").options[0];
   const directory = new URL("../../packs/rfb-demo-original/builds/", import.meta.url);
   const formal = readdirSync(directory).filter(file => file.startsWith("priest-")).map(file => JSON.parse(readFileSync(new URL(file, directory), "utf8")));
-  assert.equal(formal.length, 24);
+  assert.equal(formal.length, 28);
   assert.deepEqual(creationLeaves([priest]).map(leaf => leaf.id).sort(), formal.map(build => build.id).sort());
   for (const branch of priest.children) {
-    assert.equal(branch.children.length, 6);
+    assert.equal(branch.children.length, 7);
     for (const locale of ["en-US", "zh-CN"]) {
       const ui = readFileSync(new URL(`../../locales/${locale}/ui.ftl`, import.meta.url), "utf8");
       for (const key of [branch.nameKey, branch.descriptionKey, branch.childLabelKey, ...branch.notes]) assert.ok(ui.includes(`${key} =`));
     }
   }
-  for (const pair of ["life-life", "life-death", "crusade-daemon", "death-life", "daemon-crusade", "nature-sorcery", "life-chaos", "death-trump", "daemon-law"]) {
+  for (const pair of ["life-life", "life-death", "crusade-daemon", "death-life", "daemon-crusade", "nature-sorcery", "life-trump", "death-trump", "daemon-law"]) {
     assert.equal(PLAYTEST_BUILD_IDS.includes(`demo.build.priest-${pair}`), false);
   }
 });
@@ -195,9 +195,9 @@ test("Mage realm branches exclude repeats and match every formal ordered Build",
   const mage = CAREER_GROUPS.find(group => group.id === "magic").options.find(entry => entry.id === "mage");
   const sourceClass = JSON.parse(readFileSync(new URL("../../packs/rfb-demo-original/classes/mage.json", import.meta.url), "utf8"));
   assert.deepEqual([...MAGE_REALMS].sort(), sourceClass.castingProfile.realmProfiles.map(realm => realm.realmId).sort());
-  assert.equal(mage.children.length, 9);
+  assert.equal(mage.children.length, 10);
   for (const first of mage.children) {
-    assert.equal(first.children.length, 8);
+    assert.equal(first.children.length, 9);
     const firstId = first.id.slice("mage-".length);
     assert.deepEqual(first.children.map(second => second.id), MAGE_REALMS.filter(second => second !== firstId).map(second => `demo.build.mage-${firstId}-${second}`));
     for (const locale of ["en-US", "zh-CN"]) {

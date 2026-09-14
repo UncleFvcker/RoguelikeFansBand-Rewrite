@@ -259,6 +259,8 @@ fn n2_all_artifacts_generate_activate_and_resume_equipped_cooldowns() {
             );
         }
         game.reveal_current_visibility();
+        let initial_charge = charges(&game, &id);
+        assert!(source == 159 || initial_charge == 1);
         let failure = (0..1000)
             .find(|s| (5..10).contains(&RfbRng::seeded(*s).bounded(100)))
             .unwrap();
@@ -275,14 +277,18 @@ fn n2_all_artifacts_generate_activate_and_resume_equipped_cooldowns() {
             )),
             "{kind}: failure gate {events:?}"
         );
-        assert_eq!(charges(&failed, &id), 1, "{kind}");
+        assert_eq!(charges(&failed, &id), initial_charge, "{kind}");
         if target.is_some() || glyph.is_some() {
             let mut cancelled = game.clone();
             cancelled.rng = RfbRng::seeded(success_seed());
             let mut expected_rng = cancelled.rng.clone();
             expected_rng.bounded(100);
             activate(&mut cancelled, &id, None, None);
-            assert_eq!(charges(&cancelled, &id), 1, "{kind}: cancelled charge");
+            assert_eq!(
+                charges(&cancelled, &id),
+                initial_charge,
+                "{kind}: cancelled charge"
+            );
             assert_eq!(
                 cancelled.rng, expected_rng,
                 "{kind}: cancel only checks device"
@@ -307,7 +313,11 @@ fn n2_all_artifacts_generate_activate_and_resume_equipped_cooldowns() {
             "{kind}: {left:?}"
         );
         assert_eq!(game.state_hash(), restored.state_hash(), "{kind}");
-        assert_eq!(charges(&game, &id), u32::from(source == 159), "{kind}");
+        assert_eq!(
+            charges(&game, &id),
+            if source == 159 { initial_charge } else { 0 },
+            "{kind}"
+        );
         match source {
             98 | 211 => assert_eq!(
                 game.terrain_at(Position { x: 11, y: 10 }),

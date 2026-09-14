@@ -289,6 +289,242 @@
           {"abilityId": "demo.ability.daemon-send-to-hell", "minimumLevel": 99, "resourceCost": 0, "baseFailurePercent": 0, "firstSuccessExperience": 0},
           {"abilityId": "demo.ability.daemon-polymorph-demonlord", "minimumLevel": 99, "resourceCost": 0, "baseFailurePercent": 0, "firstSuccessExperience": 0}
         ]
+      },
+      {
+        "realmId": "chaos",
+        "abilityBookIds": [
+          "demo.ability-book.sign-of-chaos",
+          "demo.ability-book.chaos-mastery",
+          "demo.ability-book.chaos-channels",
+          "demo.ability-book.armageddon-tome"
+        ],
+        "learningCapacityBonus": 0,
+        "abilityOverrides": [
+          {
+            "abilityId": "demo.ability.chaos-magic-missile",
+            "minimumLevel": 3,
+            "resourceCost": 1,
+            "baseFailurePercent": 20,
+            "firstSuccessExperience": 3
+          },
+          {
+            "abilityId": "demo.ability.chaos-trap-door-destruction",
+            "minimumLevel": 3,
+            "resourceCost": 3,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 6
+          },
+          {
+            "abilityId": "demo.ability.chaos-flash-of-light",
+            "minimumLevel": 5,
+            "resourceCost": 3,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 10
+          },
+          {
+            "abilityId": "demo.ability.chaos-confusing-touch",
+            "minimumLevel": 7,
+            "resourceCost": 5,
+            "baseFailurePercent": 45,
+            "firstSuccessExperience": 14
+          },
+          {
+            "abilityId": "demo.ability.chaos-mana-burst",
+            "minimumLevel": 14,
+            "resourceCost": 12,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 28
+          },
+          {
+            "abilityId": "demo.ability.chaos-fire-bolt",
+            "minimumLevel": 20,
+            "resourceCost": 16,
+            "baseFailurePercent": 50,
+            "firstSuccessExperience": 120
+          },
+          {
+            "abilityId": "demo.ability.chaos-fist-of-force",
+            "minimumLevel": 25,
+            "resourceCost": 21,
+            "baseFailurePercent": 60,
+            "firstSuccessExperience": 75
+          },
+          {
+            "abilityId": "demo.ability.chaos-teleport-self",
+            "minimumLevel": 25,
+            "resourceCost": 22,
+            "baseFailurePercent": 60,
+            "firstSuccessExperience": 75
+          },
+          {
+            "abilityId": "demo.ability.chaos-wonder",
+            "minimumLevel": 27,
+            "resourceCost": 23,
+            "baseFailurePercent": 60,
+            "firstSuccessExperience": 135
+          },
+          {
+            "abilityId": "demo.ability.chaos-chaos-bolt",
+            "minimumLevel": 30,
+            "resourceCost": 25,
+            "baseFailurePercent": 60,
+            "firstSuccessExperience": 240
+          },
+          {
+            "abilityId": "demo.ability.chaos-sonic-boom",
+            "minimumLevel": 33,
+            "resourceCost": 30,
+            "baseFailurePercent": 70,
+            "firstSuccessExperience": 429
+          },
+          {
+            "abilityId": "demo.ability.chaos-doom-bolt",
+            "minimumLevel": 35,
+            "resourceCost": 31,
+            "baseFailurePercent": 70,
+            "firstSuccessExperience": 350
+          },
+          {
+            "abilityId": "demo.ability.chaos-fireball",
+            "minimumLevel": 37,
+            "resourceCost": 35,
+            "baseFailurePercent": 75,
+            "firstSuccessExperience": 555
+          },
+          {
+            "abilityId": "demo.ability.chaos-teleport-other",
+            "minimumLevel": 39,
+            "resourceCost": 29,
+            "baseFailurePercent": 65,
+            "firstSuccessExperience": 195
+          },
+          {
+            "abilityId": "demo.ability.chaos-word-of-destruction",
+            "minimumLevel": 43,
+            "resourceCost": 30,
+            "baseFailurePercent": 95,
+            "firstSuccessExperience": 645
+          },
+          {
+            "abilityId": "demo.ability.chaos-invoke-logrus",
+            "minimumLevel": 48,
+            "resourceCost": 50,
+            "baseFailurePercent": 85,
+            "firstSuccessExperience": 1440
+          },
+          {
+            "abilityId": "demo.ability.chaos-polymorph-other",
+            "minimumLevel": 22,
+            "resourceCost": 20,
+            "baseFailurePercent": 60,
+            "firstSuccessExperience": 660
+          },
+          {
+            "abilityId": "demo.ability.chaos-chain-lightning",
+            "minimumLevel": 25,
+            "resourceCost": 25,
+            "baseFailurePercent": 70,
+            "firstSuccessExperience": 500
+          },
+          {
+            "abilityId": "demo.ability.chaos-arcane-binding",
+            "minimumLevel": 28,
+            "resourceCost": 25,
+            "baseFailurePercent": 80,
+            "firstSuccessExperience": 1260
+          },
+          {
+            "abilityId": "demo.ability.chaos-disintegrate",
+            "minimumLevel": 35,
+            "resourceCost": 32,
+            "baseFailurePercent": 70,
+            "firstSuccessExperience": 1225
+          },
+          {
+            "abilityId": "demo.ability.chaos-alter-reality",
+            "minimumLevel": 38,
+            "resourceCost": 35,
+            "baseFailurePercent": 85,
+            "firstSuccessExperience": 5700
+          },
+          {
+            "abilityId": "demo.ability.chaos-magic-rocket",
+            "minimumLevel": 50,
+            "resourceCost": 50,
+            "baseFailurePercent": 90,
+            "firstSuccessExperience": 7500
+          },
+          {
+            "abilityId": "demo.ability.chaos-chaos-branding",
+            "minimumLevel": 48,
+            "resourceCost": 100,
+            "baseFailurePercent": 90,
+            "firstSuccessExperience": 12000
+          },
+          {
+            "abilityId": "demo.ability.chaos-summon-demon",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          },
+          {
+            "abilityId": "demo.ability.chaos-gravity-beam",
+            "minimumLevel": 33,
+            "resourceCost": 33,
+            "baseFailurePercent": 66,
+            "firstSuccessExperience": 264
+          },
+          {
+            "abilityId": "demo.ability.chaos-meteor-swarm",
+            "minimumLevel": 40,
+            "resourceCost": 45,
+            "baseFailurePercent": 85,
+            "firstSuccessExperience": 1400
+          },
+          {
+            "abilityId": "demo.ability.chaos-flame-strike",
+            "minimumLevel": 42,
+            "resourceCost": 42,
+            "baseFailurePercent": 75,
+            "firstSuccessExperience": 1764
+          },
+          {
+            "abilityId": "demo.ability.chaos-call-chaos",
+            "minimumLevel": 48,
+            "resourceCost": 48,
+            "baseFailurePercent": 85,
+            "firstSuccessExperience": 4800
+          },
+          {
+            "abilityId": "demo.ability.chaos-polymorph-self",
+            "minimumLevel": 42,
+            "resourceCost": 75,
+            "baseFailurePercent": 95,
+            "firstSuccessExperience": 10500
+          },
+          {
+            "abilityId": "demo.ability.chaos-mana-storm",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          },
+          {
+            "abilityId": "demo.ability.chaos-breathe-logrus",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          },
+          {
+            "abilityId": "demo.ability.chaos-call-the-void",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          }
+        ]
       }
     ],
     "firstSpellLevel": 3,

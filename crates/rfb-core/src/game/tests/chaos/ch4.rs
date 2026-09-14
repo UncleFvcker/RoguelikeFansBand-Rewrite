@@ -322,7 +322,9 @@ fn ch4_call_chaos_paid_cancel_waits_one_action_and_rejects_forged_saves() {
     let mut restored =
         Game::from_save_with_content(pending.to_save(), pending.content.clone()).unwrap();
     let mut direct = pending.clone();
-    let rng = direct.rng.clone();
+    let mut rng = direct.rng.clone();
+    // Finishing a paid book spell still performs its one Chance virtue roll.
+    rng.bounded(100);
     direct
         .resolve_pending_call_chaos(None, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
         .unwrap();
@@ -540,6 +542,7 @@ fn ch4_void_near_wall_destroys_or_vanishes_then_hurts_but_town_is_protected() {
     let wall = base.index(Position { x: 11, y: 10 }).unwrap();
     base.terrain[wall] = "demo.terrain.wall".into();
     base.vault_cells[wall] = true;
+    base.terrain[0] = "demo.terrain.permanent-wall".into();
     let terrain = base.terrain.clone();
     for vanish in [false, true] {
         let (game, events) = cast_where(&base, &id, TargetSelection::SelfTarget, |g, e| {

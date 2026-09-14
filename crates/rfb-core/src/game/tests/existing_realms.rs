@@ -4,7 +4,7 @@ use super::support::{
 };
 use super::*;
 
-fn prepared(build: &str) -> Game {
+pub(super) fn prepared(build: &str) -> Game {
     let mut game = Game::new_with_build(925, build).unwrap();
     clear_monsters(&mut game);
     game.apply_player_experience(game.experience_required_for_level(50), &mut Vec::new());
@@ -57,6 +57,10 @@ fn existing_realms_new_builds_generate_pick_up_study_cast_and_resume() {
     let content = load_built_in_content().unwrap();
     let builds: Vec<_> = content
         .builds()
+        .filter(|b| {
+            b.first_realm_id.as_deref() != Some("chaos")
+                && b.second_realm_id.as_deref() != Some("chaos")
+        })
         .filter(|b| match b.class_id.as_str() {
             "demo.class.high-mage" => {
                 !matches!(b.first_realm_id.as_deref(), Some("death" | "craft"))

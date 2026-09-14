@@ -124,6 +124,10 @@ Q2–Q5代表流程使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --
 
 报告、截图和存档在 `test-results/ordinary-equipment/`。准备后的交互与保存证据不代表自然取得七件稀有装备或自然练级；完整源分配、其他成员、概率与致死边界由核心验证。普通镰刀不自动返回，共用返回反噬仅在核心准备的返回状态中验证；未开放的返回能力入口和 Monster Sword 内部 kind111 不在桌面范围内。
 
+## 混沌领域桌面验收
+
+在`web`运行`npm run build:standalone:debug`，随后从仓库根执行`node web/e2e/ordinary-equipment-standalone.e2e.mjs --chaos`。构建、导出和桌面脚本共用`CARGO_TARGET_DIR=.../target/n1-validation`与`CARGO_BUILD_BUILD_DIR=.../target/n1-validation-build`。普通产物不启用WebDriver准备IPC；ignored核心导出仅准备合法等级、书本、目标和种子，产品UI完成学习、施法、选物、追加方向及等待，27步各经原生保存恢复核对哈希。中英文25入口和8个场景见`test-results/chaos/report.json`，来源差异与核心验收见[混沌计划](chaos-realm-plan.md#ch5开放与统一验收2026-09-14)。这不是自然练级、自然获取或Android验收。
+
 ## 随机荒野地牢桌面专项
 
 在 `web` 执行：

@@ -4,7 +4,7 @@
   "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
-  "seed": "0x4d494e4552494356",
+  "seed": "0x4d494e455249435e",
   "preconditions": {
     "world": "demo.world.middle-earth",
     "debugClearEntities": true,
@@ -50,7 +50,7 @@
     "finalState": {
       "goldPiles": {
         "generated.gold.1": {
-          "amount": 24,
+          "amount": 87,
           "discovered": true,
           "position": {
             "x": 95,
@@ -75,7 +75,7 @@
         "y": 33
       },
       "revision": 2,
-      "stateHash": "e9d485b25dd8c44a63b944e0e233d9a37315fe5fda6a79d5ffc31df557d62d87",
+      "stateHash": "088bb592c4b879cca3edff65d328f778bcfe96003c4365cd82d01d832b563da3",
       "turn": 2
     },
     "events": [
@@ -106,6 +106,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "e9d485b25dd8c44a63b944e0e233d9a37315fe5fda6a79d5ffc31df557d62d87"
+    "saveRoundTripStateHash": "088bb592c4b879cca3edff65d328f778bcfe96003c4365cd82d01d832b563da3"
   }
 }

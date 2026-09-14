@@ -39,7 +39,7 @@ fn successful_device_seed(game: &mut Game) {
 #[test]
 fn every_build_claims_and_uses_the_source_thieves_and_orc_rewards() {
     let builds = warrior_mage_build_ids();
-    assert_eq!(builds.len(), 8);
+    assert_eq!(builds.len(), 9);
     for build in builds {
         for (slug, kind) in [
             ("thieves-hideout", "demo.item.long-sword"),

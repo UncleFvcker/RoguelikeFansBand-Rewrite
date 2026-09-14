@@ -19,8 +19,20 @@ pub(super) fn dungeon(game: &mut Game) {
         .find(|f| f.id == "demo.floor.warrens-depth-1")
         .unwrap()
         .clone();
-    let floor = game.generate_procedural_floor(&definition, None).unwrap();
-    game.activate_floor(floor, Vec::new());
+    game.dungeon_states
+        .get_mut("demo.dungeon.warrens")
+        .unwrap()
+        .next_instance_ordinal = 1;
+    let floor = game
+        .generate_procedural_floor(&definition, Some("demo.dungeon.warrens.instance.1".into()))
+        .unwrap();
+    let carried = game
+        .items
+        .iter()
+        .filter(|item| !matches!(item.location, ItemLocation::Ground(_)))
+        .cloned()
+        .collect();
+    game.activate_floor(floor, carried);
     clear_monsters(game);
     game.player.position = Position { x: 10, y: 10 };
     for y in 6..=17 {
@@ -30,6 +42,7 @@ pub(super) fn dungeon(game: &mut Game) {
         }
     }
     game.glow.fill(true);
+    game.reveal_current_visibility();
 }
 
 fn chance(game: &mut Game, value: i16) {

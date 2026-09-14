@@ -355,9 +355,15 @@ fn forced_fall_moves_to_an_adjacent_cell_and_collision_stays_mounted() {
 
 #[test]
 fn damage_fall_trains_riding_and_mount_death_uses_existing_cleanup() {
-    let mut damaged = mounted_game(428, 20);
-    let mut events = Vec::new();
-    assert!(damaged.resolve_riding_fall(200, false, &mut events, &mut BTreeSet::new(),));
+    let base = mounted_game(428, 20);
+    let damaged = (0..256)
+        .find_map(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(seed);
+            game.resolve_riding_fall(200, false, &mut Vec::new(), &mut BTreeSet::new())
+                .then_some(game)
+        })
+        .expect("damage can cause an unforced fall");
     assert_eq!(damaged.riding_actor_id, None);
     assert_eq!(damaged.progress.riding_proficiency, 6);
 

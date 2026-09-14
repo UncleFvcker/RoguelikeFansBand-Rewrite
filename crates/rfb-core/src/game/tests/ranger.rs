@@ -96,8 +96,8 @@ fn at_level(build: &str, level: u16) -> Game {
 }
 
 #[test]
-fn four_births_have_source_equipment_books_and_no_early_magic() {
-    for second in ["sorcery", "death", "arcane", "daemon"] {
+fn five_births_have_source_equipment_books_and_no_early_magic() {
+    for second in ["sorcery", "chaos", "death", "arcane", "daemon"] {
         let id = format!("demo.build.ranger-nature-{second}");
         let game = Game::new_with_build(925, &id).unwrap();
         let snapshot = game.snapshot();
@@ -333,7 +333,7 @@ fn ranger_spell_parameters_preserve_unavailable_slots_and_orb_scaling() {
                 .iter()
                 .map(|realm| realm.ability_overrides.len())
                 .sum::<usize>(),
-            160
+            192
         );
         assert_eq!(
             profile
@@ -342,7 +342,7 @@ fn ranger_spell_parameters_preserve_unavailable_slots_and_orb_scaling() {
                 .flat_map(|realm| &realm.ability_overrides)
                 .filter(|spell| spell.minimum_level == 99)
                 .count(),
-            15
+            19
         );
         let detect = profile
             .realm_profiles

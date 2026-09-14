@@ -2202,7 +2202,7 @@ fn old_man_willow_unlocks_after_crows_nest_and_rewards_an_elemental_ring() {
         game.task_states[task_id].status,
         TaskStatusKindDto::Completed
     );
-    assert_eq!(game.rng_draw_counter(), before_draws + 10);
+    assert_eq!(game.rng_draw_counter(), before_draws + 4);
     let reward = game
         .items
         .iter()

@@ -592,10 +592,14 @@ fn neutral_tonberry_content() -> Arc<ContentCatalog> {
     let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
     let race = content
         .races
-        .iter_mut()
+        .iter()
         .find(|race| race.id == "rfb-legacy.race.tonberry")
-        .unwrap();
+        .unwrap()
+        .clone();
+    let mut race = race;
     race.id = "test.race.tonberry-control".to_owned();
+    race.legacy_index = None;
+    content.races.push(race);
     Arc::new(ContentCatalog::from_artifact(
         rfb_content::encode_content(content).unwrap(),
     ))
@@ -669,6 +673,17 @@ fn tonberry_damage_is_added_after_weapon_criticals_and_does_not_change_shooting(
         .unwrap();
         events
     };
+    let seed = (0..128)
+        .find(|seed| {
+            let mut trial = archer.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            shoot(&mut trial)
+                .iter()
+                .any(|event| matches!(event, DomainEvent::ProjectileHit { .. }))
+        })
+        .expect("a real bow hit must be reachable");
+    archer.rng = RfbRng::seeded(seed);
+    control.rng = archer.rng.clone();
     let events = shoot(&mut archer);
     assert_eq!(events, shoot(&mut control));
     assert!(

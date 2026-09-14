@@ -22,6 +22,7 @@ fn effect_can_affect_ground_items(effect: &AbilityEffectDefinition) -> bool {
         | AbilityEffectDefinition::ChaosMeteorSwarm
         | AbilityEffectDefinition::CallChaos
         | AbilityEffectDefinition::CallVoid
+        | AbilityEffectDefinition::AreaDestruction { .. }
         | AbilityEffectDefinition::Damage { .. }
         | AbilityEffectDefinition::Malediction { .. }
         | AbilityEffectDefinition::AreaDamage { .. }
@@ -185,7 +186,11 @@ pub(super) fn validate_abilities(
                     ..
                 } => {
                     (((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides))
-                        || (*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0))
+                        || (*damage_dice == 0
+                            && *damage_sides == 0
+                            && (*damage_bonus > 0
+                                // The casting boundary supplies 3/4 of current HP.
+                                || ability.id == "demo.ability.chaos-breathe-logrus")))
                         && *damage_bonus <= 10_000
                         && *radius <= 16
                         && target_category.as_ref().is_none_or(|category| {

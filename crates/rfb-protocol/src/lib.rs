@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.266";
+pub const PROTOCOL_VERSION: &str = "1.267";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 28;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 29;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -7051,6 +7051,8 @@ mod tests {
         current["entities"][0]["friendly"] = serde_json::json!(false);
         current["entities"][0]["noPet"] = serde_json::json!(false);
         current["entities"][0]["noGenocide"] = serde_json::json!(false);
+        current["entities"][0]["cloned"] = serde_json::json!(false);
+        current["entities"][0]["noDestruction"] = serde_json::json!(false);
         current["entities"][0]["minorSlow"] = serde_json::json!(0);
         current["items"][0]["permanentDestructionImmunities"] = serde_json::json!([]);
         current["inventory"][0]["permanentDestructionImmunities"] = serde_json::json!([]);

@@ -37,7 +37,7 @@
                 "captureBall": false,
                 "displayNameKey": "item-demo-ration-of-food-name",
                 "equipmentSlot": null,
-                "id": "generated.item.203",
+                "id": "generated.item.204",
                 "identification": "unexamined",
                 "kindId": "demo.item.ration-of-food",
                 "knowledge": "aware",
@@ -61,7 +61,7 @@
                 "weightTenthsPound": 10
               },
               "displayNameKey": "item-demo-ration-of-food-name",
-              "id": "generated.item.203",
+              "id": "generated.item.204",
               "kindId": "demo.item.ration-of-food",
               "maximumQuantity": 1,
               "quantity": 1,
@@ -79,7 +79,7 @@
       },
       "lastCommandSeq": 1,
       "revision": 1,
-      "stateHash": "954c848b9ca12a973e67421c753150cd1e553748f0ffbe18f2dc870fe0cccef8",
+      "stateHash": "7091da79b13382fc0b5c460a39eef1d767dbbf94ac64d6776f4ded2a6c733649",
       "turn": 1
     },
     "events": [
@@ -88,7 +88,7 @@
         "messageKey": "home-deposit-success",
         "args": {
           "facility": "demo.town-facility.outpost-home",
-          "item": "generated.item.203",
+          "item": "generated.item.204",
           "quantity": "1",
           "target": "demo.item.ration-of-food"
         }
