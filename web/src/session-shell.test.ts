@@ -37,6 +37,7 @@ test("new character creation exposes all formal class slices", () => {
     "demo.build.cavalry",
     "demo.build.sniper",
     "demo.build.mindcrafter",
+    "demo.build.necromancer",
     "demo.build.magic-eater",
     "demo.build.berserker",
     "demo.build.duelist",
@@ -122,7 +123,7 @@ test("random session seeds combine two entropy words without truncation", () => 
 
 test("career leaves retain the existing class and realm mapping", () => {
   assert.equal(CAREER_GROUPS.length, 8);
-  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 181);
+  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 182);
   assert.equal(CAREER_GROUPS.find(group => group.id === "device").options[0].id, "demo.build.magic-eater");
   assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.berserker", "demo.build.duelist"]);
   assert.equal(CAREER_GROUPS.find(group => group.id === "mind").options[0].id, "demo.build.mindcrafter");
@@ -159,7 +160,7 @@ test("career leaves retain the existing class and realm mapping", () => {
         } else assert.equal(build.firstRealmId, leaf.id.split("-").at(-1));
         assert.equal(leaf.descriptionKey, build.descriptionKey);
         assert.ok(!PLAYTEST_BUILD_IDS.includes(entry.id));
-      } else assert.equal(build.firstRealmId, undefined);
+      } else assert.equal(build.firstRealmId, leaf.id === "demo.build.necromancer" ? "necromancy" : undefined);
     }
   }
 });

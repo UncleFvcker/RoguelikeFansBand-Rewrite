@@ -262,7 +262,12 @@ fn tailored_candidate(game: &Game, item: &ItemDefinition) -> bool {
         }
         55 | 65 | 66 => matches!(
             class,
-            Some("demo.class.mage" | "demo.class.high-mage" | "demo.class.magic-eater")
+            Some(
+                "demo.class.mage"
+                    | "demo.class.high-mage"
+                    | "demo.class.magic-eater"
+                    | "demo.class.necromancer"
+            )
         ),
         90..=95 | 97..=101 | 104..=109 => {
             base.sval >= 2
@@ -298,7 +303,12 @@ fn tailored_category(game: &mut Game) -> Option<Category> {
         Some(Category::Book)
     } else if matches!(
         class,
-        Some("demo.class.mage" | "demo.class.high-mage" | "demo.class.magic-eater")
+        Some(
+            "demo.class.mage"
+                | "demo.class.high-mage"
+                | "demo.class.magic-eater"
+                | "demo.class.necromancer"
+        )
     ) && game.rng.bounded(7) == 0
     {
         Some(Category::Device)

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.necromancer-enslave-undead",
+  "nameKey": "ability-demo-necromancer-enslave-undead-name",
+  "descriptionKey": "ability-demo-necromancer-enslave-undead-description",
+  "target": {
+    "modes": [
+      "direction",
+      "entity",
+      "position"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  },
+  "abilityProgramId": "demo.ability-program.necromancer-enslave-undead",
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "control-power",
+      "levelOffset": 1,
+      "multiplier": 3,
+      "divisor": 1
+    }
+  ],
+  "spellPowerFields": [
+    {
+      "effectIndex": 0,
+      "field": "control-power"
+    }
+  ],
+  "tags": [
+    "necromancer",
+    "class-power"
+  ]
+}

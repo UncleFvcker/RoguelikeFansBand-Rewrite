@@ -27,6 +27,7 @@ pub(super) enum TerrainChangeSource {
     Monster,
     Projectile,
     Disintegration,
+    Destruction,
 }
 
 pub(super) enum TerrainDigOutcome {
@@ -374,12 +375,14 @@ impl Game {
         if interaction.opens && terrain.open_to_terrain_id.is_some() {
             if power == 0 {
                 self.terrain[terrain_index] = terrain.open_to_terrain_id?;
+                self.revealed_terrain.remove(&position);
                 changed.insert(position);
                 events.push(DomainEvent::DoorOpened { position });
                 return Some(false);
             }
             if original_roll(self) > u64::from(power) {
                 self.terrain[terrain_index] = terrain.monster_unlock_to_terrain_id?;
+                self.revealed_terrain.remove(&position);
                 changed.insert(position);
                 events.push(DomainEvent::DoorUnlocked { position });
                 return Some(false);
@@ -397,6 +400,7 @@ impl Game {
                     _ => terrain.bash_to_terrain_id?,
                 };
                 self.terrain[terrain_index] = target;
+                self.revealed_terrain.remove(&position);
                 changed.insert(position);
                 events.push(DomainEvent::DoorBashedOpen { position });
                 return Some(true);

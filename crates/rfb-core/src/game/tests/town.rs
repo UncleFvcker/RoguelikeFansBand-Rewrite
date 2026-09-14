@@ -1338,6 +1338,16 @@ fn zul_eddies_failure_and_abandonment_never_unlock_town_teleport() {
     let task = "demo.task.zul-eddies";
     for abandon in [false, true] {
         let mut game = town_facility_game(42, "demo.build.warrior", tower);
+        // This exercises task exit state, not survival of the entry turn.
+        game.apply_player_melee_status(STATUS_INVULNERABILITY, 1000, "test.task-lifecycle");
+        game.player
+            .statuses
+            .iter_mut()
+            .find(|status| status.kind_id == STATUS_INVULNERABILITY)
+            .unwrap()
+            .granted_modifiers
+            .max_hp = 10_000;
+        game.player.hp = game.effective_player_max_hp();
         support::clear_monsters(&mut game);
         dispatch_next(
             &mut game,
@@ -6350,6 +6360,8 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             ("demo.item.chaos-mastery", 1_350),
             ("demo.item.conjurings-and-tricks", 135),
             ("demo.item.deck-of-many-things", 1_350),
+            ("demo.item.stench-of-death", 135),
+            ("demo.item.sepulchral-ways", 1_350),
         ])
     );
     let book = shop

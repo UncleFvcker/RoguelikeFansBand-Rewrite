@@ -1997,6 +1997,9 @@ export function createPresentationFormatter(
   }
 
   function statusName(statusId: string | undefined): string {
+    if (statusId === "rfb.status.necromancy-cloak" || statusId === "rfb.status.necromancy-shield") {
+      return localization.format(`status-${statusId.slice(11)}-name`);
+    }
     const craftStatuses: Record<string, string> = {
       "hero": "heroism", "berserk": "berserk", "resist-cold": "resist-cold", "resist-fire": "resist-fire",
       "resist-electricity": "resist-electricity", "resist-acid": "resist-acid", "resist-poison": "resist-poison",

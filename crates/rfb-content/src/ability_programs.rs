@@ -210,6 +210,18 @@ fn ability_program_input_accepts_step(
     input: AbilityProgramInputDefinition,
     effect: &AbilityEffectDefinition,
 ) -> bool {
+    if let AbilityEffectDefinition::Necromancy { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::Item => *spell == 11,
+            AbilityProgramInputDefinition::CastTarget => {
+                matches!(spell, 0 | 1 | 4 | 5 | 7 | 8 | 12..=21 | 24 | 27 | 30)
+            }
+            AbilityProgramInputDefinition::SelfTarget => {
+                matches!(spell, 2 | 3 | 6 | 9 | 10 | 22 | 23 | 25 | 26 | 28 | 29 | 31)
+            }
+            _ => false,
+        };
+    }
     match input {
         AbilityProgramInputDefinition::SelfTarget => {
             matches!(
@@ -484,7 +496,13 @@ fn ability_program_input_matches_target(
                 && (!target
                     .modes
                     .contains(&AbilityTargetModeDefinition::SelfTarget)
-                    || matches!(effect, AbilityEffectDefinition::TrumpSummoning { category } if category != "kamikaze"))
+                    || matches!(effect, AbilityEffectDefinition::TrumpSummoning { category } if category != "kamikaze")
+                    || matches!(
+                        effect,
+                        AbilityEffectDefinition::Necromancy {
+                            spell: 1 | 5 | 8 | 14 | 16..=21
+                        }
+                    ))
                 && !target.modes.contains(&AbilityTargetModeDefinition::Item)
                 && (1..=64).contains(&target.range)
                 && (target.requires_line_of_effect

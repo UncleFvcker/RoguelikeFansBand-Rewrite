@@ -132,6 +132,12 @@ Q2–Q5代表流程使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --
 
 王牌领域使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --trump`。共享应用数据中的博物馆档案使用了当前分支不识别的格式，本次使用独立应用标识的普通standalone，保留原档案。构建及脚本设置 `CARGO_TARGET_DIR=.../target/trump-desktop-validation`、`CARGO_BUILD_BUILD_DIR=.../target/n1-validation-build`；在 `target/trump-standalone.conf.json` 写入 `{"identifier":"org.rfb.rewrite.trump-validation"}`，于 `web` 执行 `npm run build:standalone:debug -- --config ../target/trump-standalone.conf.json`。它只覆盖应用标识，未启用WebDriver或准备IPC。27 个王牌入口逐一检查中英文选择；六个场景共15步，覆盖第一册学习、相位门、召唤地点、恋人牌方向与取消、治疗宠物和烙印，每步原生保存恢复核对哈希。ignored 导出用例从正式高阶法师王牌构筑准备50级、满资源、无敌、书本、局部目标及实际施法成功种子。来源范围与限制见[王牌领域](trump-realm.md)，报告和截图在 `test-results/trump/`；不是自然练级或自然取得证明。
 
+## 死灵领域桌面验收
+
+在 `target/necromancy-standalone.conf.json` 写入 `{"identifier":"org.rfb.rewrite.necromancy-validation"}`，设置 `CARGO_TARGET_DIR=.../target/necromancy-desktop-validation` 与 `CARGO_BUILD_BUILD_DIR=.../target/n1-validation-build`，在 `web` 执行 `npm run build:standalone:debug -- --config ../target/necromancy-standalone.conf.json`，随后从根目录执行 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --necromancy`。独立应用标识保留主线博物馆档案，普通产物没有准备IPC。
+
+场景从正式死灵法师构筑准备50级、满资源、书本、局部地形、目标、无敌和实际成功／失败种子。中英文创建入口、第一册学习与触摸、成功宠物、失败敌对召唤、鉴定和护盾经产品UI操作，每步原生保存恢复核对哈希。报告在 `test-results/necromancy/`；来源、核心证据和适配见[死灵领域](necromancy-realm.md)。这不是自然练级、自然获取四册或Android验收。
+
 ## 随机荒野地牢桌面专项
 
 在 `web` 执行：

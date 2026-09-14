@@ -759,3 +759,6 @@ chest-scatter = 箱中的财宝散落到了四处！
 chest-summon = 你被一团烟雾吞没了！
 asgard-avenger-summoned = 维达尔站了出来，为他的父亲复仇！
 message-ability-glyph-required = 奇迹：输入要灭绝的怪物符号（取消仍消耗本次施法）。
+
+status-necromancy-cloak-name = 黑色斗篷
+status-necromancy-shield-name = 亡者之盾

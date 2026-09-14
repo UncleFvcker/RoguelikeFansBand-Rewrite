@@ -2226,13 +2226,15 @@ fn old_man_willow_unlocks_after_crows_nest_and_rewards_an_elemental_ring() {
     assert_eq!(reward.affix_ids, ["rfb-legacy.affix.elemental-jewelry"]);
     assert_eq!(reward.rolled_affixes.len(), 1);
     let resistances = &reward.rolled_affixes[0].properties.resistances;
-    assert!((1..=4).contains(&resistances.len()));
+    assert!((1..=5).contains(&resistances.len()));
     assert!(resistances.keys().all(|damage_type| matches!(
         damage_type,
         ActorDamageType::Acid
             | ActorDamageType::Cold
             | ActorDamageType::Electricity
             | ActorDamageType::Fire
+            | ActorDamageType::Poison
+            | ActorDamageType::Shards
     )));
 }
 

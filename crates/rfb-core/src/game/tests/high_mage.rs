@@ -1083,6 +1083,8 @@ fn crusade_angelic_cloak_grants_resistances_and_harms_only_evil_contact_attacker
         );
     }
     let evil_hp = evil.entities[0].hp;
+    // Keep a real contact hit independent of bookshop initialization RNG.
+    evil.rng = RfbRng::seeded(1);
     let mut events = Vec::new();
     evil.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("evil contact should resolve");

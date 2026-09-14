@@ -519,6 +519,16 @@ impl Game {
                 resolution.hp_paid = self.pay_class_ability_hit_points(hp_paid);
             }
             events.push(DomainEvent::AbilityCastFailed { resolution });
+            if let AbilityEffectDefinition::Necromancy { spell } = ability.effect {
+                self.necromancy_summon(
+                    &ability,
+                    spell,
+                    self.player.position,
+                    true,
+                    events,
+                    changed,
+                );
+            }
             if let AbilityEffectDefinition::TrumpSummoning { category } = &ability.effect {
                 self.resolve_trump_summoning(
                     &ability,

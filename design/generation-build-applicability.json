@@ -5,7 +5,7 @@
   "reviewedAt": "2026-09-14",
   "codeBaseline": "5c5f6f38b + cbc851b8e + d873743d6 integration",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
-  "scope": "Covers 154 creation builds and five generation areas per build, including 25 Chaos combinations. Source and acceptance scope: docs/chaos-realm-plan.md. Evidence references are not test execution results.",
+  "scope": "Covers 182 creation builds and five generation areas per build, including the Necromancer. Evidence references are not test execution results.",
   "recordSemantics": {
     "implemented": "Reachable implementation exists; gapIds still block acceptance completion.",
     "no-special-difference": "Source and indirect consumers reviewed; shared path applies without an additional class generation branch.",
@@ -8401,6 +8401,62 @@
           ]
         }
       ]
+    },
+    {
+      "buildId": "demo.build.necromancer",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: necromancer.c supplies the standard body, glove encumbrance and Necromancy-only books; object2.c treats Necromancer as a device class, artifact.c uses Mage bias with 20% warrior bias. ego.c has no direct Necromancer branch; existing glove and class-proficiency consumers apply. Fixed Vecna artifacts remain unavailable content; no new reward identity is claimed. Actual touch restrictions, holy-book destruction and save tests: docs/necromancy-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_books_generate_from_ordinary_pool_and_are_studied_after_pickup",
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_birth_intrinsics_destroy_holy_books_and_class_powers_use_real_class",
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_touch_rejects_empty_distant_gloved_two_handed_and_frightened_targets_without_rng"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: necromancer.c supplies the standard body, glove encumbrance and Necromancy-only books; object2.c treats Necromancer as a device class, artifact.c uses Mage bias with 20% warrior bias. ego.c has no direct Necromancer branch; existing glove and class-proficiency consumers apply. Fixed Vecna artifacts remain unavailable content; no new reward identity is claimed. Actual touch restrictions, holy-book destruction and save tests: docs/necromancy-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_books_generate_from_ordinary_pool_and_are_studied_after_pickup",
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_birth_intrinsics_destroy_holy_books_and_class_powers_use_real_class",
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_touch_rejects_empty_distant_gloved_two_handed_and_frightened_targets_without_rng"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: necromancer.c supplies the standard body, glove encumbrance and Necromancy-only books; object2.c treats Necromancer as a device class, artifact.c uses Mage bias with 20% warrior bias. ego.c has no direct Necromancer branch; existing glove and class-proficiency consumers apply. Fixed Vecna artifacts remain unavailable content; no new reward identity is claimed. Actual touch restrictions, holy-book destruction and save tests: docs/necromancy-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_books_generate_from_ordinary_pool_and_are_studied_after_pickup",
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_birth_intrinsics_destroy_holy_books_and_class_powers_use_real_class",
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_touch_rejects_empty_distant_gloved_two_handed_and_frightened_targets_without_rng"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "no-special-difference",
+          "reason": "RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: necromancer.c supplies the standard body, glove encumbrance and Necromancy-only books; object2.c treats Necromancer as a device class, artifact.c uses Mage bias with 20% warrior bias. ego.c has no direct Necromancer branch; existing glove and class-proficiency consumers apply. Fixed Vecna artifacts remain unavailable content; no new reward identity is claimed. Actual touch restrictions, holy-book destruction and save tests: docs/necromancy-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_books_generate_from_ordinary_pool_and_are_studied_after_pickup",
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_birth_intrinsics_destroy_holy_books_and_class_powers_use_real_class",
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_touch_rejects_empty_distant_gloved_two_handed_and_frightened_targets_without_rng"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: necromancer.c supplies the standard body, glove encumbrance and Necromancy-only books; object2.c treats Necromancer as a device class, artifact.c uses Mage bias with 20% warrior bias. ego.c has no direct Necromancer branch; existing glove and class-proficiency consumers apply. Fixed Vecna artifacts remain unavailable content; no new reward identity is claimed. Actual touch restrictions, holy-book destruction and save tests: docs/necromancy-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_books_generate_from_ordinary_pool_and_are_studied_after_pickup",
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_birth_intrinsics_destroy_holy_books_and_class_powers_use_real_class",
+            "crates/rfb-core/src/game/tests/necromancy.rs#necromancy_touch_rejects_empty_distant_gloved_two_handed_and_frightened_targets_without_rng"
+          ]
+        }
+      ],
+      "gapIds": []
     }
   ]
 }

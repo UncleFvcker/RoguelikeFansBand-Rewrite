@@ -569,6 +569,12 @@ fn dungeon_anti_melee_riding_charge_moves_and_spends_charge_without_attacking() 
 #[test]
 fn biased_ego_activation_reuses_the_ability_effect_resolver() {
     let mut game = ability_effect_game(0xE3_7001);
+    // Exercise the resolver after a real successful device check.
+    game.rng = RfbRng::seeded(
+        (0..1000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+            .unwrap(),
+    );
     let mut events = Vec::new();
     game.use_inventory_item(
         ABILITY_EFFECT_ITEM_ID,

@@ -191,11 +191,16 @@ fn destruction_changes_real_terrain_and_retains_resistance_on_restore() {
     target(&mut game);
     game.entities[0].no_destruction = true;
     let protected_position = game.entities[0].position;
+    let vein = game.index(Position { x: 9, y: 10 }).unwrap();
+    game.terrain[vein] = "demo.terrain.magma-hidden-treasure".into();
+    let gold_ids = game.gold_piles.iter().map(|p| p.id.clone()).collect::<BTreeSet<_>>();
     let before = game.terrain.clone();
     cast_saved(&mut game, &id, TargetSelection::SelfTarget);
     assert_ne!(game.terrain, before);
     assert!(game.entities[0].no_destruction);
     assert_eq!(game.terrain_at(protected_position), "demo.terrain.floor");
+    assert!(game.gold_piles.iter().all(|pile| gold_ids.contains(&pile.id)),
+        "destruction must not generate mining gold inside replacement rock");
     let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
     assert!(restored.entities[0].no_destruction);
     assert_eq!(game.state_hash(), restored.state_hash());

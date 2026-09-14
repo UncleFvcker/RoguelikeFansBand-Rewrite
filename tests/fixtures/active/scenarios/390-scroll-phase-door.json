@@ -37,11 +37,11 @@
       },
       "lastCommandSeq": 1,
       "playerPosition": {
-        "x": 106,
-        "y": 30
+        "x": 90,
+        "y": 35
       },
       "revision": 1,
-      "stateHash": "82dc7adaad012e12ec8348b1727fe6c86a1827ca46882d959ee6e2a4010ac8e6",
+      "stateHash": "2f57ee6521231c9836997923c8fac5457f7e82e0d6b45eda227fe5da40c1d260",
       "turn": 1
     },
     "events": [
@@ -52,8 +52,8 @@
           "fromX": "99",
           "fromY": "33",
           "source": "demo.item.flicker-scroll",
-          "toX": "106",
-          "toY": "30"
+          "toX": "90",
+          "toY": "35"
         },
         "outcome": {
           "type": "ability-teleport",
@@ -63,13 +63,13 @@
               "y": 33
             },
             "to": {
-              "x": 106,
-              "y": 30
+              "x": 90,
+              "y": 35
             }
           }
         }
       }
     ],
-    "saveRoundTripStateHash": "82dc7adaad012e12ec8348b1727fe6c86a1827ca46882d959ee6e2a4010ac8e6"
+    "saveRoundTripStateHash": "2f57ee6521231c9836997923c8fac5457f7e82e0d6b45eda227fe5da40c1d260"
   }
 }

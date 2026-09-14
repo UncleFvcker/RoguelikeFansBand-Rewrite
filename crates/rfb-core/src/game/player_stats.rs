@@ -1216,7 +1216,9 @@ impl Game {
     }
 
     pub(super) fn player_hold_life_sources(&self) -> usize {
-        self.items
+        usize::from(self.player_is_necromancer() && self.progress.level >= 25)
+            + usize::from(self.player_is_necromancer() && self.progress.level >= 45)
+            + self.items
             .iter()
             .filter(|item| {
                 matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
@@ -1259,6 +1261,7 @@ impl Game {
                     .is_some_and(|minimum_level| self.progress.level >= minimum_level)
         });
         equipment_sources
+            + usize::from(self.player_is_necromancer() && self.progress.level >= 15)
             + usize::from(self.player_is_maia() && self.player_is_enlightened_maia())
             + usize::from(race_source)
             + usize::from(self.player.statuses.iter().any(|status| {
@@ -2585,6 +2588,7 @@ impl Game {
             || self.player_is_berserker()
             || self.player_is_duelist()
             || self.player_is_mage()
+            || self.player_is_necromancer()
             || self.player_is_ranger()
             || self.player_is_priest()
             || self.player_is_warrior_mage()
@@ -2618,9 +2622,13 @@ impl Game {
                     self.class_base_blows(weapon, 525, 70, 30),
                     0,
                 )
-            } else if self.player_is_mage() {
+            } else if self.player_is_mage() || self.player_is_necromancer() {
                 (
-                    "demo.class.mage",
+                    if self.player_is_necromancer() {
+                        "demo.class.necromancer"
+                    } else {
+                        "demo.class.mage"
+                    },
                     self.class_base_blows(weapon, 400, 100, 20),
                     0,
                 )

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.necromancy-unholy-word",
+  "minimumLevel": 40,
+  "resourceCost": 65,
+  "baseFailurePercent": 75,
+  "firstSuccessExperience": 5000,
+  "resourceId": "demo.resource.mana"
+}

@@ -1027,6 +1027,10 @@ impl Game {
         }
         let transcendence = self.player_has_status_kind(STATUS_TRANSCENDENCE);
         let mut mana = self.resources.get_mut("demo.resource.mana");
+        let necromancy_repose = self.player.statuses.iter().any(|s| {
+            s.kind_id == "rfb.status.paralysis"
+                && s.source_id.as_deref() == Some("demo.ability.necromancy-repose-of-the-dead")
+        });
         let player_tick = process_actor_status_tick_with(
             &mut self.player,
             false,
@@ -1043,6 +1047,14 @@ impl Game {
             },
         );
         let player_status_expired = !player_tick.expired.is_empty();
+        if necromancy_repose
+            && player_tick
+                .expired
+                .iter()
+                .any(|s| s == "rfb.status.paralysis")
+        {
+            self.finish_necromancy_repose(events);
+        }
         let tsuyoshi_expired = player_tick
             .expired
             .iter()

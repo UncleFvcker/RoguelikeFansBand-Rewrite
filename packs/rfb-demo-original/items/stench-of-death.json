@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.stench-of-death",
+  "nameKey": "item-demo-stench-of-death-name",
+  "descriptionKey": "item-demo-stench-of-death-description",
+  "abilityBookId": "demo.ability-book.stench-of-death",
+  "rfbBaseKind": {
+    "sourceIndex": 540,
+    "tval": 100,
+    "sval": 0
+  },
+  "baseValue": 100,
+  "generationLevel": 10,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "book",
+    "necromancy",
+    "spellbook"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ]
+}

@@ -76,7 +76,7 @@ fn roll_virtues(
                 VirtueKindDto::Enlightenment,
                 VirtueKindDto::Patience,
             ]),
-            "demo.class.mage" => {
+            "demo.class.mage" | "demo.class.necromancer" => {
                 kinds.extend([VirtueKindDto::Knowledge, VirtueKindDto::Enchantment])
             }
             "demo.class.high-mage" => kinds.extend([
@@ -377,6 +377,7 @@ impl Game {
             };
         }
         alignment
+            - if self.player_is_necromancer() { 200 } else { 0 }
             - 1000
                 * self
                     .equipped_melee_weapons()

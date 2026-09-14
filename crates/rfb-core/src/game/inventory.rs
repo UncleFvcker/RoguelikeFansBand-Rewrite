@@ -1282,6 +1282,21 @@ impl Game {
             &mut self.items[index],
         );
         let kind_id = self.items[index].kind_id.clone();
+        if self.player_is_necromancer()
+            && let Some(book) = self
+                .content
+                .item(&kind_id)
+                .and_then(|i| i.ability_book_id.as_deref())
+                .and_then(|id| self.content.ability_book(id))
+            && matches!(book.realm_id.as_deref(), Some("life" | "crusade"))
+            && let Some(rank @ 1..=4) = book.rank
+            && let Some(mana) = self.resources.get_mut("demo.resource.mana")
+        {
+            mana.current = mana
+                .current
+                .saturating_add([10, 25, 100, 666][usize::from(rank - 1)])
+                .min(mana.maximum);
+        }
         if quantity == self.items[index].quantity {
             let removed = self.items.remove(index);
             self.item_property_knowledge.remove(&removed.id);

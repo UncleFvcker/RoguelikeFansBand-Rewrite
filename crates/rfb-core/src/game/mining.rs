@@ -283,10 +283,12 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) -> bool {
-        // FF_HURT_DISI has FAF_NO_DROP, including the kill_wall movement path.
+        // Disintegration and area destruction erase terrain without mining loot.
         if matches!(
             change_source,
-            TerrainChangeSource::Projectile | TerrainChangeSource::Disintegration
+            TerrainChangeSource::Projectile
+                | TerrainChangeSource::Disintegration
+                | TerrainChangeSource::Destruction
         ) {
             return false;
         }

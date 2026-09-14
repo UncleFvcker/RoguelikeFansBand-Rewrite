@@ -585,6 +585,7 @@ pub(super) fn validate_abilities(
                         && (1..=1_000_000).contains(duration_sides)
                         && *duration_bonus <= 1_000_000
                 }
+                AbilityEffectDefinition::Necromancy { spell } => *spell < 32,
                 AbilityEffectDefinition::TrumpSummoning { category } => matches!(
                     category.as_str(),
                     "spider"
@@ -1420,6 +1421,27 @@ pub(super) fn validate_abilities(
                     && (1..=64).contains(&ability.target.range)
                     && ability.target.requires_line_of_effect
             }
+            AbilityEffectDefinition::Necromancy { spell } => match spell {
+                11 => item_target_rule,
+                0 | 4 | 7 | 12 | 13 | 24 | 27 | 30 => {
+                    projectile_target_rule && ability.target.range == 1
+                }
+                15 => projectile_target_rule && ability.target.range == 18,
+                1 | 5 | 8 | 14 | 16..=21 => {
+                    ability.target.range == 18
+                        && ability.target.requires_line_of_effect
+                        && ability.target.modes.len() == 3
+                        && ability.target.modes.iter().all(|m| {
+                            matches!(
+                                m,
+                                AbilityTargetModeDefinition::SelfTarget
+                                    | AbilityTargetModeDefinition::Position
+                                    | AbilityTargetModeDefinition::Entity
+                            )
+                        })
+                }
+                _ => self_target_rule,
+            },
             AbilityEffectDefinition::TrumpSummoning { category } => {
                 ability.target.range == 18
                     && ability.target.requires_line_of_effect

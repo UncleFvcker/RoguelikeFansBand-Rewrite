@@ -655,6 +655,10 @@ pub enum AbilityEffectDefinition {
         category: String,
     },
     TrumpShuffle,
+    /// Source necromancer.c book slot (0..31), including touch and summon rules.
+    Necromancy {
+        spell: u8,
+    },
     ResetRecall,
     CallChaos,
     ChaosPolymorphSelf,

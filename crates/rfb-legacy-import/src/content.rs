@@ -17176,6 +17176,7 @@ pub fn audit_demo_weapon_proficiencies(
         ("paladin.json", 5),
         ("mindcrafter.json", 9),
         ("high-mage.json", 10),
+        ("necromancer.json", 37),
         ("archer.json", 15),
         ("magic-eater.json", 16),
         ("cavalry.json", 22),
@@ -17262,7 +17263,7 @@ pub fn audit_demo_weapon_proficiencies(
     Ok(DemoWeaponProficiencyAuditReport {
         schema_version: 1,
         source_commit,
-        classes_checked: 8,
+        classes_checked: 9,
         base_weapons_checked: base_weapons.len(),
     })
 }
@@ -30257,6 +30258,52 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                     u32::from(row.level) * u32::from(row.experience)
                 );
             }
+        }
+    }
+
+    #[test]
+    fn necromancy_source_contract_matches_all_32_necromancer_slots() {
+        let parsed = parse_m_info(include_str!("testdata/necromancy-m-info.txt")).unwrap();
+        let profile = parsed.iter().find(|c| c.class_index == 37).unwrap();
+        let rows = &profile
+            .realms
+            .iter()
+            .find(|r| r.index == 10)
+            .unwrap()
+            .spells;
+        let root =
+            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+        let source: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(root.join("legacy-necromancy-source.json")).unwrap(),
+        )
+        .unwrap();
+        assert_eq!(rows.len(), 32);
+        for (i, row) in rows.iter().enumerate() {
+            let entry = &source["spells"][i];
+            let slug = entry["abilityId"]
+                .as_str()
+                .unwrap()
+                .rsplit('.')
+                .next()
+                .unwrap();
+            let binding: serde_json::Value = serde_json::from_str(
+                &std::fs::read_to_string(root.join(format!("playerAbilityBindings/{slug}.json")))
+                    .unwrap(),
+            )
+            .unwrap();
+            assert_eq!(binding["minimumLevel"], row.level);
+            assert_eq!(binding["resourceCost"], row.mana);
+            assert_eq!(binding["baseFailurePercent"], row.failure_percent);
+            assert_eq!(
+                binding["firstSuccessExperience"],
+                u32::from(row.level) * u32::from(row.experience)
+            );
+            let program: serde_json::Value = serde_json::from_str(
+                &std::fs::read_to_string(root.join(format!("abilityPrograms/{slug}.json")))
+                    .unwrap(),
+            )
+            .unwrap();
+            assert_eq!(program["steps"][0]["spell"], i);
         }
     }
 

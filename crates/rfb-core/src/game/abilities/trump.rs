@@ -71,7 +71,7 @@ impl Game {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn trump_summon_batch(
+    pub(super) fn trump_summon_batch(
         &mut self,
         ability: &AbilityDefinition,
         category: &str,
@@ -87,7 +87,20 @@ impl Game {
         let special = matches!(
             category,
             "phantom" | "kamikaze" | "high-undead" | "high-dragon"
-        ) || category.starts_with("bizarre");
+        ) || category.starts_with("bizarre")
+            || matches!(
+                category,
+                "rat"
+                    | "bat"
+                    | "wolf"
+                    | "dread"
+                    | "zombie"
+                    | "skeleton"
+                    | "ghost"
+                    | "vampire"
+                    | "wight"
+                    | "lich"
+            );
         for _ in 0..count {
             let candidates = self
                 .summon_category_candidate_kind_ids(
@@ -101,6 +114,26 @@ impl Game {
                 .filter(|id| {
                     let a = self.content.actor(id).expect("summon candidate");
                     match category {
+                        "rat" => a.glyph == "r",
+                        "bat" => a.glyph == "b",
+                        "wolf" => a.glyph == "C",
+                        "dread" => a.allocation.as_ref().is_some_and(|a| a.legacy_index == 534),
+                        "zombie" => a.glyph == "z",
+                        "skeleton" => {
+                            a.glyph == "s"
+                                || a.allocation.as_ref().is_some_and(|a| a.legacy_index == 941)
+                        }
+                        "ghost" => {
+                            a.allocation.as_ref().is_none_or(|a| a.legacy_index != 665)
+                                && (a.glyph == "G"
+                                    || a.allocation.as_ref().is_some_and(|a| a.legacy_index == 874))
+                        }
+                        "vampire" => a.glyph == "V",
+                        "wight" => a.glyph == "W",
+                        "lich" => {
+                            a.glyph == "L"
+                                || a.allocation.as_ref().is_some_and(|a| a.legacy_index == 701)
+                        }
                         "high-undead" => "LVW".contains(&a.glyph),
                         "high-dragon" => a.glyph == "D",
                         "phantom" => matches!(

@@ -1,0 +1,332 @@
+{
+  "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+  "sourceFiles": [
+    "src/necromancer.c",
+    "src/gf.c",
+    "src/effects.c",
+    "src/monster2.c",
+    "src/tables.c",
+    "lib/edit/m_info.txt",
+    "lib/edit/s_info.txt",
+    "lib/edit/k_info.txt",
+    "src/kind_name_zh.inc"
+  ],
+  "classIndex": 37,
+  "realmIndex": 10,
+  "books": [
+    {
+      "sourceIndex": 540,
+      "name": "[Stench of Death]",
+      "chineseName": "[死亡之恶臭]",
+      "itemId": "demo.item.stench-of-death"
+    },
+    {
+      "sourceIndex": 541,
+      "name": "[Sepulchral Ways]",
+      "chineseName": "[坟茔之道]",
+      "itemId": "demo.item.sepulchral-ways"
+    },
+    {
+      "sourceIndex": 542,
+      "name": "[Return of the Dead]",
+      "chineseName": "[死者归来]",
+      "itemId": "demo.item.return-of-the-dead"
+    },
+    {
+      "sourceIndex": 543,
+      "name": "[Necromatic Tome]",
+      "chineseName": "[死灵巨著]",
+      "itemId": "demo.item.necromatic-tome"
+    }
+  ],
+  "spells": [
+    {
+      "slot": 0,
+      "abilityId": "demo.ability.necromancy-cold-touch",
+      "name": "寒冷之触",
+      "minimumLevel": 1,
+      "resourceCost": 1,
+      "baseFailurePercent": 30,
+      "firstSuccessExperience": 4
+    },
+    {
+      "slot": 1,
+      "abilityId": "demo.ability.necromancy-summon-rat",
+      "name": "召唤老鼠",
+      "minimumLevel": 2,
+      "resourceCost": 3,
+      "baseFailurePercent": 35,
+      "firstSuccessExperience": 8
+    },
+    {
+      "slot": 2,
+      "abilityId": "demo.ability.necromancy-detect-life",
+      "name": "侦测生命",
+      "minimumLevel": 4,
+      "resourceCost": 3,
+      "baseFailurePercent": 35,
+      "firstSuccessExperience": 16
+    },
+    {
+      "slot": 3,
+      "abilityId": "demo.ability.necromancy-detect-unlife",
+      "name": "侦测不死生物",
+      "minimumLevel": 5,
+      "resourceCost": 3,
+      "baseFailurePercent": 35,
+      "firstSuccessExperience": 20
+    },
+    {
+      "slot": 4,
+      "abilityId": "demo.ability.necromancy-poison-touch",
+      "name": "毒素之触",
+      "minimumLevel": 7,
+      "resourceCost": 3,
+      "baseFailurePercent": 35,
+      "firstSuccessExperience": 28
+    },
+    {
+      "slot": 5,
+      "abilityId": "demo.ability.necromancy-summon-bats",
+      "name": "召唤蝙蝠",
+      "minimumLevel": 9,
+      "resourceCost": 8,
+      "baseFailurePercent": 40,
+      "firstSuccessExperience": 36
+    },
+    {
+      "slot": 6,
+      "abilityId": "demo.ability.necromancy-eldritch-howl",
+      "name": "诡异嚎叫",
+      "minimumLevel": 11,
+      "resourceCost": 8,
+      "baseFailurePercent": 40,
+      "firstSuccessExperience": 33
+    },
+    {
+      "slot": 7,
+      "abilityId": "demo.ability.necromancy-dark-touch",
+      "name": "黑暗之触",
+      "minimumLevel": 13,
+      "resourceCost": 8,
+      "baseFailurePercent": 45,
+      "firstSuccessExperience": 39
+    },
+    {
+      "slot": 8,
+      "abilityId": "demo.ability.necromancy-summon-wolves",
+      "name": "召唤狼",
+      "minimumLevel": 15,
+      "resourceCost": 9,
+      "baseFailurePercent": 45,
+      "firstSuccessExperience": 60
+    },
+    {
+      "slot": 9,
+      "abilityId": "demo.ability.necromancy-black-cloak",
+      "name": "黑色斗篷",
+      "minimumLevel": 17,
+      "resourceCost": 11,
+      "baseFailurePercent": 50,
+      "firstSuccessExperience": 68
+    },
+    {
+      "slot": 10,
+      "abilityId": "demo.ability.necromancy-undead-sight",
+      "name": "亡灵视界",
+      "minimumLevel": 20,
+      "resourceCost": 12,
+      "baseFailurePercent": 50,
+      "firstSuccessExperience": 80
+    },
+    {
+      "slot": 11,
+      "abilityId": "demo.ability.necromancy-undead-lore",
+      "name": "亡灵学识",
+      "minimumLevel": 22,
+      "resourceCost": 13,
+      "baseFailurePercent": 50,
+      "firstSuccessExperience": 88
+    },
+    {
+      "slot": 12,
+      "abilityId": "demo.ability.necromancy-repelling-touch",
+      "name": "排斥之触",
+      "minimumLevel": 25,
+      "resourceCost": 15,
+      "baseFailurePercent": 50,
+      "firstSuccessExperience": 100
+    },
+    {
+      "slot": 13,
+      "abilityId": "demo.ability.necromancy-vampiric-touch",
+      "name": "吸血之触",
+      "minimumLevel": 28,
+      "resourceCost": 20,
+      "baseFailurePercent": 50,
+      "firstSuccessExperience": 112
+    },
+    {
+      "slot": 14,
+      "abilityId": "demo.ability.necromancy-dread-of-night",
+      "name": "黑夜恐惧",
+      "minimumLevel": 32,
+      "resourceCost": 30,
+      "baseFailurePercent": 55,
+      "firstSuccessExperience": 160
+    },
+    {
+      "slot": 15,
+      "abilityId": "demo.ability.necromancy-entomb",
+      "name": "活埋",
+      "minimumLevel": 40,
+      "resourceCost": 50,
+      "baseFailurePercent": 75,
+      "firstSuccessExperience": 200
+    },
+    {
+      "slot": 16,
+      "abilityId": "demo.ability.necromancy-summon-zombies",
+      "name": "召唤僵尸",
+      "minimumLevel": 26,
+      "resourceCost": 30,
+      "baseFailurePercent": 50,
+      "firstSuccessExperience": 1950
+    },
+    {
+      "slot": 17,
+      "abilityId": "demo.ability.necromancy-summon-skeletons",
+      "name": "召唤骷髅",
+      "minimumLevel": 28,
+      "resourceCost": 30,
+      "baseFailurePercent": 55,
+      "firstSuccessExperience": 4200
+    },
+    {
+      "slot": 18,
+      "abilityId": "demo.ability.necromancy-summon-ghosts",
+      "name": "召唤幽灵",
+      "minimumLevel": 30,
+      "resourceCost": 33,
+      "baseFailurePercent": 60,
+      "firstSuccessExperience": 2250
+    },
+    {
+      "slot": 19,
+      "abilityId": "demo.ability.necromancy-summon-vampires",
+      "name": "召唤吸血鬼",
+      "minimumLevel": 32,
+      "resourceCost": 35,
+      "baseFailurePercent": 60,
+      "firstSuccessExperience": 2400
+    },
+    {
+      "slot": 20,
+      "abilityId": "demo.ability.necromancy-summon-wights",
+      "name": "召唤怨灵",
+      "minimumLevel": 35,
+      "resourceCost": 40,
+      "baseFailurePercent": 70,
+      "firstSuccessExperience": 2625
+    },
+    {
+      "slot": 21,
+      "abilityId": "demo.ability.necromancy-summon-liches",
+      "name": "召唤巫妖",
+      "minimumLevel": 37,
+      "resourceCost": 55,
+      "baseFailurePercent": 70,
+      "firstSuccessExperience": 4255
+    },
+    {
+      "slot": 22,
+      "abilityId": "demo.ability.necromancy-unholy-word",
+      "name": "邪恶真言",
+      "minimumLevel": 40,
+      "resourceCost": 65,
+      "baseFailurePercent": 75,
+      "firstSuccessExperience": 5000
+    },
+    {
+      "slot": 23,
+      "abilityId": "demo.ability.necromancy-hopeless-endeavor",
+      "name": "无望之争",
+      "minimumLevel": 47,
+      "resourceCost": 75,
+      "baseFailurePercent": 75,
+      "firstSuccessExperience": 7050
+    },
+    {
+      "slot": 24,
+      "abilityId": "demo.ability.necromancy-draining-touch",
+      "name": "汲取之触",
+      "minimumLevel": 25,
+      "resourceCost": 10,
+      "baseFailurePercent": 50,
+      "firstSuccessExperience": 1000
+    },
+    {
+      "slot": 25,
+      "abilityId": "demo.ability.necromancy-unhallow-ground",
+      "name": "亵渎圣地",
+      "minimumLevel": 30,
+      "resourceCost": 60,
+      "baseFailurePercent": 70,
+      "firstSuccessExperience": 1500
+    },
+    {
+      "slot": 26,
+      "abilityId": "demo.ability.necromancy-shield-of-the-dead",
+      "name": "亡者之盾",
+      "minimumLevel": 35,
+      "resourceCost": 30,
+      "baseFailurePercent": 80,
+      "firstSuccessExperience": 4025
+    },
+    {
+      "slot": 27,
+      "abilityId": "demo.ability.necromancy-rending-touch",
+      "name": "撕裂之触",
+      "minimumLevel": 40,
+      "resourceCost": 45,
+      "baseFailurePercent": 80,
+      "firstSuccessExperience": 9000
+    },
+    {
+      "slot": 28,
+      "abilityId": "demo.ability.necromancy-repose-of-the-dead",
+      "name": "亡者安息",
+      "minimumLevel": 42,
+      "resourceCost": 65,
+      "baseFailurePercent": 80,
+      "firstSuccessExperience": 4830
+    },
+    {
+      "slot": 29,
+      "abilityId": "demo.ability.necromancy-sepulchral-wind",
+      "name": "阴墓之风",
+      "minimumLevel": 45,
+      "resourceCost": 50,
+      "baseFailurePercent": 80,
+      "firstSuccessExperience": 4500
+    },
+    {
+      "slot": 30,
+      "abilityId": "demo.ability.necromancy-deadly-touch",
+      "name": "致命之触",
+      "minimumLevel": 48,
+      "resourceCost": 100,
+      "baseFailurePercent": 80,
+      "firstSuccessExperience": 12000
+    },
+    {
+      "slot": 31,
+      "abilityId": "demo.ability.necromancy-necromancy",
+      "name": "死灵法术",
+      "minimumLevel": 50,
+      "resourceCost": 125,
+      "baseFailurePercent": 80,
+      "firstSuccessExperience": 12500
+    }
+  ]
+}

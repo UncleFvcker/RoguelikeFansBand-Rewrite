@@ -1608,7 +1608,7 @@ impl Game {
             self.replace_terrain_from_source(
                 position,
                 &terrain_id,
-                super::terrain::TerrainChangeSource::Magic,
+                super::terrain::TerrainChangeSource::Destruction,
                 events,
                 changed,
             );

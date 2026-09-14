@@ -599,6 +599,7 @@ export function wildernessClock(worldTick: number): WildernessClock {
 }
 
 export function abilityConfirmationMessageKey(abilityId: string): MessageKey | undefined {
+  if (abilityId === "demo.ability.necromancy-repose-of-the-dead") return "confirm-ability-necromancy-repose";
   return abilityId === "rfb.ability.race.devour-flesh"
     ? "confirm-ability-devour-flesh"
     : undefined;
@@ -1805,7 +1806,7 @@ export class StatusPanel {
       });
       return;
     }
-    if (ability.targetSpec.modes.includes("self") && !ability.effects.some(effect => effect.type === "trump-summoning")) {
+    if (ability.targetSpec.modes.includes("self") && !ability.targetSpec.modes.includes("position")) {
       void this.#dispatch({
         type: "cast-ability",
         abilityId: ability.id,

@@ -156,10 +156,12 @@ fn no_candidate_confirmation_commits_the_realm_without_a_learning_turn() {
             game.experience_required_for_level(5) - game.progress.experience,
             &mut Vec::new(),
         );
-        assert_eq!(
-            game.study_random_player_ability(&book_id).unwrap(),
-            "demo.ability.death-detect-unlife"
-        );
+        let learned = game.study_random_player_ability(&book_id).unwrap();
+        assert!(matches!(
+            learned.as_str(),
+            "demo.ability.death-detect-unlife" | "demo.ability.death-malediction"
+        ));
+        assert_eq!(game.spent_spell_learning, 1);
     }
     assert_eq!(game.state_hash(), restored.state_hash());
 }

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.necromancy-undead-sight",
+  "minimumLevel": 20,
+  "resourceCost": 12,
+  "baseFailurePercent": 50,
+  "firstSuccessExperience": 80,
+  "resourceId": "demo.resource.mana"
+}

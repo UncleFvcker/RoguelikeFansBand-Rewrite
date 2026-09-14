@@ -482,6 +482,9 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             }
         }
         AbilityEffectDefinition::TrumpShuffle => AbilityEffectSpecDto::TrumpShuffle,
+        AbilityEffectDefinition::Necromancy { spell } => {
+            AbilityEffectSpecDto::Necromancy { spell: *spell }
+        }
         AbilityEffectDefinition::ResetRecall => AbilityEffectSpecDto::ResetRecall,
         AbilityEffectDefinition::CallChaos => AbilityEffectSpecDto::CallChaos,
         AbilityEffectDefinition::ChaosPolymorphSelf => AbilityEffectSpecDto::ChaosPolymorphSelf,

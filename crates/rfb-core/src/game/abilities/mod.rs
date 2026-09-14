@@ -11,6 +11,7 @@ mod duelist;
 mod duelist_choices;
 mod items;
 pub(in crate::game) mod mindcraft;
+mod necromancy;
 mod restoration;
 mod summoning;
 mod targeting;
@@ -39,6 +40,16 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<Position>, CoreError> {
         match (ability.effect.clone(), target_plan) {
+            (AbilityEffectDefinition::Necromancy { spell }, plan) => {
+                return self.resolve_necromancy(
+                    &ability,
+                    spell,
+                    plan,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
             (
                 AbilityEffectDefinition::TrumpSummoning { category },
                 AbilityTargetPlan::TrumpSummoning { center },

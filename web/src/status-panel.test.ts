@@ -163,12 +163,16 @@ test("character overview projects exact experience, actual resources and current
   assert.match(dom.characterWorldTimeValue.textContent, /"day":2,"hour":"00","minute":"00"/);
 });
 
-test("Snotling Devour Flesh requires its dedicated confirmation", () => {
+test("self-harming abilities require their dedicated confirmation", () => {
   assert.equal(
     abilityConfirmationMessageKey("rfb.ability.race.devour-flesh"),
     "confirm-ability-devour-flesh",
   );
   assert.equal(abilityConfirmationMessageKey("demo.ability.life-heal"), undefined);
+  assert.equal(
+    abilityConfirmationMessageKey("demo.ability.necromancy-repose-of-the-dead"),
+    "confirm-ability-necromancy-repose",
+  );
 });
 
 test("Archer Create Ammo presents one level-gated menu", () => {

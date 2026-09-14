@@ -120,6 +120,9 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
+            AbilityEffectDefinition::Necromancy { spell } => {
+                self.necromancy_target_plan(ability, spell, target)
+            }
             AbilityEffectDefinition::ResetRecall => (matches!(target, TargetSelection::SelfTarget)
                 && self.recall_reset_plan().is_some())
             .then_some(AbilityTargetPlan::SelfTarget),

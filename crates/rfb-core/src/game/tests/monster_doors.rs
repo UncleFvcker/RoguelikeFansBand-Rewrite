@@ -18,22 +18,28 @@ fn door_game(actor_kind_id: &str, door_kind_id: &str) -> (Game, Position, Positi
 
 #[test]
 fn opening_an_ordinary_door_spends_the_action_without_moving() {
-    let (mut game, origin, door) = door_game("demo.actor.small-kobold", "demo.terrain.door-closed");
-    let draws = game.rng.draw_counter;
-    let mut events = Vec::new();
+    for door_kind in ["demo.terrain.door-closed", "demo.terrain.door-secret"] {
+        let (mut game, origin, door) = door_game("demo.actor.small-kobold", door_kind);
+        if door_kind == "demo.terrain.door-secret" {
+            game.revealed_terrain.insert(door);
+        }
+        let draws = game.rng.draw_counter;
+        let mut events = Vec::new();
 
-    let outcome = game
-        .move_entity(0, door, &mut events, &mut BTreeSet::new(), &mut Vec::new())
-        .expect("door action should resolve");
+        let outcome = game
+            .move_entity(0, door, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+            .expect("door action should resolve");
 
-    assert_eq!(outcome, ActorStepOutcome::Interacted);
-    assert_eq!(game.entities[0].position, origin);
-    assert_eq!(game.terrain_at(door), "demo.terrain.door-open");
-    assert_eq!(game.rng.draw_counter, draws);
-    assert!(matches!(
-        events.as_slice(),
-        [DomainEvent::DoorOpened { .. }]
-    ));
+        assert_eq!(outcome, ActorStepOutcome::Interacted);
+        assert_eq!(game.entities[0].position, origin);
+        assert_eq!(game.terrain_at(door), "demo.terrain.door-open");
+        assert_eq!(game.rng.draw_counter, draws);
+        assert!(matches!(
+            events.as_slice(),
+            [DomainEvent::DoorOpened { .. }]
+        ));
+        assert!(!game.revealed_terrain.contains(&door));
+    }
 }
 
 #[test]

@@ -255,7 +255,8 @@ fn arena_dungeon_passages_light_and_reserved_positions_survive_permanent_walls()
 
 #[test]
 fn ordinary_room_and_anywhere_allocations_reach_pickup_and_save() {
-    let mut game = Game::new_with_build(617, "demo.build.warrior").unwrap();
+    // This sample makes both allocation attempts produce a real ordinary item.
+    let mut game = Game::new_with_build(618, "demo.build.warrior").unwrap();
     let mut definition = game
         .content
         .world(DEFAULT_WORLD_ID)

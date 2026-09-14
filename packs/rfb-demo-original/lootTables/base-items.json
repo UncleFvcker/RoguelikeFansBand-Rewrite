@@ -975,6 +975,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.stench-of-death",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.book-of-elements",
       "maxDepth": 30,
       "minDepth": 10,
@@ -1536,6 +1543,13 @@
     },
     {
       "itemKindId": "demo.item.ways-of-war",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.sepulchral-ways",
       "maxDepth": 50,
       "minDepth": 20,
       "quantity": 1,
@@ -2396,6 +2410,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.return-of-the-dead",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.path-of-destruction",
       "maxDepth": 90,
       "minDepth": 45,
@@ -2915,6 +2936,13 @@
     },
     {
       "itemKindId": "demo.item.hellfire-tome",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.necromatic-tome",
       "maxDepth": 65535,
       "minDepth": 80,
       "quantity": 1,

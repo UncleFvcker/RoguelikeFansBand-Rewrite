@@ -1515,3 +1515,4 @@ message-trump-card-20 = The Hermit.
 message-trump-card-21 = Judgement.
 message-trump-card-22 = The Sun.
 message-trump-card-23 = The World.
+confirm-ability-necromancy-repose = You will enter a deep sleep and cannot act until you awaken. Continue?

@@ -1949,6 +1949,27 @@
         },
         {
           "additionalProperties": false,
+          "description": "Source necromancer.c book slot (0..31), including touch and summon rules.",
+          "properties": {
+            "spell": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "necromancy",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
           "properties": {
             "type": {
               "const": "reset-recall",

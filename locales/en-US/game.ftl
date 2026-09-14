@@ -774,3 +774,6 @@ chest-scatter = The chest's treasure scatters across the floor!
 chest-summon = You are enveloped in a cloud of smoke!
 asgard-avenger-summoned = Vidarr steps forth to avenge his father!
 message-ability-glyph-required = Wonder: enter a monster symbol to genocide (cancelling still spends this cast).
+
+status-necromancy-cloak-name = black cloak
+status-necromancy-shield-name = shield of the dead

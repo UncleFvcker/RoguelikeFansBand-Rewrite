@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.necromancy-summon-ghosts",
+  "minimumLevel": 30,
+  "resourceCost": 33,
+  "baseFailurePercent": 60,
+  "firstSuccessExperience": 2250,
+  "resourceId": "demo.resource.mana"
+}

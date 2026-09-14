@@ -1511,3 +1511,4 @@ message-trump-card-20 = 是“隐者”。
 message-trump-card-21 = 是“审判”。
 message-trump-card-22 = 是“太阳”。
 message-trump-card-23 = 是“世界”。
+confirm-ability-necromancy-repose = 你将进入深度沉睡。你确定吗？

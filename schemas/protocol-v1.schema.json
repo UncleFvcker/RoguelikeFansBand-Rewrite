@@ -4758,6 +4758,25 @@
         {
           "type": "object",
           "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "necromancy"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "type": {
               "type": "string",
               "const": "reset-recall"
