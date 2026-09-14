@@ -9,7 +9,9 @@
     "src/xtra2.c",
     "src/kind_name_zh.inc",
     "lib/edit/k_info.txt",
-    "lib/edit/m_info.txt"
+    "lib/edit/m_info.txt",
+    "src/spells3.c",
+    "src/tables.c"
   ],
   "spells": [
     {

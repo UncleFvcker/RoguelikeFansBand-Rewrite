@@ -912,6 +912,7 @@ export class StatusPanel {
     excludedItemId: string | undefined,
     onSelect: (itemId: string) => Promise<void>,
     allowedItemIds?: readonly string[],
+    onCancel?: () => Promise<void>,
   ) => void;
   readonly #startAbilityTargeting: (ability: AbilityDto) => void;
   readonly #reconcileTargeting: (state: GameSnapshot | GameUpdate) => void;
@@ -931,7 +932,8 @@ export class StatusPanel {
     selectItemTarget: (
       excludedItemId: string | undefined,
       onSelect: (itemId: string) => Promise<void>,
-    allowedItemIds?: readonly string[],
+      allowedItemIds?: readonly string[],
+      onCancel?: () => Promise<void>,
     ) => void;
     startAbilityTargeting: (ability: AbilityDto) => void;
     reconcileTargeting: (state: GameSnapshot | GameUpdate) => void;
@@ -1781,13 +1783,17 @@ export class StatusPanel {
       void this.#dispatch({ type: "cast-ability", abilityId: ability.id, target: { type: "element", element } });
       return;
     }
+    const cancelTarget = ability.itemSelectionCancelTarget;
+    const onCancel = cancelTarget
+      ? () => this.#dispatch({ type: "cast-ability", abilityId: ability.id, target: cancelTarget })
+      : undefined;
     if (ability.itemTargets) {
       this.#selectItemTarget(undefined, async (itemId) => {
         const option = ability.itemTargets?.find(option => option.itemId === itemId);
         if (!option) return;
         if (option.confirmationKey && !view?.confirm(this.#localization.format(option.confirmationKey as MessageKey))) return;
         await this.#dispatch({ type: "cast-ability", abilityId: ability.id, target: option.target });
-      }, ability.itemTargets.map(option => option.itemId));
+      }, ability.itemTargets.map(option => option.itemId), onCancel);
       return;
     }
     if (ability.targetSpec.modes.includes("town")) {
@@ -1814,6 +1820,8 @@ export class StatusPanel {
           abilityId: ability.id,
           target: { type: "item", itemId },
         }),
+        undefined,
+        onCancel,
       );
       return;
     }

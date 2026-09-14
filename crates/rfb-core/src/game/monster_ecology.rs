@@ -705,7 +705,12 @@ impl Game {
         if target_definition
             .tags
             .iter()
-            .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
+            .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian" | "questor"))
+            || target_definition.finite_lifetime_instance_limit().is_some()
+            || target_definition
+                .allocation
+                .as_ref()
+                .is_some_and(|a| a.task_id.is_some())
         {
             return AbilityEffectResolutionDto::Skipped {
                 effect_index,

@@ -649,6 +649,7 @@ pub enum AbilityEffectDefinition {
         radius: u8,
         duration_turns: u16,
     },
+    ChainLightning,
     DemonSummoning,
     AngelSummoning,
     BanishEvil,

@@ -94,6 +94,28 @@ impl Game {
         ability: &AbilityDefinition,
     ) -> Option<Vec<rfb_protocol::AbilityItemTargetDto>> {
         use AbilityEffectDefinition as E;
+        if matches!(
+            ability.effect,
+            E::BrandWeapon { .. } | E::RechargeFromPlayer { .. }
+        ) {
+            return Some(
+                self.items
+                    .iter()
+                    .filter_map(|item| {
+                        let target = TargetSelection::Item {
+                            item_id: item.id.clone(),
+                        };
+                        self.ability_target_plan(ability, &target).map(|_| {
+                            rfb_protocol::AbilityItemTargetDto {
+                                item_id: item.id.clone(),
+                                target,
+                                confirmation_key: None,
+                            }
+                        })
+                    })
+                    .collect(),
+            );
+        }
         if matches!(ability.effect, E::Mundanity) {
             return Some(self.mundanity_item_targets(None));
         }
@@ -708,6 +730,7 @@ impl Game {
             DEATH_POISON_BRANDING_ABILITY_ID
                 | DEATH_VAMPIRIC_BRANDING_ABILITY_ID
                 | CRUSADE_HOLY_BLADE_ABILITY_ID
+                | "demo.ability.chaos-chaos-branding"
         ) {
             self.add_virtue(VirtueKindDto::Enchantment, 2);
         }

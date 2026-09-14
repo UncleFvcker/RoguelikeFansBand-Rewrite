@@ -1623,6 +1623,7 @@ impl Game {
         };
         let target_entity_id = self.entities[target_index].id.clone();
         let target_kind_id = self.entities[target_index].kind_id.clone();
+        let seen = self.entity_is_visible_to_player(&self.entities[target_index]);
         let resolution = self.resolve_actor_polymorph_target(
             target_index,
             u32::from(self.progress.level),
@@ -1630,6 +1631,15 @@ impl Game {
             events,
             changed,
         );
+        if ability.id == "demo.ability.chaos-polymorph-other"
+            && seen
+            && matches!(
+                resolution,
+                AbilityEffectResolutionDto::PolymorphTarget { .. }
+            )
+        {
+            self.add_virtue(VirtueKindDto::Chance, 1);
+        }
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {

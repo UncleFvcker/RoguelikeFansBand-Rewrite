@@ -30247,7 +30247,10 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 );
             }
         }
-        for (rank, book_slug) in ["sign-of-chaos", "chaos-mastery"].iter().enumerate() {
+        for (rank, book_slug) in ["sign-of-chaos", "chaos-mastery", "chaos-channels"]
+            .iter()
+            .enumerate()
+        {
             let book: serde_json::Value = serde_json::from_str(
                 &std::fs::read_to_string(root.join(format!("abilityBooks/{book_slug}.json")))
                     .unwrap(),

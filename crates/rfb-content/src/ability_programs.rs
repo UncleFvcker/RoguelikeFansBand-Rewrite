@@ -222,6 +222,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::Summon { .. }
                     | AbilityEffectDefinition::SummonCategory { .. }
                     | AbilityEffectDefinition::NatureGate { .. }
+                    | AbilityEffectDefinition::ChainLightning
                     | AbilityEffectDefinition::DemonSummoning
                     | AbilityEffectDefinition::AngelSummoning
                     | AbilityEffectDefinition::BanishEvil

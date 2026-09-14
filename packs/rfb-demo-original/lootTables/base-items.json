@@ -954,6 +954,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.chaos-channels",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.handbook-for-pupils",
       "maxDepth": 30,
       "minDepth": 10,

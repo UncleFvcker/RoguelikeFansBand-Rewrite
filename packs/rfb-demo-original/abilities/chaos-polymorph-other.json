@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.chaos-polymorph-other",
+  "nameKey": "ability-demo-chaos-polymorph-other-name",
+  "descriptionKey": "ability-demo-chaos-polymorph-other-description",
+  "abilityProgramId": "demo.ability-program.chaos-polymorph-other",
+  "target": {
+    "modes": [
+      "position",
+      "entity",
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "chaos",
+    "spell"
+  ]
+}

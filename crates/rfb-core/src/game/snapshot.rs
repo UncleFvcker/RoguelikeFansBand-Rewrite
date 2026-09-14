@@ -709,6 +709,9 @@ impl Game {
                         .collect(),
                     target_spec,
                     element_targets: self.ability_element_targets(&effective_ability),
+                    item_selection_cancel_target: (effective_ability.id
+                        == "demo.ability.chaos-chaos-branding")
+                        .then_some(rfb_protocol::TargetSelection::SelfTarget),
                     item_targets: if matches!(
                         effective_ability.effect,
                         AbilityEffectDefinition::MagicEaterAbsorb

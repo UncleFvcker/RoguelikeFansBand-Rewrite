@@ -475,6 +475,7 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             radius: *radius,
             duration_turns: *duration_turns,
         },
+        AbilityEffectDefinition::ChainLightning => AbilityEffectSpecDto::ChainLightning,
         AbilityEffectDefinition::DemonSummoning => AbilityEffectSpecDto::DemonSummoning,
         AbilityEffectDefinition::AngelSummoning => AbilityEffectSpecDto::AngelSummoning,
         AbilityEffectDefinition::BanishEvil => AbilityEffectSpecDto::BanishEvil { power: 0 },

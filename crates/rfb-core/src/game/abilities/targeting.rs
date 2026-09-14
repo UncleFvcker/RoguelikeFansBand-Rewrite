@@ -828,6 +828,12 @@ impl Game {
                 }
             }
             AbilityEffectDefinition::BrandWeapon { .. } => {
+                // do_chaos_spell(22) ignores brand_weapon's cancellation result.
+                if ability.id == "demo.ability.chaos-chaos-branding"
+                    && matches!(target, TargetSelection::SelfTarget)
+                {
+                    return Some(AbilityTargetPlan::SelfTarget);
+                }
                 let TargetSelection::Item { item_id } = target else {
                     return None;
                 };
@@ -935,6 +941,7 @@ impl Game {
             | AbilityEffectDefinition::CureMutation
             | AbilityEffectDefinition::CreateCurrentTerrain { .. }
             | AbilityEffectDefinition::NatureGate { .. }
+            | AbilityEffectDefinition::ChainLightning
             | AbilityEffectDefinition::DemonSummoning
             | AbilityEffectDefinition::AngelSummoning
             | AbilityEffectDefinition::BanishEvil
@@ -1038,7 +1045,8 @@ impl Game {
                     self.ability_path(ability, target)
                         .map(|path| AbilityTargetPlan::Projectile {
                             path,
-                            stop_at_actor: matches!(target, TargetSelection::Direction { .. }),
+                            stop_at_actor: ability.id == "demo.ability.chaos-magic-rocket"
+                                || matches!(target, TargetSelection::Direction { .. }),
                         })
                 }
             }

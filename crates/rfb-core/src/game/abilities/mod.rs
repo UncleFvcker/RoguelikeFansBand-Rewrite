@@ -393,6 +393,14 @@ impl Game {
             (AbilityEffectDefinition::NatureGate { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_nature_gate_effect(&ability, events, changed);
             }
+            (AbilityEffectDefinition::ChainLightning, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_chain_lightning_effect(
+                    &ability,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             (AbilityEffectDefinition::DemonSummoning, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_demon_summoning_effect(&ability, events, changed);
             }
@@ -783,6 +791,16 @@ impl Game {
             }
             (AbilityEffectDefinition::AggravateMonsters, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_aggravate_monsters_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::BrandWeapon { .. }, AbilityTargetPlan::SelfTarget)
+                if ability.id == "demo.ability.chaos-chaos-branding" =>
+            {
+                // The normal cast has already charged mana and rolled failure.
+                let mut cancelled = ability.clone();
+                cancelled.effect = AbilityEffectDefinition::NoOp {
+                    reason: "cancelled".into(),
+                };
+                self.resolve_player_no_op_effect(&cancelled, events);
             }
             (AbilityEffectDefinition::BrandWeapon { .. }, AbilityTargetPlan::Item { item_id }) => {
                 self.resolve_player_brand_weapon_effect(&ability, &item_id, events);

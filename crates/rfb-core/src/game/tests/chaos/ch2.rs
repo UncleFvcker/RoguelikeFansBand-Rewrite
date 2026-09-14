@@ -9,7 +9,7 @@ fn east() -> TargetSelection {
     }
 }
 
-fn dungeon(game: &mut Game) {
+pub(super) fn dungeon(game: &mut Game) {
     let definition = game
         .content
         .world(DEFAULT_WORLD_ID)

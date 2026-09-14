@@ -1604,6 +1604,7 @@ pub enum AbilityEffectSpecDto {
         radius: u8,
         duration_turns: u16,
     },
+    ChainLightning,
     DemonSummoning,
     AngelSummoning,
     BanishEvil {
@@ -2038,6 +2039,9 @@ pub struct AbilityDto {
     pub element_targets: Vec<DamageTypeDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub item_targets: Option<Vec<AbilityItemTargetDto>>,
+    /// Submit this target when item selection is cancelled; absence means no cast.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub item_selection_cancel_target: Option<TargetSelection>,
     pub learned: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub forgotten: bool,

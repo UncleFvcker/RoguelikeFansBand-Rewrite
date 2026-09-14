@@ -35,6 +35,75 @@ const DEATH_VAMPIRIC_DRAIN_ABILITY_ID: &str = "demo.ability.death-vampiric-drain
 const DEATH_VAMPIRISM_TRUE_ABILITY_ID: &str = "demo.ability.death-vampirism-true";
 
 impl Game {
+    pub(super) fn resolve_player_chain_lightning_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        use rfb_protocol::{Direction, TargetSelection};
+
+        let mut beam = ability.clone();
+        beam.effect = AbilityEffectDefinition::BeamDamage {
+            damage_dice: 5 + self.progress.level / 10,
+            damage_sides: 8,
+            damage_bonus: 0,
+            damage_type: rfb_content::ActorDamageType::Electricity,
+            maximum_range: None,
+        };
+        if let Some(profile) = self.casting_profile() {
+            self.apply_casting_profile_damage_bonus(profile, &mut beam, self.progress.level);
+        }
+        let AbilityEffectDefinition::BeamDamage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            ..
+        } = beam.effect
+        else {
+            unreachable!()
+        };
+
+        // do_chaos_spell(17) rolls separately for keypad directions 0..=9.
+        // 0 is the origin; 5 uses RFB's old global target. This game has no
+        // retained target, so both are empty shots but still consume their dice.
+        for direction in [
+            None,
+            Some(Direction::SouthWest),
+            Some(Direction::South),
+            Some(Direction::SouthEast),
+            Some(Direction::West),
+            None,
+            Some(Direction::East),
+            Some(Direction::NorthWest),
+            Some(Direction::North),
+            Some(Direction::NorthEast),
+        ] {
+            let damage = self
+                .roll_damage(damage_dice, damage_sides)
+                .saturating_add(i32::from(damage_bonus))
+                .max(0);
+            let damage = i32::try_from(spell_power_value(damage as u64, ability.spell_power_bonus))
+                .expect("chain lightning damage must fit i32");
+            let Some(direction) = direction else { continue };
+            let path = self
+                .projectile_path(&TargetSelection::Direction { direction }, 8)
+                .expect("a compass direction always produces a projectile path");
+            self.resolve_player_beam_damage_with_base(
+                &ability.id,
+                path,
+                DamageType::Electricity,
+                damage,
+                ability.affects_ground_items,
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        Ok(())
+    }
+
     pub(in crate::game) fn resolve_player_projectile_damage_effect(
         &mut self,
         ability: &AbilityDefinition,

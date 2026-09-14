@@ -282,12 +282,17 @@ impl Game {
         };
         let hostile = self.rng.bounded(3) == 0;
         let level = self.progress.level;
-        let maximum_level_roll = self.rng.bounded(u64::from(level / 2)).saturating_add(1);
-        let maximum_level = spell_power_value(
-            u64::from(level.saturating_mul(2) / 3).saturating_add(maximum_level_roll),
-            ability.spell_power_bonus,
-        )
-        .min(u64::from(u16::MAX)) as u16;
+        let maximum_level = if ability.id == "demo.ability.chaos-summon-demon" {
+            // do_chaos_spell(23): no power boost and no level roll.
+            level.saturating_mul(3) / 2
+        } else {
+            let roll = self.rng.bounded(u64::from(level / 2)).saturating_add(1);
+            spell_power_value(
+                u64::from(level.saturating_mul(2) / 3).saturating_add(roll),
+                ability.spell_power_bonus,
+            )
+            .min(u64::from(u16::MAX)) as u16
+        };
         self.resolve_player_group_summoning_effect(
             ability,
             "demon",

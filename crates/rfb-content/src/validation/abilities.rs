@@ -683,7 +683,8 @@ pub(super) fn validate_abilities(
                         && (1..=64).contains(radius)
                         && *duration_turns == 0
                 }
-                AbilityEffectDefinition::DemonSummoning
+                AbilityEffectDefinition::ChainLightning
+                | AbilityEffectDefinition::DemonSummoning
                 | AbilityEffectDefinition::AngelSummoning
                 | AbilityEffectDefinition::BanishEvil
                 | AbilityEffectDefinition::Evocation
@@ -1391,6 +1392,7 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::Summon { .. }
             | AbilityEffectDefinition::SummonCategory { .. }
             | AbilityEffectDefinition::NatureGate { .. }
+            | AbilityEffectDefinition::ChainLightning
             | AbilityEffectDefinition::DemonSummoning
             | AbilityEffectDefinition::AngelSummoning
             | AbilityEffectDefinition::BanishEvil

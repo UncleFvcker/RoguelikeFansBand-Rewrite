@@ -21,7 +21,7 @@ fn caster(class: &str, level: u16) -> Game {
         .iter()
         .find(|p| p["classId"] == class_id)
         .unwrap();
-    let overrides = profile["abilityOverrides"].as_array().unwrap()[..16].to_vec();
+    let overrides = profile["abilityOverrides"].as_array().unwrap()[..24].to_vec();
     artifact
         .content
         .classes
@@ -37,6 +37,7 @@ fn caster(class: &str, level: u16) -> Game {
             ability_book_ids: vec![
                 "demo.ability-book.sign-of-chaos".into(),
                 "demo.ability-book.chaos-mastery".into(),
+                "demo.ability-book.chaos-channels".into(),
             ],
             learning_capacity_bonus: 0,
             ability_overrides: serde_json::from_value(serde_json::Value::Array(overrides)).unwrap(),
@@ -98,17 +99,17 @@ fn caster(class: &str, level: u16) -> Game {
 
 fn learn(game: &mut Game, slug: &str) -> String {
     let id = format!("demo.ability.chaos-{slug}");
-    let book_kind = if game
-        .content
-        .ability_book("demo.ability-book.sign-of-chaos")
-        .unwrap()
-        .ability_ids
-        .contains(&id)
-    {
-        BOOK
-    } else {
-        "demo.item.chaos-mastery"
-    };
+    let book_kind = ["sign-of-chaos", "chaos-mastery", "chaos-channels"]
+        .into_iter()
+        .find(|slug| {
+            game.content
+                .ability_book(&format!("demo.ability-book.{slug}"))
+                .unwrap()
+                .ability_ids
+                .contains(&id)
+        })
+        .map(|slug| format!("demo.item.{slug}"))
+        .expect("implemented Chaos spell must belong to a book");
     let instance_id = format!("test.{book_kind}");
     let book = game
         .items
@@ -116,7 +117,7 @@ fn learn(game: &mut Game, slug: &str) -> String {
         .find(|i| i.kind_id == book_kind)
         .map(|i| i.id.clone())
         .unwrap_or_else(|| {
-            give_inventory_item(game, &instance_id, book_kind);
+            give_inventory_item(game, &instance_id, &book_kind);
             instance_id
         });
     game.study_player_ability(&book, &id).unwrap();
@@ -431,3 +432,4 @@ fn ch1_invalid_target_does_not_arm_touch_or_spend_resources_or_rng() {
 }
 
 mod ch2;
+mod ch3;

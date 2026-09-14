@@ -31,6 +31,7 @@ fn attack_projection(effect: &AbilityEffectDefinition, self_target: bool) -> Opt
         ApplyStatus { .. } => (!self_target).then_some(true),
         Malediction { .. }
         | CallSunlight { .. }
+        | ChainLightning
         | Stardust { .. }
         | CurseDamage { .. }
         | DeathRay { .. }
