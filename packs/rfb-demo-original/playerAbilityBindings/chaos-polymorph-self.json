@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.chaos-polymorph-self",
+  "minimumLevel": 42,
+  "resourceCost": 50,
+  "baseFailurePercent": 85,
+  "firstSuccessExperience": 10500,
+  "resourceId": "demo.resource.mana"
+}

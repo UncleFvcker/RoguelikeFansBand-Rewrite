@@ -1100,13 +1100,24 @@ impl Game {
         let duelist_target_id = payload.player.duelist_target_id.clone();
         let pending_duelist = payload.player.pending_duelist.clone();
         if pending_ability_direction.as_ref().is_some_and(|pending| {
-            pending.ability_id != "demo.ability.nature-natures-wrath"
-                || !matches!(pending.branch_roll, 2 | 6)
-                || pending.cast_resolution.ability_id != pending.ability_id
+            !match pending.ability_id.as_str() {
+                "demo.ability.nature-natures-wrath" => matches!(pending.branch_roll, 2 | 6),
+                "demo.ability.chaos-call-chaos" => (1..=62).contains(&pending.branch_roll),
+                _ => false,
+            } || pending.cast_resolution.ability_id != pending.ability_id
                 || !pending.cast_resolution.succeeded
                 || !saved_learned_ability_ids.contains(&pending.ability_id)
                 || !content.ability(&pending.ability_id).is_some_and(|ability| {
-                    matches!(ability.effect, AbilityEffectDefinition::NatureWrath)
+                    matches!(
+                        (&ability.effect, pending.ability_id.as_str()),
+                        (
+                            AbilityEffectDefinition::NatureWrath,
+                            "demo.ability.nature-natures-wrath"
+                        ) | (
+                            AbilityEffectDefinition::CallChaos,
+                            "demo.ability.chaos-call-chaos"
+                        )
+                    )
                 })
                 || payload.map_scale != MapScaleDto::Local
         }) {

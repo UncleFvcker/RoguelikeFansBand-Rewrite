@@ -1417,6 +1417,29 @@ impl Game {
         magma_terrain_id: &str,
         power: Option<u16>,
     ) -> AreaDestructionPlan {
+        let radius_span = u64::from(maximum_radius - minimum_radius) + 1;
+        let radius = minimum_radius
+            + u8::try_from(self.rng.bounded(radius_span))
+                .expect("validated destruction radius span must fit u8");
+        self.plan_area_destruction_with_radius(
+            radius,
+            floor_terrain_id,
+            wall_terrain_id,
+            quartz_terrain_id,
+            magma_terrain_id,
+            power,
+        )
+    }
+
+    pub(super) fn plan_area_destruction_with_radius(
+        &mut self,
+        radius: u8,
+        floor_terrain_id: &str,
+        wall_terrain_id: &str,
+        quartz_terrain_id: &str,
+        magma_terrain_id: &str,
+        power: Option<u16>,
+    ) -> AreaDestructionPlan {
         let forest = self.in_forest_dungeon();
         let (floor_terrain_id, wall_terrain_id, quartz_terrain_id, magma_terrain_id) = if forest {
             (
@@ -1433,10 +1456,6 @@ impl Game {
                 magma_terrain_id,
             )
         };
-        let radius_span = u64::from(maximum_radius - minimum_radius) + 1;
-        let radius = minimum_radius
-            + u8::try_from(self.rng.bounded(radius_span))
-                .expect("validated destruction radius span must fit u8");
         let center = self.player.position;
         let radius_limit = u32::from(radius);
         let radius_offset = i32::from(radius);

@@ -18,7 +18,11 @@ use super::shared::{
 
 fn effect_can_affect_ground_items(effect: &AbilityEffectDefinition) -> bool {
     match effect {
-        AbilityEffectDefinition::Damage { .. }
+        AbilityEffectDefinition::ChainLightning
+        | AbilityEffectDefinition::ChaosMeteorSwarm
+        | AbilityEffectDefinition::CallChaos
+        | AbilityEffectDefinition::CallVoid
+        | AbilityEffectDefinition::Damage { .. }
         | AbilityEffectDefinition::Malediction { .. }
         | AbilityEffectDefinition::AreaDamage { .. }
         | AbilityEffectDefinition::BeamDamage { .. }
@@ -684,6 +688,10 @@ pub(super) fn validate_abilities(
                         && *duration_turns == 0
                 }
                 AbilityEffectDefinition::ChainLightning
+                | AbilityEffectDefinition::ChaosMeteorSwarm
+                | AbilityEffectDefinition::CallChaos
+                | AbilityEffectDefinition::ChaosPolymorphSelf
+                | AbilityEffectDefinition::CallVoid
                 | AbilityEffectDefinition::DemonSummoning
                 | AbilityEffectDefinition::AngelSummoning
                 | AbilityEffectDefinition::BanishEvil
@@ -1393,6 +1401,10 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::SummonCategory { .. }
             | AbilityEffectDefinition::NatureGate { .. }
             | AbilityEffectDefinition::ChainLightning
+            | AbilityEffectDefinition::ChaosMeteorSwarm
+            | AbilityEffectDefinition::CallChaos
+            | AbilityEffectDefinition::ChaosPolymorphSelf
+            | AbilityEffectDefinition::CallVoid
             | AbilityEffectDefinition::DemonSummoning
             | AbilityEffectDefinition::AngelSummoning
             | AbilityEffectDefinition::BanishEvil
@@ -1584,6 +1596,11 @@ pub(super) fn validate_abilities(
                     ActorRole::Monster,
                     &ability.id,
                 )?;
+            }
+            if matches!(effect, AbilityEffectDefinition::ChaosPolymorphSelf) {
+                for (_, race_id) in crate::CHAOS_POLYMORPH_RACES {
+                    ability_race_ids.push((ability.id.clone(), (*race_id).to_owned()));
+                }
             }
             if let AbilityEffectDefinition::BrandWeapon { affix_id, .. } = effect {
                 require_reference(affix_ids, affix_id, &ability.id)?;

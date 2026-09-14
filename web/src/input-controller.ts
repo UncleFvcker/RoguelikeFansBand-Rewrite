@@ -361,7 +361,13 @@ export class InputController {
       if (targeting) {
         this.#state.targeting = targeting;
         this.#state.targetingIntent = { type: "ability-direction" };
-        this.#announce("message-ability-direction-required", undefined, "ability");
+        this.#announce(
+          pendingAbilityDirection.abilityId === "demo.ability.chaos-call-chaos"
+            ? "message-chaos-direction-required"
+            : "message-ability-direction-required",
+          undefined,
+          "ability",
+        );
       }
     } else if (
       !pendingAbilityDirection &&

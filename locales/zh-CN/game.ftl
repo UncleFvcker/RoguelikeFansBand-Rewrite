@@ -151,6 +151,7 @@ message-mutation-warning-safe = 你感觉还算安全。
 message-mutation-warning-lonely = 你感到孤单。
 message-mutation-direction-required = 魔法能量在你体内流淌！选择一个方向释放它。
 message-ability-direction-required = 为自然之怒选择一个方向。
+message-chaos-direction-required = 为召唤混沌选择一个方向；取消仍会消耗法力和回合。
 message-mutation-fumbled = 你被自己的脚绊倒了，受到 { $damage } 点伤害。
 message-mutation-fumbled-drop = 你被自己的脚绊倒了，受到 { $damage } 点伤害并掉落了{ $target }。
 message-mutation-reality-changed = 你拒绝了这个现实，并用另一个现实取而代之！

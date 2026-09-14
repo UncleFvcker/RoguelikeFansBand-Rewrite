@@ -3,13 +3,13 @@ use super::*;
 use crate::game::ability_scaling::spell_power_value;
 use rfb_protocol::{AbilityEffectResolutionDto, ItemChargesDto, VirtueKindDto};
 
-fn cast_where(
+pub(super) fn cast_where(
     base: &Game,
     id: &str,
     target: TargetSelection,
     accepts: impl Fn(&Game, &[DomainEvent]) -> bool,
 ) -> (Game, Vec<DomainEvent>) {
-    for seed in 0..4096 {
+    for seed in 0..32_768 {
         let mut before = base.clone();
         before.rng = RfbRng::seeded(seed);
         for pool in before.resources.values_mut() {

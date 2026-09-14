@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.armageddon-tome",
+  "nameKey": "ability-book-demo-armageddon-tome-name",
+  "descriptionKey": "ability-book-demo-armageddon-tome-description",
+  "realmId": "chaos",
+  "rank": 4,
+  "abilityIds": [
+    "demo.ability.chaos-gravity-beam",
+    "demo.ability.chaos-meteor-swarm",
+    "demo.ability.chaos-flame-strike",
+    "demo.ability.chaos-call-chaos",
+    "demo.ability.chaos-polymorph-self",
+    "demo.ability.chaos-mana-storm",
+    "demo.ability.chaos-breathe-logrus",
+    "demo.ability.chaos-call-the-void"
+  ],
+  "tags": [
+    "chaos",
+    "spellbook"
+  ]
+}

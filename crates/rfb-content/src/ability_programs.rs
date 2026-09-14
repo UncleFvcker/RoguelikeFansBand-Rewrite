@@ -223,6 +223,10 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::SummonCategory { .. }
                     | AbilityEffectDefinition::NatureGate { .. }
                     | AbilityEffectDefinition::ChainLightning
+                    | AbilityEffectDefinition::ChaosMeteorSwarm
+                    | AbilityEffectDefinition::CallChaos
+                    | AbilityEffectDefinition::ChaosPolymorphSelf
+                    | AbilityEffectDefinition::CallVoid
                     | AbilityEffectDefinition::DemonSummoning
                     | AbilityEffectDefinition::AngelSummoning
                     | AbilityEffectDefinition::BanishEvil

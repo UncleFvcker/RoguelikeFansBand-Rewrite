@@ -1883,7 +1883,8 @@ impl Game {
                         &mut removed_entities,
                     )?;
                 }
-                if self.pending_ability_glyph.is_some() {
+                if self.pending_ability_glyph.is_some() || self.pending_ability_direction.is_some()
+                {
                     advances_world = false;
                     action_cost = 0;
                     turn_advance = 0;
@@ -1933,7 +1934,23 @@ impl Game {
                 )?;
             }
             GameAction::CancelAbilityDirection => {
-                self.pending_ability_direction = None;
+                if self
+                    .pending_ability_direction
+                    .as_ref()
+                    .is_some_and(|p| p.ability_id == "demo.ability.chaos-call-chaos")
+                {
+                    self.resolve_pending_call_chaos(
+                        None,
+                        &mut events,
+                        &mut changed,
+                        &mut removed_entities,
+                    )?;
+                    advances_world = true;
+                    action_cost = STANDARD_ACTION_COST;
+                    turn_advance = 1;
+                } else {
+                    self.pending_ability_direction = None;
+                }
             }
             GameAction::ResolveAbilityDirection { direction } => {
                 self.resolve_pending_ability_direction(

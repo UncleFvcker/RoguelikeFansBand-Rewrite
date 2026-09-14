@@ -380,6 +380,12 @@ impl Game {
             *damage_bonus = level + level / if mage { 2 } else { 4 };
             *radius = if level < 30 { 2 } else { 3 };
         }
+        if ability.id == "demo.ability.chaos-breathe-logrus"
+            && let AbilityEffectDefinition::AreaDamage { damage_bonus, .. } = &mut effective.effect
+        {
+            *damage_bonus = u16::try_from(i64::from(self.player.hp.max(0)) * 3 / 4)
+                .expect("player HP based spell damage fits content damage");
+        }
         effective
     }
 

@@ -570,13 +570,29 @@ impl Game {
             return Ok(None);
         }
         let practice = book_spell.then(|| (ability.clone(), self.spell_practice_targets()));
-        let result = self.resolve_player_ability_effect(
-            ability,
-            target_plan,
-            events,
-            changed,
-            removed_entities,
-        );
+        let call_chaos = matches!(ability.effect, AbilityEffectDefinition::CallChaos);
+        if call_chaos
+            && let Some(branch_roll) =
+                self.begin_call_chaos(&ability, events, changed, removed_entities)?
+        {
+            self.pending_ability_direction = Some(rfb_protocol::PendingAbilityDirectionDto {
+                ability_id: ability.id.clone(),
+                branch_roll,
+                cast_resolution: resolution,
+            });
+            return Ok(None);
+        }
+        let result = if call_chaos {
+            Ok(None)
+        } else {
+            self.resolve_player_ability_effect(
+                ability,
+                target_plan,
+                events,
+                changed,
+                removed_entities,
+            )
+        };
         if result.is_ok() && source == AbilitySourceDto::Class && self.duelist_prompt().is_some() {
             events.remove(cast_event_index);
             self.continue_after_duelist_choice(rfb_protocol::DuelistContinuationDto::ClassCast {
@@ -598,10 +614,15 @@ impl Game {
         }
         let direction_pending =
             ability_id == NATURE_WRATH_ABILITY_ID && nature_wrath_direction_roll(events).is_some();
-        if result.is_ok() && !direction_pending && first_success_experience > 0 {
+        if result.is_ok()
+            && !self.player_is_dead()
+            && !direction_pending
+            && first_success_experience > 0
+        {
             self.apply_player_experience(u64::from(first_success_experience), events);
         }
         if result.is_ok()
+            && !self.player_is_dead()
             && !direction_pending
             && let Some((ability, targets)) = practice
         {
@@ -790,6 +811,67 @@ impl Game {
         Ok(())
     }
 
+    pub(in crate::game) fn resolve_pending_call_chaos(
+        &mut self,
+        direction: Option<Direction>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let pending = self
+            .pending_ability_direction
+            .clone()
+            .ok_or(CoreError::AbilityDirectionUnavailable)?;
+        if pending.ability_id != "demo.ability.chaos-call-chaos"
+            || !(1..=62).contains(&pending.branch_roll)
+        {
+            return Err(CoreError::AbilityDirectionUnavailable);
+        }
+        let ability = self
+            .content
+            .ability(&pending.ability_id)
+            .cloned()
+            .ok_or(CoreError::AbilityDirectionUnavailable)?;
+        let targets = self.spell_practice_targets();
+        self.pending_ability_direction = None;
+        if let Some(direction) = direction {
+            self.call_chaos_projection(
+                &ability,
+                pending.branch_roll,
+                direction,
+                250,
+                3 + (self.progress.level / 35) as u8,
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        if self.player_is_dead() {
+            return Ok(());
+        }
+        let cast = pending.cast_resolution;
+        if cast.cast_count == 1 {
+            let profile = self
+                .casting_profile()
+                .expect("pending Chaos cast has a profile");
+            let effective = self.effective_casting_ability(profile, &ability);
+            let experience = Self::player_ability_parameters(&effective).first_success_experience;
+            if experience > 0 {
+                self.apply_player_experience(u64::from(experience), events);
+            }
+        }
+        if self.player_uses_dual_realm_learning() {
+            self.apply_book_spell_cast_virtues(
+                &ability.id,
+                cast.resource_cost,
+                cast.failure_percent,
+                cast.cast_count == 1,
+            );
+            self.grow_book_spell(&ability, &targets, events);
+        }
+        Ok(())
+    }
+
     pub(in crate::game) fn resolve_pending_ability_direction(
         &mut self,
         direction: Direction,
@@ -797,6 +879,18 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        if self
+            .pending_ability_direction
+            .as_ref()
+            .is_some_and(|p| p.ability_id == "demo.ability.chaos-call-chaos")
+        {
+            return self.resolve_pending_call_chaos(
+                Some(direction),
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         let pending = self
             .pending_ability_direction
             .clone()

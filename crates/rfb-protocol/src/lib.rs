@@ -1605,6 +1605,11 @@ pub enum AbilityEffectSpecDto {
         duration_turns: u16,
     },
     ChainLightning,
+    ChaosMeteorSwarm,
+    CallChaos,
+    ChaosPolymorphSelf,
+    CallVoid,
+
     DemonSummoning,
     AngelSummoning,
     BanishEvil {

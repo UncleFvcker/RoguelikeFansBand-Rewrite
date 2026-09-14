@@ -942,6 +942,10 @@ impl Game {
             | AbilityEffectDefinition::CreateCurrentTerrain { .. }
             | AbilityEffectDefinition::NatureGate { .. }
             | AbilityEffectDefinition::ChainLightning
+            | AbilityEffectDefinition::ChaosMeteorSwarm
+            | AbilityEffectDefinition::CallChaos
+            | AbilityEffectDefinition::ChaosPolymorphSelf
+            | AbilityEffectDefinition::CallVoid
             | AbilityEffectDefinition::DemonSummoning
             | AbilityEffectDefinition::AngelSummoning
             | AbilityEffectDefinition::BanishEvil

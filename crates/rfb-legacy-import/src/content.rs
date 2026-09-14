@@ -30247,9 +30247,20 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 );
             }
         }
-        for (rank, book_slug) in ["sign-of-chaos", "chaos-mastery", "chaos-channels"]
-            .iter()
-            .enumerate()
+        let races = source["polymorphRaces"].as_array().unwrap();
+        assert_eq!(races.len(), rfb_content::CHAOS_POLYMORPH_RACES.len());
+        for (entry, &(index, id)) in races.iter().zip(rfb_content::CHAOS_POLYMORPH_RACES) {
+            assert_eq!(entry["sourceIndex"], index);
+            assert_eq!(entry["raceId"], id);
+        }
+        for (rank, book_slug) in [
+            "sign-of-chaos",
+            "chaos-mastery",
+            "chaos-channels",
+            "armageddon-tome",
+        ]
+        .iter()
+        .enumerate()
         {
             let book: serde_json::Value = serde_json::from_str(
                 &std::fs::read_to_string(root.join(format!("abilityBooks/{book_slug}.json")))

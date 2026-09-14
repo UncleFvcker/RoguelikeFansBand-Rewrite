@@ -11,7 +11,15 @@
     "lib/edit/k_info.txt",
     "lib/edit/m_info.txt",
     "src/spells3.c",
-    "src/tables.c"
+    "src/tables.c",
+    "src/defines.h",
+    "src/effects.c",
+    "src/races.c",
+    "src/races_a.c",
+    "src/igor.c",
+    "src/werewolf.c",
+    "src/beorning.c",
+    "src/wild.c"
   ],
   "spells": [
     {
@@ -1362,6 +1370,180 @@
           "firstSuccessExperience": 11500
         }
       ]
+    }
+  ],
+  "polymorphRaces": [
+    {
+      "sourceIndex": 1,
+      "raceId": "rfb-legacy.race.tonberry"
+    },
+    {
+      "sourceIndex": 3,
+      "raceId": "rfb-legacy.race.hobbit"
+    },
+    {
+      "sourceIndex": 4,
+      "raceId": "rfb-legacy.race.gnome"
+    },
+    {
+      "sourceIndex": 5,
+      "raceId": "rfb-legacy.race.dwarf"
+    },
+    {
+      "sourceIndex": 6,
+      "raceId": "rfb-legacy.race.snotling"
+    },
+    {
+      "sourceIndex": 7,
+      "raceId": "rfb-legacy.race.half-troll"
+    },
+    {
+      "sourceIndex": 8,
+      "raceId": "rfb-legacy.race.amberite"
+    },
+    {
+      "sourceIndex": 9,
+      "raceId": "rfb-legacy.race.high-elf"
+    },
+    {
+      "sourceIndex": 10,
+      "raceId": "rfb-legacy.race.barbarian"
+    },
+    {
+      "sourceIndex": 11,
+      "raceId": "rfb-legacy.race.ogre"
+    },
+    {
+      "sourceIndex": 12,
+      "raceId": "rfb-legacy.race.half-giant"
+    },
+    {
+      "sourceIndex": 13,
+      "raceId": "rfb-legacy.race.half-titan"
+    },
+    {
+      "sourceIndex": 14,
+      "raceId": "rfb-legacy.race.cyclops"
+    },
+    {
+      "sourceIndex": 15,
+      "raceId": "rfb-legacy.race.yeek"
+    },
+    {
+      "sourceIndex": 16,
+      "raceId": "rfb-legacy.race.klackon"
+    },
+    {
+      "sourceIndex": 17,
+      "raceId": "rfb-legacy.race.kobold"
+    },
+    {
+      "sourceIndex": 18,
+      "raceId": "rfb-legacy.race.nibelung"
+    },
+    {
+      "sourceIndex": 19,
+      "raceId": "rfb-legacy.race.dark-elf"
+    },
+    {
+      "sourceIndex": 21,
+      "raceId": "rfb-legacy.race.mindflayer"
+    },
+    {
+      "sourceIndex": 22,
+      "raceId": "rfb-legacy.race.imp"
+    },
+    {
+      "sourceIndex": 23,
+      "raceId": "rfb-legacy.race.golem"
+    },
+    {
+      "sourceIndex": 24,
+      "raceId": "rfb-legacy.race.skeleton"
+    },
+    {
+      "sourceIndex": 25,
+      "raceId": "rfb-legacy.race.zombie"
+    },
+    {
+      "sourceIndex": 26,
+      "raceId": "rfb-legacy.race.vampire"
+    },
+    {
+      "sourceIndex": 27,
+      "raceId": "rfb-legacy.race.spectre"
+    },
+    {
+      "sourceIndex": 28,
+      "raceId": "rfb-legacy.race.sprite"
+    },
+    {
+      "sourceIndex": 29,
+      "raceId": "rfb-legacy.race.beastman"
+    },
+    {
+      "sourceIndex": 30,
+      "raceId": "rfb-legacy.race.ent"
+    },
+    {
+      "sourceIndex": 31,
+      "raceId": "rfb-legacy.race.archon"
+    },
+    {
+      "sourceIndex": 32,
+      "raceId": "rfb-legacy.race.balrog"
+    },
+    {
+      "sourceIndex": 33,
+      "raceId": "rfb-legacy.race.dunadan"
+    },
+    {
+      "sourceIndex": 34,
+      "raceId": "rfb-legacy.race.shadow-fairy"
+    },
+    {
+      "sourceIndex": 35,
+      "raceId": "rfb-legacy.race.kutar"
+    },
+    {
+      "sourceIndex": 51,
+      "raceId": "rfb-legacy.race.centaur"
+    },
+    {
+      "sourceIndex": 60,
+      "raceId": "rfb-legacy.race.wood-elf"
+    },
+    {
+      "sourceIndex": 63,
+      "raceId": "rfb-legacy.race.half-orc"
+    },
+    {
+      "sourceIndex": 64,
+      "raceId": "rfb-legacy.race.einheri"
+    },
+    {
+      "sourceIndex": 67,
+      "raceId": "rfb-legacy.race.boit"
+    },
+    {
+      "sourceIndex": 70,
+      "raceId": "rfb-legacy.race.tomte"
+    },
+    {
+      "sourceIndex": 74,
+      "raceId": "rfb-legacy.race.maia"
+    },
+    {
+      "sourceIndex": 1000,
+      "raceId": "demo.race.demon"
+    },
+    {
+      "sourceIndex": 1001,
+      "raceId": "demo.race.demon-lord"
+    },
+    {
+      "sourceIndex": 1002,
+      "raceId": "demo.race.vampire-lord"
     }
   ]
 }

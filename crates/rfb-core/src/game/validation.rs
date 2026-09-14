@@ -1784,7 +1784,46 @@ impl Game {
                     return Err(CoreError::InvalidSave("pending spell glyph is invalid"));
                 }
             }
+            if let Some(pending) = &self.pending_ability_direction
+                && pending.ability_id == "demo.ability.chaos-call-chaos"
+            {
+                let cast = &pending.cast_resolution;
+                if !(1..=62).contains(&pending.branch_roll)
+                    || cast.ability_id != pending.ability_id
+                    || !cast.succeeded
+                    || cast.cast_count == 0
+                    || !self.learned_abilities.contains(&pending.ability_id)
+                    || self.pending_ability_glyph.is_some()
+                    || self.pending_mutation_direction.is_some()
+                    || self.pending_duelist.is_some()
+                    || self.pending_realm_change_book().is_some()
+                    || self.map_scale != rfb_protocol::MapScaleDto::Local
+                    || self
+                        .ability_progress
+                        .get(&pending.ability_id)
+                        .is_none_or(|p| {
+                            p.cast_count != cast.cast_count
+                                || p.fail_count != cast.fail_count
+                                || p.proficiency != cast.proficiency_after
+                        })
+                    || cast.resource_id.as_deref() != Some("demo.resource.mana")
+                    || cast.hp_paid != 0
+                    || cast.resource_paid != cast.resource_cost
+                    || cast.resource_before.checked_sub(cast.resource_paid)
+                        != Some(cast.resource_after)
+                    || self
+                        .resources
+                        .get("demo.resource.mana")
+                        .is_none_or(|p| p.current != cast.resource_after)
+                {
+                    return Err(CoreError::InvalidSave("pending Chaos direction is invalid"));
+                }
+            }
             if self.player_uses_dual_realm_learning()
+                && self
+                    .pending_ability_direction
+                    .as_ref()
+                    .is_some_and(|p| p.ability_id != "demo.ability.chaos-call-chaos")
                 && self
                     .pending_ability_direction
                     .as_ref()

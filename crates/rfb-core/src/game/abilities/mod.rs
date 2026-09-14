@@ -3,6 +3,7 @@
 mod berserker;
 mod book_magic;
 mod casting;
+mod chaos;
 mod compound;
 mod control;
 mod damage;
@@ -392,6 +393,15 @@ impl Game {
             }
             (AbilityEffectDefinition::NatureGate { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_nature_gate_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::ChaosMeteorSwarm, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_chaos_meteor_swarm(&ability, events, changed, removed_entities)?;
+            }
+            (AbilityEffectDefinition::ChaosPolymorphSelf, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_chaos_polymorph(&ability, events, changed)?;
+            }
+            (AbilityEffectDefinition::CallVoid, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_call_void(&ability, events, changed, removed_entities)?;
             }
             (AbilityEffectDefinition::ChainLightning, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_chain_lightning_effect(
