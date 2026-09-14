@@ -1360,7 +1360,11 @@ impl Game {
             })
     }
 
-    fn terrain_is_area_destruction_protected(&self, position: Position) -> bool {
+    fn terrain_is_area_destruction_protected(
+        &self,
+        position: Position,
+        protect_monsters: bool,
+    ) -> bool {
         if position == self.player.position
             || self
                 .floor_connections
@@ -1369,16 +1373,18 @@ impl Game {
         {
             return true;
         }
-        if self.entities.iter().any(|entity| {
-            entity.hp > 0
-                && entity.position == position
-                && self.content.actor(&entity.kind_id).is_some_and(|actor| {
-                    actor
-                        .tags
-                        .iter()
-                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
-                })
-        }) {
+        if protect_monsters
+            && self.entities.iter().any(|entity| {
+                entity.hp > 0
+                    && entity.position == position
+                    && self.content.actor(&entity.kind_id).is_some_and(|actor| {
+                        actor
+                            .tags
+                            .iter()
+                            .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
+                    })
+            })
+        {
             return true;
         }
         self.index(position)
@@ -1409,6 +1415,7 @@ impl Game {
         wall_terrain_id: &str,
         quartz_terrain_id: &str,
         magma_terrain_id: &str,
+        power: Option<u16>,
     ) -> AreaDestructionPlan {
         let forest = self.in_forest_dungeon();
         let (floor_terrain_id, wall_terrain_id, quartz_terrain_id, magma_terrain_id) = if forest {
@@ -1440,7 +1447,7 @@ impl Game {
                 let position = Position { x, y };
                 if self.index(position).is_some()
                     && rfb_distance(center, position) <= radius_limit
-                    && !self.terrain_is_area_destruction_protected(position)
+                    && !self.terrain_is_area_destruction_protected(position, power.is_none())
                     && !(forest
                         && self
                             .content
@@ -1453,6 +1460,48 @@ impl Game {
         }
         positions.sort_by_key(|position| (rfb_distance(center, *position), position.y, position.x));
 
+        if let Some(power) = power {
+            let power = if forest { (power / 3).min(75) } else { power }.max(1);
+            let mut protected_positions = BTreeSet::new();
+            for index in 0..self.entities.len() {
+                let actor = &self.entities[index];
+                if actor.hp <= 0 || !positions.contains(&actor.position) {
+                    continue;
+                }
+                let definition = self.actor_runtime_definition(actor).unwrap();
+                let level = definition.level;
+                let questor = definition
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "guardian" | "questor"))
+                    || definition
+                        .allocation
+                        .as_ref()
+                        .is_some_and(|a| a.task_id.is_some());
+                let multiplies = definition.allocation.as_ref().is_some_and(|a| a.multiplies);
+                let summoned = actor.summon.is_some();
+                let freshly_summoned = summoned && actor.nice;
+                let immune = actor.no_destruction;
+                if questor
+                    || (!freshly_summoned
+                        && (immune || u64::from(level) > self.rng.bounded(u64::from(power))))
+                {
+                    let actor = &mut self.entities[index];
+                    protected_positions.insert(actor.position);
+                    actor.alerted = true;
+                    actor
+                        .statuses
+                        .retain(|status| status.kind_id != crate::effect::STATUS_SLEEP);
+                    if actor.controller_id.is_none() {
+                        actor.friendly = false;
+                    }
+                    if !questor && !multiplies && !summoned && self.rng.bounded(13) == 0 {
+                        actor.no_destruction = true;
+                    }
+                }
+            }
+            positions.retain(|p| !protected_positions.contains(p));
+        }
         let affected = positions.iter().copied().collect::<BTreeSet<_>>();
         let entity_ids = self
             .entities
@@ -1464,9 +1513,10 @@ impl Game {
                         .content
                         .actor(&entity.kind_id)
                         .is_some_and(|definition| {
-                            !definition.tags.iter().any(|tag| {
-                                matches!(tag.as_str(), "unique" | "unique2" | "guardian")
-                            })
+                            power.is_some()
+                                || !definition.tags.iter().any(|tag| {
+                                    matches!(tag.as_str(), "unique" | "unique2" | "guardian")
+                                })
                         })
             })
             .map(|entity| entity.id.clone())
@@ -1619,6 +1669,7 @@ impl Game {
             wall_terrain_id,
             quartz_terrain_id,
             magma_terrain_id,
+            None,
         );
         let outcome = self.apply_area_destruction_plan(plan, events, changed, removed_entities);
         self.mark_item_aware(source_kind_id);

@@ -2138,6 +2138,17 @@ impl Game {
         {
             return false;
         }
+        self.place_monster_offspring(index, false, changed)
+    }
+
+    pub(super) fn place_monster_offspring(
+        &mut self,
+        index: usize,
+        cloned: bool,
+        changed: &mut BTreeSet<Position>,
+    ) -> bool {
+        let kind_id = self.entities[index].kind_id.clone();
+        let origin = self.entities[index].position;
         let mut selected = None;
         let mut candidate_count = 0_u64;
         for x in origin.x - 1..=origin.x + 1 {
@@ -2179,6 +2190,8 @@ impl Game {
             INITIAL_MONSTER_ENERGY_NEED,
             true,
         );
+        offspring.cloned = cloned || self.entities[index].cloned;
+        offspring.friendly = self.entities[index].friendly;
         offspring.controller_id = self.entities[index].controller_id.clone();
         offspring.summon = self.entities[index].summon.clone();
         self.entities.push(offspring);

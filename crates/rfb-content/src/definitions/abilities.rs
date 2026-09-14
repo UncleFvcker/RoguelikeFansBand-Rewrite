@@ -560,6 +560,9 @@ pub enum AbilityEffectDefinition {
     },
     PolymorphSelf,
     PolymorphTarget,
+    CloneTarget,
+    HasteTarget,
+    HealTarget,
     SwapPosition,
     Recall {
         delay_dice: u16,

@@ -822,6 +822,19 @@ impl Game {
             removed_items,
             removed_gold_piles,
         ) = if self.area_destruction_allowed() {
+            let power = match ability.id.as_str() {
+                "demo.ability.chaos-word-of-destruction" => {
+                    Some(super::super::ability_scaling::spell_power_value(
+                        u64::from(self.progress.level) * 4,
+                        self.effective_player_spell_power_bonus(),
+                    ) as u16)
+                }
+                "demo.ability.chaos-wonder" => Some(self.progress.level * 2),
+                _ => None,
+            };
+            if power.is_some() {
+                changed.extend(self.entities.iter().map(|a| a.position));
+            }
             let plan = self.plan_area_destruction(
                 minimum_radius,
                 maximum_radius,
@@ -829,6 +842,7 @@ impl Game {
                 wall_terrain_id,
                 quartz_terrain_id,
                 magma_terrain_id,
+                power,
             );
             let outcome = self.apply_area_destruction_plan(plan, events, changed, removed_entities);
             (

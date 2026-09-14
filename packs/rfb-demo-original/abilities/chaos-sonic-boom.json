@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.chaos-sonic-boom",
+  "nameKey": "ability-demo-chaos-sonic-boom-name",
+  "descriptionKey": "ability-demo-chaos-sonic-boom-description",
+  "abilityProgramId": "demo.ability-program.chaos-sonic-boom",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "chaos",
+    "spell"
+  ],
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "multiplier": 1,
+      "divisor": 1
+    },
+    {
+      "effectIndex": 0,
+      "field": "radius",
+      "multiplier": 1,
+      "divisor": 10
+    }
+  ],
+  "spellPowerFields": [
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    },
+    {
+      "effectIndex": 0,
+      "field": "radius"
+    }
+  ],
+  "affectsGroundItems": true
+}

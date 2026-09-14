@@ -509,6 +509,7 @@ impl Game {
             || (self.validate_pending_magic_absorption().is_ok()
                 && self.pending_realm_change_book().is_none()
                 && self.pending_ability_direction.is_none()
+                && self.pending_ability_glyph.is_none()
                 && self.pending_mutation_direction.is_none()
                 && self.pending_duelist.is_none()
                 && self.casino.is_none()

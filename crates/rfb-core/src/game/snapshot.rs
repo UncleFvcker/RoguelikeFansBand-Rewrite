@@ -121,6 +121,7 @@ impl Game {
             reality_change_ticks: self.reality_change_ticks,
             pending_mutation_direction: self.pending_mutation_direction.clone(),
             pending_ability_direction: self.pending_ability_direction.clone(),
+            pending_ability_glyph: self.pending_ability_glyph.clone(),
             duelist_target_id: self.duelist_target_id.clone(),
             pending_duelist: self
                 .pending_duelist

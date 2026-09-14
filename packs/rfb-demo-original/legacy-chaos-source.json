@@ -2,6 +2,11 @@
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
   "sourceFiles": [
     "src/do-spell.c",
+    "src/gf.c",
+    "src/melee2.c",
+    "src/monster2.c",
+    "src/spells2.c",
+    "src/xtra2.c",
     "src/kind_name_zh.inc",
     "lib/edit/k_info.txt",
     "lib/edit/m_info.txt"

@@ -475,6 +475,13 @@ impl Game {
             u64::try_from(base_raw_damage).expect("area damage must be non-negative"),
         ))
         .expect("spell-powered area damage must fit i32");
+        // do_chaos_spell(10): double the already spell-powered value, then
+        // let the shared area projection attenuate it by distance.
+        let base_raw_damage = if ability.id == "demo.ability.chaos-sonic-boom" {
+            base_raw_damage.saturating_mul(2)
+        } else {
+            base_raw_damage
+        };
         let noticed_drain = ability.id == "demo.ability.mindcrafter-psychic-drain" && {
             let (trace, _) =
                 self.trace_projectile_path_with_actor_policy(path.clone(), stop_at_actor);
@@ -1888,13 +1895,16 @@ impl Game {
             // devices.c EFFECT_DRAIN_LIFE projects GF_OLD_DRAIN: living targets
             // do not resist it as nether, and vamp_player restores life first.
             let item_drain = ability.tags.iter().any(|tag| tag == "item-activation");
+            // Wonder's drain_life is GF_OLD_DRAIN, not vampirism: no nether
+            // resistance and no player healing.
+            let wonder_drain = ability.id == "demo.ability.chaos-wonder";
             let damage = self.resolve_ability_damage_to_entity_with_resistance(
                 target_index,
                 &ability.id,
                 DamageType::from(*damage_type),
                 raw_damage,
                 trace.clone(),
-                item_drain.then_some(ResistanceLevel::Normal),
+                (item_drain || wonder_drain).then_some(ResistanceLevel::Normal),
                 true,
                 false,
                 events,
@@ -1905,7 +1915,9 @@ impl Game {
                 self.add_virtue(VirtueKindDto::Sacrifice, -1);
                 self.add_virtue(VirtueKindDto::Vitality, -1);
             }
-            let requested = if !*feeds || self.nutrition < hunger::NUTRITION_FULL {
+            let requested = if wonder_drain {
+                0
+            } else if !*feeds || self.nutrition < hunger::NUTRITION_FULL {
                 damage.applied.min(hp_before)
             } else {
                 0

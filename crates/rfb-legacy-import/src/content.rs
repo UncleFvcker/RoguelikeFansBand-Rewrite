@@ -30247,31 +30247,39 @@ F:SHOW_MODS | XTRA_RES_OR_POWER
                 );
             }
         }
-        let book: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(root.join("abilityBooks/sign-of-chaos.json")).unwrap(),
-        )
-        .unwrap();
-        assert_eq!(book["abilityIds"].as_array().unwrap().len(), 8);
-        for (slot, spell) in spells.iter().take(8).enumerate() {
-            assert_eq!(book["abilityIds"][slot], spell["abilityId"]);
-            let slug = spell["abilityId"]
-                .as_str()
-                .unwrap()
-                .strip_prefix("demo.ability.")
-                .unwrap();
-            let binding: serde_json::Value = serde_json::from_str(
-                &std::fs::read_to_string(root.join(format!("playerAbilityBindings/{slug}.json")))
+        for (rank, book_slug) in ["sign-of-chaos", "chaos-mastery"].iter().enumerate() {
+            let book: serde_json::Value = serde_json::from_str(
+                &std::fs::read_to_string(root.join(format!("abilityBooks/{book_slug}.json")))
                     .unwrap(),
             )
             .unwrap();
-            for key in [
-                "abilityId",
-                "minimumLevel",
-                "resourceCost",
-                "baseFailurePercent",
-                "firstSuccessExperience",
-            ] {
-                assert_eq!(binding[key], profiles[0]["abilityOverrides"][slot][key]);
+            assert_eq!(book["abilityIds"].as_array().unwrap().len(), 8);
+            for (slot, spell) in spells.iter().skip(rank * 8).take(8).enumerate() {
+                assert_eq!(book["abilityIds"][slot], spell["abilityId"]);
+                let slug = spell["abilityId"]
+                    .as_str()
+                    .unwrap()
+                    .strip_prefix("demo.ability.")
+                    .unwrap();
+                let binding: serde_json::Value = serde_json::from_str(
+                    &std::fs::read_to_string(
+                        root.join(format!("playerAbilityBindings/{slug}.json")),
+                    )
+                    .unwrap(),
+                )
+                .unwrap();
+                for key in [
+                    "abilityId",
+                    "minimumLevel",
+                    "resourceCost",
+                    "baseFailurePercent",
+                    "firstSuccessExperience",
+                ] {
+                    assert_eq!(
+                        binding[key],
+                        profiles[0]["abilityOverrides"][rank * 8 + slot][key]
+                    );
+                }
             }
         }
     }

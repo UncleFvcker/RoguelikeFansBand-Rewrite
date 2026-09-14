@@ -896,6 +896,7 @@ pub struct Game {
     reality_change_ticks: u8,
     pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pending_ability_direction: Option<PendingAbilityDirectionDto>,
+    pending_ability_glyph: Option<rfb_protocol::PendingAbilityGlyphDto>,
     duelist_target_id: Option<String>,
     pending_duelist: Option<rfb_protocol::PendingDuelistDto>,
     pending_magic_absorption: Option<rfb_protocol::PendingMagicAbsorptionDto>,
@@ -998,6 +999,20 @@ impl Game {
             && matches!(action, GameAction::ResolveMutationDirection { .. })
         {
             return Err(CoreError::MutationDirectionUnavailable);
+        }
+        if self.pending_ability_glyph.is_some()
+            && !matches!(action, GameAction::ResolveAbilityGlyph { .. })
+        {
+            return Err(CoreError::AbilityGlyphRequired);
+        }
+        if let GameAction::ResolveAbilityGlyph { glyph } = &action {
+            if self.pending_ability_glyph.is_none()
+                || glyph
+                    .as_ref()
+                    .is_some_and(|g| g.chars().count() != 1 || g.chars().any(char::is_control))
+            {
+                return Err(CoreError::AbilityGlyphUnavailable);
+            }
         }
         if self.pending_ability_direction.is_some()
             && !maia_choice
@@ -1868,6 +1883,11 @@ impl Game {
                         &mut removed_entities,
                     )?;
                 }
+                if self.pending_ability_glyph.is_some() {
+                    advances_world = false;
+                    action_cost = 0;
+                    turn_advance = 0;
+                }
                 if defer_ability_cooldowns {
                     if events.iter().any(|event| matches!(event,
                         DomainEvent::AbilityCastUnavailable { reason, .. } if reason == "anti-melee")) {
@@ -1903,6 +1923,14 @@ impl Game {
                         action_cost = 0;
                     }
                 }
+            }
+            GameAction::ResolveAbilityGlyph { glyph } => {
+                self.resolve_pending_ability_glyph(
+                    glyph,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?;
             }
             GameAction::CancelAbilityDirection => {
                 self.pending_ability_direction = None;

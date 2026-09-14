@@ -4,7 +4,7 @@ use super::*;
 
 const BOOK: &str = "demo.item.sign-of-chaos";
 
-// CH1 is an internal realm milestone. Exercise formal effects with real class
+// CH1–CH4 are internal realm milestones. Exercise formal effects with real class
 // profiles without publishing an incomplete realm in the creation catalog.
 fn caster(class: &str, level: u16) -> Game {
     let root =
@@ -21,7 +21,7 @@ fn caster(class: &str, level: u16) -> Game {
         .iter()
         .find(|p| p["classId"] == class_id)
         .unwrap();
-    let overrides = profile["abilityOverrides"].as_array().unwrap()[..8].to_vec();
+    let overrides = profile["abilityOverrides"].as_array().unwrap()[..16].to_vec();
     artifact
         .content
         .classes
@@ -34,7 +34,10 @@ fn caster(class: &str, level: u16) -> Game {
         .realm_profiles
         .push(rfb_content::CastingRealmProfileDefinition {
             realm_id: "chaos".into(),
-            ability_book_ids: vec!["demo.ability-book.sign-of-chaos".into()],
+            ability_book_ids: vec![
+                "demo.ability-book.sign-of-chaos".into(),
+                "demo.ability-book.chaos-mastery".into(),
+            ],
             learning_capacity_bonus: 0,
             ability_overrides: serde_json::from_value(serde_json::Value::Array(overrides)).unwrap(),
         });
@@ -62,6 +65,14 @@ fn caster(class: &str, level: u16) -> Game {
         .retain(|i| i.item_kind_id != "demo.item.black-prayers");
     let build_id = build.id.clone();
     artifact.content.builds.push(build);
+    let bear = artifact
+        .content
+        .actors
+        .iter_mut()
+        .find(|a| a.id == "demo.actor.war-bear")
+        .unwrap();
+    bear.max_hp = 10_000;
+    bear.hit_point_dice = None;
     let content = Arc::new(rfb_content::ContentCatalog::from_artifact(
         rfb_content::encode_content(artifact.content).unwrap(),
     ));
@@ -86,16 +97,28 @@ fn caster(class: &str, level: u16) -> Game {
 }
 
 fn learn(game: &mut Game, slug: &str) -> String {
+    let id = format!("demo.ability.chaos-{slug}");
+    let book_kind = if game
+        .content
+        .ability_book("demo.ability-book.sign-of-chaos")
+        .unwrap()
+        .ability_ids
+        .contains(&id)
+    {
+        BOOK
+    } else {
+        "demo.item.chaos-mastery"
+    };
+    let instance_id = format!("test.{book_kind}");
     let book = game
         .items
         .iter()
-        .find(|i| i.kind_id == BOOK)
-        .map(|i| i.id.clone());
-    let book = book.unwrap_or_else(|| {
-        give_inventory_item(game, "test.chaos-book", BOOK);
-        "test.chaos-book".into()
-    });
-    let id = format!("demo.ability.chaos-{slug}");
+        .find(|i| i.kind_id == book_kind)
+        .map(|i| i.id.clone())
+        .unwrap_or_else(|| {
+            give_inventory_item(game, &instance_id, book_kind);
+            instance_id
+        });
     game.study_player_ability(&book, &id).unwrap();
     id
 }
@@ -406,3 +429,5 @@ fn ch1_invalid_target_does_not_arm_touch_or_spend_resources_or_rng() {
         assert!(!game.confusing_strike_ready);
     }
 }
+
+mod ch2;

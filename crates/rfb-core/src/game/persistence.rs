@@ -1082,6 +1082,21 @@ impl Game {
             ));
         }
         let pending_ability_direction = payload.player.pending_ability_direction.clone();
+        let pending_ability_glyph = payload.player.pending_ability_glyph.clone();
+        if pending_ability_glyph.as_ref().is_some_and(|pending| {
+            pending.cast_resolution.ability_id != "demo.ability.chaos-wonder"
+                || !pending.cast_resolution.succeeded
+                || !saved_learned_ability_ids.contains(&pending.cast_resolution.ability_id)
+                || !content
+                    .ability(&pending.cast_resolution.ability_id)
+                    .is_some_and(|ability| {
+                        matches!(ability.effect, AbilityEffectDefinition::RandomChoice { .. })
+                    })
+                || payload.map_scale != MapScaleDto::Local
+        }) {
+            return Err(CoreError::InvalidSave("pending spell glyph is invalid"));
+        }
+
         let duelist_target_id = payload.player.duelist_target_id.clone();
         let pending_duelist = payload.player.pending_duelist.clone();
         if pending_ability_direction.as_ref().is_some_and(|pending| {
@@ -1525,6 +1540,7 @@ impl Game {
             reality_change_ticks,
             pending_mutation_direction,
             pending_ability_direction,
+            pending_ability_glyph,
             duelist_target_id,
             pending_duelist,
             pending_magic_absorption: payload.pending_magic_absorption,
@@ -1832,6 +1848,7 @@ impl Game {
         player.reality_change_ticks = self.reality_change_ticks;
         player.pending_mutation_direction = self.pending_mutation_direction.clone();
         player.pending_ability_direction = self.pending_ability_direction.clone();
+        player.pending_ability_glyph = self.pending_ability_glyph.clone();
         player.duelist_target_id = self.duelist_target_id.clone();
         player.pending_duelist = self.pending_duelist.clone();
         player.body_slots = self

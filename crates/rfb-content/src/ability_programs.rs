@@ -190,6 +190,9 @@ fn ability_program_top_level_random_choice_is_valid(
                             | AbilityEffectDefinition::ApplyStatus { .. }
                             | AbilityEffectDefinition::DrainLife { .. }
                             | AbilityEffectDefinition::Genocide { .. }
+                            | AbilityEffectDefinition::CloneTarget
+                            | AbilityEffectDefinition::HasteTarget
+                            | AbilityEffectDefinition::HealTarget
                             | AbilityEffectDefinition::PolymorphTarget
                             | AbilityEffectDefinition::NoOp { .. }
                     ),
@@ -348,6 +351,9 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::TeleportLevel
                     | AbilityEffectDefinition::DimensionDoor { .. }
                     | AbilityEffectDefinition::Jump { .. }
+                    | AbilityEffectDefinition::CloneTarget
+                    | AbilityEffectDefinition::HasteTarget
+                    | AbilityEffectDefinition::HealTarget
                     | AbilityEffectDefinition::PolymorphTarget
                     | AbilityEffectDefinition::SniperShot { .. }
                     | AbilityEffectDefinition::Rodeo

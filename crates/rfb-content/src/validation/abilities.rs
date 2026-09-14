@@ -506,6 +506,9 @@ pub(super) fn validate_abilities(
                 }
                 AbilityEffectDefinition::ReportMagic
                 | AbilityEffectDefinition::PolymorphSelf
+                | AbilityEffectDefinition::CloneTarget
+                | AbilityEffectDefinition::HasteTarget
+                | AbilityEffectDefinition::HealTarget
                 | AbilityEffectDefinition::PolymorphTarget => true,
                 AbilityEffectDefinition::Earthquake {
                     radius,
@@ -1175,7 +1178,10 @@ pub(super) fn validate_abilities(
                                                 | AbilityEffectDefinition::ApplyStatus { .. }
                                                 | AbilityEffectDefinition::DrainLife { .. }
                                                 | AbilityEffectDefinition::Genocide { .. }
-                                                | AbilityEffectDefinition::PolymorphTarget
+                                                | AbilityEffectDefinition::CloneTarget
+                | AbilityEffectDefinition::HasteTarget
+                | AbilityEffectDefinition::HealTarget
+                | AbilityEffectDefinition::PolymorphTarget
                                                 | AbilityEffectDefinition::NoOp { .. }
                                         )
                                 }
@@ -1269,6 +1275,9 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::BirdDrop
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
+            | AbilityEffectDefinition::CloneTarget
+            | AbilityEffectDefinition::HasteTarget
+            | AbilityEffectDefinition::HealTarget
             | AbilityEffectDefinition::PolymorphTarget
             | AbilityEffectDefinition::DrainLife { .. }
             | AbilityEffectDefinition::DeathRay { .. }
@@ -1762,6 +1771,9 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::DrainResource { .. }
                 | AbilityEffectDefinition::Amnesia
                 | AbilityEffectDefinition::TeleportLevel
+                | AbilityEffectDefinition::CloneTarget
+                | AbilityEffectDefinition::HasteTarget
+                | AbilityEffectDefinition::HealTarget
                 | AbilityEffectDefinition::PolymorphTarget => projectile_target,
                 AbilityEffectDefinition::DoomHand => projectile_target,
                 AbilityEffectDefinition::DarkenRoom => room_target,

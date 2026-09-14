@@ -947,6 +947,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.chaos-mastery",
+      "maxDepth": 30,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.handbook-for-pupils",
       "maxDepth": 30,
       "minDepth": 10,

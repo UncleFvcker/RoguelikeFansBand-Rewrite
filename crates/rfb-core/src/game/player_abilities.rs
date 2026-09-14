@@ -583,25 +583,33 @@ impl Game {
         ability: &mut AbilityDefinition,
         level: u16,
     ) {
-        let AbilityEffectDefinition::BoltOrBeamDamage {
-            beam_chance_percent,
-            beam_chance_modifier,
-            ..
-        } = &mut ability.effect
-        else {
-            return;
-        };
         if profile.beam_chance_level_multiplier == 0 {
             return;
         }
         let chance = i32::from(level)
             .saturating_mul(i32::from(profile.beam_chance_level_multiplier))
             .saturating_div(i32::from(profile.beam_chance_level_divisor))
-            .saturating_add(i32::from(profile.beam_chance_bonus))
-            .saturating_add(i32::from(*beam_chance_modifier))
-            .clamp(0, 100);
-        *beam_chance_percent =
-            u8::try_from(chance).expect("clamped casting beam chance must fit u8");
+            .saturating_add(i32::from(profile.beam_chance_bonus));
+        let apply = |effect: &mut AbilityEffectDefinition| {
+            if let AbilityEffectDefinition::BoltOrBeamDamage {
+                beam_chance_percent,
+                beam_chance_modifier,
+                ..
+            } = effect
+            {
+                *beam_chance_percent =
+                    (chance + i32::from(*beam_chance_modifier)).clamp(0, 100) as u8;
+            }
+        };
+        if ability.id == "demo.ability.chaos-wonder"
+            && let AbilityEffectDefinition::RandomChoice { branches, .. } = &mut ability.effect
+        {
+            for branch in branches {
+                apply(&mut branch.effect);
+            }
+        } else {
+            apply(&mut ability.effect);
+        }
     }
 
     pub(super) fn apply_casting_profile_damage_bonus(
@@ -662,7 +670,24 @@ impl Game {
                 _ => {}
             }
         }
-        apply(&mut ability.effect, bonus);
+        if ability.id == "demo.ability.chaos-wonder"
+            && let AbilityEffectDefinition::RandomChoice { branches, .. } = &mut ability.effect
+        {
+            for branch in branches {
+                if branch.maximum_roll == 109 {
+                    continue;
+                }
+                if let AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. } =
+                    &mut *branch.effect
+                {
+                    *damage_dice = damage_dice.saturating_add(bonus);
+                } else {
+                    apply(&mut branch.effect, bonus);
+                }
+            }
+        } else {
+            apply(&mut ability.effect, bonus);
+        }
     }
 
     fn profile_failure_percent(

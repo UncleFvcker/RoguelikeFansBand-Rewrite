@@ -563,6 +563,12 @@ impl Game {
             None
         };
 
+        if ability_id == "demo.ability.chaos-wonder" && random_branch_index == Some(20) {
+            self.pending_ability_glyph = Some(rfb_protocol::PendingAbilityGlyphDto {
+                cast_resolution: resolution,
+            });
+            return Ok(None);
+        }
         let practice = book_spell.then(|| (ability.clone(), self.spell_practice_targets()));
         let result = self.resolve_player_ability_effect(
             ability,
@@ -661,7 +667,10 @@ impl Game {
             u64::from(base_roll.saturating_add(level_bonus)),
         ))
         .expect("spell-powered random ability roll must fit i32");
-        if ability.id == DEATH_INVOKE_SPIRITS_ABILITY_ID {
+        if matches!(
+            ability.id.as_str(),
+            DEATH_INVOKE_SPIRITS_ABILITY_ID | "demo.ability.chaos-wonder"
+        ) {
             roll = self.adjust_roll_by_chance_virtue(roll);
             if roll < 26 {
                 self.add_virtue(VirtueKindDto::Chance, 1);
@@ -672,9 +681,12 @@ impl Game {
             .enumerate()
             .find(|(_, branch)| roll <= i32::from(branch.maximum_roll))
             .or_else(|| {
-                (ability.id == DEATH_INVOKE_SPIRITS_ABILITY_ID)
-                    .then(|| branches.iter().enumerate().next_back())
-                    .flatten()
+                matches!(
+                    ability.id.as_str(),
+                    DEATH_INVOKE_SPIRITS_ABILITY_ID | "demo.ability.chaos-wonder"
+                )
+                .then(|| branches.iter().enumerate().next_back())
+                .flatten()
             })
             .expect("validated random ability branches must cover every roll");
         let branch_index =
@@ -712,6 +724,70 @@ impl Game {
             }
         }
         branch_index
+    }
+
+    pub(in crate::game) fn resolve_pending_ability_glyph(
+        &mut self,
+        glyph: Option<String>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        if glyph
+            .as_ref()
+            .is_some_and(|g| g.chars().count() != 1 || g.chars().any(char::is_control))
+        {
+            return Err(CoreError::AbilityGlyphUnavailable);
+        }
+        let pending = self
+            .pending_ability_glyph
+            .clone()
+            .ok_or(CoreError::AbilityGlyphUnavailable)?;
+        let cast = pending.cast_resolution;
+        let profile = self
+            .casting_profile()
+            .cloned()
+            .ok_or(CoreError::AbilityGlyphUnavailable)?;
+        let definition = self
+            .content
+            .ability(&cast.ability_id)
+            .ok_or(CoreError::AbilityGlyphUnavailable)?;
+        let mut ability = self.effective_casting_ability(&profile, definition);
+        Self::apply_player_level_scaling(&mut ability, self.progress.level);
+        let AbilityEffectDefinition::RandomChoice { branches, .. } = &ability.effect else {
+            return Err(CoreError::AbilityGlyphUnavailable);
+        };
+        ability.effect = (*branches[20].effect).clone();
+        let targets = self.spell_practice_targets();
+        self.pending_ability_glyph = None;
+        if glyph.is_some() {
+            self.resolve_player_genocide_effect(
+                &ability,
+                None,
+                glyph,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
+        // Wonder ignores symbol_genocide's cancellation return: the paid cast,
+        // first-success experience, virtues and one action are retained.
+        if cast.cast_count == 1 {
+            let experience = Self::player_ability_parameters(&ability).first_success_experience;
+            if experience > 0 {
+                self.apply_player_experience(u64::from(experience), events);
+            }
+        }
+        if self.player_uses_dual_realm_learning() {
+            self.apply_book_spell_cast_virtues(
+                &ability.id,
+                cast.resource_cost,
+                cast.failure_percent,
+                cast.cast_count == 1,
+            );
+            self.grow_book_spell(&ability, &targets, events);
+        }
+        Ok(())
     }
 
     pub(in crate::game) fn resolve_pending_ability_direction(

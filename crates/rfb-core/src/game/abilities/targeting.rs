@@ -1013,6 +1013,9 @@ impl Game {
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::DoomHand
             | AbilityEffectDefinition::Hellfire { .. }
+            | AbilityEffectDefinition::CloneTarget
+            | AbilityEffectDefinition::HasteTarget
+            | AbilityEffectDefinition::HealTarget
             | AbilityEffectDefinition::PolymorphTarget => {
                 self.ability_path(ability, target)
                     .map(|path| AbilityTargetPlan::Projectile {

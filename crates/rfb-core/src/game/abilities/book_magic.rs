@@ -27,6 +27,7 @@ fn attack_projection(effect: &AbilityEffectDefinition, self_target: bool) -> Opt
         | BoltOrAreaDamage { damage_type, .. }
         | ConeDamage { damage_type, .. }
         | VisibleDamage { damage_type, .. } => Some(*damage_type != ActorDamageType::Disintegrate),
+        CloneTarget | HasteTarget | HealTarget => Some(false),
         ApplyStatus { .. } => (!self_target).then_some(true),
         Malediction { .. }
         | CallSunlight { .. }

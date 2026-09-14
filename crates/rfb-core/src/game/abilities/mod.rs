@@ -320,6 +320,12 @@ impl Game {
                 AbilityEffectDefinition::PolymorphTarget,
                 AbilityTargetPlan::Projectile { path, .. },
             ) => self.resolve_player_polymorph_target_effect(&ability, path, events, changed),
+            (
+                AbilityEffectDefinition::CloneTarget
+                | AbilityEffectDefinition::HasteTarget
+                | AbilityEffectDefinition::HealTarget,
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => self.resolve_player_monster_aid(&ability, path, events, changed, removed_entities),
             (AbilityEffectDefinition::SwapPosition, AbilityTargetPlan::Projectile { path, .. }) => {
                 self.resolve_player_swap_position_effect(&ability, path, events, changed)
             }
@@ -807,6 +813,7 @@ impl Game {
                 self.resolve_player_genocide_effect(
                     &ability,
                     Some(path),
+                    None,
                     events,
                     changed,
                     removed_entities,
@@ -821,6 +828,7 @@ impl Game {
             ) => {
                 self.resolve_player_genocide_effect(
                     &ability,
+                    None,
                     None,
                     events,
                     changed,

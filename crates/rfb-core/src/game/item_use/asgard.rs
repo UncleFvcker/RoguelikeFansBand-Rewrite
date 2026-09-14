@@ -46,6 +46,7 @@ impl Game {
             && self.pending_duelist.is_none()
             && self.pending_mutation_direction.is_none()
             && self.pending_ability_direction.is_none()
+            && self.pending_ability_glyph.is_none()
             && ![
                 STATUS_PARALYSIS,
                 STATUS_CONFUSION,

@@ -56,6 +56,7 @@ export class AppState {
       this.status?.player.pendingMaiaPathChoice === true ||
       (this.status?.player.pendingMutationDirection != null ||
         this.status?.player.pendingAbilityDirection != null ||
+        this.status?.player.pendingAbilityGlyph != null ||
         this.status?.player.abilityLearning?.realms?.pendingChange != null ||
         this.status?.player.pendingDuelist != null ||
         this.status?.player.magicEater?.pendingAbsorption != null)

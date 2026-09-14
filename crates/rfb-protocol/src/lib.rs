@@ -97,6 +97,13 @@ pub struct PendingAbilityDirectionDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PendingAbilityGlyphDto {
+    pub cast_resolution: AbilityCastResolutionDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
     tag = "type",
     rename_all = "kebab-case",
@@ -363,6 +370,9 @@ pub enum GameCommand {
         target: TargetSelection,
     },
     CancelAbilityDirection,
+    ResolveAbilityGlyph {
+        glyph: Option<String>,
+    },
     ClearDuelistChallenge,
     ResolveDuelistChoice {
         choice: DuelistChoiceDto,
@@ -1533,6 +1543,9 @@ pub enum AbilityEffectSpecDto {
     },
     PolymorphSelf,
     PolymorphTarget,
+    CloneTarget,
+    HasteTarget,
+    HealTarget,
     SwapPosition,
     Recall {
         delay_dice: u16,
@@ -3375,6 +3388,11 @@ pub enum AbilityEffectResolutionDto {
         hp_before: i32,
         hp_after: i32,
     },
+    CloneTarget {
+        effect_index: u8,
+        cloned_entity_id: Option<String>,
+        protected: bool,
+    },
     PolymorphTarget {
         effect_index: u8,
         target_entity_id: String,
@@ -3959,6 +3977,7 @@ pub struct PlayerDto {
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
+    pub pending_ability_glyph: Option<PendingAbilityGlyphDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub duelist_target_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5291,6 +5310,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(Direction);
     push_declaration!(PendingMutationDirectionDto);
     push_declaration!(PendingAbilityDirectionDto);
+    push_declaration!(PendingAbilityGlyphDto);
     push_declaration!(DuelistPromptDto);
     push_declaration!(DuelistChoiceDto);
     push_declaration!(DuelistContinuationDto);
@@ -5579,6 +5599,7 @@ pub struct PlayerSaveDto {
     pub reality_change_ticks: u8,
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
+    pub pending_ability_glyph: Option<PendingAbilityGlyphDto>,
     pub duelist_target_id: Option<String>,
     pub pending_duelist: Option<PendingDuelistDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -5759,6 +5780,8 @@ pub struct ActorSaveDto {
     pub friendly: bool,
     pub no_pet: bool,
     pub no_genocide: bool,
+    pub cloned: bool,
+    pub no_destruction: bool,
     #[serde(default)]
     pub casting_cooldown_remaining: u16,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6791,6 +6814,7 @@ mod tests {
                 reality_change_ticks: 0,
                 pending_mutation_direction: None,
                 pending_ability_direction: None,
+                pending_ability_glyph: None,
                 duelist_target_id: None,
                 pending_duelist: None,
                 carried_weight_tenths_pound: 5,
@@ -7112,6 +7136,7 @@ mod tests {
             reality_change_ticks: 0,
             pending_mutation_direction: None,
             pending_ability_direction: None,
+            pending_ability_glyph: None,
             duelist_target_id: None,
             pending_duelist: None,
             statuses: Vec::new(),

@@ -63,6 +63,7 @@ export class InputController {
     kind: string,
   ) => void;
   #installed = false;
+  #glyphPromptPending = false;
   #fishingTimer: number | undefined;
   #fishingRunning = false;
   #fishingCancelRequested = false;
@@ -328,6 +329,22 @@ export class InputController {
       }
     } else if (!pendingDirection && this.#state.targetingIntent?.type === "mutation-direction") {
       this.cancelTargeting(false);
+    }
+    if (state.player.pendingAbilityGlyph && !this.#glyphPromptPending) {
+      this.cancelTargeting(false);
+      this.#glyphPromptPending = true;
+      this.#window.setTimeout(() => {
+        try {
+          if (!this.#state.status?.player.pendingAbilityGlyph) return;
+          let glyph: string | null;
+          do {
+            glyph = this.#window.prompt(this.#localization.format("message-ability-glyph-required"));
+          } while (glyph !== null && ([...glyph].length !== 1 || /[\u0000-\u001f\u007f-\u009f]/u.test(glyph)));
+          void this.#dispatch({ type: "resolve-ability-glyph", glyph });
+        } finally {
+          this.#glyphPromptPending = false;
+        }
+      }, 0);
     }
     const pendingAbilityDirection = state.player.pendingAbilityDirection;
     if (

@@ -379,6 +379,9 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             failure_threshold: *failure_threshold,
         },
         AbilityEffectDefinition::PolymorphSelf => AbilityEffectSpecDto::PolymorphSelf,
+        AbilityEffectDefinition::CloneTarget => AbilityEffectSpecDto::CloneTarget,
+        AbilityEffectDefinition::HasteTarget => AbilityEffectSpecDto::HasteTarget,
+        AbilityEffectDefinition::HealTarget => AbilityEffectSpecDto::HealTarget,
         AbilityEffectDefinition::PolymorphTarget => AbilityEffectSpecDto::PolymorphTarget,
         AbilityEffectDefinition::SwapPosition => AbilityEffectSpecDto::SwapPosition,
         AbilityEffectDefinition::Recall {

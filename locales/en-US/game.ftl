@@ -772,3 +772,4 @@ chest-alarm = An alarm sounds!
 chest-scatter = The chest's treasure scatters across the floor!
 chest-summon = You are enveloped in a cloud of smoke!
 asgard-avenger-summoned = Vidarr steps forth to avenge his father!
+message-ability-glyph-required = Wonder: enter a monster symbol to genocide (cancelling still spends this cast).

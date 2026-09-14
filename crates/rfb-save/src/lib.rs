@@ -224,6 +224,7 @@ mod tests {
                 reality_change_ticks: 0,
                 pending_mutation_direction: None,
                 pending_ability_direction: None,
+                pending_ability_glyph: None,
                 duelist_target_id: None,
                 pending_duelist: None,
                 statuses: Vec::new(),

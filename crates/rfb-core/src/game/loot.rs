@@ -333,7 +333,7 @@ impl Game {
         let depth = self.floor_depth(&floor_id);
         let mut generated = Vec::new();
         let mut gold = Vec::new();
-        generated.extend(self.generate_norse_death_extras(actor, true)?);
+        generated.extend(self.generate_norse_death_extras(actor, !actor.cloned)?);
         // xtra2.c: Osiris's chosen item precedes and supplements ordinary drops.
         if actor.kind_id == "demo.actor.osiris-the-reborn"
             && actor.controller_id.as_deref() != Some(self.player.id.as_str())
@@ -351,7 +351,8 @@ impl Game {
             generated
                 .push(self.commit_generated_item_draft(draft, ItemLocation::Ground(position))?);
         }
-        if let Some(drop) = &actor_definition.special_artifact_drop
+        if !actor.cloned
+            && let Some(drop) = &actor_definition.special_artifact_drop
             && actor.controller_id.as_deref() != Some(self.player.id.as_str())
             // xtra2.c:1806-1812 tests permanent prace, then one_in_(14),
             // before the ordinary 99% / Bad Luck / uniqueness sequence.

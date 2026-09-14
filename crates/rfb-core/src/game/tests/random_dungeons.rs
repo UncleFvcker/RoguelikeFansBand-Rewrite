@@ -912,6 +912,7 @@ fn forest_earthquake_and_destruction_preserve_water_and_use_forest_materials() {
         "demo.terrain.wall",
         "demo.terrain.quartz-vein",
         "demo.terrain.magma-vein",
+        None,
     );
     let outcome = game.apply_area_destruction_plan(
         plan,

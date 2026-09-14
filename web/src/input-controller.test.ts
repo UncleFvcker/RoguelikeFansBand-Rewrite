@@ -434,6 +434,31 @@ test("a pending Nature's Wrath branch opens ability direction targeting", () => 
   assert.deepEqual(announcements, ["message-ability-direction-required"]);
 });
 
+test("saved Wonder prompts once, validates a symbol and can cancel", () => {
+  for (const answer of ["q", null]) {
+    const state = new AppState();
+    state.status = { mapScale: "local", width: 96, height: 33, floorId: "floor",
+      player: { position: { x: 10, y: 10 }, pendingAbilityGlyph: { castResolution: {} } } };
+    const timers = [];
+    const commands = [];
+    const answers = ["two symbols", answer];
+    const controller = new InputController({ state, dom: {},
+      localization: { format: key => key },
+      window: { setTimeout: fn => timers.push(fn), prompt: () => answers.shift() },
+      getInputPreset: () => "vi", getZoom: () => 1,
+      dispatch: async command => commands.push(command),
+      describeLook: () => "", openObjectList() {}, openMogaminator() {},
+      onLookFocusChange() {}, announce() {},
+    });
+    controller.reconcileStatus(state.status);
+    controller.reconcileStatus(state.status);
+    assert.equal(timers.length, 1);
+    assert.equal(commands.length, 0);
+    timers[0]();
+    assert.deepEqual(commands, [{ type: "resolve-ability-glyph", glyph: answer }]);
+  }
+});
+
 test("auto-get locks one target, then requests the next Core target", async () => {
   const state = new AppState();
   state.mode = "playing";

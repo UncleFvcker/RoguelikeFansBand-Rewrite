@@ -590,7 +590,9 @@ impl Game {
             .expect("living actor definition must remain available")
             .clone();
         let (generated_loot, generated_gold) = self.generate_death_loot(&actor)?;
-        let corpse_kind_id = if let Some(kind_id) = actor_definition.corpse_item_kind_id {
+        let corpse_kind_id = if actor.cloned {
+            None
+        } else if let Some(kind_id) = actor_definition.corpse_item_kind_id {
             Some(kind_id)
         } else if let Some(remains) = actor_definition.remains {
             if self.rng.bounded(u64::from(remains.chance_denominator)) != 0 {
