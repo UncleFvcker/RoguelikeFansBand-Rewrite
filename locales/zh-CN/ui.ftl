@@ -1520,3 +1520,7 @@ realm-law-name = 律法
 
 status-law-spin-name = 扭曲事实
 status-law-tread-softly-name = 轻声潜行
+
+creation-realm-music = 音乐
+
+status-music-active = 持续演唱：{ $song }（可用“停止唱歌”结束）

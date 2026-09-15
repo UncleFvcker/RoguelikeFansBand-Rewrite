@@ -225,6 +225,16 @@ impl Game {
             }
         }
         self.finish_player_ready_advance(local_floor_active, events, changed, removed_entities)?;
+        if self.player.energy_need > 0 && !self.player_is_dead() {
+            return self.advance_until_player_ready(
+                resting,
+                local_floor_active,
+                pet_neglect_allowed,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         Ok(())
     }
 
@@ -280,6 +290,7 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        self.advance_music(events, changed, removed_entities)?;
         if local_floor_active {
             self.advance_summon_lifetimes(events, changed, removed_entities);
         }
@@ -970,6 +981,9 @@ impl Game {
         removed_entities: &mut Vec<String>,
         process_entities: bool,
     ) -> Result<(), CoreError> {
+        if self.music.spell.is_some() && self.player_has_status_kind(STATUS_CONFUSION) {
+            self.stop_music();
+        }
         let nonliving = self.player_is_nonliving();
         let berserker = self.player_is_berserker();
         let no_stun = berserker && self.progress.level >= 35;

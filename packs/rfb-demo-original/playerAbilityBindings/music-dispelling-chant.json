@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.music-dispelling-chant",
+  "minimumLevel": 32,
+  "resourceCost": 37,
+  "baseFailurePercent": 41,
+  "firstSuccessExperience": 1152,
+  "resourceId": "demo.resource.mana"
+}

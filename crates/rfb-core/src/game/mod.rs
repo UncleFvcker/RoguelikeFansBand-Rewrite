@@ -237,7 +237,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 134;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 135;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -894,6 +894,7 @@ pub struct Game {
     minor_slow_energy: u16,
     chaos_patron_id: Option<String>,
     reality_change_ticks: u8,
+    music: rfb_protocol::MusicStateDto,
     pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pending_ability_direction: Option<PendingAbilityDirectionDto>,
     pending_ability_glyph: Option<rfb_protocol::PendingAbilityGlyphDto>,
@@ -2180,6 +2181,9 @@ impl Game {
                 }
             }
             GameAction::Rest { turns } => {
+                if turns > 0 {
+                    self.stop_music();
+                }
                 let resolution = self.resolve_player_rest(
                     turns,
                     &mut events,
@@ -3994,7 +3998,8 @@ impl Game {
     }
 
     fn player_has_status_kind(&self, kind_id: &str) -> bool {
-        (kind_id == STATUS_BERSERK && self.player_is_berserker())
+        self.music_grants_status(kind_id)
+            || (kind_id == STATUS_BERSERK && self.player_is_berserker())
             || self
                 .player
                 .statuses

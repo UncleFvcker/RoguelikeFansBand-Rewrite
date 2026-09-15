@@ -12,6 +12,7 @@ mod duelist_choices;
 mod items;
 mod law;
 pub(in crate::game) mod mindcraft;
+pub(in crate::game) mod music;
 mod necromancy;
 mod restoration;
 mod summoning;
@@ -41,6 +42,20 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<Position>, CoreError> {
         match (ability.effect.clone(), target_plan) {
+            (AbilityEffectDefinition::Music { spell }, plan) => {
+                return self.resolve_music(
+                    &ability,
+                    spell,
+                    plan,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
+            (AbilityEffectDefinition::StopSinging, _) => {
+                self.stop_music();
+                return Ok(None);
+            }
             (AbilityEffectDefinition::Law { spell }, plan) => {
                 return self.resolve_law(&ability, spell, plan, events, changed, removed_entities);
             }

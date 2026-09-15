@@ -1088,13 +1088,17 @@ export class StatusPanel {
       state.player.pets ?? [],
     );
     this.#renderNearby(state);
-    const activeEffects = state.player.statuses.map((status) =>
-      this.#localization.format("status-effect-entry", {
+    const activeEffects = state.player.statuses.map((status) => {
+      if (status.kindId === "rfb.status.music") {
+        const song = state.player.abilities?.find(ability => ability.effects.some(effect => effect.type === "music" && effect.spell === state.player.music.spell));
+        return this.#localization.format("status-music-active", { song: this.#localization.format((song?.nameKey ?? "status-music-name") as MessageKey) });
+      }
+      return this.#localization.format("status-effect-entry", {
         status: this.#statusName(status.kindId),
         intensity: status.intensity,
         ticks: status.remainingTicks,
-      }),
-    );
+      });
+    });
     if (state.player.confusingStrikeReady) {
       activeEffects.push(this.#localization.format("status-effect-confusing-strike-ready"));
     }

@@ -993,6 +993,7 @@ fn mount_olympus_ambrosia_is_local_and_preserves_satiated_nutrition() {
         );
         assert!(!game.items.iter().any(|i| i.id == "test.food"));
     }
+    game.reveal_current_visibility();
     let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 

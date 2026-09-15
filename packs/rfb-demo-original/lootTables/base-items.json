@@ -996,6 +996,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.apprentice-handbook",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.jo-staff",
       "maxDepth": 65535,
       "minDepth": 11,
@@ -1571,6 +1578,13 @@
     },
     {
       "itemKindId": "demo.item.obstacle-coursebook",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.minstrels-music",
       "maxDepth": 50,
       "minDepth": 20,
       "quantity": 1,
@@ -2438,6 +2452,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.harps-of-rivendell",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.dwarven-pick",
       "maxDepth": 65535,
       "minDepth": 50,
@@ -2971,6 +2992,13 @@
     },
     {
       "itemKindId": "demo.item.necromatic-tome",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.lays-of-beleriand",
       "maxDepth": 65535,
       "minDepth": 80,
       "quantity": 1,

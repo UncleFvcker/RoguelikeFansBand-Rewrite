@@ -1345,7 +1345,7 @@ impl Game {
     }
 
     pub(super) fn forget_player_ability(&mut self, ability_id: &str) -> Result<(), &'static str> {
-        if self.player_uses_dual_realm_learning() {
+        if self.player_uses_dual_realm_learning() || self.player_is_bard() {
             return Err("manual-forgetting-unavailable");
         }
         let Some(profile) = self.casting_profile().cloned() else {
@@ -1858,7 +1858,8 @@ impl Game {
         succeeded: bool,
     ) -> AbilityProgress {
         let player = Self::player_ability_parameters(ability).clone();
-        let book_practice = self.player_uses_dual_realm_learning();
+        let book_practice = self.player_uses_dual_realm_learning()
+            || matches!(ability.effect, AbilityEffectDefinition::Music { spell } if super::abilities::music::continuous(spell));
         let progress = self
             .ability_progress
             .entry(ability.id.clone())

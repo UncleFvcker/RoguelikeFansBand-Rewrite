@@ -123,6 +123,10 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
+            AbilityEffectDefinition::StopSinging => Some(AbilityTargetPlan::SelfTarget),
+            AbilityEffectDefinition::Music { spell } => {
+                self.music_target_plan(ability, spell, target)
+            }
             AbilityEffectDefinition::Law { spell } => self.law_target_plan(ability, spell, target),
             AbilityEffectDefinition::Necromancy { spell } => {
                 self.necromancy_target_plan(ability, spell, target)

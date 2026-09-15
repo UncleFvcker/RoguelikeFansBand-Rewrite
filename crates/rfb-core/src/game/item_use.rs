@@ -2925,6 +2925,14 @@ impl Game {
             return Ok(None);
         };
         let kind_id = self.items[index].kind_id.clone();
+        if self
+            .content
+            .item(&kind_id)
+            .and_then(|k| k.rfb_base_kind)
+            .is_some_and(|k| matches!(k.tval, 70 | 75 | 80))
+        {
+            self.stop_music();
+        }
         if self.items[index].is_artifact_mushroom(&self.content)
             && self.items[index].device_recovery_progress > 0
         {

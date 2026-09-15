@@ -86,6 +86,9 @@ impl Game {
             }
         }
         match ability.effect {
+            AbilityEffectDefinition::StopSinging if self.music.spell.is_none() => {
+                Some("no-active-song")
+            }
             AbilityEffectDefinition::BeginFasting if self.fasting => Some("already-fasting"),
             AbilityEffectDefinition::ClearMind if self.pet_upkeep().controlled_pets > 0 => {
                 Some("pets-require-attention")
@@ -449,8 +452,14 @@ impl Game {
             });
             return Ok(None);
         }
-        let percentile_roll =
-            u8::try_from(self.rng.bounded(100)).expect("percentile ability roll must fit u8");
+        if matches!(ability.effect, AbilityEffectDefinition::Music { .. }) {
+            self.stop_music();
+        }
+        let percentile_roll = if matches!(ability.effect, AbilityEffectDefinition::StopSinging) {
+            0
+        } else {
+            u8::try_from(self.rng.bounded(100)).expect("percentile ability roll must fit u8")
+        };
         let succeeded = percentile_roll >= failure_percent;
         // spells.c::do_cmd_power rolls failure before SPELL_CAST. Vampirism's
         // NO_MELEE cancellation then refunds time and cost; a failed power still pays.

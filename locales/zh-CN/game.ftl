@@ -762,3 +762,5 @@ message-ability-glyph-required = 奇迹：输入要灭绝的怪物符号（取�
 
 status-necromancy-cloak-name = 黑色斗篷
 status-necromancy-shield-name = 亡者之盾
+
+ability-unavailable-no-active-song = 当前没有正在演唱的歌曲

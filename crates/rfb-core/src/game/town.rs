@@ -2183,6 +2183,7 @@ impl Game {
         self.minor_slow = 0;
         self.minor_slow_energy = 0;
         self.reality_change_ticks = 0;
+        self.stop_music();
         self.confusing_strike_ready = false;
         if self.recall_is_active() {
             self.cancel_recall();

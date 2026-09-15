@@ -4785,6 +4785,37 @@
             },
             "type": {
               "type": "string",
+              "const": "music"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "stop-singing"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
               "const": "law"
             }
           },
@@ -14068,6 +14099,37 @@
         "abilityIds"
       ]
     },
+    "MusicStateDto": {
+      "type": "object",
+      "properties": {
+        "beats": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "halfMana": {
+          "type": "boolean"
+        },
+        "interrupted": {
+          "type": "boolean"
+        },
+        "spell": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "beats",
+        "interrupted",
+        "halfMana"
+      ]
+    },
     "MutationRatingDto": {
       "type": "string",
       "enum": [
@@ -14542,6 +14604,9 @@
           "maximum": 255,
           "minimum": 0
         },
+        "music": {
+          "$ref": "#/$defs/MusicStateDto"
+        },
         "mutations": {
           "type": "array",
           "items": {
@@ -14731,6 +14796,7 @@
         "maxHp",
         "fame",
         "fasting",
+        "music",
         "virtues"
       ]
     },

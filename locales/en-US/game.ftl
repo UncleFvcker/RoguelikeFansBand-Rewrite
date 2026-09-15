@@ -777,3 +777,5 @@ message-ability-glyph-required = Wonder: enter a monster symbol to genocide (can
 
 status-necromancy-cloak-name = black cloak
 status-necromancy-shield-name = shield of the dead
+
+ability-unavailable-no-active-song = you are not singing

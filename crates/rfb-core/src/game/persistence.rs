@@ -1066,6 +1066,7 @@ impl Game {
             return Err(CoreError::InvalidSave("player chaos patron is invalid"));
         }
         let reality_change_ticks = payload.player.reality_change_ticks;
+        let music = payload.player.music.clone();
         if reality_change_ticks > 35 {
             return Err(CoreError::InvalidSave(
                 "player reality change countdown is invalid",
@@ -1553,6 +1554,7 @@ impl Game {
             minor_slow_energy,
             chaos_patron_id,
             reality_change_ticks,
+            music,
             pending_mutation_direction,
             pending_ability_direction,
             pending_ability_glyph,
@@ -1597,6 +1599,9 @@ impl Game {
         game.reveal_current_visibility();
         game.clear_stale_mogaminator_query();
         game.validate_loaded_state()?;
+        if !game.music_state_is_valid() {
+            return Err(CoreError::InvalidSave("invalid Music state"));
+        }
         if game.fishing_direction.is_some() && !game.fishing_state_is_valid() {
             return Err(CoreError::InvalidSave("player fishing state is invalid"));
         }
@@ -1861,6 +1866,7 @@ impl Game {
         player.minor_slow_energy = self.minor_slow_energy;
         player.chaos_patron_id = self.chaos_patron_id.clone();
         player.reality_change_ticks = self.reality_change_ticks;
+        player.music = self.music.clone();
         player.pending_mutation_direction = self.pending_mutation_direction.clone();
         player.pending_ability_direction = self.pending_ability_direction.clone();
         player.pending_ability_glyph = self.pending_ability_glyph.clone();

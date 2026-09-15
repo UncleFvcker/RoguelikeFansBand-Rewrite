@@ -20,6 +20,9 @@ fn effect_can_affect_ground_items(effect: &AbilityEffectDefinition) -> bool {
     match effect {
         AbilityEffectDefinition::ChainLightning
         | AbilityEffectDefinition::Law { spell: 27 }
+        | AbilityEffectDefinition::Music {
+            spell: 2 | 16 | 22 | 30,
+        }
         | AbilityEffectDefinition::ChaosMeteorSwarm
         | AbilityEffectDefinition::CallChaos
         | AbilityEffectDefinition::CallVoid
@@ -587,7 +590,8 @@ pub(super) fn validate_abilities(
                         && *duration_bonus <= 1_000_000
                 }
                 AbilityEffectDefinition::Necromancy { spell }
-                | AbilityEffectDefinition::Law { spell } => *spell < 32,
+                | AbilityEffectDefinition::Law { spell }
+                | AbilityEffectDefinition::Music { spell } => *spell < 32,
                 AbilityEffectDefinition::TrumpSummoning { category } => matches!(
                     category.as_str(),
                     "spider"
@@ -1010,6 +1014,7 @@ pub(super) fn validate_abilities(
                 }
                 AbilityEffectDefinition::PrepareConfusingStrike
                 | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
+                | AbilityEffectDefinition::StopSinging
                 | AbilityEffectDefinition::SatisfyHunger => true,
                 AbilityEffectDefinition::DevourFlesh {
                     maximum_hp_divisor,
@@ -1415,13 +1420,29 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::Rodeo => projectile_target_rule && ability.target.range == 1,
             AbilityEffectDefinition::MeleeAdjacent
             | AbilityEffectDefinition::ProbeMonsters
-            | AbilityEffectDefinition::Concentrate => self_target_rule,
+            | AbilityEffectDefinition::Concentrate
+            | AbilityEffectDefinition::StopSinging => self_target_rule,
             AbilityEffectDefinition::BreathDamage { .. } => projectile_target_rule,
             AbilityEffectDefinition::Teleport => {
                 !self_targeted
                     && ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
                     && (1..=64).contains(&ability.target.range)
                     && ability.target.requires_line_of_effect
+            }
+            AbilityEffectDefinition::Music { spell } => {
+                if matches!(spell, 2 | 22 | 30) {
+                    ability.target.range > 0
+                        && ability.target.modes.iter().all(|m| {
+                            matches!(
+                                m,
+                                AbilityTargetModeDefinition::Direction
+                                    | AbilityTargetModeDefinition::Entity
+                                    | AbilityTargetModeDefinition::Position
+                            )
+                        })
+                } else {
+                    ability.target.modes == [AbilityTargetModeDefinition::SelfTarget]
+                }
             }
             AbilityEffectDefinition::Law { spell } => match spell {
                 6 => item_target_rule,

@@ -3217,6 +3217,7 @@ impl Game {
                             reason: AbilityEffectSkipReasonDto::Saved,
                         }
                     } else {
+                        self.interrupt_music();
                         remove_ability_status_effect(&mut self.player, effect_index, status_kind_id)
                     }
                 }

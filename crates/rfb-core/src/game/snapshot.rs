@@ -119,6 +119,7 @@ impl Game {
             energy_need: self.player.energy_need,
             minor_slow: self.minor_slow,
             reality_change_ticks: self.reality_change_ticks,
+            music: self.music.clone(),
             pending_mutation_direction: self.pending_mutation_direction.clone(),
             pending_ability_direction: self.pending_ability_direction.clone(),
             pending_ability_glyph: self.pending_ability_glyph.clone(),
@@ -151,6 +152,7 @@ impl Game {
                 .player
                 .statuses
                 .iter()
+                .chain(self.music_status().iter())
                 .map(crate::effect::StatusInstance::to_dto)
                 .collect(),
             confusing_strike_ready: self.confusing_strike_ready,
@@ -642,6 +644,7 @@ impl Game {
                         effective_ability.effect,
                         AbilityEffectDefinition::BeamDamage { .. }
                             | AbilityEffectDefinition::Law { spell: 27 }
+                            | AbilityEffectDefinition::Music { spell: 22 }
                     ),
                     cone_radius: match effective_ability.effect {
                         AbilityEffectDefinition::ConeDamage { radius, .. } => Some(radius),
@@ -747,6 +750,7 @@ impl Game {
                             .is_some_and(|learning| learning.remaining_slots > 0),
                     can_forget: source == AbilitySourceDto::Learned
                         && learned
+                        && !self.player_is_bard()
                         && !self.player_uses_dual_realm_learning(),
                     can_cast: unavailable_reason.is_none(),
                     unavailable_reason: unavailable_reason.map(str::to_owned),

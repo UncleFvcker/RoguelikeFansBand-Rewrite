@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.music-sound-of-disintegration",
+  "minimumLevel": 10,
+  "resourceCost": 4,
+  "baseFailurePercent": 20,
+  "firstSuccessExperience": 130,
+  "resourceId": "demo.resource.mana"
+}

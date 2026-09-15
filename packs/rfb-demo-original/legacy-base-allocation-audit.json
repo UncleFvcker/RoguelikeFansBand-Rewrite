@@ -1,6 +1,6 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 439,
+  "allocationRowCount": 443,
   "explicitItems": [
     {
       "itemId": "demo.item.aegir",
@@ -10226,12 +10226,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.apprentice-handbook",
       "maxDepth": 30,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 552,
       "sourceName": "[Apprentice Handbook]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 0,
       "tval": 105
     },
@@ -10245,12 +10245,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.minstrels-music",
       "maxDepth": 50,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 553,
       "sourceName": "[Minstrel's Music]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 1,
       "tval": 105
     },
@@ -10264,12 +10264,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.harps-of-rivendell",
       "maxDepth": 90,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 554,
       "sourceName": "[Harps of Rivendell]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 2,
       "tval": 105
     },
@@ -10283,12 +10283,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.lays-of-beleriand",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 555,
       "sourceName": "[Lays of Beleriand]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 3,
       "tval": 105
     },

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.music-tempest-song",
+  "nameKey": "ability-demo-music-tempest-song-name",
+  "descriptionKey": "ability-demo-music-tempest-song-description",
+  "abilityProgramId": "demo.ability-program.music-tempest-song",
+  "target": {
+    "modes": [
+      "direction",
+      "entity",
+      "position"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "music",
+    "spell"
+  ],
+  "affectsGroundItems": true
+}

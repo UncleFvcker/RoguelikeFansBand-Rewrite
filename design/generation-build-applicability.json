@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "sourceRef": "master",
   "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
-  "reviewedAt": "2026-09-14",
+  "reviewedAt": "2026-09-15",
   "codeBaseline": "5c5f6f38b + cbc851b8e + d873743d6 integration",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
-  "scope": "Covers 211 creation builds and five generation areas per build, including the Necromancer. Evidence references are not test execution results.",
+  "scope": "Covers 212 creation builds and five generation areas per build, including the Bard. Evidence references are not test execution results.",
   "recordSemantics": {
     "implemented": "Reachable implementation exists; gapIds still block acceptance completion.",
     "no-special-difference": "Source and indirect consumers reviewed; shared path applies without an additional class generation branch.",
@@ -427,15 +427,11 @@
       "file": "src/artifact.c",
       "start": 2040,
       "end": 2047,
-      "status": "deferred-unavailable-build",
-      "entry": "no Bard creation entry",
+      "status": "implemented-current-builds",
+      "entry": "Bard creation, ordinary harp m_bonus(2), same-input artifact value limits and equipment/save consumers",
       "change": "harp slot value percentage 50 instead of 40",
       "consumer": "random artifact value acceptance and harp abilities",
-      "tests": null,
-      "prerequisite": "real Bard class, harp use and same-input value comparison",
-      "unavailableClassIds": [
-        "demo.class.bard"
-      ]
+      "tests": "crates/rfb-core/src/game/tests/music.rs#music_books_and_bard_harp_use_real_generation_pickup_and_save; crates/rfb-core/src/game/random_artifact/tests.rs#music_bard_harp_changes_actual_artifact_value_limits"
     },
     {
       "id": "artifact-theme-bias",
@@ -503,11 +499,11 @@
       "start": 3673,
       "end": 3678,
       "status": "deferred-unavailable-content",
-      "entry": "no fixed artifact harp in formal pack; no Bard",
+      "entry": "Bard is playable; no fixed artifact harp in formal pack",
       "change": "halve pval for non-Bard when creating named harp",
       "consumer": "fixed harp charisma and use",
       "tests": null,
-      "prerequisite": "fixed harp content and Bard entry"
+      "prerequisite": "fixed harp content and source pval constructor"
     },
     {
       "id": "politician-gold",
@@ -594,7 +590,7 @@
       "change": "non-Bard halves artifact harp pval",
       "consumer": "fixed artifact constructor",
       "tests": null,
-      "prerequisite": "fixed harp import; Bard entry separately"
+      "prerequisite": "fixed harp import and source pval constructor"
     },
     {
       "id": "base-harp-bard",
@@ -602,11 +598,10 @@
       "start": 2294,
       "end": 2302,
       "status": "implemented-current-builds",
-      "entry": "all open builds use non-Bard m_bonus(1)",
+      "entry": "Bard creation, ordinary harp m_bonus(2), same-input artifact value limits and equipment/save consumers",
       "change": "Bard would use m_bonus(2)",
       "consumer": "ego.rs harp intrinsic pval; charisma; launcher exclusion",
-      "tests": "game::ego::tests::ordinary_harp_rolls_intrinsic_charisma_and_is_not_a_projectile_launcher",
-      "prerequisite": "Bard special path awaits actual class/harp consumer"
+      "tests": "crates/rfb-core/src/game/tests/music.rs#music_books_and_bard_harp_use_real_generation_pickup_and_save; crates/rfb-core/src/game/random_artifact/tests.rs#music_bard_harp_changes_actual_artifact_value_limits"
     },
     {
       "id": "bikini-personality",
@@ -815,7 +810,6 @@
         "fixed-harp-bard",
         "fixed-harp-pval",
         "mauler-weight",
-        "bard-slot-value",
         "monster-ring-activation"
       ],
       "reason": "Missing identity/content branches remain distinct from currently reachable build gaps; see individual scope prerequisites.",
@@ -9932,6 +9926,57 @@
           "tests": [
             "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
             "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.bard",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Bard master a0d92b6378: source harp base bonus, artifact slot value and Priestly scroll bias implemented; Music tval 105 books use normal allocation and real pickup/study/save. Other ego/body and existing fixed reward consumers shared. Unimported fixed harps remain unavailable content; see docs/music-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/music.rs#music_books_and_bard_harp_use_real_generation_pickup_and_save",
+            "crates/rfb-core/src/game/random_artifact/tests.rs#music_bard_harp_changes_actual_artifact_value_limits"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "implemented",
+          "reason": "Bard master a0d92b6378: source harp base bonus, artifact slot value and Priestly scroll bias implemented; Music tval 105 books use normal allocation and real pickup/study/save. Other ego/body and existing fixed reward consumers shared. Unimported fixed harps remain unavailable content; see docs/music-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/music.rs#music_books_and_bard_harp_use_real_generation_pickup_and_save",
+            "crates/rfb-core/src/game/random_artifact/tests.rs#music_bard_harp_changes_actual_artifact_value_limits"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "implemented",
+          "reason": "Bard master a0d92b6378: source harp base bonus, artifact slot value and Priestly scroll bias implemented; Music tval 105 books use normal allocation and real pickup/study/save. Other ego/body and existing fixed reward consumers shared. Unimported fixed harps remain unavailable content; see docs/music-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/music.rs#music_books_and_bard_harp_use_real_generation_pickup_and_save",
+            "crates/rfb-core/src/game/random_artifact/tests.rs#music_bard_harp_changes_actual_artifact_value_limits"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "implemented",
+          "reason": "Bard master a0d92b6378: source harp base bonus, artifact slot value and Priestly scroll bias implemented; Music tval 105 books use normal allocation and real pickup/study/save. Other ego/body and existing fixed reward consumers shared. Unimported fixed harps remain unavailable content; see docs/music-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/music.rs#music_books_and_bard_harp_use_real_generation_pickup_and_save",
+            "crates/rfb-core/src/game/random_artifact/tests.rs#music_bard_harp_changes_actual_artifact_value_limits"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Bard master a0d92b6378: source harp base bonus, artifact slot value and Priestly scroll bias implemented; Music tval 105 books use normal allocation and real pickup/study/save. Other ego/body and existing fixed reward consumers shared. Unimported fixed harps remain unavailable content; see docs/music-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/music.rs#music_books_and_bard_harp_use_real_generation_pickup_and_save",
+            "crates/rfb-core/src/game/random_artifact/tests.rs#music_bard_harp_changes_actual_artifact_value_limits"
           ]
         }
       ],

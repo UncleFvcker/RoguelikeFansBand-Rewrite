@@ -1524,3 +1524,7 @@ realm-law-name = Law
 
 status-law-spin-name = Spin
 status-law-tread-softly-name = Tread Softly
+
+creation-realm-music = Music
+
+status-music-active = Singing: { $song } (use Stop Singing to end)

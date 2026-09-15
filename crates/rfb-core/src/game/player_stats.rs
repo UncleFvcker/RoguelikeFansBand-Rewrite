@@ -560,7 +560,12 @@ impl Game {
         for (damage_type, level) in self.maia_resistances() {
             record(damage_type, level);
         }
-        for status in &self.player.statuses {
+        for status in self
+            .player
+            .statuses
+            .iter()
+            .chain(self.music_status().iter())
+        {
             for (damage_type, level) in &status.granted_resistances {
                 if *level == ResistanceLevel::Resistant
                     && matches!(
@@ -871,7 +876,12 @@ impl Game {
         if self.player_is_nonliving() {
             immunities.extend([STATUS_BLEEDING.to_owned(), STATUS_UNWELL.to_owned()]);
         }
-        for status in &self.player.statuses {
+        for status in self
+            .player
+            .statuses
+            .iter()
+            .chain(self.music_status().iter())
+        {
             immunities.extend(status.granted_status_immunities.iter().cloned());
         }
         if let Some((_, race, _, _)) = self.character_definitions() {
@@ -2589,6 +2599,7 @@ impl Game {
             || self.player_is_duelist()
             || self.player_is_mage()
             || self.player_is_necromancer()
+            || self.player_is_bard()
             || self.player_is_ranger()
             || self.player_is_priest()
             || self.player_is_warrior_mage()
@@ -2614,6 +2625,12 @@ impl Game {
                 (
                     "demo.class.ranger",
                     self.class_base_blows(weapon, 500, 70, 40),
+                    0,
+                )
+            } else if self.player_is_bard() {
+                (
+                    "demo.class.bard",
+                    self.class_base_blows(weapon, 450, 70, 20),
                     0,
                 )
             } else if self.player_is_warrior_mage() {
@@ -3121,7 +3138,12 @@ impl Game {
             }
             multiplier = multiplier.max(self.item_damage_multiplier(item, target, definition));
         }
-        for status in &self.player.statuses {
+        for status in self
+            .player
+            .statuses
+            .iter()
+            .chain(self.music_status().iter())
+        {
             for brand in &status.granted_brands {
                 if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
                     multiplier = multiplier.max(24);
@@ -3855,7 +3877,8 @@ impl Game {
             }
         }
 
-        for status in &actor.statuses {
+        let music = include_equipment.then(|| self.music_status()).flatten();
+        for status in actor.statuses.iter().chain(music.iter()) {
             if include_equipment && self.player_is_berserker() && status.kind_id == STATUS_BERSERK {
                 continue;
             }

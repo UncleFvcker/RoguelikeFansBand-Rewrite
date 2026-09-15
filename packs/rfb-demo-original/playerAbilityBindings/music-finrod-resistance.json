@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.music-finrod-resistance",
+  "minimumLevel": 22,
+  "resourceCost": 5,
+  "baseFailurePercent": 30,
+  "firstSuccessExperience": 572,
+  "resourceId": "demo.resource.mana"
+}

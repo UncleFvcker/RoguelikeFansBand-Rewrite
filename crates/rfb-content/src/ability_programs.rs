@@ -210,6 +210,15 @@ fn ability_program_input_accepts_step(
     input: AbilityProgramInputDefinition,
     effect: &AbilityEffectDefinition,
 ) -> bool {
+    if let AbilityEffectDefinition::Music { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::CastTarget => matches!(spell, 2 | 22 | 30),
+            AbilityProgramInputDefinition::SelfTarget => {
+                *spell < 32 && !matches!(spell, 2 | 22 | 30)
+            }
+            _ => false,
+        };
+    }
     if let AbilityEffectDefinition::Law { spell } = effect {
         return match input {
             AbilityProgramInputDefinition::Item => *spell == 6,
@@ -275,6 +284,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::ReduceStatus { .. }
                     | AbilityEffectDefinition::PrepareConfusingStrike
                     | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
+                    | AbilityEffectDefinition::StopSinging
                     | AbilityEffectDefinition::SatisfyHunger
                     | AbilityEffectDefinition::DevourFlesh { .. }
                     | AbilityEffectDefinition::Vomit

@@ -79,6 +79,7 @@ fn roll_virtues(
             "demo.class.mage" | "demo.class.necromancer" => {
                 kinds.extend([VirtueKindDto::Knowledge, VirtueKindDto::Enchantment])
             }
+            "demo.class.bard" => kinds.extend([VirtueKindDto::Harmony, VirtueKindDto::Compassion]),
             "demo.class.high-mage" => kinds.extend([
                 VirtueKindDto::Enlightenment,
                 VirtueKindDto::Enchantment,

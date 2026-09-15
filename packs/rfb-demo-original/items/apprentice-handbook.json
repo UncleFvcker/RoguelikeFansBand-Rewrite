@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.apprentice-handbook",
+  "nameKey": "item-demo-apprentice-handbook-name",
+  "descriptionKey": "item-demo-apprentice-handbook-description",
+  "abilityBookId": "demo.ability-book.apprentice-handbook",
+  "rfbBaseKind": {
+    "sourceIndex": 552,
+    "tval": 105,
+    "sval": 0
+  },
+  "baseValue": 100,
+  "generationLevel": 10,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "music",
+    "book",
+    "spellbook"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ]
+}

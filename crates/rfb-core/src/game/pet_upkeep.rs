@@ -91,6 +91,9 @@ impl Game {
         };
         let pets = self.pet_upkeep();
         let upkeep = pets.percent;
+        if upkeep <= 100 && self.music.spell.is_some() {
+            return 0;
+        }
         if upkeep <= 100 {
             let recovery_percent = if self
                 .player_equipment_passives()

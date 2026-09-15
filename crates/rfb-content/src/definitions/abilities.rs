@@ -659,6 +659,10 @@ pub enum AbilityEffectDefinition {
     Necromancy {
         spell: u8,
     },
+    Music {
+        spell: u8,
+    },
+    StopSinging,
     Law {
         spell: u8,
     },

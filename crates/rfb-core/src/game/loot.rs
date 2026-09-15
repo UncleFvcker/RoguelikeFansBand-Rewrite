@@ -1021,9 +1021,15 @@ impl Game {
         if entry.item_kind_id == "demo.item.large-wooden-chest" {
             return Some(self.fixed_item_draft(context, entry.item_kind_id.clone()));
         }
+        let harp_maximum_bonus = if self.player_is_bard() { 2 } else { 1 };
         let mut base_intrinsic_properties =
             self.content.item(&entry.item_kind_id).and_then(|item| {
-                materialize_rfb_harp_intrinsic_with_rng(&mut self.rng, item, generation_depth)
+                materialize_rfb_harp_intrinsic_with_rng(
+                    &mut self.rng,
+                    item,
+                    generation_depth,
+                    harp_maximum_bonus,
+                )
             });
         let preselected_generic_affix_id = (table.rfb_ego_policy
             != Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger))

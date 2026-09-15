@@ -248,7 +248,7 @@ pub(super) fn materialize_ego_with_rng(
                 level,
             ),
             180..=185 => materialize_rfb_ammunition_ego_with_rng(rng, item, affix, level),
-            195 | 196 => materialize_rfb_harp_intrinsic_with_rng(rng, item, level)
+            195 | 196 => materialize_rfb_harp_intrinsic_with_rng(rng, item, level, 1)
                 .and_then(|properties| materialize_rfb_harp_ego(item, affix, &properties)),
             _ => None,
         };
@@ -472,13 +472,14 @@ pub(super) fn materialize_rfb_harp_intrinsic_with_rng(
     rng: &mut RfbRng,
     item: &ItemDefinition,
     generation_level: u16,
+    maximum_bonus: u16,
 ) -> Option<AffixPropertyBundleDefinition> {
     let base_kind = item.rfb_base_kind?;
     if base_kind.tval != TV_BOW || base_kind.sval != SV_HARP {
         return None;
     }
     let mut properties = AffixPropertyBundleDefinition::default();
-    let pval = i32::from(1_u16.saturating_add(rfb_m_bonus(rng, 1, generation_level)));
+    let pval = i32::from(1_u16.saturating_add(rfb_m_bonus(rng, maximum_bonus, generation_level)));
     armor::apply_pval(&mut properties, armor::Pval::Charisma, pval);
     Some(properties)
 }
@@ -3725,7 +3726,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 134);
+        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 135);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,
@@ -3879,7 +3880,7 @@ mod tests {
         assert!(definition.resists_enchantment);
 
         let mut rng = RfbRng::seeded(0xE4_4001);
-        let intrinsic = materialize_rfb_harp_intrinsic_with_rng(&mut rng, &definition, 80)
+        let intrinsic = materialize_rfb_harp_intrinsic_with_rng(&mut rng, &definition, 80, 1)
             .expect("the authoritative Harp base should roll intrinsic charisma");
         assert_eq!((intrinsic.modifiers.charisma, rng.draw_counter), (2, 4));
 
@@ -3916,7 +3917,7 @@ mod tests {
     fn harp_egos_reuse_base_pval_and_round_trip_without_rerolling() {
         let definition = rfb_launcher_item("demo.item.harp");
         let mut rng = RfbRng::seeded(0xE4_4195);
-        let intrinsic = materialize_rfb_harp_intrinsic_with_rng(&mut rng, &definition, 80)
+        let intrinsic = materialize_rfb_harp_intrinsic_with_rng(&mut rng, &definition, 80, 1)
             .expect("Harp base should roll before its ego");
         let base_draws = rng.draw_counter;
         let vanyar = ego_affix(

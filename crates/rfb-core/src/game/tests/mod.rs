@@ -101,5 +101,6 @@ mod weapon_traits;
 mod world;
 
 mod law;
+mod music;
 mod necromancy;
 mod trump;

@@ -302,6 +302,7 @@ mod tests {
                 97 => Some("craft"),
                 100 => Some("necromancy"),
                 104 => Some("law"),
+                105 => Some("music"),
                 _ => None,
             };
             if let Some(realm) = authored_realm {

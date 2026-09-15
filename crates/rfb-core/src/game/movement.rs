@@ -240,9 +240,10 @@ impl Game {
 
     pub(super) fn player_wall_destruction_target(&self, position: Position) -> Option<&str> {
         // RFB cmd1.c: kill_wall uses FF_HURT_DISI, before entry; it is not pass_wall.
-        let destroys_walls = self
-            .character_definitions()
-            .is_some_and(|(_, race, _, _)| race.id == "demo.race.demon-lord")
+        let destroys_walls = self.singing(16)
+            || self
+                .character_definitions()
+                .is_some_and(|(_, race, _, _)| race.id == "demo.race.demon-lord")
             || (self.riding_actor_id.is_some()
                 && self
                     .active_traveler_definition()

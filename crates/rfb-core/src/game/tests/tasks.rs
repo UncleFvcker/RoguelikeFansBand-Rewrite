@@ -3348,10 +3348,11 @@ fn p86d_camelot_entrance_recall_conquest_and_reward_round_trip() {
         .iter()
         .find(|item| item.kind_id == "demo.item.mirror-shield")
         .expect("Arthur should drop the fixed Mirror Shield");
-    assert_eq!(
-        mirror_shield.location,
-        ItemLocation::Ground(guardian_position)
-    );
+    let ItemLocation::Ground(reward_position) = mirror_shield.location else {
+        panic!("Arthur's reward must be on the ground");
+    };
+    // The normal drop consumer scatters when the death square already holds loot.
+    assert!(crate::game::projectile_geometry::rfb_distance(reward_position, guardian_position) <= 3);
     assert_eq!(mirror_shield.quality, ItemQualityDto::Ordinary);
     assert!(mirror_shield.affix_ids.is_empty());
 

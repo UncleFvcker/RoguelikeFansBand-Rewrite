@@ -822,3 +822,27 @@ fn random_artifact_starlight_activation_casts_multiple_weak_light_beams() {
     assert!((5..=15).contains(&beams));
     assert!(game.glow.iter().any(|glow| *glow));
 }
+
+#[test]
+fn music_bard_harp_changes_actual_artifact_value_limits() {
+    let bard = Game::new_with_build(925, "demo.build.bard").unwrap();
+    let mage = Game::new_with_build(925, "demo.build.high-mage-law").unwrap();
+    let object = ValueObject {
+        tval: 19,
+        sval: 70,
+        ..Default::default()
+    };
+    let limits = |g: &Game| {
+        value_limits(
+            &mut RfbRng::seeded(925),
+            &object,
+            &g.character_definitions().unwrap().2.id,
+            70,
+            &mut false,
+            false,
+            0,
+        )
+    };
+    assert_eq!(limits(&bard).maximum, 62_000);
+    assert_eq!(limits(&mage).maximum, 50_000);
+}

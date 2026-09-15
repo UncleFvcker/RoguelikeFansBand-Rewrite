@@ -361,6 +361,10 @@ impl Game {
                 22 => &["rfb.status.elemental-immunity"],
                 24 => &[STATUS_MANA_BRAND],
                 28 => &[STATUS_INVENTORY_PROTECTION],
+                32 if self.music.spell.is_some() && !self.music.interrupted => {
+                    self.interrupt_music();
+                    return true;
+                }
                 // Other original branches belong to statuses/classes not opened here;
                 // failed attempts still consume their original 1..33 draw.
                 _ => &[],

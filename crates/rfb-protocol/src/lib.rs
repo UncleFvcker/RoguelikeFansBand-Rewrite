@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.270";
+pub const PROTOCOL_VERSION: &str = "1.271";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 29;
 
@@ -1169,6 +1169,17 @@ pub enum TerrainInteractionKindDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+#[derive(Default)]
+pub struct MusicStateDto {
+    pub spell: Option<u8>,
+    pub beats: u8,
+    pub interrupted: bool,
+    pub half_mana: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct ResourcePoolDto {
     pub id: String,
     pub name_key: String,
@@ -1614,6 +1625,10 @@ pub enum AbilityEffectSpecDto {
     Necromancy {
         spell: u8,
     },
+    Music {
+        spell: u8,
+    },
+    StopSinging,
     Law {
         spell: u8,
     },
@@ -3994,6 +4009,7 @@ pub struct PlayerDto {
     pub minor_slow: u8,
     #[serde(default)]
     pub reality_change_ticks: u8,
+    pub music: MusicStateDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5398,6 +5414,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(TargetModeDto);
     push_declaration!(TargetSpecDto);
     push_declaration!(ResourcePoolDto);
+    push_declaration!(MusicStateDto);
     push_declaration!(AbilityLearningDto);
     push_declaration!(SpellRealmsDto);
     push_declaration!(RealmChangeBookDto);
@@ -5618,6 +5635,7 @@ pub struct PlayerSaveDto {
     pub chaos_patron_id: Option<String>,
     #[serde(default)]
     pub reality_change_ticks: u8,
+    pub music: MusicStateDto,
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
     pub pending_ability_glyph: Option<PendingAbilityGlyphDto>,
@@ -6833,6 +6851,7 @@ mod tests {
                 energy_need: 0,
                 minor_slow: 0,
                 reality_change_ticks: 0,
+                music: MusicStateDto::default(),
                 pending_mutation_direction: None,
                 pending_ability_direction: None,
                 pending_ability_glyph: None,
@@ -7157,6 +7176,7 @@ mod tests {
             minor_slow_energy: 0,
             chaos_patron_id: None,
             reality_change_ticks: 0,
+            music: MusicStateDto::default(),
             pending_mutation_direction: None,
             pending_ability_direction: None,
             pending_ability_glyph: None,

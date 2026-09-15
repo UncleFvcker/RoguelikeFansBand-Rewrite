@@ -1051,6 +1051,7 @@ pub(crate) fn player_to_save(
         minor_slow_energy: 0,
         chaos_patron_id: None,
         reality_change_ticks: 0,
+        music: rfb_protocol::MusicStateDto::default(),
         pending_mutation_direction: None,
         pending_ability_direction: None,
         pending_ability_glyph: None,
