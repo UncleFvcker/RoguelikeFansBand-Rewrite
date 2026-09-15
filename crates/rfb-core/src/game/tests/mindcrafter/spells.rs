@@ -484,6 +484,12 @@ fn failed_spells_follow_all_five_backlash_branches_and_preserve_fully_identified
         let mut game = arena(45);
         game.debug_set_ability_casts_succeed(false);
         give_inventory_item(&mut game, "test.partial", "demo.item.small-sword");
+        game.items
+            .last_mut()
+            .unwrap()
+            .intrinsic_properties
+            .brands
+            .insert(rfb_content::WeaponBrand::Cold);
         give_inventory_item(&mut game, "test.full", "demo.item.small-sword");
         for (item_id, full) in [("test.partial", false), ("test.full", true)] {
             game.identify_item_instance(item_id, ItemIdentificationRequest::new(full));

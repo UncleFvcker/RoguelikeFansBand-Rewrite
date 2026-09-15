@@ -622,7 +622,7 @@ impl Game {
             base
         };
         // Poison starts from the pre-acid-resistance amount, as in dungeon.c FF_ACID.
-        let resisted = |amount, damage_type| {
+        let mut resisted = |amount, damage_type| {
             self.resist_player_damage(resolve_damage(
                 DamagePacket::new(amount, damage_type),
                 self.effective_player_resistances().level(damage_type),

@@ -25,6 +25,7 @@ test("large original render profile is deterministic and covers the whole map", 
     terrainId: "profile.terrain.wall",
     itemKindId: "profile.item.light",
     actorKindId: "profile.actor.mote",
+    actorUnique: true,
     visibility: "visible",
     light: { color: 0xffb060, intensity: 0 },
   });

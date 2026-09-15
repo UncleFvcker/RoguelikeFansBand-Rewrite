@@ -2325,6 +2325,11 @@ impl Game {
         self.items[index] = mundane;
         if let Some(knowledge) = self.item_property_knowledge.get_mut(item_id) {
             knowledge.known_blessed = false;
+            knowledge.known_flags.clear();
+            knowledge.known_curse_flags = 0;
+            knowledge.known_curse = false;
+            knowledge.known_affix_ids.clear();
+            knowledge.identified = false;
         }
         self.identify_item_instance(item_id, ItemIdentificationRequest::new(false));
         changed
@@ -3174,6 +3179,9 @@ impl Game {
             )?
         {
             return Ok(Some(0));
+        }
+        if activation.is_some() {
+            self.learn_item_activation(item_id);
         }
         if self.items[index].is_artifact_mushroom(&self.content) {
             self.items[index].device_recovery_progress =

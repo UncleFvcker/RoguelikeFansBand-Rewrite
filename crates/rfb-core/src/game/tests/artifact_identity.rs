@@ -117,7 +117,12 @@ fn artifact_identity_keeps_base_properties_value_knowledge_and_equipment() {
         assert_eq!(game.snapshot().inventory[0].artifact_name, None);
         assert_eq!(game.snapshot().inventory[0].modifiers.strength, 0);
         game.appraise_inventory_item(ID).unwrap();
-        assert_eq!(game.snapshot().inventory[0].artifact_name, None);
+        assert_eq!(
+            game.snapshot().inventory[0].artifact_name.as_deref(),
+            Some(NAME)
+        );
+        assert_eq!(game.snapshot().inventory[0].modifiers.strength, 0);
+        assert!(game.snapshot().inventory[0].activation.is_none());
         let mut game = round_trip(&game);
         game.identify_item_instance(ID, ItemIdentificationRequest::new(true));
         let known = &game.snapshot().inventory[0];
@@ -375,7 +380,7 @@ fn artifact_identity_mogaminator_matches_known_name_and_artifact_but_never_namel
     configure(&mut game, "nameless items");
     assert!(game.mogaminator_dto(Vec::new()).matches.is_empty());
     configure(&mut game, "items:永恒蘑菇");
-    assert!(game.mogaminator_dto(Vec::new()).matches.is_empty());
+    assert_eq!(game.mogaminator_dto(Vec::new()).matches.len(), 1);
     game.identify_item_instance(ID, ItemIdentificationRequest::new(true));
     assert_eq!(game.mogaminator_dto(Vec::new()).matches.len(), 1);
     configure(&mut game, "!artifact items");

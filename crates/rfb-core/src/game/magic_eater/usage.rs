@@ -243,15 +243,10 @@ impl Game {
             if let (ItemUseEffectDefinition::IdentifyItem { full }, ItemUsePlan::Item { item_id }) =
                 (&profile.effect, &plan)
                 && self
-                    .item_property_knowledge
-                    .get(item_id)
-                    .is_some_and(|knowledge| {
-                        if *full {
-                            knowledge.identified
-                        } else {
-                            knowledge.appraised
-                        }
-                    })
+                    .items
+                    .iter()
+                    .find(|item| &item.id == item_id)
+                    .is_some_and(|item| !self.item_needs_identification(item, *full))
             {
                 continue;
             }

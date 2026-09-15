@@ -564,6 +564,16 @@ pub(super) fn revealed_terrain_is_valid(
 
 impl Game {
     pub(super) fn validate_loaded_state(&self) -> Result<(), CoreError> {
+        if self.reproduction_count > super::monster_ecology::MAX_FLOOR_REPRODUCTIONS
+            || self.stored_floors.values().any(|floor| {
+                floor.reproduction_count > super::monster_ecology::MAX_FLOOR_REPRODUCTIONS
+            })
+        {
+            return Err(CoreError::InvalidSave(
+                "floor reproduction count exceeds its limit",
+            ));
+        }
+        self.validate_item_lore()?;
         self.validate_spell_realms()?;
         if !self.duelist_challenge_is_valid() {
             return Err(CoreError::InvalidSave("duelist challenge is invalid"));
@@ -1102,9 +1112,12 @@ impl Game {
             }) {
                 return Err(CoreError::InvalidSave("item origin actor state is invalid"));
             }
-            let supports_quality = (definition.max_stack == 1
-                && definition.equipment_slot.is_some()
-                && item.quantity == 1)
+            let supports_quality = definition
+                .fuel
+                .is_some_and(|fuel| fuel.kind == rfb_content::ItemFuelKindDefinition::Torch)
+                || (definition.max_stack == 1
+                    && definition.equipment_slot.is_some()
+                    && item.quantity == 1)
                 || definition
                     .tags
                     .iter()
@@ -1157,15 +1170,6 @@ impl Game {
                     }
                 }
                 ItemLocation::Equipped { slot_id } => {
-                    let fully_identified =
-                        self.item_property_knowledge
-                            .get(&item.id)
-                            .is_some_and(|knowledge| {
-                                knowledge.identified
-                                    && item.affix_ids.iter().all(|affix_id| {
-                                        knowledge.known_affix_ids.contains(affix_id)
-                                    })
-                            });
                     // The occupied instance must exist on the body and its
                     // type must match the item's declared slot class.
                     let slot_type_matches = self.body_slot_type(slot_id).is_some_and(|slot_type| {
@@ -1178,7 +1182,6 @@ impl Game {
                         || item.quantity != 1
                         || !slot_type_matches
                         || !equipment_slots.insert(slot_id.clone())
-                        || !fully_identified
                     {
                         return Err(CoreError::InvalidSave("equipment item state is invalid"));
                     }
@@ -1212,7 +1215,10 @@ impl Game {
                     .content
                     .item(&item.kind_id)
                     .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
-                let supports_quality = (definition.max_stack == 1 && item.quantity == 1)
+                let supports_quality = definition
+                    .fuel
+                    .is_some_and(|fuel| fuel.kind == rfb_content::ItemFuelKindDefinition::Torch)
+                    || (definition.max_stack == 1 && item.quantity == 1)
                     || definition
                         .tags
                         .iter()
@@ -1246,7 +1252,10 @@ impl Game {
                     .content
                     .item(&item.kind_id)
                     .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
-                let supports_quality = (definition.max_stack == 1 && item.quantity == 1)
+                let supports_quality = definition
+                    .fuel
+                    .is_some_and(|fuel| fuel.kind == rfb_content::ItemFuelKindDefinition::Torch)
+                    || (definition.max_stack == 1 && item.quantity == 1)
                     || definition
                         .tags
                         .iter()
@@ -1383,9 +1392,12 @@ impl Game {
                     .content
                     .item(&item.kind_id)
                     .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
-                let supports_quality = (definition.max_stack == 1
-                    && definition.equipment_slot.is_some()
-                    && item.quantity == 1)
+                let supports_quality = definition
+                    .fuel
+                    .is_some_and(|fuel| fuel.kind == rfb_content::ItemFuelKindDefinition::Torch)
+                    || (definition.max_stack == 1
+                        && definition.equipment_slot.is_some()
+                        && item.quantity == 1)
                     || definition
                         .tags
                         .iter()
@@ -2017,6 +2029,8 @@ impl Game {
                 ));
             };
             let identification_without_appraisal = knowledge.identified && !knowledge.appraised;
+            let foreign_curse_knowledge =
+                knowledge.known_curse_flags & !self.actual_item_curse_flags(item) != 0;
             let foreign_affix = knowledge
                 .known_affix_ids
                 .iter()
@@ -2026,8 +2040,15 @@ impl Game {
                     .affix_ids
                     .iter()
                     .any(|affix_id| !knowledge.known_affix_ids.contains(affix_id));
-            if !knowledge.discovered
+            // Forgotten ground objects and objects carried away by monsters retain
+            // identification, but no longer have a known position on the map.
+            if (!knowledge.discovered
+                && !matches!(
+                    item.location,
+                    ItemLocation::Ground(_) | ItemLocation::CarriedBy { .. }
+                ))
                 || identification_without_appraisal
+                || foreign_curse_knowledge
                 || foreign_affix
                 || incomplete_identification
             {

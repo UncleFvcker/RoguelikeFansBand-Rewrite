@@ -7,7 +7,9 @@ import {
   Container,
   Graphics,
   Rectangle,
+  RendererType,
   Sprite,
+  type Filter,
   type Texture,
 } from "pixi.js";
 
@@ -30,6 +32,7 @@ import type {
   TilesetChangeResult,
 } from "./renderer-backend";
 import { TilesetRuntime, type RuntimeTileVisual } from "./tileset-runtime";
+import { createUniqueRainbowFilter } from "./unique-rainbow-filter";
 
 const rgb = (color: string) => Number.parseInt(color.slice(1), 16);
 const DYNAMIC_DISPLAY_OBJECTS_PER_CELL = 7;
@@ -95,6 +98,23 @@ export class PixiRendererBackend implements RendererBackend {
   #visibleChunkCount = 0;
   #lastRebuiltTerrainChunks = 0;
   #totalRebuiltTerrainChunks = 0;
+  #rainbowFilter: Filter | undefined;
+  readonly #rainbowSprites = new Set<Sprite>();
+  #motionPreference: MediaQueryList | undefined;
+  #animatingRainbow = false;
+  readonly #animateRainbow = () => {
+    this.#rainbowFilter!.resources.rainbow.uniforms.uPhase = (performance.now() % 8000) / 8000;
+  };
+  readonly #syncRainbowAnimation = () => {
+    const moving = this.#rainbowSprites.size > 0 && this.#visuals.uniqueEffect === "flowing" &&
+      !this.#motionPreference?.matches && this.#host?.ownerDocument.visibilityState === "visible";
+    if (moving !== this.#animatingRainbow) {
+      this.#animatingRainbow = moving;
+      if (moving) this.#application.ticker.add(this.#animateRainbow);
+      else this.#application.ticker.remove(this.#animateRainbow);
+    }
+    if (!moving && this.#rainbowFilter) this.#rainbowFilter.resources.rainbow.uniforms.uPhase = 0;
+  };
 
   constructor(options: PixiRendererBackendOptions = {}) {
     const terrainChunkSize = options.terrainChunkSize ?? TERRAIN_CHUNK_SIZE;
@@ -125,6 +145,9 @@ export class PixiRendererBackend implements RendererBackend {
       autoDensity: true,
     });
     this.#application.canvas.setAttribute("aria-label", options.canvasLabel);
+    this.#motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    this.#motionPreference.addEventListener("change", this.#syncRainbowAnimation);
+    options.host.ownerDocument.addEventListener("visibilitychange", this.#syncRainbowAnimation);
     options.host.replaceChildren(this.#application.canvas);
     this.#camera.scale.set(this.#zoom);
     this.#application.stage.addChild(this.#camera);
@@ -178,6 +201,7 @@ export class PixiRendererBackend implements RendererBackend {
     this.#visibleChunkCount = 0;
     this.#lastRebuiltTerrainChunks = 0;
     this.#createTerrainChunks();
+    this.#syncRainbowAnimation();
   }
 
   setCameraTransform(transform: CameraTransform): void {
@@ -240,6 +264,7 @@ export class PixiRendererBackend implements RendererBackend {
     this.#forceTerrainRebuild = false;
     this.#lastRebuiltTerrainChunks = dirtyChunks.size;
     this.#totalRebuiltTerrainChunks += dirtyChunks.size;
+    this.#syncRainbowAnimation();
     return applied;
   }
 
@@ -282,10 +307,17 @@ export class PixiRendererBackend implements RendererBackend {
   }
 
   destroy(): void {
+    this.#host?.ownerDocument.removeEventListener("visibilitychange", this.#syncRainbowAnimation);
+    this.#motionPreference?.removeEventListener("change", this.#syncRainbowAnimation);
+    this.#application.ticker?.remove(this.#animateRainbow);
     for (const view of [...this.#allocatedDynamicViews]) this.#destroyDynamicView(view);
     for (const chunk of this.#chunks) chunk.terrainTexture?.destroy(true);
     this.#tileset?.destroy();
     this.#tileset = undefined;
+    this.#rainbowFilter?.destroy();
+    this.#rainbowFilter = undefined;
+    this.#rainbowSprites.clear();
+    this.#animatingRainbow = false;
     this.#layout = undefined;
     this.#chunks = [];
     this.#renderCells = [];
@@ -390,6 +422,7 @@ export class PixiRendererBackend implements RendererBackend {
     const view = this.#activeDynamicViews.get(chunkIndex);
     if (!view) return;
     this.#activeDynamicViews.delete(chunkIndex);
+    for (const cell of view.cells) this.#clearRainbow(cell.actorSymbol);
     view.descriptorIndex = undefined;
     for (const layer of dynamicViewLayers(view)) layer.visible = false;
     const poolKey = dynamicViewPoolKey(view.cellWidth, view.cellHeight);
@@ -409,6 +442,7 @@ export class PixiRendererBackend implements RendererBackend {
   }
 
   #destroyDynamicView(view: DynamicChunkView): void {
+    for (const cell of view.cells) this.#clearRainbow(cell.actorSymbol);
     this.#allocatedDynamicViews.delete(view);
     for (const layer of dynamicViewLayers(view)) layer.destroy({ children: true });
   }
@@ -424,7 +458,7 @@ export class PixiRendererBackend implements RendererBackend {
         const worldY = descriptor.cellY + localY;
         const cell = this.#renderCells[worldY * this.#width + worldX];
         if (cell) this.#applyDynamicCell(cellView, cell, tileset, localX, localY);
-        else resetCellView(cellView);
+        else { this.#clearRainbow(cellView.actorSymbol); resetCellView(cellView); }
       }
     }
   }
@@ -460,8 +494,20 @@ export class PixiRendererBackend implements RendererBackend {
       actor && cell.highlightPet ? { ...actor, background: rgb(this.#visuals.theme.pet) } : actor,
       item?.background ?? terrainBackground,
     );
+    // Pixi's existing software Canvas fallback cannot execute custom GPU filters.
+    if (this.#application.renderer.type !== RendererType.CANVAS && actor?.source === "glyph" && cell.actorKindId && !cell.actorGlyph &&
+        cell.visibility === "visible" && tileset.uniqueEffect(cell.actorKindId, cell.actorUnique === true) !== "off") {
+      this.#rainbowFilter ??= createUniqueRainbowFilter();
+      if (!this.#rainbowSprites.has(view.actorSymbol)) view.actorSymbol.filters = [this.#rainbowFilter];
+      this.#rainbowSprites.add(view.actorSymbol);
+      view.actorSymbol.tint = 0xffffff;
+    } else this.#clearRainbow(view.actorSymbol);
     drawVisibility(view.visibilityMask, localX, localY, cell, this.#visuals.theme);
     drawLighting(view.lightColor, view.darkness, localX, localY, cell, this.#visuals.theme);
+  }
+
+  #clearRainbow(sprite: Sprite): void {
+    if (this.#rainbowSprites.delete(sprite)) sprite.filters = null;
   }
 
   #rebuildTerrainChunk(chunkIndex: number): void {
@@ -517,6 +563,7 @@ export class PixiRendererBackend implements RendererBackend {
       this.#assignDynamicView(chunkIndex);
     }
     this.#trimDynamicViewPools();
+    this.#syncRainbowAnimation();
   }
 
   #tilesetResult(): TilesetChangeResult {

@@ -17852,6 +17852,12 @@
           "format": "uint32",
           "minimum": 0
         },
+        "identifyItemIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "innStayCost": {
           "type": [
             "integer",
@@ -17900,6 +17906,12 @@
           ],
           "format": "uint32",
           "minimum": 0
+        },
+        "researchItemIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "researchMonsterCost": {
           "type": [

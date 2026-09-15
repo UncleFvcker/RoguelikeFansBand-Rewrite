@@ -21,7 +21,7 @@
     "finalState": {
       "groundItemCount": 3,
       "inventory": {
-        "generated.item.8": {
+        "generated.item.3": {
           "kindId": "demo.item.arrow",
           "quantity": 21
         }
@@ -32,7 +32,7 @@
         "y": 33
       },
       "revision": 1,
-      "stateHash": "f41783e6a07562e35bce055ab9801fadcf7c0c364665989c280fe2db2ab49c19",
+      "stateHash": "ec8f03de8dcfb530a08b8f9907266ef6e330e077b64e456ab5b6fc2028c79c7b",
       "turn": 1
     },
     "events": [

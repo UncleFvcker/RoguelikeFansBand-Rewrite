@@ -105,6 +105,7 @@ export class InputController {
   #localTravelObjectId: string | undefined;
   #rememberedTarget: { target: TargetSelection; floorId: string } | undefined;
   #continuousAction: ContinuousAction | undefined;
+  #heldMovement: { key: KeyboardEvent; direction: Direction } | undefined;
 
   constructor(options: {
     state: AppState;
@@ -160,6 +161,7 @@ export class InputController {
     if (this.#installed) return;
     this.#installed = true;
     this.#window.addEventListener("keydown", this.#handleKeydown);
+    this.#window.addEventListener("keyup", this.#handleKeyup);
     this.#window.addEventListener("keydown", this.#interruptContinuousKey, true);
     this.#window.addEventListener("click", this.#interruptContinuousClick, true);
     this.#window.addEventListener("blur", this.#stopOnBlur);
@@ -179,6 +181,7 @@ export class InputController {
     this.#installed = false;
     this.resetSession();
     this.#window.removeEventListener("keydown", this.#handleKeydown);
+    this.#window.removeEventListener("keyup", this.#handleKeyup);
     this.#window.removeEventListener("keydown", this.#interruptContinuousKey, true);
     this.#window.removeEventListener("click", this.#interruptContinuousClick, true);
     this.#window.removeEventListener("blur", this.#stopOnBlur);
@@ -251,6 +254,7 @@ export class InputController {
   }
 
   resetSession(): void {
+    this.#heldMovement = undefined;
     this.#mapDisplay.reset();
     this.#rememberedTarget = undefined;
     this.#sessionGeneration++;
@@ -687,21 +691,44 @@ export class InputController {
 
   readonly #handleKeydown = (event: KeyboardEvent): void => this.#processKeydown(event);
 
+  readonly #handleKeyup = (event: KeyboardEvent): void => {
+    if (event.key === this.#heldMovement?.key.key ||
+        (event.code && event.code === this.#heldMovement?.key.code)) this.#heldMovement = undefined;
+  };
+
   executeOriginalKey(key: KeyboardEventInit): void {
     this.#processKeydown(new KeyboardEvent("keydown", key), "original");
   }
 
-  #processKeydown(event: KeyboardEvent, forcedPreset?: InputPreset): void {
+  #processKeydown(event: KeyboardEvent, forcedPreset?: InputPreset,
+    movementKey: KeyboardEvent | undefined = forcedPreset ? undefined : event): void {
+    if (!event.repeat) this.#heldMovement = undefined;
     if (
-      event.defaultPrevented || event.repeat || event.isComposing || this.continuousAction ||
+      event.defaultPrevented || event.isComposing || this.continuousAction || this.#window.document.hidden ||
       this.#dom.mapHost.ownerDocument.querySelector("dialog[open]") ||
       isTextInput(event.target)
-    ) return;
+    ) { this.#heldMovement = undefined; return; }
+    if (event.repeat) {
+      const held = this.#heldMovement;
+      if (!held || this.#state.commandBlocked || this.#state.targeting || this.#state.terrainInteractionMode ||
+          this.#ridingDirection || this.#walkDirection || this.#runDirectionPreset ||
+          this.#state.status?.mogaminator.pendingQuery ||
+          event.key !== held.key.key || event.code !== held.key.code ||
+          (["ctrlKey", "altKey", "metaKey", "shiftKey"] as const).some(modifier =>
+            Boolean(event[modifier]) !== Boolean(held.key[modifier]))) {
+        this.#heldMovement = undefined;
+        return;
+      }
+      event.preventDefault(); event.stopImmediatePropagation();
+      // Use only OS key-repeat events. Busy commands are dropped, never queued.
+      if (!this.#state.busy) void this.#dispatch({ type: "move", direction: held.direction });
+      return;
+    }
     const preset = forcedPreset ?? (this.#literalCommand ? "original" : this.#getInputPreset());
     if (!forcedPreset && !this.#literalCommand && this.#countInput === undefined && event.key !== "\\" &&
         !this.#state.busy && !this.#state.commandBlocked && !this.#state.targeting && !this.#state.terrainInteractionMode &&
         !this.#ridingDirection && !this.#runDirectionPreset && !this.#walkDirection &&
-        this.#customKey(event, key => this.executeOriginalKey(key))) {
+        this.#customKey(event, key => this.#processKeydown(new KeyboardEvent("keydown", key), "original", movementKey))) {
       event.preventDefault(); event.stopImmediatePropagation(); return;
     }
     if (event.key === "\\" && !event.ctrlKey && !event.altKey && !event.metaKey && !this.#state.busy && !this.#state.commandBlocked &&
@@ -845,7 +872,12 @@ export class InputController {
       else if (event.key === "<" || event.key === ">") { event.preventDefault(); this.#handleTraverseStairs(); }
       else {
         const command = commandForKeyboardInput(event, runPreset);
-        if (command) { event.preventDefault(); void this.dispatchCounted(command); }
+        if (command) {
+          if (command.type === "move" && movementKey && this.#commandCount === undefined) {
+            this.#heldMovement = { key: movementKey, direction: command.direction };
+          }
+          event.preventDefault(); void this.dispatchCounted(command);
+        }
         else this.#commandCount = undefined;
       }
       event.stopImmediatePropagation();
@@ -1333,6 +1365,7 @@ export class InputController {
   }
 
   async stopContinuousAction(): Promise<void> {
+    this.#heldMovement = undefined;
     this.#countInput = undefined;
     this.#commandCount = undefined;
     this.#state.terrainInteractionMode = undefined;
@@ -1421,6 +1454,7 @@ export class InputController {
   };
 
   readonly #interruptContinuousClick = (event: MouseEvent): void => {
+    this.#heldMovement = undefined;
     if (this.#countInput !== undefined || this.#commandCount !== undefined || this.#walkDirection) {
       this.#countInput = undefined;
       this.#commandCount = undefined;
@@ -1508,7 +1542,7 @@ export function localTravelStopsAfterStep(
     searchDiscoveredSomething(current) ||
     current.player.statuses.some((status) => status.kindId === "rfb.status.confusion") ||
     current.entities.some((entity) => entity.faction === "hostile") ||
-    samePosition(current.player.position, before.player.position) ||
+    (samePosition(current.player.position, before.player.position) && !doorOpenedAfterStep(before, current)) ||
     samePosition(current.player.position, destination)
   );
 }
@@ -1530,9 +1564,15 @@ export function autoGetStopsAfterStep(
     Boolean(
       current &&
         samePosition(current.player.position, before.player.position) &&
+        !doorOpenedAfterStep(before, current) &&
         autoGetObjectExists(current, target.objectId),
     )
   );
+}
+
+function doorOpenedAfterStep(before: GameSnapshot | GameUpdate, current: GameSnapshot | GameUpdate): boolean {
+  return current.revision > before.revision && "events" in current &&
+    current.events.some(event => event.kind === "terrain.door-opened");
 }
 
 function autoGetInterrupted(
@@ -1646,6 +1686,7 @@ export function directionForKeyboardInput(
   preset: InputPreset,
 ): Direction | undefined {
   return NUMPAD_DIRECTIONS[event.code] ?? NUMPAD_DIRECTIONS[`Numpad${event.key}`] ??
+    ({ ArrowUp: "north", ArrowDown: "south", ArrowLeft: "west", ArrowRight: "east" } as Record<string, Direction>)[event.key] ??
     (preset === "roguelike" ? VI_DIRECTIONS[event.key] : undefined);
 }
 

@@ -475,7 +475,7 @@ fn mutation_detection_recall_and_resistance_use_existing_authoritative_state() {
                 .find(|item| item.id == "test.item.cursed")
                 .unwrap()
         ),
-        ItemIdentificationDto::Appraised
+        ItemIdentificationDto::Identified
     );
 
     let mut recall = active_source_mutation_game(29, "recall", 17);

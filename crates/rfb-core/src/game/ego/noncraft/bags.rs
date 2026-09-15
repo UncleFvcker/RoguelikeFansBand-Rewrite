@@ -299,6 +299,10 @@ fn forced_base_bags_cover_ordinary_good_great_all_egos_known_capacity_and_save()
                 game.items.push(item);
                 assert_eq!(game.inventory_dto()[0].bag_capacity, None);
                 assert!(game.equip_inventory_item(&id, None).is_some());
+                game.identify_item_instance(
+                    &id,
+                    crate::game::inventory::ItemIdentificationRequest::new(false),
+                );
                 assert_eq!(game.equipment_dto()[0].bag_capacity, Some(expected));
                 assert_eq!(game.inventory_slot_capacity(), 26 + expected);
                 assert_eq!(

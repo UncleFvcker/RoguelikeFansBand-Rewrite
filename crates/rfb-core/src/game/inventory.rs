@@ -54,12 +54,16 @@ pub(super) fn record_book_found(
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(super) struct ItemPropertyKnowledgeState {
+    pub(super) known_curse_flags: u32,
     pub(super) known_curse: bool,
     pub(super) discovered: bool,
     pub(super) appraised: bool,
+    // Explicit full-identification knowledge; effective completeness also derives
+    // from actual flags minus instance/base/shared lore (item_identification).
     pub(super) identified: bool,
     pub(super) feeling: Option<ItemFeelingDto>,
     pub(super) known_affix_ids: BTreeSet<String>,
+    pub(super) known_flags: BTreeSet<String>,
     pub(super) known_blessed: bool,
 }
 
@@ -72,9 +76,11 @@ pub(super) fn item_properties_match(
     let right = right.unwrap_or(&empty);
     left.appraised == right.appraised
         && left.known_curse == right.known_curse
+        && left.known_curse_flags == right.known_curse_flags
         && left.identified == right.identified
         && left.feeling == right.feeling
         && left.known_affix_ids == right.known_affix_ids
+        && left.known_flags == right.known_flags
         && left.known_blessed == right.known_blessed
 }
 
@@ -815,7 +821,7 @@ fn plan_equip(
         .id
         .clone()
     };
-    if carried.quantity != 1 {
+    if carried.quantity == 0 || carried.quantity > definition.max_stack {
         return None;
     }
     let replaced_index = items.iter().position(|equipped| {
@@ -1009,6 +1015,52 @@ pub(super) fn merge_item_stack(
         destination.inscription.clone_from(&source.inscription);
     }
     destination.discount_percent = destination.discount_percent.max(source.discount_percent);
+}
+
+// Return whether the incoming inventory instance was entirely absorbed.
+fn combine_inventory_stack(
+    content: &ContentCatalog,
+    items: &mut Vec<ItemInstance>,
+    knowledge: &BTreeMap<String, ItemPropertyKnowledgeState>,
+    item_id: &str,
+) -> bool {
+    let source_index = items
+        .iter()
+        .position(|item| item.id == item_id && item.location == ItemLocation::Inventory)
+        .expect("returned equipment is in the inventory");
+    let source = items[source_index].clone();
+    let maximum = content
+        .item(&source.kind_id)
+        .expect("item kind exists")
+        .max_stack;
+    let mut candidates = items
+        .iter()
+        .enumerate()
+        .filter(|(index, item)| {
+            *index != source_index
+                && item.location == ItemLocation::Inventory
+                && item.quantity < maximum
+                && item_instances_stack_compatible(content, item, &source)
+                && item_properties_match(knowledge.get(&item.id), knowledge.get(item_id))
+        })
+        .map(|(index, item)| (item.id.clone(), index))
+        .collect::<Vec<_>>();
+    candidates.sort();
+    let mut remaining = source.quantity;
+    for (_, index) in candidates {
+        let amount = remaining.min(maximum - items[index].quantity);
+        merge_item_stack(&mut items[index], &source, amount);
+        remaining -= amount;
+        if remaining == 0 {
+            break;
+        }
+    }
+    if remaining == 0 {
+        items.remove(source_index);
+    } else {
+        items[source_index].quantity = remaining;
+    }
+    remaining == 0
 }
 
 impl Game {
@@ -1620,12 +1672,7 @@ impl Game {
         if knowledge.is_some_and(|knowledge| knowledge.appraised || knowledge.identified) {
             return None;
         }
-        let knowledge = self
-            .item_property_knowledge
-            .entry(item_instance_id)
-            .or_default();
-        knowledge.discovered = true;
-        knowledge.appraised = true;
+        self.identify_item_instance(&item_instance_id, ItemIdentificationRequest::new(false));
         Some((kind_id, quality))
     }
 
@@ -1634,6 +1681,7 @@ impl Game {
         item_id: &str,
         request: ItemIdentificationRequest,
     ) -> ItemIdentificationOutcome {
+        let full = request.full || self.easy_identification;
         let index = self
             .items
             .iter()
@@ -1665,18 +1713,20 @@ impl Game {
             .or_default();
         knowledge.discovered = true;
         knowledge.appraised = true;
-        if request.full {
+        // RFB object1.c:_obj_identify_aux clears pseudo-ID even for ordinary Identify.
+        knowledge.feeling = None;
+        if full {
             knowledge.identified = true;
-            knowledge.feeling = None;
             knowledge.known_affix_ids.extend(affix_ids);
         }
+        self.identify_item_lore(item_id, full);
         let changed = awareness_before != self.item_knowledge_dto(&item_kind_id)
             || property_before.as_ref() != self.item_property_knowledge.get(item_id);
         self.discover_item(item_id);
         ItemIdentificationOutcome {
             item_id: item_id.to_owned(),
             item_kind_id,
-            full: request.full,
+            full,
             changed,
         }
     }
@@ -1938,6 +1988,7 @@ impl Game {
     }
 
     pub(super) fn blast_item(&mut self, index: usize) {
+        let heavy_curse = self.item_has_heavy_curse(&self.items[index]);
         let definition = self.content.item(&self.items[index].kind_id).unwrap();
         // blast_object clears object flags but deliberately retains the shared pval.
         let pval = self.items[index]
@@ -1982,6 +2033,7 @@ impl Game {
         item.rolled_affixes = vec![blasted];
         item.intrinsic_properties = Default::default();
         // blast_object leaves art_name, weight and curse_flags intact.
+        item.intrinsic_properties.rfb_heavy_curse = heavy_curse;
         item.intrinsic_melee_damage_dice = None;
         item.intrinsic_weapon_traits.clear();
         item.permanent_destruction_immunities.clear();
@@ -2034,6 +2086,10 @@ impl Game {
             }
             if was_cursed && item.curse.is_none() {
                 clear_item_curse(item);
+                if let Some(knowledge) = self.item_property_knowledge.get_mut(&item.id) {
+                    knowledge.known_curse = false;
+                    knowledge.known_curse_flags = 0;
+                }
             }
         }
         removed_item_ids.sort();
@@ -2369,6 +2425,7 @@ impl Game {
         knowledge.appraised = true;
         knowledge.feeling = None;
         knowledge.known_curse = false;
+        knowledge.known_curse_flags = 0;
         true
     }
 
@@ -2429,6 +2486,18 @@ impl Game {
             item_id,
             slot_id,
         )?;
+        let remainder = (self.items[plan.inventory_index].quantity > 1).then(|| {
+            let mut item = self.items[plan.inventory_index].clone();
+            item.quantity -= 1;
+            item
+        });
+        if remainder.is_some() {
+            // Valid state keeps the allocator beyond every existing serial.
+            self.next_item_instance_serial.checked_add(1)?;
+        }
+        let replaced_id = plan
+            .replaced_index
+            .map(|index| self.items[index].id.clone());
         let mut projected_items = self.items.clone();
         if let Some(index) = plan.replaced_index {
             projected_items[index].location = ItemLocation::Inventory;
@@ -2436,6 +2505,18 @@ impl Game {
         projected_items[plan.inventory_index].location = ItemLocation::Equipped {
             slot_id: plan.slot_id.clone(),
         };
+        projected_items[plan.inventory_index].quantity = 1;
+        if let Some(item) = &remainder {
+            projected_items.push(item.clone());
+        }
+        if let Some(id) = &replaced_id {
+            combine_inventory_stack(
+                &self.content,
+                &mut projected_items,
+                &self.item_property_knowledge,
+                id,
+            );
+        }
         if !self.inventory_fits(&projected_items) {
             return None;
         }
@@ -2450,9 +2531,20 @@ impl Game {
             self.items[index].location = ItemLocation::Inventory;
             kind_id
         });
+        if let Some(mut item) = remainder {
+            let knowledge = self.item_property_knowledge.get(&item.id).cloned();
+            item.id = self
+                .allocate_item_instance_id()
+                .expect("split allocator preflighted");
+            if let Some(knowledge) = knowledge {
+                self.item_property_knowledge
+                    .insert(item.id.clone(), knowledge);
+            }
+            self.items.push(item);
+            self.items[plan.inventory_index].quantity = 1;
+        }
         let kind_id = self.items[plan.inventory_index].kind_id.clone();
         let item_instance_id = self.items[plan.inventory_index].id.clone();
-        let affix_ids = self.items[plan.inventory_index].affix_ids.clone();
         self.items[plan.inventory_index].previously_worn = false;
         self.items[plan.inventory_index].location = ItemLocation::Equipped {
             slot_id: plan.slot_id.clone(),
@@ -2461,16 +2553,16 @@ impl Game {
         self.clamp_player_hp_to_effective_max();
         let knowledge = self
             .item_property_knowledge
-            .entry(item_instance_id)
+            .entry(item_instance_id.clone())
             .or_default();
         knowledge.discovered = true;
-        knowledge.appraised = true;
-        knowledge.identified = true;
-        knowledge.feeling = None;
-        let discovered_affix_ids = affix_ids
-            .into_iter()
-            .filter(|affix_id| knowledge.known_affix_ids.insert(affix_id.clone()))
-            .collect();
+        // Wearing is not Identify or *Identify*. Preserve existing lore and learn
+        // the curse encountered while wearing; class sensing uses its normal path.
+        if self.items[plan.inventory_index].curse.is_some() {
+            knowledge.known_curse = true;
+        }
+        self.apply_player_item_knowledge(vec![self.items[plan.inventory_index].id.clone()]);
+        self.learn_equipped_item(&item_instance_id);
         // RFB equip.c: wearing LORE2 identifies the existing pack as well as
         // enabling auto-identification for subsequent finds.
         if self
@@ -2485,11 +2577,21 @@ impl Game {
                 .collect();
             self.apply_player_item_knowledge(carried);
         }
+        if let Some(id) = &replaced_id
+            && combine_inventory_stack(
+                &self.content,
+                &mut self.items,
+                &self.item_property_knowledge,
+                id,
+            )
+        {
+            self.item_property_knowledge.remove(id);
+        }
         Some(EquipOutcome {
             kind_id,
             slot_id: plan.slot_id,
             replaced_kind_id,
-            discovered_affix_ids,
+            discovered_affix_ids: Vec::new(),
         })
     }
 
@@ -2511,8 +2613,15 @@ impl Game {
 
     pub(super) fn unequip_slot(&mut self, slot_id: &str) -> Option<String> {
         let plan = plan_unequip(&self.items, slot_id)?;
+        let item_id = self.items[plan.item_index].id.clone();
         let mut projected_items = self.items.clone();
         projected_items[plan.item_index].location = ItemLocation::Inventory;
+        combine_inventory_stack(
+            &self.content,
+            &mut projected_items,
+            &self.item_property_knowledge,
+            &item_id,
+        );
         if !self.inventory_fits(&projected_items) {
             return None;
         }
@@ -2520,6 +2629,14 @@ impl Game {
             return None;
         }
         self.items[plan.item_index].location = ItemLocation::Inventory;
+        if combine_inventory_stack(
+            &self.content,
+            &mut self.items,
+            &self.item_property_knowledge,
+            &item_id,
+        ) {
+            self.item_property_knowledge.remove(&item_id);
+        }
         self.refresh_duelist_challenge();
         self.clamp_player_hp_to_effective_max();
         Some(plan.kind_id)

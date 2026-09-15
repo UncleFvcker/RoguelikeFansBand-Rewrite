@@ -2944,6 +2944,10 @@ fn formal_tonberry_action_chain_equips_levels_attacks_swaps_and_restores() {
         .active_weapon_id
         .unwrap();
     give_inventory_item(&mut game, "test.tonberry-chain.sabre", "demo.item.sabre");
+    game.identify_item_instance(
+        "test.tonberry-chain.sabre",
+        crate::game::ItemIdentificationRequest::new(true),
+    );
     dispatch_next(
         &mut game,
         GameCommand::Equip {
@@ -3164,10 +3168,7 @@ fn formal_tomte_action_chain_probes_changes_headgear_levels_senses_and_restores(
     );
     assert!(restored.item_property_knowledge[&arrows.id].appraised);
     assert!(!restored.item_property_knowledge[&arrows.id].identified);
-    assert_eq!(
-        restored.item_property_knowledge[&arrows.id].feeling,
-        Some(rfb_protocol::ItemFeelingDto::Excellent)
-    );
+    assert_eq!(restored.item_property_knowledge[&arrows.id].feeling, None);
     dispatch_next(&mut restored, GameCommand::PickUp);
     let mut continued =
         Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
@@ -3231,8 +3232,9 @@ fn tomte_birth_merges_one_cap_with_each_class_kit_and_unique_knowledge_virtue() 
             .iter()
             .filter(|item| item.kind_id == "demo.item.wooden-torch")
             .collect::<Vec<_>>();
-        assert!((3..=7).contains(&torches.len()));
-        assert!(torches.iter().all(|item| item.quantity == 1
+        assert_eq!(torches.len(), 1);
+        assert!((3..=7).contains(&torches[0].quantity));
+        assert!(torches.iter().all(|item| (3..=7).contains(&item.quantity)
             && item.location == ItemLocation::Inventory
             && item.fuel == torches[0].fuel));
         assert!((1500..=3500).contains(&torches[0].fuel.unwrap().current));

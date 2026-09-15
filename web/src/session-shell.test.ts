@@ -100,8 +100,10 @@ test("new character requests preserve the selected setup", () => {
       buildId: "demo.build.warrior",
       raceId: "rfb-legacy.race.half-orc",
       playerName: "Gorbag",
+      easyIdentification: false,
     },
   );
+  assert.equal(createNewSessionRequest("83", "demo.build.warrior", "rfb-legacy.race.half-orc", "Gorbag", true).easyIdentification, true);
 });
 
 test("session seeds canonicalize the complete unsigned 64-bit range", () => {
@@ -133,7 +135,7 @@ test("career leaves retain the existing class and realm mapping", () => {
   assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.samurai", "demo.build.rage-mage", "demo.build.berserker", "demo.build.duelist"]);
   assert.equal(CAREER_GROUPS.find(group => group.id === "mind").options[0].id, "demo.build.mindcrafter");
   assert.deepEqual(createNewSessionRequest("83", "demo.build.mindcrafter", "demo.race.rfb-human", "心灵术士"), {
-    seed: "83", buildId: "demo.build.mindcrafter", raceId: "demo.race.rfb-human", playerName: "心灵术士",
+    seed: "83", buildId: "demo.build.mindcrafter", raceId: "demo.race.rfb-human", playerName: "心灵术士", easyIdentification: false,
   });
   for (const entry of CAREER_GROUPS.flatMap(group => group.options)) {
     const leaves = creationLeaves([entry]);

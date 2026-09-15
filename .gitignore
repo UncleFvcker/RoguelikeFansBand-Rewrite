@@ -1,5 +1,6 @@
 # Rust
 /target/
+/release/
 **/*.rs.bk
 
 # Node / frontend

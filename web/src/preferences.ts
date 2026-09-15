@@ -40,6 +40,10 @@ export function defaultPreferences(): Preferences {
 export function behaviorPreferences(p: Preferences): BehaviorPreferencesDto { return { locale: p.locale, travel: p.travel, operations: p.operations, mogaminator: p.mogaminator }; }
 export function parsePreferences(text: string): Preferences {
   const p = JSON.parse(text);
+  // Additive visual preference: retain existing version-5 settings and explicit overrides.
+  if (p?.visuals && typeof p.visuals === "object" && !Array.isArray(p.visuals) && !Object.hasOwn(p.visuals, "uniqueEffect")) {
+    p.visuals.uniqueEffect = "flowing";
+  }
   if (!p || typeof p !== "object" || Object.keys(p).sort().join() !== "cameraMode,display,formatVersion,inputPreset,keyBindings,locale,mogaminator,operations,tilesetPreset,travel,visuals,zoom" ||
       p.formatVersion !== 5 || !validVisuals(p.visuals) || !validDisplay(p.display) || !["zh-CN", "en-US"].includes(p.locale) ||
       !["original", "roguelike"].includes(p.inputPreset) ||

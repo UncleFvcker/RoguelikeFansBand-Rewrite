@@ -8,7 +8,7 @@ use crate::mogaminator::{
     MogaminatorPredicate, MogaminatorVariable, compile_mogaminator, mogaminator_search_matches,
 };
 use rfb_content::AmmunitionTypeDefinition;
-use rfb_localization::{Locale, Localizer, MogaminatorNames};
+use rfb_localization::{Locale, MogaminatorNames};
 use rfb_protocol::{
     AutoGetModeDto, AutoGetTargetDto, ItemFeelingDto, LocaleDto, MogaminatorActionDto,
     MogaminatorContextDto, MogaminatorDiagnosticDto, MogaminatorDispositionDto, MogaminatorDto,
@@ -91,9 +91,9 @@ pub(super) struct MogaminatorState {
 impl Default for MogaminatorState {
     fn default() -> Self {
         Self {
-            enabled: false,
+            enabled: true,
             leave_destroyed_items: false,
-            auto_get_mode: AutoGetModeDto::Off,
+            auto_get_mode: AutoGetModeDto::Wanted,
             zh_cn_source: DEFAULT_ZH_CN_SOURCE.to_owned(),
             en_us_source: DEFAULT_EN_US_SOURCE.to_owned(),
             pending_query: None,
@@ -341,6 +341,9 @@ impl Game {
                         add_candidate(&pile.id, pile.position);
                     }
                 }
+                if !self.mogaminator.enabled {
+                    return candidates;
+                }
                 let locale = localization_locale(self.interface_locale);
                 let names = MogaminatorNames::new(locale)
                     .expect("bundled Mogaminator matching names must remain available");
@@ -361,7 +364,11 @@ impl Game {
                                 !self.mogaminator.leave_destroyed_items
                                     && self.can_destroy_item(item).is_ok()
                             }
-                            MogaminatorDisposition::Leave | MogaminatorDisposition::Query => false,
+                            MogaminatorDisposition::Query => {
+                                *position == origin
+                                    && !self.mogaminator.dismissed_query_item_ids.contains(&item.id)
+                            }
+                            MogaminatorDisposition::Leave => false,
                         });
                     if wanted {
                         add_candidate(&item.id, *position);
@@ -382,9 +389,9 @@ impl Game {
             .expect("validated rules");
         let filter = self.mogaminator.enabled
             && compiled.rules.iter().any(|rule| {
-                rule.condition
-                    .as_ref()
-                    .is_none_or(|condition| self.evaluate_mogaminator_condition(condition, locale))
+                rule.condition.as_ref().is_none_or(|condition| {
+                    self.evaluate_mogaminator_condition(condition, locale, &names)
+                })
             });
         self.items
             .iter()
@@ -907,7 +914,9 @@ impl Game {
                 .iter()
                 .map(|affix| affix.affix_id.clone()),
         );
-        if item.artifact_name.is_some() {
+        if item.artifact_name.is_some()
+            || self.item_identification(item) == ItemIdentificationDto::Unexamined
+        {
             affix_ids.clear();
         }
         let mut name = names
@@ -926,7 +935,7 @@ impl Game {
             name.push_str(&artifact_name);
         }
         compiled.rules.iter().find_map(|compiled_rule| {
-            self.mogaminator_rule_matches(compiled_rule, locale, item, &name)
+            self.mogaminator_rule_matches(compiled_rule, locale, names, item, &name)
                 .then(|| {
                     (
                         compiled_rule.line_number,
@@ -943,13 +952,14 @@ impl Game {
         &self,
         compiled: &CompiledMogaminatorRule,
         locale: Locale,
+        names: &MogaminatorNames,
         item: &ItemInstance,
         name: &str,
     ) -> bool {
         compiled
             .condition
             .as_ref()
-            .is_none_or(|condition| self.evaluate_mogaminator_condition(condition, locale))
+            .is_none_or(|condition| self.evaluate_mogaminator_condition(condition, locale, names))
             && compiled
                 .rule
                 .predicates
@@ -962,19 +972,21 @@ impl Game {
         &self,
         expression: &MogaminatorExpression,
         locale: Locale,
+        names: &MogaminatorNames,
     ) -> bool {
-        truthy(&self.mogaminator_expression_value(expression, locale))
+        truthy(&self.mogaminator_expression_value(expression, locale, names))
     }
 
     fn mogaminator_expression_value(
         &self,
         expression: &MogaminatorExpression,
         locale: Locale,
+        names: &MogaminatorNames,
     ) -> String {
         match expression {
             MogaminatorExpression::Literal(value) => value.clone(),
             MogaminatorExpression::Variable(variable) => {
-                self.mogaminator_variable_value(*variable, locale)
+                self.mogaminator_variable_value(*variable, locale, names)
             }
             MogaminatorExpression::Call {
                 function,
@@ -982,7 +994,7 @@ impl Game {
             } => {
                 let values = arguments
                     .iter()
-                    .map(|argument| self.mogaminator_expression_value(argument, locale))
+                    .map(|argument| self.mogaminator_expression_value(argument, locale, names))
                     .collect::<Vec<_>>();
                 let result = match function {
                     MogaminatorFunction::Or => values.iter().any(|value| truthy(value)),
@@ -1003,7 +1015,12 @@ impl Game {
         }
     }
 
-    fn mogaminator_variable_value(&self, variable: MogaminatorVariable, locale: Locale) -> String {
+    fn mogaminator_variable_value(
+        &self,
+        variable: MogaminatorVariable,
+        locale: Locale,
+        names: &MogaminatorNames,
+    ) -> String {
         match variable {
             MogaminatorVariable::Level => self.progress.level.to_string(),
             MogaminatorVariable::Money => self.gold.to_string(),
@@ -1043,9 +1060,7 @@ impl Game {
                 let Some(key) = key else {
                     return String::new();
                 };
-                Localizer::new(locale)
-                    .and_then(|localizer| localizer.format_exact(locale, key, None))
-                    .unwrap_or_default()
+                names.character_name(key).unwrap_or_default()
             }
             MogaminatorVariable::Selling => match locale {
                 Locale::EnUs => "On",
@@ -1130,7 +1145,8 @@ impl Game {
                     )
             }
             MogaminatorPredicate::Ego => {
-                known_affixes.is_some_and(|affixes| !affixes.is_empty())
+                (identification != ItemIdentificationDto::Unexamined && !item.affix_ids.is_empty())
+                    || known_affixes.is_some_and(|affixes| !affixes.is_empty())
                     || matches!(
                         feeling,
                         Some(ItemFeelingDto::Awful | ItemFeelingDto::Excellent)
@@ -1148,7 +1164,7 @@ impl Game {
                 || {
                     identification != ItemIdentificationDto::Unexamined
                         && !item.is_artifact(&self.content)
-                        && known_affixes.is_none_or(BTreeSet::is_empty)
+                        && item.affix_ids.is_empty()
                 },
                 |feeling| {
                     matches!(
@@ -1428,6 +1444,49 @@ mod tests {
     use rfb_protocol::GameCommand;
 
     #[test]
+    fn enabling_default_rules_and_next_turn_remain_responsive_for_a_character() {
+        use crate::game::tests::support::{
+            choose_human_talent_if_pending, clear_monsters, dispatch_next,
+        };
+        use std::time::{Duration, Instant};
+
+        let mut game = Game::new_with_build(83, "demo.build.berserker").unwrap();
+        choose_human_talent_if_pending(&mut game);
+        clear_monsters(&mut game);
+        let mut before = game.to_save();
+        let mut preferences = game.behavior_preferences();
+        preferences.mogaminator.enabled = true;
+        let start = Instant::now();
+        let update = dispatch_next(&mut game, GameCommand::ConfigurePreferences { preferences });
+        let apply_elapsed = start.elapsed();
+        assert!(update.mogaminator.enabled);
+        assert!(!update.mogaminator.matches.is_empty());
+        before.revision = game.revision();
+        before.last_command_seq = game.last_command_seq();
+        assert_eq!(
+            game.to_save(),
+            before,
+            "applying rules must not take a turn"
+        );
+        let tick = game.world_tick;
+        let start = Instant::now();
+        dispatch_next(&mut game, GameCommand::Wait);
+        let turn_elapsed = start.elapsed();
+        assert!(game.world_tick > tick);
+        eprintln!("default Mogaminator: apply={apply_elapsed:?}, next turn={turn_elapsed:?}");
+        // A generous debug-build ceiling catches reparsing all language resources
+        // for every class/race condition, which stalls both commands for many seconds.
+        assert!(
+            apply_elapsed < Duration::from_secs(5),
+            "apply: {apply_elapsed:?}"
+        );
+        assert!(
+            turn_elapsed < Duration::from_secs(5),
+            "turn: {turn_elapsed:?}"
+        );
+    }
+
+    #[test]
     fn protection_templates_precede_destroy_rules_and_track_current_wanted_targets() {
         let mut game = Game::new_with_build(83, "demo.build.warrior").unwrap();
         let wanted = game
@@ -1452,7 +1511,8 @@ mod tests {
             } else {
                 Locale::EnUs
             };
-            assert!(game.mogaminator_rule_matches(&compiled.rules[0], locale, &corpse, ""));
+            let names = MogaminatorNames::new(locale).unwrap();
+            assert!(game.mogaminator_rule_matches(&compiled.rules[0], locale, &names, &corpse, ""));
             assert_eq!(
                 compiled.rules[0].rule.action.disposition,
                 MogaminatorDisposition::Leave
@@ -1463,7 +1523,13 @@ mod tests {
             );
             let before = game.mogaminator.wanted_actor_kind_ids.clone();
             game.mogaminator.wanted_actor_kind_ids.clear();
-            assert!(!game.mogaminator_rule_matches(&compiled.rules[0], locale, &corpse, ""));
+            assert!(!game.mogaminator_rule_matches(
+                &compiled.rules[0],
+                locale,
+                &names,
+                &corpse,
+                ""
+            ));
             game.mogaminator.wanted_actor_kind_ids = before;
         }
     }
@@ -1645,6 +1711,8 @@ mod tests {
         game.item_property_knowledge.insert(
             id.to_owned(),
             inventory::ItemPropertyKnowledgeState {
+                known_flags: Default::default(),
+                known_curse_flags: 0,
                 discovered,
                 ..Default::default()
             },
@@ -1671,7 +1739,7 @@ mod tests {
     #[test]
     fn character_keeps_independent_bilingual_sources_and_applies_atomically() {
         let mut game = Game::new(7);
-        assert_eq!(game.mogaminator.auto_get_mode, AutoGetModeDto::Off);
+        assert_eq!(game.mogaminator.auto_get_mode, AutoGetModeDto::Wanted);
         let initial_hash = game.state_hash();
         assert!(
             game.configure_mogaminator(
@@ -1918,10 +1986,10 @@ mod tests {
             assert_eq!(chinese_rule.rule.action, english_rule.rule.action);
             assert_eq!(chinese_rule.rule.inscription, english_rule.rule.inscription);
             let english_active = english_rule.condition.as_ref().is_none_or(|condition| {
-                game.evaluate_mogaminator_condition(condition, Locale::EnUs)
+                game.evaluate_mogaminator_condition(condition, Locale::EnUs, &english_names)
             });
             let chinese_active = chinese_rule.condition.as_ref().is_none_or(|condition| {
-                game.evaluate_mogaminator_condition(condition, Locale::ZhCn)
+                game.evaluate_mogaminator_condition(condition, Locale::ZhCn, &chinese_names)
             });
             assert_eq!(
                 chinese_active, english_active,
@@ -1957,6 +2025,8 @@ mod tests {
                         (
                             item.id.clone(),
                             inventory::ItemPropertyKnowledgeState {
+                                known_flags: Default::default(),
+                                known_curse_flags: 0,
                                 known_blessed: false,
                                 known_curse: false,
                                 discovered: true,
@@ -2012,7 +2082,8 @@ mod tests {
             .condition
             .as_ref()
             .expect("rule should retain its condition");
-        assert!(Game::new(7).evaluate_mogaminator_condition(condition, Locale::EnUs));
+        let names = MogaminatorNames::new(Locale::EnUs).unwrap();
+        assert!(Game::new(7).evaluate_mogaminator_condition(condition, Locale::EnUs, &names));
     }
 
     #[test]
@@ -2166,13 +2237,22 @@ mod tests {
             );
             dispatch_next(&mut game, GameCommand::ResolveRealmChange { confirm: true });
             for (locale, name) in [(Locale::ZhCn, zh_name), (Locale::EnUs, en_name)] {
+                let names = MogaminatorNames::new(locale).unwrap();
                 assert_eq!(
-                    game.mogaminator_variable_value(MogaminatorVariable::SecondRealm, locale),
+                    game.mogaminator_variable_value(
+                        MogaminatorVariable::SecondRealm,
+                        locale,
+                        &names
+                    ),
                     name
                 );
             }
             assert_eq!(
-                game.mogaminator_variable_value(MogaminatorVariable::FirstRealm, Locale::ZhCn),
+                game.mogaminator_variable_value(
+                    MogaminatorVariable::FirstRealm,
+                    Locale::ZhCn,
+                    &MogaminatorNames::new(Locale::ZhCn).unwrap()
+                ),
                 "死亡"
             );
             assert!(!game.mogaminator_predicate_matches(MogaminatorPredicate::SecondRealm, &old));

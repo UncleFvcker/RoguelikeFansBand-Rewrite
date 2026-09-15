@@ -93,6 +93,16 @@ pub struct VisualPreferences {
     pub overrides: BTreeMap<String, VisualOverride>,
     pub palette: [String; 16],
     pub theme: MapTheme,
+    #[serde(default)]
+    pub unique_effect: UniqueEffect,
+}
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum UniqueEffect {
+    #[default]
+    Flowing,
+    Static,
+    Off,
 }
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -123,6 +133,7 @@ impl Default for VisualPreferences {
     fn default() -> Self {
         Self {
             overrides: BTreeMap::new(),
+            unique_effect: UniqueEffect::Flowing,
             palette: [
                 "#000000", "#ffffff", "#808080", "#ff8000", "#c00000", "#008040", "#0000ff",
                 "#804000", "#404040", "#c0c0c0", "#ff00ff", "#ffff00", "#ff0000", "#00ff00",
@@ -538,6 +549,39 @@ mod tests {
         assert!(serde_json::from_value::<Preferences>(json).is_err());
     }
 
+    #[test]
+    fn unique_effect_round_trips_and_defaults_only_when_absent() {
+        let mut preferences = Preferences::default();
+        for mode in [
+            UniqueEffect::Flowing,
+            UniqueEffect::Static,
+            UniqueEffect::Off,
+        ] {
+            preferences.visuals.unique_effect = mode;
+            let json = serde_json::to_value(&preferences).unwrap();
+            assert_eq!(
+                serde_json::from_value::<Preferences>(json).unwrap(),
+                preferences
+            );
+        }
+        let mut json = serde_json::to_value(&preferences).unwrap();
+        json["visuals"]
+            .as_object_mut()
+            .unwrap()
+            .remove("uniqueEffect");
+        let loaded = serde_json::from_value::<Preferences>(json.clone()).unwrap();
+        assert_eq!(loaded.visuals.unique_effect, UniqueEffect::Flowing);
+        assert_eq!(loaded.visuals.palette, preferences.visuals.palette);
+        for invalid in [
+            serde_json::Value::Null,
+            serde_json::json!("rainbow"),
+            serde_json::json!(1),
+        ] {
+            json["visuals"]["uniqueEffect"] = invalid;
+            assert!(serde_json::from_value::<Preferences>(json.clone()).is_err());
+        }
+    }
+
     fn root() -> std::path::PathBuf {
         std::env::temp_dir().join(format!("rfb-preferences-{}", uuid::Uuid::new_v4()))
     }
@@ -604,6 +648,7 @@ mod tests {
                 "Preferences",
                 String::new(),
                 Preferences::default().behavior(),
+                false,
             )
             .unwrap();
         let bytes = state.save(String::new()).unwrap();

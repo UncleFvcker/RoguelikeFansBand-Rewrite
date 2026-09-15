@@ -116,6 +116,23 @@ mod tests {
     use rfb_protocol::GameCommand;
 
     #[test]
+    fn rule_pickup_is_the_default_but_explicit_off_survives_save_loading() {
+        let mut preferences = Game::default_behavior_preferences();
+        assert!(preferences.mogaminator.enabled);
+        assert_eq!(
+            preferences.mogaminator.auto_get_mode,
+            AutoGetModeDto::Wanted
+        );
+        preferences.mogaminator.enabled = false;
+        preferences.mogaminator.auto_get_mode = AutoGetModeDto::Off;
+        let mut game = Game::new_with_build(42, "demo.build.warrior").unwrap();
+        game.apply_behavior_preferences(preferences.clone())
+            .unwrap();
+        let restored = Game::from_save(game.to_save(), preferences.clone()).unwrap();
+        assert_eq!(restored.behavior_preferences(), preferences);
+    }
+
+    #[test]
     fn reloading_mogaminator_is_atomic_and_preserves_other_preferences_and_character_facts() {
         let mut game = Game::new_with_build(42, "demo.build.warrior").unwrap();
         game.operation_options.cut_corners = true;

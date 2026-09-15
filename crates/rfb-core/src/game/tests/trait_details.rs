@@ -339,6 +339,7 @@ fn trait_details_curses_do_not_infer_effects_from_severity_or_reveal_unknown_aff
     let mut game = game();
     equip(&mut game, "test.weapon", "demo.item.short-sword", "weapon");
     game.items[0].curse = Some(ItemCurseSeverityDto::Heavy);
+    game.identify_item_instance("test.weapon", ItemIdentificationRequest::new(true));
     assert!(details(&game).negatives[0].effects.is_empty());
     game.items[0].rolled_affixes.push(RolledAffixState {
         affix_id: "test.negative".to_owned(),
@@ -407,12 +408,7 @@ fn trait_details_curses_do_not_infer_effects_from_severity_or_reveal_unknown_aff
         Some(game.player_derived_stats().stealth_skill.value)
     );
     game.items[0].curse = None;
-    assert!(
-        details(&game).negatives[0]
-            .effects
-            .iter()
-            .all(|effect| effect.active == Some(false))
-    );
+    assert!(details(&game).negatives.is_empty());
     game.items[0].location = ItemLocation::Inventory;
     assert!(details(&game).negatives.is_empty());
 }

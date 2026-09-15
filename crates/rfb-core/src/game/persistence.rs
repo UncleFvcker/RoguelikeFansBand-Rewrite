@@ -629,14 +629,20 @@ fn item_property_knowledge_from_save(
             ));
         };
         let known_affix_count = entry.known_affix_ids.len();
+        let known_flag_count = entry.known_flags.len();
+        let known_flags = entry.known_flags.into_iter().collect::<BTreeSet<_>>();
         let known_affix_ids = entry.known_affix_ids.into_iter().collect::<BTreeSet<_>>();
         let all_affixes_known = item
             .affix_ids
             .iter()
             .all(|affix_id| known_affix_ids.contains(affix_id));
-        let identified = entry.identified || (!known_affix_ids.is_empty() && all_affixes_known);
+        let identified = entry.identified;
         let appraised = entry.appraised || identified;
-        if !entry.discovered
+        if (!entry.discovered
+            && !matches!(
+                item.location,
+                ItemLocation::Ground(_) | ItemLocation::CarriedBy { .. }
+            ))
             || (entry.known_blessed
                 && !item
                     .intrinsic_weapon_traits
@@ -649,6 +655,7 @@ fn item_property_knowledge_from_save(
                             .item(&item.kind_id)
                             .is_some_and(super::item_knowledge::item_can_be_sensed))))
             || known_affix_ids.len() != known_affix_count
+            || known_flags.len() != known_flag_count
             || known_affix_ids.iter().any(|affix_id| {
                 !item.affix_ids.contains(affix_id) || content.affix(affix_id).is_none()
             })
@@ -657,6 +664,8 @@ fn item_property_knowledge_from_save(
                 .insert(
                     entry.item_id,
                     ItemPropertyKnowledgeState {
+                        known_flags,
+                        known_curse_flags: entry.known_curse_flags,
                         known_curse: entry.known_curse,
                         discovered: entry.discovered,
                         appraised,
@@ -710,6 +719,8 @@ struct StateHashPayloadV98<'a> {
     item_knowledge: Vec<ItemKnowledgeSaveDto>,
     discovery: rfb_protocol::DiscoverySaveDto,
     item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
+    item_lore: &'a rfb_protocol::ItemLoreSaveDto,
+    easy_identification: bool,
     task_states: Vec<TaskStateSaveDto>,
     bounty_state: rfb_protocol::BountyStateSaveDto,
     active_pantheons: u8,
@@ -737,6 +748,7 @@ struct StateHashPayloadV98<'a> {
     current_floor_id: &'a str,
     current_dungeon_instance_id: Option<&'a str>,
     reproduction_suppressed: bool,
+    reproduction_count: u16,
     stored_floors: Vec<FloorSaveForHash<'a>>,
 }
 
@@ -772,6 +784,7 @@ struct FloorSaveForHash<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     dungeon_instance_id: Option<&'a str>,
     reproduction_suppressed: bool,
+    reproduction_count: u16,
     player_position: Position,
     terrain: TerrainSaveRef<'a>,
     entities: Vec<ActorSaveDto>,
@@ -794,6 +807,7 @@ fn floor_save_for_hash(floor: &FloorState) -> FloorSaveForHash<'_> {
         id: &floor.id,
         dungeon_instance_id: floor.dungeon_instance_id.as_deref(),
         reproduction_suppressed: floor.reproduction_suppressed,
+        reproduction_count: floor.reproduction_count,
         player_position: floor.player_position,
         terrain: TerrainSaveRef {
             width: floor.width,
@@ -1441,16 +1455,6 @@ impl Game {
                 let knowledge = item_property_knowledge.entry(item.id.clone()).or_default();
                 knowledge.discovered = true;
             }
-            if matches!(item.location, ItemLocation::Equipped { .. }) {
-                let knowledge = item_property_knowledge
-                    .get_mut(&item.id)
-                    .expect("equipped item knowledge was initialized");
-                knowledge.appraised = true;
-                knowledge.identified = true;
-                knowledge
-                    .known_affix_ids
-                    .extend(item.affix_ids.iter().cloned());
-            }
         }
         let task_states = restore_task_states(
             world,
@@ -1554,6 +1558,7 @@ impl Game {
             current_floor_id,
             current_dungeon_instance_id,
             reproduction_suppressed: payload.reproduction_suppressed,
+            reproduction_count: payload.reproduction_count,
             stored_floors,
             width: payload.terrain.width,
             height: payload.terrain.height,
@@ -1589,6 +1594,8 @@ impl Game {
             item_knowledge,
             discovery: payload.discovery,
             item_property_knowledge,
+            item_lore: payload.item_lore,
+            easy_identification: payload.easy_identification,
             task_states,
             bounty_state,
             command_actor_deaths: Vec::new(),
@@ -1748,6 +1755,8 @@ impl Game {
             item_knowledge: self.item_knowledge_to_save(),
             discovery: self.discovery.clone(),
             item_property_knowledge: self.item_property_knowledge_to_save(),
+            item_lore: self.item_lore.clone(),
+            easy_identification: self.easy_identification,
             task_progress: Vec::new(),
             task_states: self.task_states_to_save(),
             bounty_state: self.bounty_state.to_save(),
@@ -1795,6 +1804,7 @@ impl Game {
             current_floor_id: self.current_floor_id.clone(),
             current_dungeon_instance_id: self.current_dungeon_instance_id.clone(),
             reproduction_suppressed: self.reproduction_suppressed,
+            reproduction_count: self.reproduction_count,
             stored_floors: self.stored_floors.values().map(floor_to_save).collect(),
         }
     }
@@ -1839,6 +1849,8 @@ impl Game {
             item_knowledge: self.item_knowledge_to_save(),
             discovery: self.discovery.clone(),
             item_property_knowledge: self.item_property_knowledge_to_save(),
+            item_lore: &self.item_lore,
+            easy_identification: self.easy_identification,
             task_states: self.task_states_to_save(),
             bounty_state: self.bounty_state.to_save(),
             active_pantheons: self.active_pantheons,
@@ -1892,6 +1904,7 @@ impl Game {
             current_floor_id: &self.current_floor_id,
             current_dungeon_instance_id: self.current_dungeon_instance_id.as_deref(),
             reproduction_suppressed: self.reproduction_suppressed,
+            reproduction_count: self.reproduction_count,
             stored_floors: self
                 .stored_floors
                 .values()
@@ -2046,6 +2059,10 @@ impl Game {
                         )
                 });
                 ItemPropertyKnowledgeSaveDto {
+                    known_curse_flags: knowledge.map_or(0, |k| k.known_curse_flags),
+                    known_flags: knowledge
+                        .map(|knowledge| knowledge.known_flags.iter().cloned().collect())
+                        .unwrap_or_default(),
                     known_curse: knowledge.is_some_and(|knowledge| knowledge.known_curse),
                     item_id,
                     discovered: held || knowledge.is_some_and(|knowledge| knowledge.discovered),

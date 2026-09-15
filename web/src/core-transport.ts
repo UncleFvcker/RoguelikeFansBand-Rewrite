@@ -7,6 +7,7 @@ export interface NewSessionRequest {
   readonly buildId: string;
   readonly raceId: string;
   readonly playerName: string;
+  readonly easyIdentification?: boolean;
 }
 
 export interface CoreTransport {

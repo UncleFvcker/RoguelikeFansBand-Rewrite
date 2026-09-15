@@ -247,7 +247,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 147;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 150;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -849,6 +849,7 @@ pub struct Game {
     current_floor_id: String,
     current_dungeon_instance_id: Option<String>,
     reproduction_suppressed: bool,
+    reproduction_count: u16,
     stored_floors: BTreeMap<String, FloorState>,
     width: u16,
     height: u16,
@@ -885,6 +886,8 @@ pub struct Game {
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
     discovery: rfb_protocol::DiscoverySaveDto,
     item_property_knowledge: BTreeMap<String, ItemPropertyKnowledgeState>,
+    item_lore: rfb_protocol::ItemLoreSaveDto,
+    easy_identification: bool,
     task_states: BTreeMap<String, TaskState>,
     bounty_state: bounty::BountyState,
     command_actor_deaths: Vec<ActorDeathRecord>,
@@ -1334,6 +1337,9 @@ impl Game {
                 direction,
                 flip_pickup: false,
             };
+        }
+        if local_travel_direction.is_some() || auto_get_direction.is_some() {
+            action = self.convenient_walk_action(action);
         }
         let mut advances_world = magic_absorption_advances_world.unwrap_or(true)
             && !depleted_device_use
@@ -2763,9 +2769,10 @@ impl Game {
             }
 
             self.apply_player_floor_item_knowledge();
-            if (stay_pickup
-                || (automatic_pickup_after_move
-                    && self.player.position != player_position_before_command))
+            if !explore_command
+                && (stay_pickup
+                    || (automatic_pickup_after_move
+                        && self.player.position != player_position_before_command))
                 && map_scale_before_command == MapScaleDto::Local
                 && self.map_scale == MapScaleDto::Local
                 && !self.player_is_dead()

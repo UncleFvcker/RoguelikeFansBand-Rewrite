@@ -184,6 +184,8 @@ impl Game {
         ) {
             let duration = self.roll_damage(1, 20);
             self.apply_player_melee_status(STATUS_STUN, duration, source_kind_id);
+        } else {
+            self.learn_status_protection(STATUS_STUN);
         }
         let fear_resistance = self.effective_player_resistances().level(DamageType::Fear);
         self.record_monster_player_resistance(source_entity_id, DamageType::Fear, fear_resistance);
@@ -193,6 +195,11 @@ impl Game {
         let duration = resisted_status_duration(
             u32::try_from(fear_duration).unwrap_or(u32::MAX),
             fear_resistance,
+        );
+        self.learn_resisted_status(
+            DamageType::Fear,
+            u32::try_from(fear_duration).unwrap_or(u32::MAX),
+            duration,
         );
         self.apply_player_melee_status(
             STATUS_FEAR,
@@ -3379,6 +3386,10 @@ impl Game {
                             Some(target_level),
                             Some((&effective, &immunities, resistance_percent)),
                             &mut self.rng,
+                        );
+                        self.learn_status_resolution(
+                            &resolution,
+                            resistance_type.map(DamageType::from),
                         );
                         if let Some(damage_type) = resistance_type.map(DamageType::from) {
                             let level = effective.level(damage_type);

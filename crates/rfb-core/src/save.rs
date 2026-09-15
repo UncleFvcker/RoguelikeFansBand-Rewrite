@@ -2410,6 +2410,7 @@ pub(crate) fn floor_to_save(floor: &FloorState) -> FloorSaveDto {
         id: floor.id.clone(),
         dungeon_instance_id: floor.dungeon_instance_id.clone(),
         reproduction_suppressed: floor.reproduction_suppressed,
+        reproduction_count: floor.reproduction_count,
         player_position: floor.player_position,
         terrain: TerrainSaveDto {
             width: floor.width,
@@ -2484,6 +2485,7 @@ pub(crate) fn floor_from_save(
         id: floor.id,
         dungeon_instance_id: floor.dungeon_instance_id,
         reproduction_suppressed: floor.reproduction_suppressed,
+        reproduction_count: floor.reproduction_count,
         width: floor.terrain.width,
         height: floor.terrain.height,
         terrain: floor.terrain.terrain_ids,

@@ -5035,6 +5035,20 @@ kbd {
 .visual-detail { display: grid; gap: .7rem; }
 .visual-detail input { width: min(100%, 12rem); }
 .visual-glyph-preview { display: grid; place-items: center; width: 4rem; height: 4rem; font: 2rem Consolas, monospace; border: 1px solid currentColor; }
+.visual-glyph-preview [data-unique-effect="flowing"],
+.visual-glyph-preview [data-unique-effect="static"] {
+  color: transparent;
+  background: repeating-linear-gradient(135deg, #ff3333 0, #ffff33 8px, #33ff33 16px, #33ffff 24px, #3333ff 32px, #ff33ff 40px, #ff3333 48px);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-stroke: .4px #111;
+}
+.visual-glyph-preview [data-unique-effect="flowing"] { animation: unique-rainbow-flow 8s linear infinite; }
+/* Moving along the gradient normal by exactly one period keeps the loop seamless. */
+@keyframes unique-rainbow-flow { to { background-position: 33.941125px 33.941125px; } }
+@media (prefers-reduced-motion: reduce) {
+  .visual-glyph-preview [data-unique-effect="flowing"] { animation: none; }
+}
 .visual-theme-preview { display: flex; flex-wrap: wrap; gap: .8rem; padding: 1rem; }
 .visual-theme-preview > span { border: 1px solid; padding: 1rem; }
 

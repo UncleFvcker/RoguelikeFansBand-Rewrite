@@ -16,7 +16,7 @@
   "generationLevel": 1,
   "glyph": "~",
   "id": "demo.item.wooden-torch",
-  "maxStack": 1,
+  "maxStack": 99,
   "mogaminatorRare": false,
   "nameKey": "item-demo-wooden-torch-name",
   "rfbBaseKind": {

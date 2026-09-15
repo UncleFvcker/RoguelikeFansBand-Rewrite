@@ -24,10 +24,20 @@
         "y": 33
       },
       "revision": 1,
-      "stateHash": "eca1686d3dddae80e9696ddf5dd1ddf522c090dc50bdd53c72662ed46544c362",
+      "stateHash": "caf05e9c1f5ace913954944f4fcbd615a28d2d6cb69e6271463f23dc59e00b8d",
       "turn": 1,
       "worldTick": 10
     },
+    "events": [
+      {
+        "kind": "item.pickup",
+        "messageKey": "item-pickup-success",
+        "args": {
+          "quantity": "1",
+          "target": "demo.item.short-sword"
+        }
+      }
+    ],
     "changedCells": [
       {
         "x": 99,

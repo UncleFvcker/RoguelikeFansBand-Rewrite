@@ -358,7 +358,7 @@ message-item-pickup-none = There is nothing here to pick up. Move onto a visible
 message-item-equip-success = You equip { $target } in the { $slot } slot.
 message-item-equip-swap = You unequip { $replaced } and equip { $target } in the { $slot } slot.
 message-item-equip-unavailable = The selected item cannot be equipped right now. Select one item with an equipment slot and check that its Equip action is enabled.
-message-item-appraise-success = You appraise { $target } as { $quality } quality.
+message-item-appraise-success = You identify { $target }, which is of { $quality } quality.
 message-item-appraise-unavailable = The selected item cannot be appraised right now.
 message-item-destroy-success = You destroy { $target } ×{ $quantity }.{ $ruleLine ->
     [0] { "" }

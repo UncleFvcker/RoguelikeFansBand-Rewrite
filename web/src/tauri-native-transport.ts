@@ -15,6 +15,7 @@ export class TauriNativeTransport implements CoreTransport {
       buildId: request.buildId,
       raceId: request.raceId,
       playerName: request.playerName,
+      easyIdentification: request.easyIdentification ?? false,
       createdAt: new Date().toISOString(),
     });
     this.#syncSnapshot(snapshot);

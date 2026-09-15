@@ -21,6 +21,7 @@ export interface RenderCell {
   itemKindId?: string;
   actorKindId?: string;
   actorGlyph?: string;
+  actorUnique?: boolean;
   highlightPet?: boolean;
   visibility: CellVisibility;
   light: CellLight;

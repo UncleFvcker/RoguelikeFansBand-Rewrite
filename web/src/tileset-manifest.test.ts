@@ -19,6 +19,22 @@ function readManifest(path: string): unknown {
   return JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 }
 
+test("every monster has a color mapping and same-glyph birds retain their source colors", () => {
+  const directory = new URL("../../packs/rfb-demo-original/actors/", import.meta.url);
+  const monsters = readdirSync(directory).filter(name => name.endsWith(".json"))
+    .map(name => JSON.parse(readFileSync(new URL(name, directory), "utf8"))).filter(actor => actor.role === "monster");
+  for (const name of ["ascii-default", "image-demo", "rfb-pixel-28"]) {
+    const manifest = parseTilesetManifest(readManifest(`../public/tilesets/${name}/tileset.json`));
+    for (const monster of monsters) assert.ok(manifest.mappings[monster.id]?.foreground, monster.id);
+    const sparrow = resolveTilesetVisual(manifest, "demo.actor.sparrow", { "demo.actor.sparrow": "B" }, false);
+    const chaffinch = resolveTilesetVisual(manifest, "demo.actor.chaffinch", { "demo.actor.chaffinch": "B" }, false);
+    assert.equal(sparrow.glyph, chaffinch.glyph);
+    assert.equal(sparrow.foreground, 0xc08040);
+    assert.equal(chaffinch.foreground, 0xc00000);
+    assert.equal(manifest.mappings["demo.actor.filthy-street-urchin"].foreground, "#404040");
+  }
+});
+
 test("shipped tilesets color every projected world and local terrain without the missing-mapping pink", () => {
   const directory = new URL("../../packs/rfb-demo-original/terrain/", import.meta.url);
   const terrains = readdirSync(directory).filter(name => name.endsWith(".json"))

@@ -10,16 +10,18 @@ export const DEFAULT_THEME = {
 };
 export type MapTheme = typeof DEFAULT_THEME;
 export interface VisualOverride { glyph?: string; foreground?: string; background?: string }
-export interface VisualPreferences { overrides: Record<string, VisualOverride>; palette: string[]; theme: MapTheme }
+export type UniqueEffect = "flowing" | "static" | "off";
+export interface VisualPreferences { overrides: Record<string, VisualOverride>; palette: string[]; theme: MapTheme; uniqueEffect: UniqueEffect }
 export function defaultVisuals(): VisualPreferences {
-  return { overrides: {}, palette: [...BASE_PALETTE], theme: { ...DEFAULT_THEME } };
+  return { overrides: {}, palette: [...BASE_PALETTE], theme: { ...DEFAULT_THEME }, uniqueEffect: "flowing" };
 }
 export const validColor = (v: unknown): v is string => typeof v === "string" && /^#[0-9a-fA-F]{6}$/.test(v);
 export const validGlyph = (v: unknown): v is string => typeof v === "string" && [...v].length === 1 &&
   v.trim().length > 0 && !/[\u0000-\u001f\u007f-\u009f\ud800-\udfff\u00ad\u061c\u200b-\u200f\u202a-\u202e\u2060-\u206f\ufeff\ufe00-\ufe0f\u{e0000}-\u{e0fff}]/u.test(v);
 const record = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 export function validVisuals(v: unknown): v is VisualPreferences {
-  if (!record(v) || Object.keys(v).sort().join() !== "overrides,palette,theme" || !record(v.overrides) ||
+  if (!record(v) || Object.keys(v).sort().join() !== "overrides,palette,theme,uniqueEffect" || !record(v.overrides) ||
+      !["flowing", "static", "off"].includes(v.uniqueEffect as string) ||
       !Array.isArray(v.palette) || v.palette.length !== 16 || !v.palette.every(validColor) || !record(v.theme)) return false;
   if (Object.keys(v.overrides).length > 20000 || !Object.entries(v.overrides).every(([id, item]) =>
     /^[a-z0-9_-]+(?:\.[a-z0-9_-]+){2,}$/.test(id) && id.length <= 192 && record(item) &&
@@ -39,6 +41,10 @@ export function prfVisualId(visual: Pick<EditableVisualDto, "id" | "prf">): stri
 }
 export function visualOverride(p: VisualPreferences, visual: EditableVisualDto): VisualOverride {
   return { ...p.overrides[prfVisualId(visual)], ...p.overrides[visual.id] };
+}
+export function uniqueEffect(p: VisualPreferences, id: string, unique: boolean, visual?: EditableVisualDto): UniqueEffect {
+  const override = visual ? visualOverride(p, visual) : p.overrides[id];
+  return unique && override?.foreground === undefined ? p.uniqueEffect : "off";
 }
 export function visualStyle(p: VisualPreferences, id: string, base: { glyph: string; foreground: string; background?: string }, known: boolean, visual?: EditableVisualDto) {
   const override = known ? visual ? visualOverride(p, visual) : p.overrides[id] : undefined;

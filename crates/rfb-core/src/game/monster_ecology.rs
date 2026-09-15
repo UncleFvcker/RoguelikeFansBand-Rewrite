@@ -53,6 +53,8 @@ pub(super) fn actor_matches_allocation_terrain(
 const ORIGINAL_GROUP_MAX: u16 = 32;
 const ORIGINAL_ESCORT_ATTEMPTS: u16 = 32;
 const ORIGINAL_MAX_REPRODUCERS: usize = 100;
+// Project rule: successful natural births share a lifetime budget on each floor instance.
+pub(super) const MAX_FLOOR_REPRODUCTIONS: u16 = 100;
 const ORIGINAL_MULTIPLY_ADJACENCY_FACTOR: u64 = 8;
 const ORIGINAL_MAX_SIGHT: u32 = 20;
 const SHADOWER_APPEARANCE_KIND_ID: &str = "demo.actor.shadower";
@@ -260,9 +262,11 @@ impl Game {
         else {
             return false;
         };
-        if !definition.tags.iter().any(|tag| tag == FEAR_AURA_TAG)
-            || self.player_status_immunities().contains(STATUS_FEAR)
-        {
+        if !definition.tags.iter().any(|tag| tag == FEAR_AURA_TAG) {
+            return false;
+        }
+        if self.player_status_immunities().contains(STATUS_FEAR) {
+            self.learn_status_protection(STATUS_FEAR);
             return false;
         }
         let divisor = if scale_by_distance {
@@ -288,6 +292,7 @@ impl Game {
             power,
             self.effective_player_resistances().level(DamageType::Fear),
         );
+        self.learn_resisted_status(DamageType::Fear, power, duration);
         if duration == 0 {
             return false;
         }
@@ -322,10 +327,16 @@ impl Game {
 
     fn eldritch_resistance_save(&mut self, damage_type: DamageType, status_kind_id: &str) -> bool {
         if self.player_status_immunities().contains(status_kind_id) {
+            self.learn_status_protection(status_kind_id);
             return true;
         }
         let percent = self.player_resistance_percent(damage_type).max(0);
-        self.rng.bounded(ELDRITCH_HIGH_RESISTANCE_ROLL) < u64::try_from(percent).unwrap_or(0)
+        let saved =
+            self.rng.bounded(ELDRITCH_HIGH_RESISTANCE_ROLL) < u64::try_from(percent).unwrap_or(0);
+        if saved {
+            self.learn_resisted_status(damage_type, 1, 0);
+        }
+        saved
     }
 
     fn apply_eldritch_status(&mut self, status_kind_id: &str, duration: u32, source_kind_id: &str) {
@@ -355,6 +366,7 @@ impl Game {
 
     pub(super) fn drain_eldritch_attribute(&mut self, attribute: AttributeKind) -> bool {
         if self.player_sustains_attribute(attribute) {
+            self.learn_attribute_sustain(attribute);
             return false;
         }
         let previous_max_hp = self.effective_player_max_hp();
@@ -2107,7 +2119,7 @@ impl Game {
         index: usize,
         changed: &mut BTreeSet<Position>,
     ) -> bool {
-        if self.reproduction_suppressed {
+        if self.reproduction_suppressed || self.reproduction_count >= MAX_FLOOR_REPRODUCTIONS {
             return false;
         }
         let kind_id = self.entities[index].kind_id.clone();
@@ -2120,10 +2132,12 @@ impl Game {
                 .entities
                 .iter()
                 .filter(|entity| {
-                    self.content
-                        .actor(&entity.kind_id)
-                        .and_then(|definition| definition.allocation.as_ref())
-                        .is_some_and(|allocation| allocation.multiplies)
+                    entity.hp > 0
+                        && self
+                            .content
+                            .actor(&entity.kind_id)
+                            .and_then(|definition| definition.allocation.as_ref())
+                            .is_some_and(|allocation| allocation.multiplies)
                 })
                 .count()
                 >= ORIGINAL_MAX_REPRODUCERS
@@ -2165,7 +2179,11 @@ impl Game {
         {
             return false;
         }
-        self.place_monster_offspring(index, false, changed)
+        if !self.place_monster_offspring(index, false, changed) {
+            return false;
+        }
+        self.reproduction_count += 1;
+        true
     }
 
     pub(super) fn place_monster_offspring(

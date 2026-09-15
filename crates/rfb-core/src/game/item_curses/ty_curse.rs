@@ -121,27 +121,7 @@ impl Game {
                         self.resolve_item_drain_attribute(source, stat, events);
                     }
                     10 => {
-                        self.clear_current_floor_memory(changed);
-                        for knowledge in self.item_property_knowledge.values_mut() {
-                            knowledge.appraised = false;
-                            knowledge.identified = false;
-                            knowledge.known_affix_ids.clear();
-                            knowledge.known_blessed = false;
-                        }
-                        if self.player_is_berserker() {
-                            let item_ids = self
-                                .items
-                                .iter()
-                                .filter(|item| {
-                                    matches!(
-                                        item.location,
-                                        ItemLocation::Inventory | ItemLocation::Equipped { .. }
-                                    )
-                                })
-                                .map(|item| item.id.clone())
-                                .collect();
-                            self.apply_player_item_knowledge(item_ids);
-                        }
+                        self.lose_mindcraft_information(changed);
                     }
                     11 => {
                         if depth > 65 && !stop {
@@ -594,7 +574,7 @@ mod tests {
     }
 
     #[test]
-    fn ty_curse_amnesia_clears_map_and_instance_identification() {
+    fn ty_curse_amnesia_preserves_learned_flags_and_full_identification() {
         let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
         let seed = (1..10_000)
             .find(|seed| {
@@ -603,18 +583,35 @@ mod tests {
             })
             .unwrap();
         game.explored.fill(true);
-        game.item_property_knowledge.insert(
-            game.items[0].id.clone(),
-            inventory::ItemPropertyKnowledgeState {
-                known_blessed: false,
-                known_curse: false,
-                discovered: true,
-                appraised: true,
-                identified: true,
-                feeling: None,
-                known_affix_ids: BTreeSet::from(["rfb-legacy.affix.protection".to_owned()]),
-            },
+        let fully_known = game
+            .item_property_knowledge
+            .iter()
+            .filter(|(_, knowledge)| knowledge.identified)
+            .map(|(id, knowledge)| (id.clone(), knowledge.clone()))
+            .collect::<Vec<_>>();
+        crate::game::tests::support::give_inventory_item(
+            &mut game,
+            "amnesia-item",
+            "demo.item.dagger",
         );
+        game.items
+            .last_mut()
+            .unwrap()
+            .intrinsic_properties
+            .modifiers
+            .strength = 1;
+        game.identify_item_instance(
+            "amnesia-item",
+            inventory::ItemIdentificationRequest::new(false),
+        );
+        game.learn_item_flag("amnesia-item", "STR");
+        // Keep a genuinely unknown power so this is still only partially identified.
+        game.items
+            .last_mut()
+            .unwrap()
+            .intrinsic_properties
+            .brands
+            .insert(rfb_content::WeaponBrand::Cold);
         game.rng = RfbRng::seeded(seed);
         game.resolve_equipped_ty_curse(
             "demo.item.chain-mail",
@@ -624,13 +621,12 @@ mod tests {
         )
         .unwrap();
         assert!(game.explored.iter().all(|cell| !cell));
-        assert!(
-            game.item_property_knowledge
-                .values()
-                .all(|knowledge| !knowledge.identified
-                    && !knowledge.appraised
-                    && knowledge.known_affix_ids.is_empty())
-        );
+        let knowledge = &game.item_property_knowledge["amnesia-item"];
+        assert!(!knowledge.identified && !knowledge.appraised);
+        assert!(knowledge.known_flags.contains("STR"));
+        for (id, knowledge) in fully_known {
+            assert_eq!(game.item_property_knowledge[&id], knowledge);
+        }
     }
 
     #[test]

@@ -557,13 +557,7 @@ impl Game {
             }
             29..=30 => self.resolve_player_disenchantment(),
             31 => {
-                self.clear_current_floor_memory(changed);
-                for k in self.item_property_knowledge.values_mut() {
-                    k.appraised = false;
-                    k.identified = false;
-                    k.known_affix_ids.clear();
-                    k.known_blessed = false;
-                }
+                self.lose_mindcraft_information(changed);
             }
             32 => {
                 effect = Some(E::AreaDamage {

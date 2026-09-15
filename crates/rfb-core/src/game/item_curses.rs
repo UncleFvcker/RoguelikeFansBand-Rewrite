@@ -235,6 +235,7 @@ impl Game {
             && self.rng.bounded(200) == 0
         {
             self.resolve_equipped_ty_curse(&source, events, changed, removed_entities)?;
+            self.learn_equipped_curse(ItemCurseEffectDto::TyCurse);
             changed.insert(self.player.position);
             if self.player_is_dead() {
                 return Ok(());

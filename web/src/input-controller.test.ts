@@ -25,6 +25,104 @@ import { defaultPreferences } from "./preferences.ts";
 
 const flushCommands = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
 
+test("held movement uses OS repeats without queueing commands after keyup", async t => {
+  installElementIdentities(t);
+  for (const preset of ["original", "roguelike"]) {
+    for (const scale of ["local", "world"]) {
+      for (const key of [{ key: "ArrowRight", code: "ArrowRight" },
+        preset === "original" ? { key: "6", code: "Numpad6" } : { key: "l", code: "KeyL" }]) {
+        const h = continuousHarness(scale, undefined, preset);
+        h.emit("keydown", { ...key, repeat: true });
+        assert.equal(h.requests.length, 0, "a repeat without an accepted press cannot start movement");
+        h.emit("keydown", key);
+        assert.ok(h.requests[0], `${preset}/${scale}/${key.key} must dispatch its first movement`);
+        assert.deepEqual(h.requests[0].command, { type: "move", direction: "east" });
+        for (let i = 0; i < 3; i++) {
+          assert.equal(h.emit("keydown", { ...key, repeat: true }).defaultPrevented, true);
+        }
+        assert.equal(h.requests.length, 1, "busy repeats are discarded");
+        await h.finish();
+        assert.equal(h.requests.length, 1, "finishing a command does not drain a movement queue");
+        h.emit("keydown", { ...key, repeat: true });
+        assert.deepEqual(h.requests[1].command, { type: "move", direction: "east" });
+        h.emit("keyup", key);
+        await h.finish();
+        h.emit("keydown", { ...key, repeat: true });
+        assert.equal(h.requests.length, 2, "keyup stops future movement even with an in-flight command");
+        assert.equal(h.timers.size, 0);
+        h.controller.dispose();
+      }
+    }
+  }
+});
+
+test("held movement is cleared by focus, UI, session and command interruptions", async t => {
+  installElementIdentities(t);
+  for (const interrupt of ["blur", "hidden", "dialog", "input", "composition", "target", "query", "death", "modifier", "click", "reset", "shortcut"]) {
+    const h = continuousHarness("local", undefined, "original");
+    const key = { key: "6", code: "Numpad6" };
+    h.emit("keydown", key); await h.finish();
+    if (interrupt === "blur") h.emit("blur");
+    if (interrupt === "hidden") { h.document.hidden = true; h.emit("visibilitychange"); h.document.hidden = false; }
+    if (interrupt === "dialog") {
+      h.document.querySelector = () => ({}); h.emit("keydown", { ...key, repeat: true });
+      h.document.querySelector = () => null;
+    }
+    if (interrupt === "input") h.emit("keydown", { ...key, repeat: true, target: new HTMLInputElement() });
+    if (interrupt === "composition") h.emit("keydown", { ...key, repeat: true, isComposing: true });
+    if (interrupt === "target") {
+      h.state.targeting = {}; h.emit("keydown", { ...key, repeat: true }); h.state.targeting = undefined;
+    }
+    if (interrupt === "query") {
+      h.state.status.mogaminator.pendingQuery = {}; h.emit("keydown", { ...key, repeat: true });
+      delete h.state.status.mogaminator.pendingQuery;
+    }
+    if (interrupt === "death") {
+      h.state.playerDead = true; h.emit("keydown", { ...key, repeat: true }); h.state.playerDead = false;
+    }
+    if (interrupt === "modifier") h.emit("keydown", { ...key, repeat: true, shiftKey: true });
+    if (interrupt === "click") h.emit("click");
+    if (interrupt === "reset") h.controller.resetSession();
+    if (interrupt === "shortcut") h.emit("keydown", { key: "i" });
+    h.emit("keydown", { ...key, repeat: true });
+    assert.equal(h.requests.length, 1, interrupt);
+    h.emit("keydown", key); await h.finish();
+    assert.equal(h.requests.length, 2, "a fresh press resumes movement after " + interrupt);
+    h.controller.dispose();
+  }
+});
+
+test("held custom movement repeats its resolved direction without re-expanding bindings", async t => {
+  installElementIdentities(t);
+  const previous = Object.getOwnPropertyDescriptor(globalThis, "KeyboardEvent");
+  Object.defineProperty(globalThis, "KeyboardEvent", { configurable: true, value: class extends Event {
+    constructor(type, options) { super(type, { cancelable: true }); Object.assign(this, options); }
+  } });
+  t.after(() => previous ? Object.defineProperty(globalThis, "KeyboardEvent", previous) : delete globalThis.KeyboardEvent);
+  for (const preset of ["original", "roguelike"]) {
+    let expansions = 0;
+    const h = continuousHarness("local", undefined, preset, {
+      customKey(event, execute) {
+        if (event.repeat || !["j", "6"].includes(event.key)) return false;
+        expansions++; execute({ key: event.key === "j" ? "6" : "i" }); return true;
+      },
+    });
+    h.emit("keydown", { key: "j", code: "KeyJ" }); await h.finish();
+    h.emit("keydown", { key: "j", code: "KeyJ", repeat: true }); await h.finish();
+    assert.deepEqual(h.requests.map(request => request.command), [
+      { type: "move", direction: "east" }, { type: "move", direction: "east" },
+    ]);
+    assert.equal(expansions, 1);
+    h.emit("keyup", { key: "j", code: "KeyJ" });
+    h.emit("keydown", { key: "6", code: "Numpad6" });
+    h.emit("keydown", { key: "6", code: "Numpad6", repeat: true });
+    assert.deepEqual(h.shortcuts, ["inventory"]);
+    assert.equal(h.requests.length, 2, "a remapped menu key must not revert to its native movement");
+    assert.equal(expansions, 2);
+    h.controller.dispose();
+  }
+});
+
 test("auto-repeat off issues one attempt while explicit counts still repeat", async t => {
   installElementIdentities(t);
   const h = continuousHarness("local", undefined, "original");
@@ -1756,6 +1854,28 @@ test("local travel destinations follow wilderness map translations", () => {
     x: 48,
     y: 14,
   });
+});
+
+test("travel and auto-get continue after a fresh door-open event but stop on failure or danger", () => {
+  const destination = { x: 4, y: 1 };
+  const target = { objectId: "item", position: destination };
+  const before = {
+    revision: 1, mapScale: "local", floorId: "floor.1",
+    player: { position: { x: 1, y: 1 }, hp: 10, isDead: false, statuses: [], inventoryUsedSlots: 0, inventorySlotCapacity: 10 },
+    entities: [], items: [{ id: "item" }], goldPiles: [], mogaminator: {},
+  };
+  const opened = { ...before, revision: 2, events: [{ kind: "terrain.door-opened" }] };
+  assert.equal(localTravelStopsAfterStep(before, opened, destination), false);
+  assert.equal(autoGetStopsAfterStep(before, opened, target), false);
+  for (const after of [
+    { ...opened, events: [{ kind: "terrain.door-unlock-failed" }] },
+    { ...opened, player: { ...opened.player, hp: 9 } },
+    { ...opened, entities: [{ faction: "hostile" }] },
+    { ...opened, revision: before.revision },
+  ]) {
+    assert.equal(localTravelStopsAfterStep(before, after, destination), true);
+    assert.equal(autoGetStopsAfterStep(before, after, target), true);
+  }
 });
 
 test("look and targeting cursors follow wilderness map translations", () => {

@@ -62,6 +62,7 @@ impl AppState {
         }
     }
 
+    #[allow(clippy::too_many_arguments)] // Mirrors the native creation command's fields.
     fn initialize(
         &self,
         seed: &str,
@@ -70,11 +71,13 @@ impl AppState {
         player_name: &str,
         created_at: String,
         preferences: rfb_protocol::BehaviorPreferencesDto,
+        easy_identification: bool,
     ) -> Result<GameSnapshot, String> {
         let seed = seed
             .parse::<u64>()
             .map_err(|error| format!("invalid seed: {error}"))?;
-        let game = initial_game(seed, build_id, race_id, player_name, preferences)?;
+        let game = initial_game(seed, build_id, race_id, player_name, preferences)?
+            .with_easy_identification(easy_identification);
         let mut session = self.lock_session()?;
         let mut store = MuseumStore::open(&self.profile_root)?;
         let binding = store.new_character()?;
@@ -677,6 +680,7 @@ fn log_event(app: &tauri::AppHandle, event: &str, detail: &str) {
 }
 
 #[tauri::command(rename_all = "camelCase")]
+#[allow(clippy::too_many_arguments)] // Tauri injects app/state beside the creation fields.
 fn initialize_game(
     app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
@@ -685,6 +689,7 @@ fn initialize_game(
     race_id: String,
     player_name: String,
     created_at: String,
+    easy_identification: Option<bool>,
 ) -> Result<GameSnapshot, String> {
     let preferences = preferences::current_behavior(&app).map_err(|e| e.detail)?;
     state.initialize(
@@ -694,6 +699,7 @@ fn initialize_game(
         &player_name,
         created_at,
         preferences,
+        easy_identification.unwrap_or(false),
     )
 }
 
@@ -1386,6 +1392,7 @@ mod tests {
                 "Adventurer",
                 "2026-07-15T00:00:00Z".to_owned(),
                 Game::default_behavior_preferences(),
+                true,
             )
             .expect("session should initialize");
         let update = state
@@ -1401,6 +1408,7 @@ mod tests {
             .save("2026-07-15T00:01:00Z".to_owned())
             .expect("save should encode");
         let (_, saved_payload) = rfb_save::decode(&bytes).expect("save should decode");
+        assert!(saved_payload.easy_identification);
         let replay = decode_replay(&state.export_replay().expect("replay should encode"))
             .expect("replay should decode");
         let verification = verify_replay(
@@ -1412,7 +1420,8 @@ mod tests {
                 "Adventurer",
                 Game::default_behavior_preferences(),
             )
-            .expect("initial game should create"),
+            .expect("initial game should create")
+            .with_easy_identification(true),
         )
         .expect("exported replay should verify");
         let restored = AppState::new(state.profile_root.clone())
@@ -1439,6 +1448,7 @@ mod tests {
                 "Adventurer",
                 "2026-07-15T00:00:00Z".to_owned(),
                 Game::default_behavior_preferences(),
+                false,
             )
             .expect("session should initialize");
 
@@ -1463,6 +1473,7 @@ mod tests {
                 "Adventurer",
                 "2026-07-15T00:00:00Z".to_owned(),
                 Game::default_behavior_preferences(),
+                false,
             )
             .expect("session should initialize");
         state
@@ -1511,6 +1522,7 @@ mod tests {
                 "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
                 Game::default_behavior_preferences(),
+                false,
             )
             .expect("Warrior session should initialize");
 
@@ -1543,6 +1555,7 @@ mod tests {
                 "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
                 Game::default_behavior_preferences(),
+                false,
             )
             .expect("Warrior session should initialize");
         state
@@ -1557,6 +1570,7 @@ mod tests {
                 "Adventurer",
                 "2026-08-01T00:05:00Z".to_owned(),
                 Game::default_behavior_preferences(),
+                false,
             )
             .expect("same setup should replace the native session");
         let replay = decode_replay(&state.export_replay().expect("replay should encode"))
@@ -1581,6 +1595,7 @@ mod tests {
                 "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
                 Game::default_behavior_preferences(),
+                false,
             )
             .expect_err("invalid seed should be rejected");
         let unknown_build = state
@@ -1591,6 +1606,7 @@ mod tests {
                 "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
                 Game::default_behavior_preferences(),
+                false,
             )
             .expect_err("unknown build should be rejected");
 

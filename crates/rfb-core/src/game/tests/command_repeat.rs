@@ -4,6 +4,7 @@ use super::*;
 
 fn arena() -> Game {
     let mut game = Game::new_with_build(509, "demo.build.warrior").unwrap();
+    game.mogaminator.enabled = false;
     choose_human_talent_if_pending(&mut game);
     clear_monsters(&mut game);
     game.items.clear();

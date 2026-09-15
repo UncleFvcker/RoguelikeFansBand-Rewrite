@@ -358,7 +358,7 @@ message-item-pickup-none = 脚下没有可以拾取的物品。请走到可见�
 message-item-equip-success = 你将{ $target }装备在{ $slot }槽位。
 message-item-equip-swap = 你卸下了{ $replaced }，并将{ $target }装备在{ $slot }槽位。
 message-item-equip-unavailable = 所选物品现在无法装备。请选择一件具有装备槽的物品，并确认“装备”按钮可用。
-message-item-appraise-success = 你鉴别出{ $target }的品质为{ $quality }。
+message-item-appraise-success = 你鉴定了{ $target }，品质为{ $quality }。
 message-item-appraise-unavailable = 所选物品现在无法鉴别。
 message-item-destroy-success = 你销毁了 { $quantity } 个{ $target }。{ $ruleLine ->
     [0] { "" }

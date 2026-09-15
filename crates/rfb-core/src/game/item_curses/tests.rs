@@ -23,6 +23,132 @@ fn trigger_seed(odds: u64) -> u64 {
         .unwrap()
 }
 
+#[test]
+fn generic_curse_awareness_and_one_observed_effect_do_not_reveal_other_curses() {
+    use ItemCurseEffectDto::*;
+    let mut game = game_with(DrainHp);
+    let id = game.items[0].id.clone();
+    game.items[0].curse = Some(ItemCurseSeverityDto::Heavy);
+    game.items[0].rolled_affixes[0]
+        .curse_effects
+        .insert(LowArmor);
+    game.item_property_knowledge.remove(&id);
+    game.item_property_knowledge
+        .entry(id.clone())
+        .or_default()
+        .known_curse = true;
+    assert_eq!(
+        game.visible_item_curse(&game.items[0]),
+        Some(ItemCurseSeverityDto::Normal)
+    );
+    assert!(
+        game.character_trait_details(&game.player_derived_stats())
+            .negatives[0]
+            .effects
+            .is_empty()
+    );
+    let rng = game.rng.clone();
+    game.learn_item_curse(&id, DrainHp);
+    game.learn_item_curse(&id, DrainMana); // Absent flags cannot be learned.
+    let details = game.character_trait_details(&game.player_derived_stats());
+    assert_eq!(details.negatives[0].effects.len(), 1);
+    assert_eq!(details.negatives[0].effects[0].effect, DrainHp);
+    assert_eq!(details.negatives[0].effects[0].active, Some(true));
+    assert!(!game.item_curse_effect_is_known(&game.items[0], LowArmor));
+    assert_eq!(game.rng, rng);
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    assert_eq!(
+        game.visible_item_curse(&game.items[0]),
+        Some(ItemCurseSeverityDto::Heavy)
+    );
+    assert!(game.item_curse_effect_is_known(&game.items[0], LowArmor));
+}
+
+#[test]
+fn full_identification_relearns_new_curses_after_removal_without_shared_ego_knowledge() {
+    use ItemCurseEffectDto::*;
+    let mut game = game_with(DrainHp);
+    let id = game.items[0].id.clone();
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    let mut other = game.items[0].clone();
+    other.id = "other-cursed-ego".into();
+    other.location = ItemLocation::Inventory;
+    game.items.push(other);
+    game.identify_item_instance("other-cursed-ego", ItemIdentificationRequest::new(false));
+    assert!(!game.item_curse_effect_is_known(&game.items[1], DrainHp));
+    game.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
+    assert_eq!(game.item_property_knowledge[&id].known_curse_flags, 0);
+    assert!(!game.item_property_knowledge[&id].known_curse);
+    game.items[0].curse = Some(ItemCurseSeverityDto::Normal);
+    game.items[0].intrinsic_curse_effects.insert(DrainMana);
+    assert_eq!(
+        game.item_identification(&game.items[0]),
+        ItemIdentificationDto::Identified
+    );
+    assert!(game.item_needs_full_identification(&game.items[0]));
+    assert_eq!(game.visible_item_curse(&game.items[0]), None);
+    assert!(!game.item_curse_effect_is_known(&game.items[0], DrainMana));
+    let outcome = game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    assert!(outcome.changed);
+    assert!(!game.item_needs_full_identification(&game.items[0]));
+    assert!(game.item_curse_effect_is_known(&game.items[0], DrainMana));
+    assert!(!game.item_curse_effect_is_known(&game.items[0], DrainHp));
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn permanent_and_heavy_curse_bits_survive_blasting_independently() {
+    let mut game = game_with(ItemCurseEffectDto::LowArmor);
+    let id = game.items[0].id.clone();
+    game.items[0].curse = Some(ItemCurseSeverityDto::Permanent);
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    assert_eq!(game.known_item_curse_flags(&game.items[0]) & 7, 5);
+    game.items[0].intrinsic_properties.rfb_heavy_curse = true;
+    assert_eq!(game.known_item_curse_flags(&game.items[0]) & 7, 5);
+    assert!(game.item_needs_full_identification(&game.items[0]));
+    game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    game.blast_item(0);
+    assert_eq!(game.actual_item_curse_flags(&game.items[0]) & 7, 7);
+    assert_eq!(game.known_item_curse_flags(&game.items[0]) & 7, 7);
+    assert_eq!(
+        game.visible_item_curse(&game.items[0]),
+        Some(ItemCurseSeverityDto::Permanent)
+    );
+}
+
+#[test]
+fn easy_identification_promotes_identify_and_enables_strong_periodic_sensing() {
+    for enabled in [false, true] {
+        let mut game = game_with(ItemCurseEffectDto::LowArmor).with_easy_identification(enabled);
+        let id = game.items[0].id.clone();
+        game.item_property_knowledge.remove(&id);
+        let rng = game.rng.clone();
+        game.process_class_item_sensing();
+        assert_eq!(
+            game.item_feeling(&game.items[0]),
+            enabled.then_some(rfb_protocol::ItemFeelingDto::Awful)
+        );
+        assert_eq!(
+            game.rng, rng,
+            "equipped sensing adds no pack or frequency roll in easy mode"
+        );
+        assert!(!game.item_curse_effect_is_known(&game.items[0], ItemCurseEffectDto::LowArmor));
+        let outcome = game.identify_item_instance(&id, ItemIdentificationRequest::new(false));
+        assert_eq!(outcome.full, enabled);
+        assert_eq!(game.item_property_knowledge[&id].identified, enabled);
+        assert_eq!(
+            game.item_curse_effect_is_known(&game.items[0], ItemCurseEffectDto::LowArmor),
+            enabled
+        );
+        let saved = game.to_save();
+        assert_eq!(saved.easy_identification, enabled);
+        let restored = Game::from_save(saved, game.behavior_preferences()).unwrap();
+        assert_eq!(restored.easy_identification, enabled);
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
+}
+
 fn tick(game: &mut Game) {
     game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
         .unwrap();
@@ -147,6 +273,11 @@ fn periodic_hp_mana_experience_and_device_drains_use_original_amounts_and_short_
         game.rng = RfbRng::seeded(trigger_seed(odds));
         let level = game.progress.level;
         tick(&mut game);
+        assert_eq!(
+            game.item_curse_effect_is_known(&game.items[0], effect),
+            effect != ItemCurseEffectDto::DrainMana,
+            "only an observed drain learns its curse; missing mana skips learning",
+        );
         match effect {
             ItemCurseEffectDto::DrainHp => {
                 assert_eq!(game.player.hp, 100 - i32::from(level) * 2);
@@ -183,6 +314,7 @@ fn periodic_hp_mana_experience_and_device_drains_use_original_amounts_and_short_
         100 - u32::from(mage.progress.level)
     );
     assert_eq!(mage.rng_draw_counter(), 1);
+    assert!(mage.item_curse_effect_is_known(&mage.items[0], ItemCurseEffectDto::DrainMana));
 }
 
 #[test]
@@ -226,12 +358,14 @@ fn progressive_curses_and_normality_preserve_conditional_rng() {
         game.rng, expected,
         "all 200 failed status attempts consume their draw"
     );
+    assert!(!game.item_curse_effect_is_known(&game.items[0], ItemCurseEffectDto::Normality));
     game.player
         .statuses
         .push(monster_combat::melee_status(STATUS_HASTE, 100, "test").status);
     game.rng = RfbRng::seeded(trigger_seed(128));
     tick(&mut game);
     assert!(!game.player_has_status_kind(STATUS_HASTE));
+    assert!(game.item_curse_effect_is_known(&game.items[0], ItemCurseEffectDto::Normality));
 }
 
 #[test]

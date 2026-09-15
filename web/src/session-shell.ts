@@ -21,8 +21,9 @@ export function createNewSessionRequest(
   buildId: PlaytestBuildId,
   raceId: PlaytestRaceId,
   playerName: string,
+  easyIdentification = false,
 ): NewSessionRequest {
-  return { seed, buildId, raceId, playerName };
+  return { seed, buildId, raceId, playerName, easyIdentification };
 }
 
 const MAX_SESSION_SEED = (1n << 64n) - 1n;
@@ -49,6 +50,7 @@ interface SessionShellDom {
   readonly careerPanel: HTMLElement;
   readonly characterNameInput: HTMLInputElement;
   readonly seedInput: HTMLInputElement;
+  readonly easyIdentificationInput: HTMLInputElement;
   readonly randomizeSeedButton: HTMLButtonElement;
   readonly startGameButton: HTMLButtonElement;
   readonly newGameBackButton: HTMLButtonElement;
@@ -339,7 +341,7 @@ export class SessionShell {
       this.#dom.characterNameInput.focus();
       return;
     }
-    void this.#start(createNewSessionRequest(seed, buildId, raceId, playerName));
+    void this.#start(createNewSessionRequest(seed, buildId, raceId, playerName, this.#dom.easyIdentificationInput.checked));
   };
 
   readonly #randomizeSeed = (): void => {
@@ -636,6 +638,7 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     careerPanel: element<HTMLElement>(document, "session-page-career"),
     characterNameInput: element<HTMLInputElement>(document, "session-character-name"),
     seedInput: element<HTMLInputElement>(document, "session-seed"),
+    easyIdentificationInput: element<HTMLInputElement>(document, "session-easy-identification"),
     randomizeSeedButton: element<HTMLButtonElement>(document, "session-randomize-seed"),
     startGameButton: element<HTMLButtonElement>(document, "session-start-game"),
     newGameBackButton: element<HTMLButtonElement>(document, "session-new-game-back"),

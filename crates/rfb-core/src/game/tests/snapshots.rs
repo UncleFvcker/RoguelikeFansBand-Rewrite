@@ -207,6 +207,77 @@ fn item_command_categories_are_public_projection_and_survive_save_without_mutati
 }
 
 #[test]
+fn remembered_objects_survive_save_but_forgetting_removes_map_marks_only() {
+    let mut game = Game::new(64);
+    clear_monsters(&mut game);
+    let position = Position { x: 11, y: 11 };
+    let distant = Position { x: 19, y: 19 };
+    replace_terrain(&mut game, position, "demo.terrain.floor");
+    replace_terrain(&mut game, distant, "demo.terrain.floor");
+    game.player.position = position;
+    give_inventory_item(&mut game, "test.memory.item", "demo.item.dagger");
+    game.items.last_mut().unwrap().location = ItemLocation::Ground(position);
+    let gold_id = game.allocate_gold_pile_id().unwrap();
+    game.gold_piles.push(GoldPile {
+        id: gold_id.clone(),
+        position,
+        amount: 10,
+        appearance: rfb_protocol::GoldAppearanceDto::Gold,
+        discovered: false,
+    });
+    game.reveal_current_visibility();
+    game.identify_item_instance("test.memory.item", ItemIdentificationRequest::new(true));
+    let knowledge = game.item_property_knowledge["test.memory.item"].clone();
+    game.player.position = distant;
+    game.reveal_current_visibility();
+    assert!(!game.is_visible(position));
+    assert_eq!(
+        game.cell_dto(position).item_id.as_deref(),
+        Some(gold_id.as_str())
+    );
+    assert!(
+        game.items_dto()
+            .iter()
+            .any(|item| item.id == "test.memory.item")
+    );
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(restored.cell_dto(position), game.cell_dto(position));
+
+    restored.clear_current_floor_memory(&mut BTreeSet::new());
+    assert!(restored.cell_dto(position).item_id.is_none());
+    assert!(
+        !restored
+            .items_dto()
+            .iter()
+            .any(|item| item.id == "test.memory.item")
+    );
+    let mut forgotten = knowledge.clone();
+    forgotten.discovered = false;
+    assert_eq!(
+        restored.item_property_knowledge["test.memory.item"],
+        forgotten
+    );
+    let mut reloaded =
+        Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
+    assert!(reloaded.cell_dto(position).item_id.is_none());
+    reloaded.player.position = position;
+    reloaded.reveal_current_visibility();
+    assert_eq!(
+        reloaded.item_property_knowledge["test.memory.item"],
+        knowledge
+    );
+    assert_eq!(
+        reloaded.cell_dto(position).item_id.as_deref(),
+        Some(gold_id.as_str())
+    );
+    reloaded.gold_piles.retain(|pile| pile.id != gold_id);
+    assert_eq!(
+        reloaded.cell_dto(position).item_id.as_deref(),
+        Some("test.memory.item")
+    );
+}
+
+#[test]
 fn ground_item_projection_requires_sight_or_detection_and_round_trips() {
     let mut game = Game::new(64);
     clear_monsters(&mut game);

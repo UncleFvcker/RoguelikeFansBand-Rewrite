@@ -279,26 +279,38 @@ test("self-harming abilities require their dedicated confirmation", () => {
   );
 });
 
-test("Archer Create Ammo presents one level-gated menu", () => {
+test("Archer Create Ammo previews every level in one menu", () => {
   const group = "ability-group-demo-archer-create-ammo-name";
   const abilities = [
     { id: "shots", minimumLevel: 1, uiGroupNameKey: group },
     { id: "arrows", minimumLevel: 10, uiGroupNameKey: group },
     { id: "bolts", minimumLevel: 20, uiGroupNameKey: group },
   ];
-  const labels = (level: number) =>
-    abilityPresentation(abilities, level).map((entry) =>
-      entry.type === "heading" ? `heading:${entry.nameKey}` : `ability:${entry.ability.id}`,
-    );
+  const labels = abilityPresentation(abilities).map((entry) =>
+    entry.type === "heading" ? `heading:${entry.nameKey}` : `ability:${entry.ability.id}`,
+  );
 
-  assert.deepEqual(labels(1), [`heading:${group}`, "ability:shots"]);
-  assert.deepEqual(labels(10), [`heading:${group}`, "ability:shots", "ability:arrows"]);
-  assert.deepEqual(labels(20), [
+  assert.deepEqual(labels, [
     `heading:${group}`,
     "ability:shots",
     "ability:arrows",
     "ability:bolts",
   ]);
+});
+
+test("Berserker Recall is visible before level 10 and retains the core activation gate", () => {
+  const recall = {
+    id: "demo.ability.berserker-recall", source: "class", minimumLevel: 10,
+    uiGroupNameKey: "class-demo-berserker-name", learned: false,
+    canCast: false, unavailableReason: "level-too-low",
+  };
+  for (const ability of [recall, { ...recall, canCast: true, unavailableReason: null }]) {
+    const entries = abilityPresentation([ability]);
+    assert.equal(entries[0].type, "heading");
+    assert.equal(entries[0].nameKey, "class-demo-berserker-name");
+    assert.deepEqual(entries[1], { type: "ability", ability });
+    assert.equal(entries.length, 2);
+  }
 });
 
 test("spellbook headings expose one divine study action", () => {
@@ -320,7 +332,6 @@ test("spellbook headings expose one divine study action", () => {
         canStudy: true,
       },
     ],
-    1,
   );
 
   assert.deepEqual(entries[0], {
@@ -334,7 +345,7 @@ test("spellbook headings expose one divine study action", () => {
 
 test("Mage books keep primary and secondary ordering and show authoritative learning states", () => {
   const ability = (realm, rank) => ({ id: `${realm}-${rank}`, minimumLevel: 1, source: "learned", bookRealmId: realm, bookRank: rank, bookNameKey: `${realm}-book-${rank}` });
-  const entries = abilityPresentation([ability("life", 1), ability("death", 2), ability("death", 1)], 1, ["death", "life"]);
+  const entries = abilityPresentation([ability("life", 1), ability("death", 2), ability("death", 1)], ["death", "life"]);
   assert.deepEqual(entries.filter(entry => entry.type === "heading").map(entry => [entry.realmId, entry.nameKey]), [
     ["death", "death-book-1"], ["death", "death-book-2"], ["life", "life-book-1"],
   ]);
@@ -374,7 +385,7 @@ test("Paladin Hell Lance stays visible as a level-gated class power", () => {
     canCast: false,
   };
 
-  assert.deepEqual(abilityPresentation([hellLance], 29), [
+  assert.deepEqual(abilityPresentation([hellLance]), [
     { type: "ability", ability: hellLance },
   ]);
   assert.equal(abilityStatusMessageKey(hellLance), "ability-status-class");

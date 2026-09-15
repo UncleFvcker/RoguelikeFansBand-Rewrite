@@ -72,7 +72,7 @@
       },
       "playerStatuses": [],
       "revision": 2,
-      "stateHash": "f012683a421b3710517f858a4d5807812ee6db94c794b77a04f0cfad526a922c",
+      "stateHash": "7b799cc3fbff0260f988e727b0fa77016697632020e8027594f014c0c9887365",
       "turn": 2,
       "worldTick": 20
     },
@@ -90,8 +90,16 @@
         "args": {
           "status": "rfb.status.paralysis"
         }
+      },
+      {
+        "kind": "item.pickup",
+        "messageKey": "item-pickup-success",
+        "args": {
+          "quantity": "1",
+          "target": "demo.item.short-sword"
+        }
       }
     ],
-    "saveRoundTripStateHash": "f012683a421b3710517f858a4d5807812ee6db94c794b77a04f0cfad526a922c"
+    "saveRoundTripStateHash": "7b799cc3fbff0260f988e727b0fa77016697632020e8027594f014c0c9887365"
   }
 }

@@ -57,6 +57,168 @@ fn discovers_connected_regions_and_finishes_without_claiming_isolated_room() {
 }
 
 #[test]
+fn opens_a_frontier_door_then_continues_into_the_unknown_corridor() {
+    let mut game = arena();
+    let origin = game.player.position;
+    let door = at(2, 1);
+    replace_terrain(&mut game, door, "demo.terrain.door-closed");
+    game.explored.fill(false);
+    game.reveal_current_visibility();
+    let before = game.turn;
+    let update = dispatch_next(&mut game, GameCommand::AutoExplore);
+    assert_eq!(game.player.position, origin);
+    assert_eq!(game.turn, before + 1);
+    assert_eq!(game.terrain_at(door), "demo.terrain.door-open");
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "terrain.door-opened")
+    );
+    assert!(game.auto_explore.is_some());
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(
+        dispatch_next(&mut game, GameCommand::ContinueAutoExplore),
+        dispatch_next(&mut restored, GameCommand::ContinueAutoExplore),
+    );
+    finish(&mut game);
+    assert!(game.explored[game.index(at(24, 8)).unwrap()]);
+}
+
+#[test]
+fn closed_doors_obey_easy_open_and_jammed_and_secret_doors_block_exploration() {
+    for (terrain, easy_open) in [
+        ("demo.terrain.door-closed", false),
+        ("demo.terrain.door-jammed-1", true),
+        ("demo.terrain.door-secret", true),
+    ] {
+        let mut game = arena();
+        let door = at(2, 1);
+        replace_terrain(&mut game, door, terrain);
+        game.operation_options.easy_open = easy_open;
+        game.explored.fill(false);
+        game.reveal_current_visibility();
+        dispatch_next(&mut game, GameCommand::AutoExplore);
+        finish(&mut game);
+        assert_eq!(game.player.position, at(1, 1), "{terrain}");
+        assert_eq!(game.terrain_at(door), terrain);
+        assert!(!game.explored[game.index(at(24, 8)).unwrap()]);
+    }
+}
+
+#[test]
+fn ordinary_travel_uses_the_same_door_action_without_teleporting_through_it() {
+    let mut game = arena();
+    let door = at(2, 1);
+    replace_terrain(&mut game, door, "demo.terrain.door-closed");
+    game.reveal_current_visibility();
+    let update = dispatch_next(&mut game, GameCommand::TravelLocal { destination: door });
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "terrain.door-opened")
+    );
+    assert_eq!(game.player.position, at(1, 1));
+    dispatch_next(&mut game, GameCommand::TravelLocal { destination: door });
+    assert_eq!(game.player.position, door);
+}
+
+#[test]
+fn a_failed_lock_attempt_stops_without_queuing_more_turns() {
+    let mut game = arena();
+    let door = at(2, 1);
+    replace_terrain(&mut game, door, "demo.terrain.door-secret");
+    game.revealed_terrain.insert(door);
+    game.explored.fill(false);
+    game.reveal_current_visibility();
+    let seed = (0..100)
+        .find(|seed| {
+            let mut probe = game.clone();
+            probe.rng = crate::rng::RfbRng::seeded(*seed);
+            matches!(
+                probe.open_door(Direction::East),
+                Some(DoorOpenOutcome::UnlockFailed { .. })
+            )
+        })
+        .expect("locked door can fail its check");
+    game.rng = crate::rng::RfbRng::seeded(seed);
+    let before = game.turn;
+    let update = dispatch_next(&mut game, GameCommand::AutoExplore);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "terrain.door-unlock-failed")
+    );
+    assert_eq!(game.turn, before + 1);
+    assert!(game.auto_explore.is_none());
+    let stopped = (
+        game.turn,
+        game.world_tick,
+        game.rng.clone(),
+        game.player.position,
+    );
+    dispatch_next(&mut game, GameCommand::ContinueAutoExplore);
+    assert_eq!(
+        (
+            game.turn,
+            game.world_tick,
+            game.rng.clone(),
+            game.player.position
+        ),
+        stopped
+    );
+}
+
+#[test]
+fn rule_pickup_handles_start_and_newly_seen_items_without_collecting_rejected_items() {
+    let mut game = arena();
+    game.apply_behavior_preferences(Game::default_behavior_preferences())
+        .unwrap();
+    // Even the manual pick-up-all preference must not bypass the selected explore rules.
+    game.travel_options.always_pickup = true;
+    game.mogaminator.zh_cn_source = "食物".into();
+    for (id, kind, position) in [
+        ("test.start.food", "demo.item.ration-of-food", at(1, 1)),
+        ("test.start.weapon", "demo.item.dagger", at(1, 1)),
+        ("test.later.food", "demo.item.ration-of-food", at(20, 1)),
+        ("test.later.weapon", "demo.item.dagger", at(20, 1)),
+    ] {
+        give_inventory_item(&mut game, id, kind);
+        game.items.last_mut().unwrap().location = ItemLocation::Ground(position);
+    }
+    game.reveal_current_visibility();
+    dispatch_next(&mut game, GameCommand::AutoExplore);
+    assert_eq!(game.player.position, at(1, 1));
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.kind_id == "demo.item.ration-of-food"
+                && item.location == ItemLocation::Inventory)
+    );
+    finish(&mut game);
+    assert!(
+        !game
+            .items
+            .iter()
+            .any(|item| item.kind_id == "demo.item.ration-of-food"
+                && matches!(item.location, ItemLocation::Ground(_)))
+    );
+    for (id, position) in [
+        ("test.start.weapon", at(1, 1)),
+        ("test.later.weapon", at(20, 1)),
+    ] {
+        assert!(
+            game.items
+                .iter()
+                .any(|item| item.id == id && item.location == ItemLocation::Ground(position))
+        );
+    }
+    assert!(game.explored[game.index(at(24, 8)).unwrap()]);
+}
+
+#[test]
 fn completed_map_and_stale_continue_or_cancel_cost_nothing() {
     let mut game = arena();
     game.explored.fill(true);
@@ -153,6 +315,33 @@ fn wanted_gold_precedes_frontiers_while_off_ignores_it() {
     });
     dispatch_next(&mut off, GameCommand::AutoExplore);
     assert_eq!(off.gold_piles.len(), 1);
+}
+
+#[test]
+fn off_ignores_rule_items_and_gold_encountered_while_exploring() {
+    let mut game = arena();
+    game.mogaminator.enabled = true;
+    game.mogaminator.zh_cn_source = "物品".into();
+    game.travel_options.always_pickup = true;
+    give_inventory_item(&mut game, "test.off.food", "demo.item.ration-of-food");
+    game.items.last_mut().unwrap().location = ItemLocation::Ground(at(2, 1));
+    game.gold_piles.push(GoldPile {
+        id: "test.off.gold".into(),
+        position: at(2, 1),
+        amount: 10,
+        appearance: rfb_protocol::GoldAppearanceDto::Gold,
+        discovered: true,
+    });
+    game.reveal_current_visibility();
+    dispatch_next(&mut game, GameCommand::AutoExplore);
+    finish(&mut game);
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == "test.off.food"
+                && item.location == ItemLocation::Ground(at(2, 1)))
+    );
+    assert_eq!(game.gold_piles.len(), 1);
 }
 
 #[test]

@@ -20,6 +20,7 @@ fn fixture(root: &Path, name: &str) -> AppState {
             name,
             "2026-09-09T00:00:00Z".to_owned(),
             Game::default_behavior_preferences(),
+            false,
         )
         .unwrap();
     let mut guard = state.lock_session().unwrap();
@@ -231,6 +232,7 @@ fn new_character_imports_the_profile_at_the_outpost_museum() {
             "Recipient",
             "2026-09-10T00:00:00Z".to_owned(),
             Game::default_behavior_preferences(),
+            false,
         )
         .unwrap();
     let museum = initial.homes.iter().find(|home| home.id == MUSEUM).unwrap();

@@ -238,7 +238,7 @@ fn enlightened_maia_senses_only_carried_curses_without_identifying_quality_or_en
         .unwrap();
     assert_eq!(
         game.visible_item_curse(item),
-        Some(ItemCurseSeverityDto::Heavy)
+        Some(ItemCurseSeverityDto::Normal)
     );
     assert_eq!(game.item_feeling(item), Some(ItemFeelingDto::Cursed));
     assert_eq!(

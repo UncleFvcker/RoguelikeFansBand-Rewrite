@@ -2028,6 +2028,8 @@ fn fuel_items_require_original_capacity_slot_stack_and_radius_shapes() {
             .find(|item| item.id == id)
             .unwrap_or_else(|| panic!("fixture should contain {id}"))
     };
+    assert_eq!(item("demo.item.wooden-torch").max_stack, 99);
+    assert_eq!(item("demo.item.brass-lantern").max_stack, 1);
     assert_eq!(
         item("demo.item.wooden-torch").fuel,
         Some(ItemFuelDefinition {

@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.294";
+pub const PROTOCOL_VERSION: &str = "1.297";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 42;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 45;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -5309,6 +5309,10 @@ pub struct TaskServiceDto {
     pub identify_item_cost: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub research_item_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub identify_item_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub research_item_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub research_monster_cost: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6741,6 +6745,7 @@ pub struct FloorSaveDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dungeon_instance_id: Option<String>,
     pub reproduction_suppressed: bool,
+    pub reproduction_count: u16,
     pub player_position: Position,
     pub terrain: TerrainSaveDto,
     pub entities: Vec<ActorSaveDto>,
@@ -6803,6 +6808,8 @@ pub struct ItemKnowledgeSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemPropertyKnowledgeSaveDto {
+    pub known_flags: Vec<String>,
+    pub known_curse_flags: u32,
     pub known_curse: bool,
     pub item_id: String,
     pub discovered: bool,
@@ -6816,6 +6823,15 @@ pub struct ItemPropertyKnowledgeSaveDto {
     pub known_affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub known_blessed: bool,
+}
+
+/// Shared knowledge is consulted only after identifying an object's identity.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ItemLoreSaveDto {
+    pub egos: std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
+    pub artifacts: std::collections::BTreeMap<String, std::collections::BTreeSet<String>>,
+    pub activation_profiles: std::collections::BTreeSet<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -6992,6 +7008,8 @@ pub struct SavePayloadV1 {
     pub item_knowledge: Vec<ItemKnowledgeSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
+    pub item_lore: ItemLoreSaveDto,
+    pub easy_identification: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub task_progress: Vec<TaskProgressSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -7033,6 +7051,7 @@ pub struct SavePayloadV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub current_dungeon_instance_id: Option<String>,
     pub reproduction_suppressed: bool,
+    pub reproduction_count: u16,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub stored_floors: Vec<FloorSaveDto>,
 }
@@ -7754,6 +7773,7 @@ mod tests {
             "pre-v190 actor saves without nice must be rejected"
         );
         let mut current = serde_json::to_value(&legacy).expect("fixture should serialize");
+        current["itemLore"] = serde_json::to_value(ItemLoreSaveDto::default()).unwrap();
         current["wantedActorKindIds"] = serde_json::json!([]);
         current.as_object_mut().unwrap().remove("interfaceLocale");
         current.as_object_mut().unwrap().remove("mogaminator");
@@ -7787,6 +7807,9 @@ mod tests {
         current["player"]["sniperConcentration"] = serde_json::json!(0);
         current["player"]["probedActorKindIds"] = serde_json::json!([]);
         current["reproductionSuppressed"] = serde_json::json!(false);
+        current["reproductionCount"] = serde_json::json!(0);
+        current["easyIdentification"] = serde_json::json!(false);
+        current["itemLore"] = serde_json::to_value(ItemLoreSaveDto::default()).unwrap();
         current["defeatedLimitedActorCounts"] = serde_json::json!([]);
         current["discovery"] = serde_json::to_value(DiscoverySaveDto::default()).unwrap();
         current["generatedArtifactIds"] = serde_json::json!([]);

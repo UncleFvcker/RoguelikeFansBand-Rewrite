@@ -250,6 +250,12 @@ impl Game {
         )
     }
 
+    /// Birth-only option: callers apply it before constructing the replay recorder.
+    pub fn with_easy_identification(mut self, enabled: bool) -> Self {
+        self.easy_identification = enabled;
+        self
+    }
+
     pub fn new_with_build_and_name(
         seed: u64,
         build_id: &str,
@@ -546,12 +552,19 @@ impl Game {
             }
         }
         if let Some(supply) = starting_torches {
-            for _ in 0..supply.quantity {
+            let mut remaining = supply.quantity;
+            while remaining > 0 {
+                let quantity = remaining.min(
+                    content
+                        .item(lighting::WOODEN_TORCH_ITEM_KIND_ID)
+                        .expect("birth torch kind exists")
+                        .max_stack,
+                );
                 append_starting_item(
                     &content,
                     &StartingItemDefinition {
                         item_kind_id: lighting::WOODEN_TORCH_ITEM_KIND_ID.to_owned(),
-                        quantity: 1,
+                        quantity,
                         maximum_quantity: None,
                         equipped: false,
                         fully_charged: false,
@@ -566,6 +579,7 @@ impl Game {
                     .and_then(|item| item.fuel.as_mut())
                     .expect("validated birth torch must have fuel")
                     .current = supply.fuel;
+                remaining -= quantity;
             }
         }
         append_starting_items(
@@ -617,6 +631,7 @@ impl Game {
             current_floor_id: initial_floor_id,
             current_dungeon_instance_id: None,
             reproduction_suppressed: false,
+            reproduction_count: 0,
             stored_floors: BTreeMap::new(),
             width,
             height,
@@ -651,6 +666,8 @@ impl Game {
             item_knowledge: BTreeMap::new(),
             discovery: rfb_protocol::DiscoverySaveDto::default(),
             item_property_knowledge: BTreeMap::new(),
+            item_lore: Default::default(),
+            easy_identification: false,
             task_states,
             casino: None,
             bounty_state: bounty::BountyState::default(),
@@ -825,9 +842,20 @@ impl Game {
                         identified: true,
                         feeling: None,
                         known_affix_ids: item.affix_ids.iter().cloned().collect(),
+                        known_flags: Default::default(),
+                        known_curse_flags: 0,
                     },
                 );
             }
+        }
+        let known_ids = self
+            .item_property_knowledge
+            .iter()
+            .filter(|(_, knowledge)| knowledge.identified)
+            .map(|(id, _)| id.clone())
+            .collect::<Vec<_>>();
+        for id in known_ids {
+            self.identify_item_lore(&id, true);
         }
     }
 }

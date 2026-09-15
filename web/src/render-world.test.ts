@@ -6,6 +6,50 @@ import test from "node:test";
 
 import { RenderWorld } from "./render-world.ts";
 
+test("unique glyph effects use projected identity and clear on disguise, removal, and snapshot replacement", () => {
+  const world = new RenderWorld(2, 1), snapshot = snapshotFixture();
+  const unique = "demo.actor.basement-cat";
+  snapshot.player.monsterRecall = [{ kindId: unique, unique: true }];
+  snapshot.entities = [{ id: "cat", kindId: unique, highlightMap: true }];
+  snapshot.cells[1] = cell(1, 0, "cat");
+  snapshot.visualCells[1] = visual(1, 0, "visible", 0xffffff, 100);
+  let rendered = world.applySnapshot(snapshot)[1];
+  assert.equal(rendered.actorUnique, true);
+  assert.equal(rendered.highlightPet, true);
+  const update = { ...snapshot, changedCells: [], changedVisualCells: [], removedEntities: [] };
+  update.entities = [{ id: "cat", kindId: "core.actor.fuzzy-monster", glyph: "f" }];
+  rendered = world.applyUpdate(update)[0];
+  assert.equal(rendered.index, 1);
+  assert.equal(rendered.actorUnique, false);
+  assert.equal(rendered.actorGlyph, "f");
+  update.entities = snapshot.entities;
+  assert.equal(world.applyUpdate(update)[0].actorUnique, true);
+  update.entities = []; update.removedEntities = ["cat"];
+  assert.equal(world.applyUpdate(update)[0].actorKindId, undefined);
+  snapshot.cells = [snapshot.cells[0]];
+  assert.equal(world.applySnapshot(snapshot).length, 1);
+});
+
+test("unique knowledge alone does not reveal hidden or hallucinated monsters", () => {
+  const world = new RenderWorld(2, 1), snapshot = snapshotFixture();
+  const kindId = "demo.actor.basement-cat";
+  snapshot.player.monsterRecall = [{ kindId, unique: true }];
+  snapshot.entities = [{ id: "cat", kindId }];
+  snapshot.cells[1] = cell(1, 0, "cat");
+  for (const visibility of ["hidden", "remembered"]) {
+    snapshot.visualCells[1] = visual(1, 0, visibility, 0xffffff, 100);
+    assert.equal(world.applySnapshot(snapshot)[1].actorUnique, undefined);
+  }
+  snapshot.visualCells[1] = visual(1, 0, "visible", 0xffffff, 100);
+  snapshot.player.statuses = [{ kindId: "rfb.status.hallucination" }];
+  assert.equal(world.applySnapshot(snapshot)[1].actorUnique, false);
+  snapshot.player.statuses = []; snapshot.player.monsterRecall = [];
+  const update = { ...snapshot, changedCells: [], changedVisualCells: [], removedEntities: [] };
+  assert.equal(world.applyUpdate(update).find(c => c.index === 1).actorUnique, false);
+  snapshot.player.monsterRecall = [{ kindId, unique: true }];
+  assert.equal(world.applyUpdate(update)[0].actorUnique, true);
+});
+
 test("pet map highlight consumes projection and disappears when disabled or hidden", () => {
   const world = new RenderWorld(2, 1);
   const snapshot = snapshotFixture();
@@ -124,14 +168,33 @@ test("visibility changes use a separate render delta", () => {
   );
 });
 
-test("remembered and hidden cells do not expose current occupants", () => {
+test("remembered cells retain known items while hiding ordinary actors; hidden cells show neither", () => {
   const world = new RenderWorld(2, 1);
   world.applySnapshot(snapshotFixture());
   const remembered = world.applyVisibilityDelta([
     { position: { x: 0, y: 0 }, visibility: "remembered" },
   ])[0];
-  assert.equal(remembered.itemKindId, undefined);
+  assert.equal(remembered.itemKindId, "demo.item.ration-of-food");
   assert.equal(remembered.actorKindId, undefined);
+  const hidden = world.applyVisibilityDelta([
+    { position: { x: 0, y: 0 }, visibility: "hidden" },
+  ])[0];
+  assert.equal(hidden.itemKindId, undefined);
+  assert.equal(hidden.actorKindId, undefined);
+});
+
+test("remembered item removal and gold stacks follow authoritative updates and snapshots", () => {
+  const snapshot = snapshotFixture();
+  snapshot.visualCells[0] = visual(0, 0, "remembered", 0xffffff, 0);
+  const world = new RenderWorld(2, 1);
+  assert.equal(world.applySnapshot(snapshot)[0].itemKindId, "demo.item.ration-of-food");
+  const update = { ...snapshot, changedCells: [cell(0, 0)], changedVisualCells: [], items: [] };
+  assert.equal(world.applyUpdate(update)[0].itemKindId, undefined);
+  update.goldPiles = [{ id: "gold", position: { x: 0, y: 0 }, amount: 10, appearance: "gold" }];
+  update.changedCells = [cell(0, 0, undefined, "gold")];
+  assert.equal(world.applyUpdate(update)[0].itemKindId, "core.gold.gold");
+  const restored = new RenderWorld(2, 1);
+  assert.equal(restored.applySnapshot({ ...snapshot, cells: update.changedCells, items: [], goldPiles: update.goldPiles })[0].itemKindId, "core.gold.gold");
 });
 
 test("hallucination scrambles occupants deterministically without randomness", () => {

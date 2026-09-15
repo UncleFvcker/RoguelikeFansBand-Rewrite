@@ -1,5 +1,7 @@
 # 验证与契约
 
+本次 v0.0.1 发布批次的回归、契约差异和普通 EXE 验收已记录于[发布验证](release-0.0.1-validation.md)。当前协议 1.297、payload 45、State Hash Schema 150，生成物及内容 lock 已同步。
+
 ## 选择范围
 
 检查的目标是证明本次行为正确并防止实际回归。先找已有覆盖，缺少证据时补测试；没有每个内容条目必须增加几个测试的配额。通过后交付，不因为仍有时间就扩大范围。
@@ -24,6 +26,12 @@ git diff --check
 ```
 
 以上命令是用法示例，不是每批必跑流水线。Clippy/check 的 crate 和 targets 按真实改动选择；不为纯文档跑 Clippy。前端在 `web` 选择对应测试，如 `node --test src/character-traits-panel.test.ts`，再按需要运行 `npm run typecheck`。全量 `npm test` 留给实际跨界面改动或明确验收。
+
+## Mogaminator 响应验收
+
+在 `web` 执行 `npm run build:standalone:debug`，随后执行 `node e2e/global-preferences-standalone.e2e.mjs --mogaminator`。使用普通 EXE 的隔离副本正常创建战士，分别以中英文默认规则在正式界面关闭、启用并应用 Mogaminator，再用键盘移动一步。场景开启按规则取物，检查每种语言的应用与移动均在 5 秒内完成，并记录 `test-results/mogaminator-responsive/timings.json` 和截图；移动计时包含状态读取开销。原有全局偏好在结束后恢复。可通过 `RFB_STANDALONE_EXE` 指定已构建的普通 EXE。
+
+核心回归为 `cargo test -p rfb-core --lib game::mogaminator::tests::enabling_default_rules_and_next_turn_remain_responsive_for_a_character -- --exact --nocapture`，计时分别覆盖真实配置命令及下一回合，并验证应用不改变角色存档事实。该性能上限用于捕获数十秒卡顿，不是稳定帧率指标。
 
 ## 宠物 standalone 验收
 

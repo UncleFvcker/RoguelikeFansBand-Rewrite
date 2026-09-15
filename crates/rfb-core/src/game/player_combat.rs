@@ -722,8 +722,16 @@ impl Game {
                 };
                 Some(ammunition)
             };
+            let learning_ammunition = ammunition.as_ref().cloned().unwrap_or_else(|| {
+                self.items
+                    .iter()
+                    .find(|item| item.id == ammo_item_id)
+                    .expect("returning ammunition remains in inventory")
+                    .clone()
+            });
             let outcome = self.resolve_one_player_projectile(
                 &profile,
+                &learning_ammunition,
                 &path,
                 mode,
                 shot_concentration,
@@ -839,6 +847,7 @@ impl Game {
     fn resolve_one_player_projectile(
         &mut self,
         profile: &ResolvedProjectileProfile,
+        ammunition: &ItemInstance,
         path: &[Position],
         mode: ProjectileMode,
         concentration: u8,
@@ -933,6 +942,7 @@ impl Game {
             let outcome = self.resolve_player_projectile_collision(
                 target_index,
                 profile,
+                ammunition,
                 mode,
                 active_concentration,
                 -60 * penetrations,
@@ -993,6 +1003,7 @@ impl Game {
         &mut self,
         index: usize,
         profile: &ResolvedProjectileProfile,
+        ammunition: &ItemInstance,
         mode: ProjectileMode,
         concentration: u8,
         hit_modifier: i32,
@@ -1125,6 +1136,14 @@ impl Game {
                 removed_entities,
             );
         }
+        let learning_sources = self.projectile_learning_sources(
+            ammunition,
+            profile
+                .ammo_item_id
+                .as_deref()
+                .expect("firing requires ammunition"),
+        );
+        self.learn_offense_from_hit(&learning_sources, index);
         let ammunition_critical_multiplier = self.roll_projectile_critical_multiplier(
             profile.ammunition_weight_tenths_pound,
             profile.to_hit,
@@ -1805,6 +1824,8 @@ impl Game {
                 self.entities[index].alerted = true;
                 // py_throw.c applies only the thrown object's slays/brands to
                 // its dice, before flat damage and the throwing multiplier.
+                let learning_sources = self.projectile_learning_sources(&thrown, item_id);
+                self.learn_offense_from_hit(&learning_sources, index);
                 let mut item_multiplier =
                     self.item_damage_multiplier(&thrown, &self.entities[index], &target_definition);
                 let dice = self.roll_damage(profile.damage_dice, profile.damage_sides);
@@ -1819,6 +1840,7 @@ impl Game {
                     if pool.current >= cost {
                         pool.current -= cost;
                         item_multiplier = mana_brand_multiplier(item_multiplier);
+                        self.learn_projectile_trait(&learning_sources, "BRAND_MANA");
                     }
                 }
                 let mut dice_damage = dice.saturating_mul(item_multiplier) / 10;
@@ -1832,6 +1854,10 @@ impl Game {
                 if let Some(chance) = vorpal
                     && self.rng.bounded(chance * 3 / 2) == 0
                 {
+                    self.learn_projectile_trait(
+                        &learning_sources,
+                        if chance == 2 { "VORPAL2" } else { "VORPAL" },
+                    );
                     let mut multiplier = 2;
                     while self.rng.bounded(chance) == 0 {
                         multiplier += 1;
@@ -1891,6 +1917,9 @@ impl Game {
                             self.roll_damage(3, sides).min(30)
                         };
                         let outcome = self.apply_player_healing(heal);
+                        if outcome.applied > 0 {
+                            self.learn_projectile_trait(&learning_sources, "BRAND_VAMP");
+                        }
                         events.push(DomainEvent::PlayerVampiricHealed {
                             resolution: HealingResolutionDto {
                                 requested: outcome.requested,
@@ -2583,6 +2612,11 @@ impl Game {
                     continue;
                 }
 
+                if !profile.poison_needle
+                    && let Some(item_id) = profile.source_item_id.as_deref()
+                {
+                    self.learn_melee_offense(item_id, index);
+                }
                 let source_weapon_index = profile
                     .source_item_id
                     .as_deref()
@@ -2627,6 +2661,9 @@ impl Game {
                     if pool.current >= cost {
                         pool.current -= cost;
                         damage_multiplier = mana_brand_multiplier(damage_multiplier);
+                        if let Some(item_id) = profile.source_item_id.as_deref() {
+                            self.learn_melee_trait(item_id, "BRAND_MANA");
+                        }
                     }
                 }
                 let weapon_damage = if order {
@@ -2667,19 +2704,24 @@ impl Game {
                 let impact_triggered = impact && (base_damage > 50 || self.rng.bounded(7) == 0);
                 if impact_triggered {
                     impact_earthquake_item_id = profile.source_item_id.clone();
+                    if let Some(item_id) = profile.source_item_id.as_deref() {
+                        self.learn_melee_trait(item_id, "IMPACT");
+                    }
                 }
                 let time_brand_damage = base_damage;
-                let weapon_stun = (artifact_index == Some(335)
+                let impact_stun = (artifact_index == Some(335)
                     && matches!(
                         target_kind.as_str(),
                         "demo.actor.werewolf"
                             | "demo.actor.draugluin-sire-of-all-werewolves"
                             | "demo.actor.carcharoth-the-jaws-of-thirst"
                     ))
-                    || impact_triggered && base_damage > 50
-                    || stun
-                        && self.rng.bounded(100) + 1
-                            < u64::try_from(base_damage.max(0)).unwrap_or(u64::MAX);
+                    || impact_triggered && base_damage > 50;
+                let trait_stun = !impact_stun
+                    && stun
+                    && self.rng.bounded(100) + 1
+                        < u64::try_from(base_damage.max(0)).unwrap_or(u64::MAX);
+                let weapon_stun = impact_stun || trait_stun;
                 if self.player_is_rogue() && profile.source_item_id.is_some() && attack_number == 1
                 {
                     if sleeping_at_start {
@@ -2715,6 +2757,12 @@ impl Game {
                 if let Some(chance) = vorpal_chance
                     && self.rng.bounded(chance.saturating_mul(3).saturating_div(2)) == 0
                 {
+                    if let Some(item_id) = profile.source_item_id.as_deref() {
+                        self.learn_melee_trait(
+                            item_id,
+                            if chance == 2 { "VORPAL2" } else { "VORPAL" },
+                        );
+                    }
                     if artifact_index == Some(85) && self.rng.bounded(2) != 0 {
                         self.chainsword_noise(events);
                     } else if artifact_index == Some(92) {
@@ -2775,6 +2823,7 @@ impl Game {
                     ordinary_drain = ordinary_drain.saturating_mul(3) / 2;
                 }
                 if wild && let Some(source_item_id) = profile.source_item_id.as_deref() {
+                    self.learn_melee_trait(source_item_id, "BRAND_WILD");
                     self.resolve_wild_weapon_strike(source_item_id, events);
                 }
                 if !profile.poison_needle {
@@ -2900,6 +2949,9 @@ impl Game {
                         && !self.actor_has_status_immunity(index, STATUS_STUN)
                         && !definition.tags.iter().any(|tag| tag == "resist-all")
                     {
+                        if trait_stun && let Some(item_id) = profile.source_item_id.as_deref() {
+                            self.learn_melee_trait(item_id, "STUN");
+                        }
                         self.apply_actor_melee_status(
                             index,
                             STATUS_STUN,
@@ -2973,6 +3025,11 @@ impl Game {
                             .expect("mutation regeneration percent must fit i32"),
                     ) / 100;
                     let outcome = self.apply_player_vampiric_healing(requested);
+                    if outcome.applied > 0
+                        && let Some(item_id) = profile.source_item_id.as_deref()
+                    {
+                        self.learn_melee_trait(item_id, "BRAND_VAMP");
+                    }
                     events.push(DomainEvent::PlayerVampiricHealed {
                         resolution: HealingResolutionDto {
                             requested: outcome.requested,

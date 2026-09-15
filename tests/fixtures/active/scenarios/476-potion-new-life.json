@@ -32,7 +32,7 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "inventoryStackCount": 9,
+      "inventoryStackCount": 3,
       "lastCommandSeq": 1,
       "playerAttributes": {
         "attributes": {
@@ -84,7 +84,7 @@
       "playerHp": 33,
       "playerMaxHp": 56,
       "revision": 1,
-      "stateHash": "c40c2757b0ee94a16ca80b12b2671fd729410360318a1553db83d4825d7a9d24",
+      "stateHash": "7679da8f8a2f0c43851e8456c72a80a92508405a4762cbc292881336ef061765",
       "turn": 1
     },
     "events": [
@@ -116,6 +116,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "c40c2757b0ee94a16ca80b12b2671fd729410360318a1553db83d4825d7a9d24"
+    "saveRoundTripStateHash": "7679da8f8a2f0c43851e8456c72a80a92508405a4762cbc292881336ef061765"
   }
 }

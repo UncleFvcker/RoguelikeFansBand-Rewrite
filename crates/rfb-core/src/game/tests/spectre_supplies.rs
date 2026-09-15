@@ -79,8 +79,9 @@ fn spectre_night_birth_preserves_all_six_class_kits_and_supplies_full_staff_and_
             .iter()
             .filter(|item| item.kind_id == lighting::WOODEN_TORCH_ITEM_KIND_ID)
             .collect();
-        assert!((3..=7).contains(&torches.len()));
-        assert!(torches.iter().all(|item| item.quantity == 1
+        assert_eq!(torches.len(), 1);
+        assert!((3..=7).contains(&torches[0].quantity));
+        assert!(torches.iter().all(|item| (3..=7).contains(&item.quantity)
             && item.location == ItemLocation::Inventory
             && item.fuel == torches[0].fuel));
         let fuel = torches[0].fuel.unwrap().current;

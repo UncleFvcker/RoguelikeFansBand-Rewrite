@@ -935,7 +935,10 @@ impl Game {
                         }))
                     && (minimum_quality == rfb_content::ItemQuality::Ordinary
                         || self.content.item(&entry.item_kind_id).is_some_and(|item| {
-                            item.max_stack == 1
+                            (item.max_stack == 1
+                                || item.fuel.is_some_and(|fuel| {
+                                    fuel.kind == rfb_content::ItemFuelKindDefinition::Torch
+                                }))
                                 && item.equipment_slot.is_some()
                                 && entry.quantity == 1
                         }))
@@ -1178,7 +1181,12 @@ impl Game {
             })
         });
         let supports_quality = self.content.item(&entry.item_kind_id).is_some_and(|item| {
-            (item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1)
+            (item.equipment_slot.is_some()
+                && entry.quantity == 1
+                && (item.max_stack == 1
+                    || item.fuel.is_some_and(|fuel| {
+                        fuel.kind == rfb_content::ItemFuelKindDefinition::Torch
+                    })))
                 || (table.rfb_ego_policy
                     == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
                     && ((item.rfb_base_kind.is_some() && item.ammunition_profile.is_some())

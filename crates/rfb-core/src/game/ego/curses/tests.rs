@@ -233,8 +233,8 @@ fn naturally_generated_negative_equipment_can_be_equipped_uncursed_and_saved_wit
         );
         assert_eq!(
             game.item_identification(game.items.iter().find(|item| item.id == id).unwrap()),
-            ItemIdentificationDto::Identified,
-            "the existing equip rule identifies the worn item"
+            ItemIdentificationDto::Unexamined,
+            "wearing learns obvious powers and the curse without revealing identity"
         );
         let restored = Game::from_save(game.to_save(), game.behavior_preferences())
             .unwrap_or_else(|error| panic!("{kind}: {error:?}"));

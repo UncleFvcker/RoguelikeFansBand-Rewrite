@@ -818,7 +818,7 @@ impl Game {
         )
     }
 
-    pub(super) fn resist_player_damage(&self, mut damage: DamageOutcome) -> DamageOutcome {
+    pub(super) fn resist_player_damage(&mut self, mut damage: DamageOutcome) -> DamageOutcome {
         let percent = self.adjust_player_resistance_percent(damage.damage_type, damage.resistance);
         if percent != damage.resistance.reduction_percent() {
             // Re-evaluate resistance on the post-armor amount before incoming-damage modifiers.
@@ -828,6 +828,7 @@ impl Game {
                 percent,
             );
         }
+        self.learn_damage_resistance(&damage);
         if matches!(
             damage.damage_type,
             DamageType::HolyFire | DamageType::HellFire
@@ -875,7 +876,7 @@ impl Game {
         damage
     }
 
-    pub(super) fn reduce_player_damage(&self, damage: DamageOutcome) -> DamageOutcome {
+    pub(super) fn reduce_player_damage(&mut self, damage: DamageOutcome) -> DamageOutcome {
         scale_damage_outcome(
             self.resist_player_damage(damage),
             self.player_incoming_damage_percent(),
@@ -2215,7 +2216,7 @@ impl Game {
             .collect()
     }
 
-    fn ring_affects_weapon(&self, ring_slot: &str, weapon_id: Option<&str>) -> bool {
+    pub(super) fn ring_affects_weapon(&self, ring_slot: &str, weapon_id: Option<&str>) -> bool {
         let Some(weapon) = self
             .items
             .iter()

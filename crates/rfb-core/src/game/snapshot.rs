@@ -19,9 +19,9 @@ use rfb_protocol::{
     AbilitySummonSpecDto, AbilityTerrainTransformSpecDto, AttackProfileDto, AttributeKindDto,
     AttributeSetDto, AttributeValueDto, BodySlotDto, CampaignStateDto, CapturedActorDto, CellDto,
     CellVisualDto, ContentVisualDto, DamageDiceDto, EntityDto, EntityFactionDto, EquipmentItemDto,
-    GameSnapshot, InventoryItemDto, ItemDto, ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto,
-    MutationRatingDto, PROTOCOL_VERSION, PendingRaceMutationChoiceDto, PetDto, PlayerBuildDto,
-    PlayerDto, PlayerMutationDto, PlayerProgressDto, Position, ResistanceDto, ResourcePoolDto,
+    GameSnapshot, InventoryItemDto, ItemDto, MapScaleDto, MeleeRoutineDto, MutationRatingDto,
+    PROTOCOL_VERSION, PendingRaceMutationChoiceDto, PetDto, PlayerBuildDto, PlayerDto,
+    PlayerMutationDto, PlayerProgressDto, Position, ResistanceDto, ResourcePoolDto,
     SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto, TaskStatusKindDto,
     TerrainInteractionDto, TerrainInteractionKindDto, VisibilityState, WildernessLocationDto,
     WildernessLocationKindDto,
@@ -1344,10 +1344,12 @@ impl Game {
                     use_unavailable_reason: self
                         .berserker_item_use_rejection_cost(item)
                         .map(|_| "berserker".to_owned()),
-                    charges: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
+                    charges: self
+                        .item_activation_is_known(item)
                         .then_some(item.charges)
                         .flatten(),
-                    activation: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
+                    activation: self
+                        .item_activation_is_known(item)
                         .then(|| item.activation.clone())
                         .flatten(),
                     quantity: item.quantity,
@@ -1917,7 +1919,36 @@ impl Game {
                 } else {
                     Vec::new()
                 };
+                let identification_candidates = |full| {
+                    self.items
+                        .iter()
+                        .filter(|item| {
+                            item.quantity > 0
+                                && matches!(
+                                    item.location,
+                                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                                )
+                                && self.item_needs_identification(item, full)
+                        })
+                        .map(|item| item.id.clone())
+                        .collect()
+                };
                 TaskServiceDto {
+                    identify_item_ids: if player_at_entrance
+                        && (facility.identify_item_cost.is_some()
+                            || facility.identify_all_items_cost.is_some())
+                    {
+                        identification_candidates(false)
+                    } else {
+                        Vec::new()
+                    },
+                    research_item_ids: if player_at_entrance
+                        && facility.research_item_cost.is_some()
+                    {
+                        identification_candidates(true)
+                    } else {
+                        Vec::new()
+                    },
                     inn_travel_destinations: self.facility_town_travel_destinations(&facility.id),
                     casino: facility.casino.then(|| self.casino_dto(&facility.id)),
                     id: facility.id.clone(),

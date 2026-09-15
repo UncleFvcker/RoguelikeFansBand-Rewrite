@@ -7,7 +7,6 @@ import test from "node:test";
 import {
   TaskServicePanel,
   bountyMissionAction,
-  facilityIdentificationCandidate,
   facilityMembershipKey,
   facilityServiceActionKey,
   facilityServiceUsesItem,
@@ -90,6 +89,26 @@ test("paid facility selection and closing are free; only confirmation dispatches
   panel.render(snapshot);
   assert.equal(list.children[0].children[2].disabled, true);
   commands.length = 0;
+  state.inventory = [
+    { id: "sword", displayNameKey: "sword-name", kindId: "sword-kind", identification: "identified" },
+    { id: "known", displayNameKey: "known-name", kindId: "sword-kind", identification: "identified" },
+  ];
+  snapshot.taskServices = [{ id: "library", playerAtEntrance: true, membership: "visitor", tasks: [],
+    identifyItemCost: 70, researchItemCost: 3000, identifyAllItemsCost: 500,
+    identifyItemIds: ["sword"], researchItemIds: ["sword"],
+  }];
+  panel.render(snapshot);
+  for (const row of list.children.slice(0, 2)) {
+    assert.deepEqual(row.children[0].children.map(option => option.value), ["sword"]);
+    assert.equal(row.children[1].disabled, false, "core can allow re-identifying a known item with a new curse");
+  }
+  assert.equal(list.children[2].children[0].disabled, false);
+  snapshot.taskServices[0].identifyItemIds = [];
+  snapshot.taskServices[0].researchItemIds = [];
+  panel.render(snapshot);
+  assert.equal(list.children[0].children[1].disabled, true);
+  assert.equal(list.children[1].children[1].disabled, true);
+  assert.equal(list.children[2].children[0].disabled, true);
   state.inventory = [{ id: "sword", displayNameKey: "sword-name", kindId: "sword-kind" }];
   snapshot.taskServices = [{ id: "guild", playerAtEntrance: true, membership: "owner", tasks: [],
     serviceActions: [{ kind: "enchant-weapon", cost: 0, targets: [{ itemId: "sword", choices: [
@@ -243,16 +262,6 @@ test("task service actions are limited to acceptance and reward claims", () => {
   ]) {
     assert.equal(taskActionForStatus(status), undefined);
   }
-});
-
-test("p104d Anambar library distinguishes identification from research candidates", () => {
-  assert.equal(facilityIdentificationCandidate("unexamined", false), true);
-  assert.equal(facilityIdentificationCandidate("appraised", false), false);
-  assert.equal(facilityIdentificationCandidate("identified", false), false);
-
-  assert.equal(facilityIdentificationCandidate("unexamined", true), true);
-  assert.equal(facilityIdentificationCandidate("appraised", true), true);
-  assert.equal(facilityIdentificationCandidate("identified", true), false);
 });
 
 test("p105d Anambar facility roles and typed service actions stay stable", () => {

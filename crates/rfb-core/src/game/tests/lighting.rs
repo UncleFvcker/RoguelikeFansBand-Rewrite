@@ -623,17 +623,17 @@ fn warrior_birth_rolls_three_to_seven_matching_torches_after_food() {
             })
             .collect::<Vec<_>>();
 
-        assert_eq!(torches.len(), usize::try_from(expected.quantity).unwrap());
-        assert!((3..=7).contains(&torches.len()));
+        assert_eq!(torches.len(), 1);
+        assert_eq!(torches[0].quantity, expected.quantity);
+        assert!((3..=7).contains(&torches[0].quantity));
         assert!(torches.iter().all(|torch| {
-            torch.quantity == 1
-                && torch.fuel
-                    == Some(ItemFuelDto {
-                        kind: ItemFuelKindDto::Torch,
-                        current: expected.fuel,
-                        maximum: 5_000,
-                        light_radius: 1,
-                    })
+            torch.fuel
+                == Some(ItemFuelDto {
+                    kind: ItemFuelKindDto::Torch,
+                    current: expected.fuel,
+                    maximum: 5_000,
+                    light_radius: 1,
+                })
         }));
         assert!((1_500..=3_500).contains(&expected.fuel));
         assert_eq!(expected.fuel % 500, 0);
@@ -678,6 +678,113 @@ fn fuel_items_start_with_original_capacity_weight_and_radius() {
     assert_eq!(game.item_weight_tenths_pound(TORCH_KIND_ID), 30);
     assert_eq!(game.item_weight_tenths_pound(LANTERN_KIND_ID), 50);
     assert_eq!(game.item_weight_tenths_pound(OIL_KIND_ID), 10);
+}
+
+#[test]
+fn torch_stack_equips_one_burns_one_and_refuels_from_one_spare() {
+    let mut game = Game::new(42);
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    give_inventory_item(&mut game, "test.torches", TORCH_KIND_ID);
+    game.items[0].quantity = 4;
+    game.identify_item_instance("test.torches", ItemIdentificationRequest::new(true));
+    let knowledge = game.item_property_knowledge["test.torches"].clone();
+    let equipped = game.equip_inventory_item("test.torches", None).unwrap();
+    let spare_id = game
+        .items
+        .iter()
+        .find(|item| item.location == ItemLocation::Inventory)
+        .unwrap()
+        .id
+        .clone();
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.torches")
+            .unwrap()
+            .quantity,
+        1
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == spare_id)
+            .unwrap()
+            .quantity,
+        3
+    );
+    assert_eq!(game.item_property_knowledge[&spare_id], knowledge);
+    game.world_tick = 10;
+    game.process_equipped_light_fuel(&mut Vec::new());
+    assert_eq!(fuel(&game, "test.torches").current, 3_999);
+    assert_eq!(fuel(&game, &spare_id).current, 4_000);
+    game.unequip_slot(&equipped.slot_id).unwrap();
+    assert_eq!(game.items.len(), 2, "different fuel must stay separate");
+    game.equip_inventory_item("test.torches", Some(&equipped.slot_id))
+        .unwrap();
+    game.refuel_equipped_light("test.torches", &spare_id)
+        .unwrap();
+    assert_eq!(fuel(&game, "test.torches").current, 5_000);
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == spare_id)
+            .unwrap()
+            .quantity,
+        2
+    );
+    game.drop_inventory_quantity(&spare_id, 1).unwrap().unwrap();
+    let dropped = game
+        .items
+        .iter()
+        .find(|item| matches!(item.location, ItemLocation::Ground(_)))
+        .unwrap()
+        .id
+        .clone();
+    game.pick_up_item_at_player(Some(&dropped)).unwrap();
+    assert!(!game.items.iter().any(|item| item.id == dropped));
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == spare_id)
+            .unwrap()
+            .quantity,
+        2
+    );
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn matching_torch_returns_to_its_stack_even_with_a_full_pack() {
+    let mut game = Game::new(42);
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    give_inventory_item(&mut game, "test.torches", TORCH_KIND_ID);
+    game.items[0].quantity = 3;
+    game.identify_item_instance("test.torches", ItemIdentificationRequest::new(true));
+    let slot = game
+        .equip_inventory_item("test.torches", None)
+        .unwrap()
+        .slot_id;
+    while game.inventory_used_slots() < game.inventory_slot_capacity() {
+        let id = format!("test.filler.{}", game.items.len());
+        give_inventory_item(&mut game, &id, "demo.item.dagger");
+    }
+    let draws = game.rng_draw_counter();
+    game.unequip_slot(&slot)
+        .expect("returning to a matching stack needs no extra slot");
+    let torches = game
+        .items
+        .iter()
+        .filter(|item| item.kind_id == TORCH_KIND_ID)
+        .collect::<Vec<_>>();
+    assert_eq!(torches.len(), 1);
+    assert_eq!(torches[0].quantity, 3);
+    assert!(!game.item_property_knowledge.contains_key("test.torches"));
+    assert_eq!(game.rng_draw_counter(), draws);
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
 }
 
 #[test]

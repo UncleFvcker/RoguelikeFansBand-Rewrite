@@ -16,6 +16,8 @@ fn equipped_capture_ball(game: &mut Game) -> usize {
     game.item_property_knowledge.insert(
         "test.capture-ball".to_owned(),
         ItemPropertyKnowledgeState {
+            known_flags: Default::default(),
+            known_curse_flags: 0,
             known_blessed: false,
             known_curse: false,
             discovered: true,

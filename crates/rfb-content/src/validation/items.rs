@@ -938,9 +938,7 @@ pub(super) fn validate_items(
                 && fuel.initial <= fuel.maximum
                 && match fuel.kind {
                     ItemFuelKindDefinition::Torch => {
-                        item.equipment_slot.as_deref() == Some("light")
-                            && item.max_stack == 1
-                            && fuel.light_radius == 1
+                        item.equipment_slot.as_deref() == Some("light") && fuel.light_radius == 1
                     }
                     ItemFuelKindDefinition::Lantern => {
                         item.equipment_slot.as_deref() == Some("light")
@@ -958,7 +956,11 @@ pub(super) fn validate_items(
             }
         }
         if let Some(slot) = &item.equipment_slot
-            && (item.max_stack != 1 || validate_equipment_slot(slot).is_err())
+            && ((item.max_stack != 1
+                && !item
+                    .fuel
+                    .is_some_and(|fuel| fuel.kind == ItemFuelKindDefinition::Torch))
+                || validate_equipment_slot(slot).is_err())
         {
             return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
         }

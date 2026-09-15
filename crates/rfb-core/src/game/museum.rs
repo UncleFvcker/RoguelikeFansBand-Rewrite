@@ -72,6 +72,17 @@ impl Game {
             .item_property_knowledge
             .into_iter()
             .filter(|entry| inventory.iter().any(|item| item.id == entry.item_id))
+            .map(|mut entry| {
+                // Carry the object's known powers, not the donor's entire shared lore.
+                let item = self
+                    .home_states
+                    .values()
+                    .flat_map(|home| &home.inventory)
+                    .find(|item| item.id == entry.item_id)
+                    .expect("museum item exists");
+                entry.known_flags = self.known_item_flags(item).into_iter().collect();
+                entry
+            })
             .collect();
         Some(SharedMuseum {
             inventory,

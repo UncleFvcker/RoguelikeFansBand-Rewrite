@@ -27,7 +27,7 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "inventoryStackCount": 6,
+      "inventoryStackCount": 4,
       "itemKnowledge": {
         "demo.item.flicker-scroll": {
           "aware": true,
@@ -41,7 +41,7 @@
         "y": 32
       },
       "revision": 1,
-      "stateHash": "e18c677970b7a5e1c3e1b68f8ba32cddeb317464587360fd5bebd0b0dea95347",
+      "stateHash": "ad016685363a836aae8972cf6a2b212124bca3d3faebcc47dd527b609c5abfb7",
       "turn": 1
     },
     "events": [
@@ -70,6 +70,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "e18c677970b7a5e1c3e1b68f8ba32cddeb317464587360fd5bebd0b0dea95347"
+    "saveRoundTripStateHash": "ad016685363a836aae8972cf6a2b212124bca3d3faebcc47dd527b609c5abfb7"
   }
 }

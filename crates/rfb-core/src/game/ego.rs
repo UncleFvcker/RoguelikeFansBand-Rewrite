@@ -3727,7 +3727,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 147);
+        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 150);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,

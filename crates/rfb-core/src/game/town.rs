@@ -491,6 +491,11 @@ fn plain_shop_item(
     next_serial: &mut u64,
 ) -> Result<ItemInstance, CoreError> {
     let (activation, charges) = initial_item_runtime_state(content, rng, item_kind_id, &[], 15);
+    // RFB master a0d92b6378: shop.c::_create fills new light stock to capacity.
+    let fuel = initial_item_fuel(content, item_kind_id).map(|mut fuel| {
+        fuel.current = fuel.maximum;
+        fuel
+    });
     Ok(ItemInstance {
         previously_worn: false,
         book_counted: false,
@@ -516,7 +521,7 @@ fn plain_shop_item(
         permanent_destruction_immunities: Default::default(),
         activation,
         charges,
-        fuel: initial_item_fuel(content, item_kind_id),
+        fuel,
         device_recovery_progress: 0,
         chest: None,
         captured_actor: None,
@@ -1596,11 +1601,7 @@ impl Game {
         }) else {
             return Err("item-unavailable");
         };
-        let already_identified = self
-            .item_property_knowledge
-            .get(&item.id)
-            .is_some_and(|knowledge| knowledge.identified || (!full && knowledge.appraised));
-        if already_identified {
+        if !self.item_needs_identification(item, full) {
             return Err("already-identified");
         }
         if self.gold < cost {
@@ -1637,18 +1638,15 @@ impl Game {
         if !self.town_facility_accessible(facility_id) {
             return Err("facility-unreachable");
         }
-        let has_unexamined_item = self.items.iter().any(|item| {
+        let has_identifiable_item = self.items.iter().any(|item| {
             item.quantity > 0
                 && matches!(
                     item.location,
                     ItemLocation::Inventory | ItemLocation::Equipped { .. }
                 )
-                && !self
-                    .item_property_knowledge
-                    .get(&item.id)
-                    .is_some_and(|knowledge| knowledge.appraised || knowledge.identified)
+                && self.item_needs_identification(item, false)
         });
-        if !has_unexamined_item {
+        if !has_identifiable_item {
             return Err("nothing-to-identify");
         }
         if self.gold < cost {
@@ -2734,30 +2732,7 @@ impl Game {
         destination_ids.sort();
         destination_ids.dedup();
         for destination_id in destination_ids {
-            let purchased = self
-                .items
-                .iter()
-                .find(|item| item.id == destination_id)
-                .expect("purchased item must remain available");
-            let known_affix_ids = purchased
-                .affix_ids
-                .iter()
-                .cloned()
-                .chain(
-                    purchased
-                        .rolled_affixes
-                        .iter()
-                        .map(|affix| affix.affix_id.clone()),
-                )
-                .collect::<Vec<_>>();
-            let knowledge = self
-                .item_property_knowledge
-                .entry(destination_id)
-                .or_default();
-            knowledge.discovered = true;
-            knowledge.appraised = true;
-            knowledge.identified = true;
-            knowledge.known_affix_ids.extend(known_affix_ids);
+            self.identify_item_instance(&destination_id, ItemIdentificationRequest::new(true));
         }
         Ok(ShopTransactionOutcome {
             shop_id: shop_id.to_owned(),

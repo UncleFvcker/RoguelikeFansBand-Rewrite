@@ -43,7 +43,7 @@ export function createRendererProfileCells(): RenderCell[] {
         terrainId:
           border || patternedWall ? "profile.terrain.wall" : "profile.terrain.floor",
         ...(itemKindId ? { itemKindId } : {}),
-        ...(actorKindId ? { actorKindId } : {}),
+        ...(actorKindId ? { actorKindId, actorUnique: true } : {}),
         visibility,
         light: {
           color: (x + y) % 3 === 0 ? 0xffb060 : 0x80b8ff,

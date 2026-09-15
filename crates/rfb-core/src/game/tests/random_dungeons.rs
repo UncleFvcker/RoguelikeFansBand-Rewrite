@@ -80,12 +80,9 @@ fn enter_at_depth(game: &mut Game, depth: u16) {
 fn restore(game: &Game) -> Game {
     let bytes = rfb_protocol::to_msgpack(&game.to_save()).unwrap();
     let payload = rfb_protocol::from_msgpack(&bytes).unwrap();
-    let restored = Game::from_save_with_content(
-        payload,
-        game.content.clone(),
-        Game::default_behavior_preferences(),
-    )
-    .unwrap();
+    let restored =
+        Game::from_save_with_content(payload, game.content.clone(), game.behavior_preferences())
+            .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     restored
 }

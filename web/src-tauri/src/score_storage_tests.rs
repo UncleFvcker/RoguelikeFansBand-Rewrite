@@ -12,6 +12,7 @@ fn fresh(root: &std::path::Path) -> AppState {
             "Same name",
             "2026-09-14T00:00:00Z".into(),
             Game::default_behavior_preferences(),
+            false,
         )
         .unwrap();
     if let Some(choice) = snapshot.player.pending_race_mutation_choice {

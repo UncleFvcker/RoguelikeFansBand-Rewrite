@@ -5946,8 +5946,9 @@ fn arcane_identify_performs_basic_identification_without_an_extra_rng_roll() {
         .expect("identify target should remain");
     assert_eq!(
         game.item_identification(target),
-        ItemIdentificationDto::Appraised
+        ItemIdentificationDto::Identified
     );
+    assert!(!game.item_property_knowledge[&target.id].identified);
     assert_eq!(game.rng_draw_counter(), draws_before + 1);
 }
 

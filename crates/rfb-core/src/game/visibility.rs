@@ -95,6 +95,19 @@ impl Game {
         cleared_cells += u32::try_from(self.revealed_terrain.len()).unwrap_or(0);
         self.revealed_terrain.clear();
         self.detection_coverage.traps.clear();
+        // RFB cave.c:wiz_dark clears OM_FOUND for floor objects, not identification.
+        for item in &self.items {
+            if let ItemLocation::Ground(position) = item.location {
+                if let Some(knowledge) = self.item_property_knowledge.get_mut(&item.id) {
+                    knowledge.discovered = false;
+                }
+                changed.insert(position);
+            }
+        }
+        for pile in &mut self.gold_piles {
+            pile.discovered = false;
+            changed.insert(pile.position);
+        }
         cleared_cells
     }
 

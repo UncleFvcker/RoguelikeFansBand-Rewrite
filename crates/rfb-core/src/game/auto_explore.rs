@@ -86,7 +86,7 @@ impl Game {
             .terrain(self.known_terrain_at(position))
             .unwrap();
         // The upstream can_travel target filter excludes known walls, rubble and hidden doors.
-        if terrain.digging.is_some() || (!terrain.walkable && terrain.movement_modes.is_empty()) {
+        if terrain.digging.is_some() || !self.local_travel_position_is_available(position) {
             return false;
         }
         let unknown = (-1..=1)
@@ -105,12 +105,6 @@ impl Game {
         &self,
         state: &AutoExploreStateDto,
     ) -> Option<AutoExploreTargetDto> {
-        if let Some(target) = self.mogaminator_auto_get_target() {
-            return Some(AutoExploreTargetDto::Object {
-                object_id: target.object_id,
-                position: target.position,
-            });
-        }
         let reachable = self.reachable_local_travel_positions();
         // Preserve RFB distance and x-then-y scan order, while skipping unreachable frontiers.
         reachable
@@ -164,14 +158,14 @@ impl Game {
                     .filter(|state| self.auto_explore_state_is_valid(state))
                     .ok_or("game-auto-explore-interrupted")?
             };
-            if starting
-                && self.mogaminator.auto_get_mode != AutoGetModeDto::Off
-                && self.auto_explore_ground_units() > 0
-            {
-                self.auto_explore = Some(state);
-                return Ok(GameAction::PickUp);
-            }
-            if state.target.is_none() {
+            // Reconsider objects after each reveal, including matching items at our feet.
+            // Generic PickUp would also collect items rejected by the rules.
+            if let Some(target) = self.mogaminator_auto_get_target() {
+                state.target = Some(AutoExploreTargetDto::Object {
+                    object_id: target.object_id,
+                    position: target.position,
+                });
+            } else if state.target.is_none() {
                 state.target = self.auto_explore_next_target(&state);
             }
             let target = state.target.as_ref().ok_or("game-auto-explore-complete")?;
@@ -246,7 +240,10 @@ impl Game {
             .x
             .abs_diff(position.x)
             .max(previous.y.abs_diff(position.y));
-        if (!moved && !pickup)
+        let opened_door = events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::DoorOpened { .. }));
+        if (!moved && !pickup && !opened_door)
             || (moved && step_distance != 1)
             || (pickup && self.auto_explore_ground_units() >= ground_units_before)
         {

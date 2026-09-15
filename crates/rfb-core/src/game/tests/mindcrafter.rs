@@ -607,7 +607,7 @@ fn tomte_sensing_and_free_identification_precede_paid_mindcraft_without_replacin
         game.apply_player_floor_item_knowledge();
         assert_eq!(
             game.item_feeling(game.items.last().unwrap()),
-            (!heavy_headgear).then_some(rfb_protocol::ItemFeelingDto::Good)
+            (level < 40 && !heavy_headgear).then_some(rfb_protocol::ItemFeelingDto::Good)
         );
         assert_eq!(
             game.item_property_knowledge

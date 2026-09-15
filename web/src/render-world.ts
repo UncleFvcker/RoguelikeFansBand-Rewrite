@@ -27,6 +27,7 @@ export class RenderWorld {
   readonly #entityKinds = new Map<string, string>();
   readonly #fuzzyEntityGlyphs = new Map<string, string>();
   readonly #highlightedPets = new Set<string>();
+  readonly #uniqueKinds = new Set<string>();
   #actorKindIds: string[] = [];
   #itemKindIds: string[] = [];
   #playerId = "";
@@ -56,6 +57,7 @@ export class RenderWorld {
     this.#syncEntityKinds(snapshot.player, snapshot.entities, snapshot.items, snapshot.goldPiles);
     this.#syncHallucination(snapshot.player, snapshot.worldTick);
     this.#playerPosition = snapshot.player.position;
+    this.#cells.fill(undefined);
     this.#visibility.fill("hidden");
     this.#lights.fill(DEFAULT_LIGHT);
     for (const cell of snapshot.cells) this.#storeCell(cell);
@@ -66,10 +68,16 @@ export class RenderWorld {
   applyUpdate(update: GameUpdate): RenderCell[] {
     const previousHallucinating = this.#hallucinating;
     const previousPhase = this.#hallucinationPhase;
-    this.#syncEntityKinds(update.player, update.entities, update.items, update.goldPiles);
+    const changedActors = this.#syncEntityKinds(update.player, update.entities, update.items, update.goldPiles);
+    for (const id of update.removedEntities ?? []) changedActors.add(id);
     this.#syncHallucination(update.player, update.worldTick);
     this.#playerPosition = update.player.position;
     const dirty = new Set<number>();
+    if (changedActors.size) {
+      this.#cells.forEach((cell, index) => {
+        if (cell?.actorId && changedActors.has(cell.actorId)) dirty.add(index);
+      });
+    }
     for (const cell of update.changedCells) {
       const index = this.#storeCell(cell);
       if (index !== undefined) dirty.add(index);
@@ -117,10 +125,22 @@ export class RenderWorld {
     entities: EntityDto[],
     items: ItemDto[],
     goldPiles: GoldPileDto[],
-  ): void {
+  ): Set<string> {
+    const uniqueKinds = new Set((player.monsterRecall ?? []).filter(m => m.unique).map(m => m.kindId));
+    const changedActors = new Set<string>();
+    for (const entity of entities) {
+      const previous = this.#entityKinds.get(entity.id);
+      if (previous !== entity.kindId || this.#uniqueKinds.has(previous ?? "") !== uniqueKinds.has(entity.kindId) ||
+          this.#highlightedPets.has(entity.id) !== (entity.highlightMap === true) ||
+          this.#fuzzyEntityGlyphs.get(entity.id) !== (entity.kindId === FUZZY_MONSTER_KIND_ID ? entity.glyph : undefined)) {
+        changedActors.add(entity.id);
+      }
+    }
     this.#entityKinds.clear();
     this.#fuzzyEntityGlyphs.clear();
     this.#highlightedPets.clear();
+    this.#uniqueKinds.clear();
+    for (const kind of uniqueKinds) this.#uniqueKinds.add(kind);
     this.#playerId = player.id;
     this.#entityKinds.set(player.id, player.kindId);
     for (const entity of entities) {
@@ -140,6 +160,7 @@ export class RenderWorld {
         ...goldPiles.map((pile) => goldVisualId(pile.appearance)),
       ]),
     ].sort();
+    return changedActors;
   }
 
   #syncHallucination(player: PlayerDto, worldTick: number): void {
@@ -186,7 +207,7 @@ export class RenderWorld {
         x,
         y,
         terrainId: cell.terrainId,
-        ...(occupantsVisible && cell.itemId
+        ...(visibility !== "hidden" && cell.itemId
           ? {
               itemKindId: this.#hallucinatedKind(
                 this.#entityKinds.get(cell.itemId) ?? cell.itemId,
@@ -196,7 +217,7 @@ export class RenderWorld {
               ),
             }
           : {}),
-        ...((occupantsVisible || (cell.actorId && this.#fuzzyEntityGlyphs.has(cell.actorId))) && cell.actorId
+        ...((occupantsVisible || (cell.actorId && this.#fuzzyEntityGlyphs.has(cell.actorId))) && cell.actorId && this.#entityKinds.has(cell.actorId)
           ? {
               actorKindId:
                 cell.actorId === this.#playerId
@@ -211,6 +232,9 @@ export class RenderWorld {
                 ? { actorGlyph: this.#fuzzyEntityGlyphs.get(cell.actorId) }
                 : {}),
               highlightPet: !this.#hallucinating && occupantsVisible && this.#highlightedPets.has(cell.actorId),
+              actorUnique: !this.#hallucinating && occupantsVisible && cell.actorId !== this.#playerId &&
+                !this.#fuzzyEntityGlyphs.has(cell.actorId) &&
+                this.#uniqueKinds.has(this.#entityKinds.get(cell.actorId) ?? ""),
             }
           : {}),
         visibility,

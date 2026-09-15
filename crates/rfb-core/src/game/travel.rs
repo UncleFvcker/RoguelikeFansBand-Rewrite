@@ -440,7 +440,8 @@ impl Game {
             self.player_can_cross_surface_terrain(terrain)
         } else {
             self.player_can_cross_terrain(terrain)
-        }) || self.player_wall_destruction_target(position).is_some()
+        }) || (self.operation_options.easy_open && terrain.open_to_terrain_id.is_some())
+            || self.player_wall_destruction_target(position).is_some()
     }
 }
 

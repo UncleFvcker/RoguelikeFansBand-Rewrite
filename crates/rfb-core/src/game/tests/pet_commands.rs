@@ -678,6 +678,7 @@ fn pickup_option_is_free_drops_items_once_and_preserves_identity_and_save() {
             actor_id: "pet".into()
         }
     );
+    assert!(!game.item_is_discovered("test.pet-loot"));
     let restored = Game::from_save_with_content(
         game.to_save(),
         game.content.clone(),

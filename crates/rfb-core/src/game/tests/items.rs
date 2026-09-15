@@ -9302,6 +9302,8 @@ fn dr_jones_game() -> (Game, String) {
     game.item_property_knowledge.insert(
         id.clone(),
         ItemPropertyKnowledgeState {
+            known_flags: Default::default(),
+            known_curse_flags: 0,
             known_blessed: false,
             known_curse: false,
             discovered: true,
@@ -10443,6 +10445,8 @@ fn p100e_soulsword_rolls_and_persists_one_extra_power_and_increases_life() {
     game.item_property_knowledge.insert(
         item_id.clone(),
         ItemPropertyKnowledgeState {
+            known_flags: Default::default(),
+            known_curse_flags: 0,
             known_blessed: false,
             known_curse: false,
             discovered: true,
@@ -13577,6 +13581,7 @@ fn artifact_scroll_zero_value_failure_keeps_generated_item_rng_and_scroll_withou
 #[test]
 fn artifact_scroll_rejects_stale_known_or_illegal_targets_without_mutation() {
     let mut base = Game::new(638);
+    base.mogaminator.enabled = false;
     choose_human_talent_if_pending(&mut base);
     clear_monsters(&mut base);
     base.items.clear();

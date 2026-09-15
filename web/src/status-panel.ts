@@ -1198,7 +1198,7 @@ export class StatusPanel {
     this.#dom.resourceList.replaceChildren();
     this.#dom.abilityList.replaceChildren();
     const realms = learning?.realms;
-    const presentation = abilityPresentation(abilities, playerLevel, realms ? [realms.firstRealmId, realms.secondRealmId] : []);
+    const presentation = abilityPresentation(abilities, realms ? [realms.firstRealmId, realms.secondRealmId] : []);
     this.#dom.resourceRest.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
@@ -1823,21 +1823,19 @@ export type AbilityPresentationEntry =
 
 export function abilityPresentation(
   abilities: readonly AbilityDto[],
-  playerLevel: number,
   realmIds: readonly string[] = [],
 ): AbilityPresentationEntry[] {
-  const ordered = [...abilities]
-    .filter((ability) => !ability.uiGroupNameKey || ability.minimumLevel <= playerLevel)
-    .sort(
-      (left, right) =>
-        (left.uiGroupNameKey ?? "").localeCompare(right.uiGroupNameKey ?? "") ||
-        realmIds.indexOf(left.bookRealmId ?? "") - realmIds.indexOf(right.bookRealmId ?? "") ||
-        (left.bookRank ?? Number.MAX_SAFE_INTEGER) -
-          (right.bookRank ?? Number.MAX_SAFE_INTEGER) ||
-        (left.bookNameKey ?? "").localeCompare(right.bookNameKey ?? "") ||
-        left.minimumLevel - right.minimumLevel ||
-        left.id.localeCompare(right.id),
-    );
+  // Preview all projected abilities; the core's canCast still gates activation.
+  const ordered = [...abilities].sort(
+    (left, right) =>
+      (left.uiGroupNameKey ?? "").localeCompare(right.uiGroupNameKey ?? "") ||
+      realmIds.indexOf(left.bookRealmId ?? "") - realmIds.indexOf(right.bookRealmId ?? "") ||
+      (left.bookRank ?? Number.MAX_SAFE_INTEGER) -
+        (right.bookRank ?? Number.MAX_SAFE_INTEGER) ||
+      (left.bookNameKey ?? "").localeCompare(right.bookNameKey ?? "") ||
+      left.minimumLevel - right.minimumLevel ||
+      left.id.localeCompare(right.id),
+  );
   const entries: AbilityPresentationEntry[] = [];
   const studyByHeading = new Map<string, { bookItemId?: string; canStudy: boolean }>();
   for (const ability of ordered) {

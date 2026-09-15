@@ -175,8 +175,9 @@ fn tonberry_birth_keeps_standard_supplies_and_individualism_for_each_current_cla
             .iter()
             .filter(|item| item.kind_id == "demo.item.wooden-torch")
             .collect();
-        assert!((3..=7).contains(&torches.len()));
-        assert!(torches.iter().all(|item| item.quantity == 1
+        assert_eq!(torches.len(), 1);
+        assert!((3..=7).contains(&torches[0].quantity));
+        assert!(torches.iter().all(|item| (3..=7).contains(&item.quantity)
             && item.location == ItemLocation::Inventory
             && item.fuel == torches[0].fuel));
         assert!((1500..=3500).contains(&torches[0].fuel.unwrap().current));

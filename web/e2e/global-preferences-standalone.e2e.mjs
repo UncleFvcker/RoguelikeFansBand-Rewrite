@@ -14,7 +14,8 @@ const root = fileURLToPath(new URL("../../", import.meta.url));
 const builtExecutable = process.env.RFB_STANDALONE_EXE ?? path.join(root, "target/debug/rfb-tauri.exe");
 const nativeSaves = process.argv.includes("--native-saves");
 const terrainColors = process.argv.includes("--terrain-colors");
-const directory = path.join(root, nativeSaves ? "test-results/native-saves" : terrainColors ? "test-results/terrain-colors" : "test-results/global-preferences");
+const mogaminator = process.argv.includes("--mogaminator");
+const directory = path.join(root, nativeSaves ? "test-results/native-saves" : terrainColors ? "test-results/terrain-colors" : mogaminator ? "test-results/mogaminator-responsive" : "test-results/global-preferences");
 const preferencesFile = path.join(process.env.LOCALAPPDATA, "io.github.unclefvcker.rfb-rewrite/preferences.json");
 await mkdir(directory, { recursive: true });
 await rm(path.join(directory, "report.json"), { force: true });
@@ -127,6 +128,45 @@ try {
         installDirectory = destination; executable = path.join(destination, "rfb-tauri.exe");
       },
     });
+  } else if (mogaminator) {
+    await create("自动拾取响应验收", 811);
+    const timings = [];
+    for (const locale of ["zh-CN", "en-US"]) {
+      await setPreferences(driver, { locale });
+      await driver.execute('document.activeElement?.blur(); return true;');
+      await keyboard.key("_");
+      await driver.waitFor('return document.querySelector("#mogaminator-dialog").open', "Mogaminator opens");
+      await edit("#mogaminator-enabled", false);
+      await edit("#mogaminator-auto-get-mode", "wanted");
+      await click("#mogaminator-apply");
+      await driver.waitFor('return !document.querySelector("#mogaminator-apply").disabled', "rules disabled before timed enable", 5000);
+      await edit("#mogaminator-enabled", true);
+      const start = performance.now();
+      await click("#mogaminator-apply");
+      await driver.waitFor('return !document.querySelector("#mogaminator-apply").disabled', "default rules applied", 5000);
+      const applyMs = performance.now() - start;
+      const applied = await snapshot();
+      assert.equal(applied.mogaminator.enabled, true);
+      assert.equal(applied.mogaminator.autoGetMode, "wanted");
+      assert.equal(applied.mogaminator.source, applied.mogaminator.defaultSource.replaceAll("\r\n", "\n"));
+      assert.ok(applied.mogaminator.matches.length > 0);
+      await capture(`applied-${locale}`);
+      await click("#mogaminator-close");
+      await driver.execute('document.activeElement?.blur(); return true;');
+      const { x, y } = applied.player.position;
+      const direction = [["6", 1, 0], ["4", -1, 0], ["2", 0, 1], ["8", 0, -1]].find(([, dx, dy]) =>
+        applied.cells.some(cell => cell.position.x === x + dx && cell.position.y === y + dy && cell.knownProjectilePassage && !cell.actorId));
+      assert.ok(direction, "fresh town has an open adjacent cell");
+      const movementStart = performance.now();
+      await keyboard.key(direction[0]);
+      const moved = await snapshot();
+      const moveMs = performance.now() - movementStart;
+      assert.deepEqual(moved.player.position, { x: x + direction[1], y: y + direction[2] });
+      assert.ok(applyMs < 5000 && moveMs < 5000, `responsive commands: ${applyMs} / ${moveMs} ms`);
+      timings.push({ locale, applyMs, moveMs });
+    }
+    await writeFile(path.join(directory, "timings.json"), JSON.stringify(timings, null, 2));
+    checks.push("Chinese and English default rules apply through the ordinary UI", "Keyboard movement completes within five seconds with Mogaminator enabled");
   } else if (terrainColors) {
     await create("地形配色验收", 811);
     await keyboard.viewport(1600, 1000);
@@ -260,7 +300,7 @@ try {
   await stop(true);
   await rm(path.join(directory, "failure.json"), { force: true });
   await rm(path.join(directory, "failure.png"), { force: true });
-  await writeFile(path.join(directory, "report.json"), JSON.stringify({ builtExecutable, executable, checks, errors: runtimeErrors, preparation: nativeSaves ? "Two normal fresh Warriors in an isolated copy of the ordinary EXE, UI save/load, installation directory move and deliberate primary corruption for recovery. Original preferences restored." : terrainColors ? "One normal fresh human Warrior, normal world-map entry, ASCII/image rendering. No preparation commands. Original preferences restored after the run." : "Two normal fresh human Warriors, production preference UI and ordinary native storage. No WebDriver preparation commands. Original preferences restored after the run." }, null, 2));
+  await writeFile(path.join(directory, "report.json"), JSON.stringify({ builtExecutable, executable, checks, errors: runtimeErrors, preparation: nativeSaves ? "Two normal fresh Warriors in an isolated copy of the ordinary EXE, UI save/load, installation directory move and deliberate primary corruption for recovery. Original preferences restored." : terrainColors ? "One normal fresh human Warrior, normal world-map entry, ASCII/image rendering. No preparation commands. Original preferences restored after the run." : mogaminator ? "One normal fresh human Warrior, Chinese/English default rules with wanted mode, UI enable/apply and keyboard movement. Timings include native calls and state readback. Original preferences restored." : "Two normal fresh human Warriors, production preference UI and ordinary native storage. No WebDriver preparation commands. Original preferences restored after the run." }, null, 2));
   process.stdout.write(`Global preferences standalone: ${checks.length} grouped checks passed.\n`);
 } catch (error) {
   await writeFile(path.join(directory, "failure.json"), JSON.stringify({ error: String(error.stack ?? error), checks }, null, 2));

@@ -4,6 +4,129 @@ use super::*;
 use rfb_protocol::ItemFeelingDto;
 
 #[test]
+fn ordinary_identify_reveals_identity_and_bonuses_but_not_unlearned_ego_powers() {
+    let mut game = Game::new(606);
+    game.interface_locale = LocaleDto::EnUs;
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    for id in ["test.identify", "test.other"] {
+        give_inventory_item(&mut game, id, "demo.item.dagger");
+        let item = game.items.last_mut().unwrap();
+        item.affix_ids = vec!["demo.affix.frost-hunter".into()];
+        item.quality = ItemQualityDto::Fine;
+        item.enchantments.to_hit = 3;
+        item.enchantments.to_damage = 5;
+    }
+    game.psychometry_item("test.identify");
+    assert_eq!(
+        game.item_feeling(&game.items[0]),
+        Some(ItemFeelingDto::Excellent)
+    );
+    game.identify_item_instance("test.identify", ItemIdentificationRequest::new(false));
+    let snapshot = game.snapshot();
+    let normal = snapshot
+        .inventory
+        .iter()
+        .find(|item| item.id == "test.identify")
+        .unwrap();
+    assert_eq!(normal.identification, ItemIdentificationDto::Appraised);
+    assert_eq!(normal.feeling, None);
+    assert_eq!(
+        (normal.enchantments.to_hit, normal.enchantments.to_damage),
+        (3, 5)
+    );
+    assert_eq!(
+        normal.known_properties[0].affix_id,
+        "demo.affix.frost-hunter"
+    );
+    assert!(normal.brands.is_empty() && normal.slays.is_empty());
+    assert_eq!(
+        normal.melee_profile.as_ref().unwrap().to_hit,
+        game.item_melee_profile(&game.items[0]).unwrap().to_hit
+    );
+    let other = snapshot
+        .inventory
+        .iter()
+        .find(|item| item.id == "test.other")
+        .unwrap();
+    assert_eq!(other.identification, ItemIdentificationDto::Unexamined);
+    assert!(other.known_properties.is_empty());
+    assert_eq!(other.enchantments.to_hit, 0);
+
+    assert!(
+        game.configure_mogaminator(
+            true,
+            false,
+            AutoGetModeDto::Off,
+            LocaleDto::EnUs,
+            "ego items".into()
+        )
+        .is_empty()
+    );
+    let matches = game.mogaminator_dto(Vec::new()).matches;
+    assert_eq!(matches.len(), 1);
+    assert_eq!(matches[0].item_id, "test.identify");
+    assert!(
+        game.configure_mogaminator(
+            true,
+            false,
+            AutoGetModeDto::Off,
+            LocaleDto::EnUs,
+            "nameless items".into()
+        )
+        .is_empty()
+    );
+    assert!(game.mogaminator_dto(Vec::new()).matches.is_empty());
+
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(restored.snapshot(), game.snapshot());
+    restored.identify_item_instance("test.identify", ItemIdentificationRequest::new(true));
+    let full = restored
+        .snapshot()
+        .inventory
+        .into_iter()
+        .find(|item| item.id == "test.identify")
+        .unwrap();
+    assert_eq!(full.identification, ItemIdentificationDto::Identified);
+    assert!(!full.brands.is_empty() && !full.slays.is_empty());
+}
+
+#[test]
+fn wearing_and_loading_preserve_partial_identification_and_known_curses() {
+    let mut game = Game::new(607);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    give_inventory_item(&mut game, "test.wear", "demo.item.dagger");
+    game.items[0].affix_ids = vec!["demo.affix.frost-hunter".into()];
+    game.items[0].quality = ItemQualityDto::Fine;
+    game.items[0].curse = Some(ItemCurseSeverityDto::Normal);
+    game.items[0].intrinsic_properties.modifiers.strength = 2;
+    assert!(game.equip_inventory_item("test.wear", None).is_some());
+    let known = &game.item_property_knowledge["test.wear"];
+    assert!(!known.appraised && !known.identified && known.known_affix_ids.is_empty());
+    assert!(known.known_curse);
+    assert!(known.known_flags.contains("STR"));
+    assert_eq!(game.snapshot().equipment[0].modifiers.strength, 2);
+    assert!(game.snapshot().equipment[0].known_properties.is_empty());
+    assert!(game.snapshot().equipment[0].brands.is_empty());
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(restored.item_property_knowledge["test.wear"], *known);
+
+    // Knowing an ego is not proof that random instance powers were fully identified.
+    let knowledge = game.item_property_knowledge.get_mut("test.wear").unwrap();
+    knowledge.appraised = true;
+    knowledge
+        .known_affix_ids
+        .insert("demo.affix.frost-hunter".into());
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert!(!restored.item_property_knowledge["test.wear"].identified);
+    assert_eq!(restored.snapshot().equipment[0].modifiers.strength, 2);
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
 fn i6_pickup_blends_metadata_through_partial_stacks_split_destroy_and_save() {
     let mut game = Game::new(606);
     clear_monsters(&mut game);
@@ -344,6 +467,7 @@ fn tomte_sensing_classifies_floor_items_without_identifying_their_properties() {
 #[test]
 fn tomte_level_forty_and_headgear_gate_only_racial_identification() {
     let mut game = tomte_sensing_game(39);
+    game.mogaminator.enabled = false;
     give_inventory_item(&mut game, "helmet", "demo.item.iron-helm");
     assert!(game.equip_inventory_item("helmet", Some("head")).is_some());
     give_inventory_item(&mut game, "blade", "demo.item.dagger");
@@ -406,10 +530,7 @@ fn tomte_level_forty_and_headgear_gate_only_racial_identification() {
         .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
     assert!(!game.player_has_tomte_item_sensing());
     assert!(!game.player_auto_identifies_items());
-    assert_eq!(
-        game.item_property_knowledge["blade"].feeling,
-        Some(ItemFeelingDto::Average)
-    );
+    assert_eq!(game.item_property_knowledge["blade"].feeling, None);
 }
 
 #[test]
@@ -940,6 +1061,8 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
     game.item_property_knowledge.insert(
         item_id.clone(),
         ItemPropertyKnowledgeState {
+            known_flags: Default::default(),
+            known_curse_flags: 0,
             known_blessed: false,
             known_curse: false,
             discovered: true,

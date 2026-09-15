@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { defaultVisuals, validVisuals, visualStyle } from "./visual-preferences.ts";
+import { defaultVisuals, uniqueEffect, validVisuals, visualStyle } from "./visual-preferences.ts";
 import { parseTilesetManifest, resolveTilesetVisual } from "./tileset-manifest.ts";
 import { defaultPreferences, parsePreferences, behaviorPreferences } from "./preferences.ts";
 import { AppState } from "./app-state.ts";
@@ -58,5 +58,25 @@ test("visual shortcuts work in every preset and respect modifier isolation", () 
     assert.equal(commandShortcut({ key: "%" }, preset), "glyphs");
     assert.equal(commandShortcut({ key: "&" }, preset), "colors");
     assert.equal(commandShortcut({ key: "%", ctrlKey: true }, preset), undefined);
+  }
+});
+
+test("unique rainbow respects explicit color overrides and preserves version-5 preferences", () => {
+  const id = "demo.actor.basement-cat", p = defaultPreferences();
+  p.visuals.overrides[id] = { glyph: "猫", background: "#123456" };
+  assert.equal(uniqueEffect(p.visuals, id, true), "flowing");
+  assert.equal(uniqueEffect(p.visuals, id, false), "off");
+  for (const mode of ["flowing", "static", "off"]) {
+    p.visuals.uniqueEffect = mode;
+    assert.equal(parsePreferences(JSON.stringify(p)).visuals.uniqueEffect, mode);
+    assert.equal(uniqueEffect(p.visuals, id, true), mode);
+  }
+  p.visuals.uniqueEffect = "flowing";
+  p.visuals.overrides[id].foreground = "#ffffff";
+  assert.equal(uniqueEffect(p.visuals, id, true), "off");
+  const old = structuredClone(p); delete old.visuals.uniqueEffect;
+  assert.deepEqual(parsePreferences(JSON.stringify(old)), p);
+  for (const invalid of ["rainbow", null, false, 1]) {
+    assert.throws(() => parsePreferences(JSON.stringify({ ...p, visuals: { ...p.visuals, uniqueEffect: invalid } })), /preferences-invalid/);
   }
 });

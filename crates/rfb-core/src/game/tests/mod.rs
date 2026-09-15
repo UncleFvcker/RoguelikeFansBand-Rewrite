@@ -30,6 +30,7 @@ mod berserker;
 mod command_repeat;
 mod discovery;
 mod ending;
+mod item_learning;
 mod item_selection_desktop;
 mod map_intelligence;
 mod spike;

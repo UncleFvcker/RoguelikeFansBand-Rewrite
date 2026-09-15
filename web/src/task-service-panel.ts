@@ -13,7 +13,6 @@ import type {
   BountyMissionStatusDto,
   FacilityMembershipDto,
   FacilityServiceKindDto,
-  ItemIdentificationDto,
   ResearchMonsterDto,
   TaskServiceDto,
   TaskStatusDto,
@@ -552,7 +551,7 @@ export class TaskServicePanel {
     const renderItemAction = (
       action: "identify" | "research",
       cost: number | null | undefined,
-      full: boolean,
+      candidateIds: readonly string[],
     ): void => {
       if (cost === undefined || cost === null) return;
       const row = document.createElement("li");
@@ -560,7 +559,7 @@ export class TaskServicePanel {
       const select = document.createElement("select");
       select.dataset.facilityItemAction = action;
       const items = [...this.#state.inventory, ...this.#state.equipment]
-        .filter((item) => facilityIdentificationCandidate(item.identification, full));
+        .filter((item) => candidateIds.includes(item.id));
       for (const item of items) {
         const option = document.createElement("option");
         option.value = item.id;
@@ -581,8 +580,8 @@ export class TaskServicePanel {
       row.append(select, button);
       this.#dom.list.append(row);
     };
-    renderItemAction("identify", service.identifyItemCost, false);
-    renderItemAction("research", service.researchItemCost, true);
+    renderItemAction("identify", service.identifyItemCost, service.identifyItemIds ?? []);
+    renderItemAction("research", service.researchItemCost, service.researchItemIds ?? []);
     if (service.identifyAllItemsCost !== undefined && service.identifyAllItemsCost !== null) {
       const row = document.createElement("li");
       row.className = "task-service-row";
@@ -590,8 +589,7 @@ export class TaskServicePanel {
       button.type = "button";
       button.className = "primary-button task-service-action";
       button.dataset.facilityAction = "identify-all";
-      button.disabled = this.#state.busy || ![...this.#state.inventory, ...this.#state.equipment]
-        .some((item) => facilityIdentificationCandidate(item.identification, false));
+      button.disabled = this.#state.busy || !service.identifyItemIds?.length;
       button.textContent = this.#localization.format("action-facility-identify-all", {
         cost: service.identifyAllItemsCost,
       });
@@ -907,13 +905,6 @@ export function facilityServiceUsesItem(service: FacilityServiceKindDto): boolea
 
 export function facilityServiceActionKey(service: FacilityServiceKindDto) {
   return `action-facility-${service}` as const;
-}
-
-export function facilityIdentificationCandidate(
-  identification: ItemIdentificationDto,
-  full: boolean,
-): boolean {
-  return full ? identification !== "identified" : identification === "unexamined";
 }
 
 function createTaskServiceDom(document: Document): TaskServiceDom {

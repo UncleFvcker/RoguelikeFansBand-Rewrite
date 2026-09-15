@@ -226,7 +226,12 @@ impl Game {
             .max(1),
         )
         .unwrap_or(1);
-        (0..sources).any(|_| self.rng.bounded(monster_power) <= self.rng.bounded(player_power))
+        let saved =
+            (0..sources).any(|_| self.rng.bounded(monster_power) <= self.rng.bounded(player_power));
+        if saved {
+            self.learn_equipment_flag("HOLD_LIFE");
+        }
+        saved
     }
 
     pub(super) fn resolve_monster_unlife_against_actor(
@@ -299,7 +304,11 @@ impl Game {
         duration: i32,
         source_kind_id: &str,
     ) {
-        if duration <= 0 || self.player_status_immunities().contains(status_kind_id) {
+        if duration <= 0 {
+            return;
+        }
+        if self.player_status_immunities().contains(status_kind_id) {
+            self.learn_status_protection(status_kind_id);
             return;
         }
         apply_status(
@@ -739,6 +748,8 @@ impl Game {
                         damage.applied / 2
                     };
                     self.apply_player_melee_status(status, duration, source_kind_id);
+                } else {
+                    self.learn_status_protection(status);
                 }
             }
         }
@@ -1479,6 +1490,9 @@ impl Game {
             self.items.push(stolen);
             item_id
         };
+        if let Some(knowledge) = self.item_property_knowledge.get_mut(&item_id) {
+            knowledge.discovered = false;
+        }
         events.push(DomainEvent::MonsterItemStolen {
             source_kind_id,
             target_kind_id,
@@ -1828,25 +1842,14 @@ impl Game {
                             nice,
                             true,
                         );
-                        let duration = resolve_damage(
+                        let poison = resolve_damage(
                             DamagePacket::new(raw, DamageType::Poison),
                             self.effective_player_resistances()
                                 .level(DamageType::Poison),
-                        )
-                        .applied
-                        .saturating_mul(7)
-                            / 4;
-                        if duration > 0 && !self.player_status_immunities().contains(STATUS_POISON)
-                        {
-                            apply_status(
-                                &mut self.player.statuses,
-                                melee_status(
-                                    STATUS_POISON,
-                                    u32::try_from(duration).unwrap_or(u32::MAX),
-                                    &kind_id,
-                                ),
-                            );
-                        }
+                        );
+                        self.learn_damage_resistance(&poison);
+                        let duration = poison.applied.saturating_mul(7) / 4;
+                        self.apply_player_melee_status(STATUS_POISON, duration, &kind_id);
                         None
                     }
                     MeleeBlowEffectDefinition::Disease {
@@ -2040,18 +2043,7 @@ impl Game {
                             nice,
                             true,
                         );
-                        if duration > 0
-                            && !self.player_status_immunities().contains(STATUS_BLEEDING)
-                        {
-                            apply_status(
-                                &mut self.player.statuses,
-                                melee_status(
-                                    STATUS_BLEEDING,
-                                    u32::try_from(duration).unwrap_or(u32::MAX),
-                                    &kind_id,
-                                ),
-                            );
-                        }
+                        self.apply_player_melee_status(STATUS_BLEEDING, duration, &kind_id);
                         None
                     }
                     MeleeBlowEffectDefinition::Blind { .. } => {
@@ -2076,13 +2068,16 @@ impl Game {
                                 true,
                             )
                         });
+                        let requested =
+                            u32::try_from(10 + self.roll_damage(1, 20)).unwrap_or(u32::MAX);
                         let duration = status_effects::resisted_status_duration_with_percent(
-                            u32::try_from(10 + self.roll_damage(1, 20)).unwrap_or(u32::MAX),
+                            requested,
                             self.adjust_player_resistance_percent(
                                 DamageType::Confusion,
                                 resistance,
                             ),
                         );
+                        self.learn_resisted_status(DamageType::Confusion, requested, duration);
                         self.apply_player_melee_status(
                             STATUS_CONFUSION,
                             i32::try_from(duration).unwrap_or(i32::MAX),
@@ -2120,6 +2115,7 @@ impl Game {
                     }
                     MeleeBlowEffectDefinition::Inertia { .. } => {
                         let amount = if self.player_status_immunities().contains(STATUS_PARALYSIS) {
+                            self.learn_status_protection(STATUS_PARALYSIS);
                             1
                         } else {
                             5
@@ -2152,10 +2148,13 @@ impl Game {
                         None
                     }
                     MeleeBlowEffectDefinition::Terrify { .. } => {
+                        let requested =
+                            u32::try_from(melee_terrify_duration(&definition)).unwrap_or(u32::MAX);
                         let duration = resisted_status_duration(
-                            u32::try_from(melee_terrify_duration(&definition)).unwrap_or(u32::MAX),
+                            requested,
                             self.effective_player_resistances().level(DamageType::Fear),
                         );
+                        self.learn_resisted_status(DamageType::Fear, requested, duration);
                         self.apply_player_melee_status(
                             STATUS_FEAR,
                             i32::try_from(duration).unwrap_or(i32::MAX),
@@ -2219,22 +2218,13 @@ impl Game {
                     self.heal_vampiric_melee_source(&source_entity_id, damage.applied, changed);
                 }
                 if matches!(effect, MeleeBlowEffectDefinition::Disease { .. }) {
-                    let duration = resolve_damage(
+                    let poison = resolve_damage(
                         DamagePacket::new(damage.applied, DamageType::Poison),
                         self.effective_player_resistances()
                             .level(DamageType::Poison),
-                    )
-                    .applied;
-                    if duration > 0 && !self.player_status_immunities().contains(STATUS_POISON) {
-                        apply_status(
-                            &mut self.player.statuses,
-                            melee_status(
-                                STATUS_POISON,
-                                u32::try_from(duration).unwrap_or(u32::MAX),
-                                &kind_id,
-                            ),
-                        );
-                    }
+                    );
+                    self.learn_damage_resistance(&poison);
+                    self.apply_player_melee_status(STATUS_POISON, poison.applied, &kind_id);
                     if self.rng.bounded(100) < 10 {
                         self.resolve_monster_attribute_drain(AttributeKind::Constitution);
                     }
@@ -2575,6 +2565,7 @@ impl Game {
 
     pub(super) fn resolve_monster_attribute_drain(&mut self, attribute: AttributeKind) {
         if self.player_sustains_attribute(attribute) {
+            self.learn_attribute_sustain(attribute);
             return;
         }
         let previous_max_hp = self.effective_player_max_hp();

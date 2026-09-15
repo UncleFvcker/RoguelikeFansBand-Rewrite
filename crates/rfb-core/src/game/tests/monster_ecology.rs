@@ -1192,6 +1192,7 @@ fn giant_white_mouse_reproduction_adds_one_adjacent_mouse() {
 
     assert!(game.try_original_reproduction(0, &mut changed));
     assert_eq!(game.entities.len(), 2);
+    assert_eq!(game.reproduction_count, 1);
     assert_eq!(game.entities[1].kind_id, "demo.actor.giant-white-mouse");
     assert!(adjacent(origin, game.entities[1].position));
 }
@@ -1211,6 +1212,7 @@ fn sterility_suppresses_reproduction_without_spending_rng() {
 
     assert!(!game.try_original_reproduction(0, &mut BTreeSet::new()));
     assert_eq!(game.entities.len(), 1);
+    assert_eq!(game.reproduction_count, 0);
     assert_eq!(game.rng.draw_counter, draws_before);
 }
 
@@ -1240,6 +1242,101 @@ fn same_kind_reproduction_stops_at_one_hundred_living_monsters() {
     assert!(!game.try_original_reproduction(0, &mut BTreeSet::new()));
     assert_eq!(game.entities.len(), 100);
     assert_eq!(game.rng.draw_counter, draws_before);
+}
+
+#[test]
+fn floor_birth_budget_counts_successes_and_does_not_refund_removed_offspring() {
+    let mut game = enter_warrens(7);
+    game.entities.clear();
+    let origin = game.player.position;
+    game.player.position.x -= 5;
+    game.push_generated_actor("test.parent".into(), "demo.actor.giant-white-mouse", origin);
+    game.reproduction_count = 99;
+    let seed = first_seed_for(|rng| {
+        rng.bounded(375);
+        rng.bounded(8) == 0
+    });
+    let terrain = game.terrain.clone();
+    for y in origin.y - 1..=origin.y + 1 {
+        for x in origin.x - 1..=origin.x + 1 {
+            let position = Position { x, y };
+            if position != origin {
+                let tile = game.index(position).unwrap();
+                game.terrain[tile] = "demo.terrain.permanent-wall".into();
+            }
+        }
+    }
+    game.rng = RfbRng::seeded(seed);
+    assert!(!game.try_original_reproduction(0, &mut BTreeSet::new()));
+    assert_eq!(game.reproduction_count, 99);
+    game.terrain = terrain;
+    game.rng = RfbRng::seeded(seed);
+    assert!(game.try_original_reproduction(0, &mut BTreeSet::new()));
+    assert_eq!(game.reproduction_count, 100);
+    game.entities.truncate(1);
+    let rng = game.rng.clone();
+    let mut changed = BTreeSet::new();
+    assert!(!game.try_original_reproduction(0, &mut changed));
+    assert_eq!(game.rng, rng);
+    assert!(changed.is_empty());
+    // A different species and its descendants share this floor's exhausted budget.
+    game.entities.clear();
+    game.push_generated_actor("test.worm".into(), "demo.actor.green-worm-mass", origin);
+    let rng = game.rng.clone();
+    assert!(!game.try_original_reproduction(0, &mut changed));
+    assert_eq!(game.rng, rng);
+    // Explicit cloning is an ability action, not natural reproduction.
+    assert!(game.place_monster_offspring(0, true, &mut changed));
+    assert_eq!(game.reproduction_count, 100);
+    game.entities.clear();
+    game.player.position = origin;
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(restored.reproduction_count, 100);
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn reproduction_budget_follows_stored_floor_and_rejects_invalid_save_counts() {
+    let mut game = enter_warrens(7);
+    let before = game.state_hash();
+    game.reproduction_count = 100;
+    assert_ne!(before, game.state_hash());
+    let first_floor_id = game.current_floor_id.clone();
+    let first_storage_key = crate::game::floor::dungeon_instance_storage_key(
+        game.current_dungeon_instance_id.as_deref(),
+        &first_floor_id,
+    );
+    place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+    game.traverse_stairs(false)
+        .unwrap()
+        .expect("enter second floor");
+    assert_eq!(game.reproduction_count, 0);
+    assert_eq!(
+        game.stored_floors[&first_storage_key].reproduction_count,
+        100
+    );
+    game.reproduction_count = 37;
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.reproduction_count, 37);
+    place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
+    restored
+        .traverse_stairs(false)
+        .unwrap()
+        .expect("return to first floor");
+    assert_eq!(restored.current_floor_id, first_floor_id);
+    assert_eq!(restored.reproduction_count, 100);
+    let mut invalid = game.to_save();
+    invalid.reproduction_count = 101;
+    assert!(Game::from_save(invalid, game.behavior_preferences()).is_err());
+    let mut invalid = game.to_save();
+    invalid
+        .stored_floors
+        .iter_mut()
+        .find(|floor| floor.id == first_floor_id)
+        .unwrap()
+        .reproduction_count = 101;
+    assert!(Game::from_save(invalid, game.behavior_preferences()).is_err());
 }
 
 #[test]

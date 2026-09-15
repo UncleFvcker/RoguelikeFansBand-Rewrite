@@ -15,6 +15,7 @@ fn saving_updates_current_slot_and_new_characters_never_reuse_it() {
                 name,
                 "2026-09-15T00:00:00Z".into(),
                 Game::default_behavior_preferences(),
+                false,
             )
             .unwrap()
     };

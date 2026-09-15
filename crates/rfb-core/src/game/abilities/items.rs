@@ -278,6 +278,8 @@ impl Game {
                 .or_default();
             knowledge.discovered = true;
             knowledge.appraised = true;
+            knowledge.known_curse = false;
+            knowledge.known_curse_flags = 0;
             knowledge.feeling = None;
         }
         let item = &self.items[index];

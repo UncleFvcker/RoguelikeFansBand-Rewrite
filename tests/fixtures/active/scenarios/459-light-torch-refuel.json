@@ -61,10 +61,10 @@
           "slotId": "light"
         }
       },
-      "inventoryStackCount": 8,
+      "inventoryStackCount": 3,
       "lastCommandSeq": 2,
       "revision": 2,
-      "stateHash": "5f4a32872d1f3a5afe1c79e033093b75a027db4eac5ef02b8139d6ad571c1d4b",
+      "stateHash": "155f01c1bd52ff96ba98a7b743bae3a9dd6a502c0c5f41059e5729faac7b7f7f",
       "turn": 2
     },
     "events": [
@@ -89,6 +89,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "5f4a32872d1f3a5afe1c79e033093b75a027db4eac5ef02b8139d6ad571c1d4b"
+    "saveRoundTripStateHash": "155f01c1bd52ff96ba98a7b743bae3a9dd6a502c0c5f41059e5729faac7b7f7f"
   }
 }

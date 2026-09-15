@@ -766,37 +766,19 @@ impl Game {
             .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
         {
             let curse = self.visible_item_curse(item);
-            let knowledge = self.item_property_knowledge.get(&item.id);
             let mut effects = Vec::new();
             for effect in ego::curses::CURSE_EFFECTS.into_iter().flatten() {
-                let known = (self.item_identification(item) == ItemIdentificationDto::Identified
-                    && self.item_has_intrinsic_curse_effect(item, effect))
-                    || (knowledge.is_some_and(|known| known.known_curse)
-                        && item.curse.is_some()
-                        && (item.intrinsic_curse_effects.contains(&effect)
-                            || item
-                                .rolled_affixes
-                                .iter()
-                                .any(|rolled| rolled.curse_effects.contains(&effect))))
-                    || item.rolled_affixes.iter().any(|rolled| {
-                        rolled.curse_effects.contains(&effect)
-                            && knowledge.is_some_and(|known| {
-                                known.known_affix_ids.contains(&rolled.affix_id)
-                            })
-                    });
+                let known = self.item_curse_effect_is_known(item, effect);
                 if known {
-                    let active = (self.item_identification(item)
-                        != ItemIdentificationDto::Unexamined
-                        || knowledge.is_some_and(|known| known.known_curse))
-                    .then(|| {
+                    let active = Some(
                         self.item_has_active_equipped_curse_effect(item, effect)
                             && (effect != ItemCurseEffectDto::Teleport
                                 || item.curse.is_some()
                                 || item
                                     .inscription
                                     .as_deref()
-                                    .is_none_or(|inscription| !inscription.contains('.')))
-                    });
+                                    .is_none_or(|inscription| !inscription.contains('.'))),
+                    );
                     effects.push(CharacterCurseEffectDto {
                         effect,
                         active,

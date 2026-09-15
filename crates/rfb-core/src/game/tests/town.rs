@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::*;
-use crate::game::tests::support::{dispatch_next, test_caster_game};
+use crate::game::tests::support::{dispatch_next, give_inventory_item, test_caster_game};
 use rfb_protocol::{BountyOfficeActionDto, FacilityMembershipDto, FacilityServiceKindDto};
 
 const GENERAL_STORE_ID: &str = "demo.shop.outpost-general-store";
@@ -5301,18 +5301,21 @@ fn p104c_anambar_library_identifies_researches_and_identifies_all_without_time_o
     );
 
     let mut research = anambar_library_game(105);
-    let item_id = research
+    let item_id = "test.research.hidden-brand".to_owned();
+    give_inventory_item(&mut research, &item_id, "demo.item.dagger");
+    research
         .items
-        .iter()
-        .find(|item| item.location == ItemLocation::Inventory)
-        .expect("warrior should carry an item")
-        .id
-        .clone();
+        .last_mut()
+        .unwrap()
+        .intrinsic_properties
+        .brands
+        .insert(WeaponBrand::Fire);
     let knowledge = research
         .item_property_knowledge
         .entry(item_id.clone())
         .or_default();
     knowledge.appraised = true;
+    knowledge.discovered = true;
     knowledge.identified = false;
     knowledge.known_affix_ids.clear();
     research.gold = service.research_item_cost.unwrap();
@@ -5332,6 +5335,81 @@ fn p104c_anambar_library_identifies_researches_and_identifies_all_without_time_o
     assert_eq!(
         researched.events[0].message_key,
         "facility-research-completed"
+    );
+
+    give_inventory_item(&mut research, "test.research.plain", "demo.item.dagger");
+    research.identify_item_instance("test.research.plain", ItemIdentificationRequest::new(false));
+    research.gold = service.research_item_cost.unwrap();
+    let gold = research.gold;
+    assert_eq!(
+        research
+            .research_item_at_facility(ANAMBAR_LIBRARY_ID, "test.research.plain")
+            .unwrap_err(),
+        "already-identified"
+    );
+    assert_eq!(research.gold, gold);
+    assert_eq!(research.world_tick, tick);
+    assert!(!research.item_property_knowledge["test.research.plain"].identified);
+
+    // Ordinary properties can be complete while a newly applied curse is unknown.
+    let plain = research
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.research.plain")
+        .unwrap();
+    plain.curse = Some(ItemCurseSeverityDto::Normal);
+    plain
+        .intrinsic_curse_effects
+        .insert(rfb_protocol::ItemCurseEffectDto::LowArmor);
+    let projected = research
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == ANAMBAR_LIBRARY_ID)
+        .unwrap();
+    assert!(
+        projected
+            .research_item_ids
+            .contains(&"test.research.plain".to_owned())
+    );
+    assert!(
+        !projected
+            .identify_item_ids
+            .contains(&"test.research.plain".to_owned())
+    );
+    research
+        .research_item_at_facility(ANAMBAR_LIBRARY_ID, "test.research.plain")
+        .unwrap();
+    assert_eq!(research.gold, 0);
+    let plain = research
+        .items
+        .iter()
+        .find(|item| item.id == "test.research.plain")
+        .unwrap();
+    assert!(research.item_curse_effect_is_known(plain, rfb_protocol::ItemCurseEffectDto::LowArmor));
+    assert_eq!(research.world_tick, tick);
+
+    let mut easy = anambar_library_game(107).with_easy_identification(true);
+    give_inventory_item(&mut easy, "test.easy.recurse", "demo.item.dagger");
+    easy.identify_item_instance("test.easy.recurse", ItemIdentificationRequest::new(false));
+    easy.items.last_mut().unwrap().curse = Some(ItemCurseSeverityDto::Normal);
+    let projected = easy
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == ANAMBAR_LIBRARY_ID)
+        .unwrap();
+    assert!(
+        projected
+            .identify_item_ids
+            .contains(&"test.easy.recurse".to_owned())
+    );
+    easy.gold = projected.identify_all_items_cost.unwrap();
+    easy.identify_all_at_facility(ANAMBAR_LIBRARY_ID).unwrap();
+    assert_eq!(easy.gold, 0);
+    assert_eq!(
+        easy.visible_item_curse(easy.items.last().unwrap()),
+        Some(ItemCurseSeverityDto::Normal)
     );
 
     let mut all = anambar_library_game(106);
@@ -5689,6 +5767,8 @@ fn home_deposit_withdraw_grouping_and_save_are_authoritative() {
     game.item_property_knowledge.insert(
         ration.id.clone(),
         ItemPropertyKnowledgeState {
+            known_flags: Default::default(),
+            known_curse_flags: 0,
             known_blessed: false,
             known_curse: false,
             discovered: true,
@@ -6856,6 +6936,64 @@ fn corpse_sale_is_rejected() {
 }
 
 #[test]
+fn new_shop_lights_are_full_and_repeated_torch_purchases_stack() {
+    let mut game = store_game(42);
+    game.gold = 1_000;
+    let torch = game
+        .shop_states
+        .get_mut(GENERAL_STORE_ID)
+        .unwrap()
+        .inventory
+        .iter_mut()
+        .find(|item| item.kind_id == "demo.item.wooden-torch")
+        .unwrap();
+    torch.quantity = 2;
+    let torch_id = torch.id.clone();
+    for item in &game.shop_states[GENERAL_STORE_ID].inventory {
+        if let Some(fuel) = item.fuel {
+            assert_eq!(fuel.current, fuel.maximum);
+        }
+    }
+    game.buy_from_shop(GENERAL_STORE_ID, &torch_id, 1).unwrap();
+    game.buy_from_shop(GENERAL_STORE_ID, &torch_id, 1).unwrap();
+    let bought = game
+        .items
+        .iter()
+        .filter(|item| {
+            item.kind_id == "demo.item.wooden-torch"
+                && item.fuel.is_some_and(|fuel| fuel.current == 5_000)
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(bought.len(), 1);
+    assert_eq!(bought[0].quantity, 2);
+    game.shop_states
+        .get_mut(GENERAL_STORE_ID)
+        .unwrap()
+        .inventory
+        .clear();
+    game.world_tick += game
+        .content
+        .shop(GENERAL_STORE_ID)
+        .unwrap()
+        .maintenance
+        .interval_world_ticks;
+    game.maintain_shop_at_player().unwrap();
+    assert!(
+        game.shop_states[GENERAL_STORE_ID]
+            .inventory
+            .iter()
+            .any(|item| item.kind_id == "demo.item.wooden-torch")
+    );
+    for item in &game.shop_states[GENERAL_STORE_ID].inventory {
+        if let Some(fuel) = item.fuel {
+            assert_eq!(fuel.current, fuel.maximum);
+        }
+    }
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
 fn sold_item_can_be_bought_back_with_full_instance_state() {
     let mut game = store_game(42);
     game.gold = 100;
@@ -6864,6 +7002,7 @@ fn sold_item_can_be_bought_back_with_full_instance_state() {
         .iter_mut()
         .find(|item| item.kind_id == "demo.item.wooden-torch")
         .map(|item| {
+            item.quantity = 1;
             item.fuel
                 .as_mut()
                 .expect("starting torch must have fuel")

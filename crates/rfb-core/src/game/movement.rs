@@ -517,6 +517,10 @@ impl Game {
             self.items[index].location = ItemLocation::CarriedBy {
                 actor_id: actor.id.clone(),
             };
+            // RFB melee2.c clears OM_FOUND on pickup: unseen later drops need rediscovery.
+            if let Some(knowledge) = self.item_property_knowledge.get_mut(&self.items[index].id) {
+                knowledge.discovered = false;
+            }
             events.push(DomainEvent::MonsterItemPickedUp {
                 source_kind_id: actor.kind_id.clone(),
                 target_kind_id,

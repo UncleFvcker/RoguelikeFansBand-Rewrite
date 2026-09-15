@@ -42,20 +42,19 @@ impl Game {
         if fixed_artifact {
             remember(&mut self.discovery.artifacts, &item.kind_id);
         }
-        if let Some(known) = self.item_property_knowledge.get(item_id) {
-            for affix in &known.known_affix_ids {
-                if self
-                    .content
-                    .affix(affix)
-                    .is_some_and(|definition| definition.rfb_ego.is_some())
-                {
-                    remember(&mut self.discovery.egos, affix);
-                }
+        let known = self.item_property_knowledge.get(item_id);
+        for affix in item.affix_ids.iter().filter(|id| {
+            identified || known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(*id))
+        }) {
+            if self
+                .content
+                .affix(affix)
+                .is_some_and(|definition| definition.rfb_ego.is_some())
+            {
+                remember(&mut self.discovery.egos, affix);
             }
         }
-        if self.item_identification(item) == ItemIdentificationDto::Identified
-            && let Some(name) = &item.artifact_name
-        {
+        if identified && let Some(name) = &item.artifact_name {
             match self
                 .discovery
                 .random_artifacts

@@ -3,7 +3,7 @@
 import { Assets, Rectangle, Texture } from "pixi.js";
 
 import type { EditableVisualDto } from "./protocol";
-import { defaultVisuals, visualOverride, type VisualPreferences } from "./visual-preferences.ts";
+import { defaultVisuals, uniqueEffect, visualOverride, type VisualPreferences } from "./visual-preferences.ts";
 import { GlyphAtlas } from "./glyph-atlas";
 import {
   parseTilesetManifest,
@@ -173,6 +173,10 @@ export class TilesetRuntime {
       tint: 0xffffff,
       usedFallback: false,
     };
+  }
+
+  uniqueEffect(id: string, unique: boolean) {
+    return uniqueEffect(this.#visuals, id, unique && Object.hasOwn(this.#knownGlyphs, id));
   }
 
   #resolveUncached(semanticId: string): RuntimeTileVisual {

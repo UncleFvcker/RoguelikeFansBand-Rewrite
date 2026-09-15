@@ -2,7 +2,7 @@
 import type { AppState } from "./app-state";
 import type { Localization } from "./localization";
 import type { VisualCategoryDto } from "./protocol";
-import { BASE_PALETTE, DEFAULT_THEME, defaultVisuals, validColor, validGlyph, visualStyle, visualOverride, prfVisualId, type VisualPreferences, type VisualOverride } from "./visual-preferences.ts";
+import { BASE_PALETTE, DEFAULT_THEME, defaultVisuals, uniqueEffect, validColor, validGlyph, visualStyle, visualOverride, prfVisualId, type VisualPreferences, type VisualOverride, type UniqueEffect } from "./visual-preferences.ts";
 
 export class VisualEditor {
   valid = true;
@@ -32,6 +32,7 @@ export class VisualEditor {
     const add = (tag: string, key: string) => { const node = document.createElement(tag); node.textContent = t(key); this.host.append(node); return node; };
     add("h3", "visual-" + this.#page);
     add("p", "visual-help");
+    this.#uniqueControl();
     if (this.#page === "colors") { this.#colors(); return; }
     const category = document.createElement("select"); category.setAttribute("aria-label", t("visual-category"));
     for (const value of ["item", "monster", "terrain", "marker"] as const) category.add(new Option(t("visual-category-" + value), value));
@@ -65,10 +66,13 @@ export class VisualEditor {
     if (!entry) { host.textContent = this.localization.format("visual-empty"); return; }
     const document = host.ownerDocument, base = this.base(id);
     const preview = document.createElement("output"); preview.className = "visual-glyph-preview";
+    const symbol = document.createElement("span"); preview.append(symbol);
     const error = document.createElement("p"); error.setAttribute("role", "alert");
     const paint = () => {
       const style = visualStyle(this.draft(), id, base, true, entry);
-      preview.textContent = style.glyph; preview.style.color = style.foreground; preview.style.backgroundColor = style.background ?? "";
+      symbol.textContent = style.glyph; preview.style.color = style.foreground; preview.style.backgroundColor = style.background ?? "";
+      const unique = this.state.status?.player.monsterRecall.some(v => v.kindId === id && v.unique) === true;
+      symbol.dataset.uniqueEffect = uniqueEffect(this.draft(), id, unique, entry);
     };
     const controls = new Map<keyof VisualOverride, HTMLInputElement>();
     for (const field of ["glyph", "foreground", "background"] as const) {
@@ -105,6 +109,21 @@ export class VisualEditor {
       host.append(shared);
     }
     host.append(preview, error, reset); paint();
+  }
+
+  #uniqueControl(): void {
+    const document = this.host.ownerDocument;
+    const label = document.createElement("label");
+    label.textContent = this.localization.format("visual-unique-effect");
+    const select = document.createElement("select");
+    for (const mode of ["flowing", "static", "off"] as const) {
+      select.add(new Option(this.localization.format("visual-unique-" + mode), mode));
+    }
+    select.value = this.draft().uniqueEffect;
+    select.onchange = () => { this.draft().uniqueEffect = select.value as UniqueEffect; this.changed(); this.render(); };
+    label.append(select);
+    const help = document.createElement("p"); help.textContent = this.localization.format("visual-unique-help");
+    this.host.append(label, help);
   }
 
   #colors(): void {
@@ -146,7 +165,7 @@ export class VisualEditor {
       label.append(input, output); theme.append(label);
     }
     const reset = document.createElement("button"); reset.type = "button"; reset.textContent = this.localization.format("visual-reset-colors");
-    reset.onclick = () => { const defaults = defaultVisuals(); this.draft().palette = defaults.palette; this.draft().theme = defaults.theme; this.changed(); this.render(); };
+    reset.onclick = () => { const defaults = defaultVisuals(); this.draft().palette = defaults.palette; this.draft().theme = defaults.theme; this.draft().uniqueEffect = defaults.uniqueEffect; this.changed(); this.render(); };
     this.host.append(preview, palette, theme, reset); paint();
   }
 }

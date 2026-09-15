@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use std::collections::BTreeSet;
+use std::sync::OnceLock;
 
-use fluent_bundle::{FluentArgs, FluentBundle, FluentResource};
+use fluent_bundle::{FluentArgs, FluentResource, concurrent::FluentBundle};
 use rfb_content::{AffixNamePlacementDefinition, ContentCatalog};
 use thiserror::Error;
 use unic_langid::LanguageIdentifier;
@@ -38,16 +39,28 @@ impl Locale {
 
 pub struct Localizer {
     locale: Locale,
-    english: FluentBundle<FluentResource>,
-    chinese: FluentBundle<FluentResource>,
+    english: &'static FluentBundle<FluentResource>,
+    chinese: &'static FluentBundle<FluentResource>,
 }
 
 impl Localizer {
     pub fn new(locale: Locale) -> Result<Self, LocalizationError> {
+        // Embedded resources never change during a process. Share their parsed
+        // bundles, while each localizer keeps its own selected language.
+        static ENGLISH: OnceLock<Result<FluentBundle<FluentResource>, LocalizationError>> =
+            OnceLock::new();
+        static CHINESE: OnceLock<Result<FluentBundle<FluentResource>, LocalizationError>> =
+            OnceLock::new();
         Ok(Self {
             locale,
-            english: create_bundle(Locale::EnUs, &EN_US)?,
-            chinese: create_bundle(Locale::ZhCn, &ZH_CN)?,
+            english: ENGLISH
+                .get_or_init(|| create_bundle(Locale::EnUs, &EN_US))
+                .as_ref()
+                .map_err(Clone::clone)?,
+            chinese: CHINESE
+                .get_or_init(|| create_bundle(Locale::ZhCn, &ZH_CN))
+                .as_ref()
+                .map_err(Clone::clone)?,
         })
     }
 
@@ -74,7 +87,7 @@ impl Localizer {
             return Ok(value);
         }
         if self.locale != Locale::EnUs
-            && let Some(value) = format_from(&self.english, key, args)?
+            && let Some(value) = format_from(self.english, key, args)?
         {
             return Ok(value);
         }
@@ -98,8 +111,8 @@ impl Localizer {
 
     fn bundle(&self, locale: Locale) -> &FluentBundle<FluentResource> {
         match locale {
-            Locale::EnUs => &self.english,
-            Locale::ZhCn => &self.chinese,
+            Locale::EnUs => self.english,
+            Locale::ZhCn => self.chinese,
         }
     }
 }
@@ -118,6 +131,12 @@ impl MogaminatorNames {
         Ok(Self {
             localizer: Localizer::new(locale)?,
         })
+    }
+
+    /// Resolves class/race rule variables with the same resources as item names.
+    pub fn character_name(&self, key: &str) -> Result<String, LocalizationError> {
+        self.localizer
+            .format_exact(self.localizer.locale(), key, None)
     }
 
     pub fn item_name(
@@ -247,7 +266,7 @@ fn create_bundle(
         .id()
         .parse::<LanguageIdentifier>()
         .map_err(|error| LocalizationError::InvalidLocale(error.to_string()))?;
-    let mut bundle = FluentBundle::new(vec![language]);
+    let mut bundle = FluentBundle::new_concurrent(vec![language]);
     bundle.set_use_isolating(false);
     for source in sources {
         let resource = FluentResource::try_new((*source).to_owned()).map_err(|(_, errors)| {
@@ -300,7 +319,7 @@ fn format_from(
     }
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Clone, Error)]
 pub enum LocalizationError {
     #[error("invalid locale: {0}")]
     InvalidLocale(String),
@@ -320,6 +339,47 @@ mod tests {
     use rfb_content::{ContentCatalog, compile_pack_dir};
 
     use super::*;
+
+    #[test]
+    fn shared_bundles_keep_language_and_arguments_independent_across_threads() {
+        std::thread::scope(|scope| {
+            for locale in [Locale::EnUs, Locale::ZhCn] {
+                scope.spawn(move || {
+                    let mut localizer = Localizer::new(locale).unwrap();
+                    for quantity in 1..=8 {
+                        let mut args = FluentArgs::new();
+                        args.set("target", "test item");
+                        args.set("quantity", quantity);
+                        let expected = match locale {
+                            Locale::EnUs => format!("You pick up test item ×{quantity}."),
+                            Locale::ZhCn => format!("你将 {quantity} 个test item收入了背包。"),
+                        };
+                        assert_eq!(
+                            localizer
+                                .format("message-item-pickup-success", Some(&args))
+                                .unwrap(),
+                            expected
+                        );
+                        localizer.set_locale(match locale {
+                            Locale::EnUs => Locale::ZhCn,
+                            Locale::ZhCn => Locale::EnUs,
+                        });
+                        assert_eq!(
+                            localizer
+                                .format_exact(locale, "message-item-pickup-success", Some(&args))
+                                .unwrap(),
+                            expected
+                        );
+                        localizer.set_locale(locale);
+                    }
+                    assert!(matches!(
+                        localizer.format_exact(locale, "missing-test-message", None),
+                        Err(LocalizationError::MissingMessage(_))
+                    ));
+                });
+            }
+        });
+    }
 
     #[test]
     fn bundled_resources_format_in_both_languages() {

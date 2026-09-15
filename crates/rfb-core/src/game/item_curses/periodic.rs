@@ -76,11 +76,16 @@ impl Game {
         use ItemCurseEffectDto::*;
         if self.curse_triggers(ByCurse, 200) {
             self.equipped_baby_curse(events);
+            self.learn_equipped_curse(ByCurse);
         }
         if self.curse_triggers(Normality, 128) {
             let count = ego::randint1(&mut self.rng, 20);
+            let mut noticed = false;
             for _ in 0..count {
-                self.curse_dispel_one_status();
+                noticed |= self.curse_dispel_one_status();
+            }
+            if noticed {
+                self.learn_equipped_curse(Normality);
             }
         }
         if self.player_has_equipped_curse_effect(Allergy)
@@ -89,9 +94,11 @@ impl Game {
             && self.curse_allergy_race_eligible()
         {
             self.add_curse_status(STATUS_UNWELL, 70);
+            self.learn_equipped_curse(Allergy);
         }
         if self.curse_triggers(CrappyMutation, 1500) {
             self.gain_random_bad_mutation(events);
+            self.learn_equipped_curse(CrappyMutation);
         }
         if self
             .selected_race_definition()
@@ -102,6 +109,7 @@ impl Game {
             self.progress.maximum_experience =
                 self.progress.maximum_experience.saturating_sub(amount);
             self.apply_player_experience_drain(amount, "equipment.curse", events);
+            self.learn_equipped_curse(DrainExperience);
         }
         for (effect, power) in [(AddLightCurse, 0), (AddHeavyCurse, 1)] {
             if self.curse_triggers(effect, 2000) {
@@ -112,10 +120,14 @@ impl Game {
                     .and_then(|kind| kind.rfb_base_kind)
                     .map_or(0, |kind| kind.tval);
                 let new = ego::curses::get_curse(&mut self.rng, power, tval);
+                let before = self.actual_item_curse_flags(&self.items[index]);
                 if let Some(roll) = self.items[index].rolled_affixes.first_mut() {
                     roll.curse_effects.insert(new);
                 } else {
                     self.items[index].intrinsic_curse_effects.insert(new);
+                }
+                if before != self.actual_item_curse_flags(&self.items[index]) {
+                    self.learn_item_curse(&self.items[index].id.clone(), effect);
                 }
             }
         }
@@ -129,18 +141,21 @@ impl Game {
                 if self.ty_curse_summon("equipment.curse", category, level, true, events, changed)
                     > 0
                 {
-                    self.choose_cursed_item(effect);
+                    let index = self.choose_cursed_item(effect);
+                    self.learn_item_curse(&self.items[index].id.clone(), effect);
                 }
             }
         }
         if self.curse_triggers(Cowardice, 1500) && !self.curse_fear_save() {
             self.add_curse_status(STATUS_FEAR, 50);
+            self.learn_equipped_curse(Cowardice);
         }
         let cursed_teleport = self.items.iter().any(|item| {
             item.curse.is_some() && self.item_has_active_equipped_curse_effect(item, Teleport)
         });
         if cursed_teleport && ego::one_in(&mut self.rng, 200) {
             self.curse_teleport(40, events, changed);
+            self.learn_equipped_curse(Teleport);
         }
         if self.curse_triggers(DrainHp, 666) {
             let index = self.choose_cursed_item(DrainHp);
@@ -153,6 +168,7 @@ impl Game {
                 ResistanceLevel::Normal,
             );
             let outcome = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+            self.learn_item_curse(&self.items[index].id.clone(), DrainHp);
             events.push(DomainEvent::ItemLifeLost {
                 source_kind_id: source.clone(),
                 display_name_key: self.item_display_name_key(&source),
@@ -172,6 +188,7 @@ impl Game {
             let pool = self.resources.get_mut(&id).unwrap();
             let drained = pool.current.min(u32::from(self.progress.level).min(50));
             pool.current -= drained;
+            self.learn_item_curse(&self.items[index].id.clone(), DrainMana);
             events.push(DomainEvent::ItemResourceDrained {
                 source_kind_id: source.clone(),
                 display_name_key: self.item_display_name_key(&source),
@@ -180,7 +197,8 @@ impl Game {
             });
         }
         if self.curse_triggers(DrainPack, 333) && self.curse_drain_pack() {
-            self.choose_cursed_item(DrainPack);
+            let index = self.choose_cursed_item(DrainPack);
+            self.learn_item_curse(&self.items[index].id.clone(), DrainPack);
         }
     }
 
