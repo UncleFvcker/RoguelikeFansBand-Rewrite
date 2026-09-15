@@ -34,7 +34,8 @@ pub(in crate::game) fn nature_wrath_direction_roll(events: &[DomainEvent]) -> Op
 
 impl Game {
     pub(in crate::game) fn dungeon_blocks_player_ability(&self, ability_id: &str) -> bool {
-        self.dungeon_blocks_magic()
+        !ability_id.starts_with("demo.ability.hissatsu-")
+            && self.dungeon_blocks_magic()
             && self.mutation_activation_for_ability(ability_id).is_none()
             && self.race_ability_activation(ability_id).is_none()
             && self.class_ability_activation(ability_id).map_or_else(
@@ -55,6 +56,9 @@ impl Game {
         &self,
         ability_id: &str,
     ) -> Option<&'static str> {
+        if let Some(reason) = self.samurai_ability_unavailable_reason(ability_id) {
+            return Some(reason);
+        }
         if self.maia_forbids_spell(ability_id)
             && self.mutation_activation_for_ability(ability_id).is_none()
             && self.race_ability_activation(ability_id).is_none()
@@ -198,14 +202,20 @@ impl Game {
             });
             return Ok(None);
         }
-        if source == AbilitySourceDto::Learned && self.player_has_anti_magic() {
+        if source == AbilitySourceDto::Learned
+            && !matches!(ability.effect, AbilityEffectDefinition::Hissatsu { .. })
+            && self.player_has_anti_magic()
+        {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "anti-magic".to_owned(),
             });
             return Ok(None);
         }
-        if source == AbilitySourceDto::Learned && self.player_has_status_kind(STATUS_BERSERK) {
+        if source == AbilitySourceDto::Learned
+            && !matches!(ability.effect, AbilityEffectDefinition::Hissatsu { .. })
+            && self.player_has_status_kind(STATUS_BERSERK)
+        {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "berserk".to_owned(),
@@ -267,7 +277,9 @@ impl Game {
                     Some("level-too-low")
                 } else if !self.profile_supports_ability(profile, ability_id) {
                     Some("ability-not-supported")
-                } else if self.ability_book_item_id(profile, ability_id).is_none() {
+                } else if !self.player_is_samurai()
+                    && self.ability_book_item_id(profile, ability_id).is_none()
+                {
                     Some("book-unavailable")
                 } else if self.ability_cooldown_remaining(&ability) > 0 {
                     Some("cooldown")
@@ -292,6 +304,9 @@ impl Game {
             return Ok(None);
         }
 
+        if matches!(ability.effect, AbilityEffectDefinition::Hissatsu { .. }) {
+            self.set_samurai_posture(0);
+        }
         // Validate the target before charging resources/HP or drawing the
         // failure/damage RNG. The command remains a normal scheduled action,
         // but an impossible target cannot consume resources or proficiency.
@@ -455,7 +470,13 @@ impl Game {
         if matches!(ability.effect, AbilityEffectDefinition::Music { .. }) {
             self.stop_music();
         }
-        let percentile_roll = if matches!(ability.effect, AbilityEffectDefinition::StopSinging) {
+        let percentile_roll = if matches!(
+            ability.effect,
+            AbilityEffectDefinition::StopSinging
+                | AbilityEffectDefinition::Hissatsu { .. }
+                | AbilityEffectDefinition::SamuraiConcentration
+                | AbilityEffectDefinition::SamuraiPosture { .. }
+        ) {
             0
         } else {
             u8::try_from(self.rng.bounded(100)).expect("percentile ability roll must fit u8")
@@ -618,6 +639,33 @@ impl Game {
                 branch_roll,
                 cast_resolution: resolution,
             });
+            return Ok(None);
+        }
+        if matches!(
+            ability.effect,
+            AbilityEffectDefinition::Hissatsu { spell: 26 }
+        ) {
+            let before = removed_entities.len();
+            self.resolve_player_ability_effect(
+                ability.clone(),
+                target_plan,
+                events,
+                changed,
+                removed_entities,
+            )?;
+            if removed_entities.len() > before
+                && !self.player_is_dead()
+                && self
+                    .resources
+                    .get("demo.resource.mana")
+                    .is_some_and(|p| p.current > 8)
+            {
+                self.pending_ability_direction = Some(rfb_protocol::PendingAbilityDirectionDto {
+                    ability_id: ability.id,
+                    branch_roll: 1,
+                    cast_resolution: resolution,
+                });
+            }
             return Ok(None);
         }
         let result = if call_chaos || shuffle {
@@ -868,6 +916,13 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        if self
+            .pending_ability_direction
+            .as_ref()
+            .is_some_and(|p| p.ability_id == "demo.ability.hissatsu-hundred-slaughter")
+        {
+            return self.continue_hissatsu_slaughter(direction, events, changed, removed_entities);
+        }
         let pending = self
             .pending_ability_direction
             .clone()
@@ -939,7 +994,9 @@ impl Game {
         if self.pending_ability_direction.as_ref().is_some_and(|p| {
             matches!(
                 p.ability_id.as_str(),
-                "demo.ability.chaos-call-chaos" | "demo.ability.trump-shuffle"
+                "demo.ability.chaos-call-chaos"
+                    | "demo.ability.trump-shuffle"
+                    | "demo.ability.hissatsu-hundred-slaughter"
             )
         }) {
             return self.resolve_pending_call_chaos(

@@ -32,10 +32,11 @@ fn sniper_explosion_radius(concentration: u8) -> u8 {
     (concentration.saturating_add(1) / 2).saturating_add(1)
 }
 
-fn mana_brand_cost(damage_dice: u16, damage_sides: u16) -> u32 {
+fn mana_brand_cost(damage_dice: u16, damage_sides: u16, samurai: bool) -> u32 {
     1_u32.saturating_add(
         u32::from(damage_dice)
             .saturating_mul(u32::from(damage_sides))
+            .saturating_mul(if samurai { 2 } else { 1 })
             .saturating_div(7),
     )
 }
@@ -1647,11 +1648,28 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        let Some(item_index) = self
-            .items
-            .iter()
-            .position(|item| item.id == item_id && self.item_can_be_thrown(item))
-        else {
+        self.throw_hissatsu_weapon(item_id, direction, 0, events, changed, removed_entities)
+    }
+
+    pub(in crate::game) fn throw_hissatsu_weapon(
+        &mut self,
+        item_id: &str,
+        direction: rfb_protocol::Direction,
+        return_chance: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let samurai = self.player_is_samurai();
+        let Some(item_index) = self.items.iter().position(|item| {
+            item.id == item_id
+                && (self.item_can_be_thrown(item)
+                    || return_chance > 0
+                        && self
+                            .equipped_melee_weapons()
+                            .iter()
+                            .any(|w| w.id == item.id))
+        }) else {
             events.push(DomainEvent::ItemThrowUnavailable);
             return Ok(());
         };
@@ -1664,8 +1682,9 @@ impl Game {
             return Ok(());
         }
         let item = &self.items[item_index];
-        let boomerang =
-            self.item_is_fixed_artifact(item, 136) || self.item_is_fixed_artifact(item, 208);
+        let boomerang = return_chance > 0
+            || self.item_is_fixed_artifact(item, 136)
+            || self.item_is_fixed_artifact(item, 208);
         let (range, damage_multiplier) = self.item_throw_parameters(item);
         let profile = self
             .item_throw_profile(item)
@@ -1695,7 +1714,9 @@ impl Game {
         let (trace, target_index) = self.trace_projectile_path(path);
         let landing = trace.landing;
         let (comes_back, caught) = if boomerang {
-            let chance = 20 + self.player_dexterity_to_hit() + (self.rng.bounded(30) + 1) as i32;
+            let chance = (if return_chance > 0 { return_chance } else { 20 })
+                + self.player_dexterity_to_hit()
+                + (self.rng.bounded(30) + 1) as i32;
             let comes_back = chance > 30 && self.rng.bounded(100) != 0;
             let caught = comes_back
                 && !self.player_has_status_kind(STATUS_BLINDNESS)
@@ -1770,7 +1791,8 @@ impl Game {
                         .map(|profile| profile.resource_id.clone())
                     && let Some(pool) = self.resources.get_mut(&resource_id)
                 {
-                    let cost = mana_brand_cost(profile.damage_dice, profile.damage_sides);
+                    let cost = mana_brand_cost(profile.damage_dice, profile.damage_sides, samurai)
+                        .saturating_mul(if return_chance > 0 { 3 } else { 1 });
                     if pool.current >= cost {
                         pool.current -= cost;
                         item_multiplier = mana_brand_multiplier(item_multiplier);
@@ -2055,6 +2077,117 @@ impl Game {
         });
     }
 
+    pub(in crate::game) fn resolve_hissatsu_melee(
+        &mut self,
+        index: usize,
+        spell: u8,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed: &mut Vec<String>,
+    ) -> Result<PlayerMeleeOutcome, CoreError> {
+        let energy = self.player.energy_need;
+        let result = self.resolve_player_melee_with_draconian_strike(
+            index,
+            true,
+            None,
+            false,
+            Some(spell),
+            events,
+            changed,
+            removed,
+        );
+        self.player.energy_need = energy;
+        result
+    }
+
+    fn hissatsu_damage_multiplier(
+        &self,
+        index: usize,
+        spell: Option<u8>,
+        profile: &super::player_stats::ResolvedAttackProfile,
+        base: i32,
+    ) -> i32 {
+        let Some(spell) = spell else {
+            return base;
+        };
+        let actor = &self.entities[index];
+        let definition = self
+            .actor_runtime_definition(actor)
+            .expect("target definition");
+        let elemental = match spell {
+            3 => Some(DamageType::Fire),
+            8 => Some(DamageType::Poison),
+            13 => Some(DamageType::Cold),
+            17 => Some(DamageType::Electricity),
+            _ => None,
+        };
+        if let Some(d) = elemental {
+            if actor.resistances.level(d) == ResistanceLevel::Immune {
+                return base;
+            }
+            let flag = match spell {
+                3 => "BRAND_FIRE",
+                8 => "BRAND_POIS",
+                13 => "BRAND_COLD",
+                _ => "BRAND_ELEC",
+            };
+            let own_brand = profile
+                .source_item_id
+                .as_ref()
+                .and_then(|id| self.items.iter().find(|i| &i.id == id))
+                .is_some_and(|i| self.item_has_rfb_flag(i, flag));
+            let brand = if own_brand { 24 } else { 10 };
+            let mult = if spell == 17 {
+                brand + 35
+            } else {
+                (brand + (brand - 10) / 2).max(24)
+            };
+            return base.max(
+                if actor.resistances.level(d) == ResistanceLevel::Vulnerable {
+                    mult * 2
+                } else {
+                    mult
+                },
+            );
+        }
+        match spell {
+            9 if actor_matches_category(definition, "nonliving")
+                && actor_matches_category(definition, "evil") =>
+            {
+                if base < 15 {
+                    25
+                } else {
+                    base.max((base + 19).min(45))
+                }
+            }
+            12 if definition.tags.iter().any(|t| t == "hurt-rock") => {
+                if base == 10 {
+                    37
+                } else {
+                    base.max(56)
+                }
+            }
+            19 if actor_matches_category(definition, "living") => {
+                let cut = self
+                    .player
+                    .statuses
+                    .iter()
+                    .find(|s| s.kind_id == "rfb.status.bleeding")
+                    .map_or(0, |s| s.remaining_ticks as i32);
+                base.max(((cut + 300) / 10).max(cut / 5).min(95))
+            }
+            30 => {
+                let undead = actor_matches_category(definition, "undead");
+                if base == 10 {
+                    if undead { 60 } else { 36 }
+                } else {
+                    base.max((base + if undead { 50 } else { 25 }).min(120))
+                }
+            }
+            _ => base,
+        }
+    }
+
     pub(super) fn resolve_player_melee(
         &mut self,
         index: usize,
@@ -2063,11 +2196,15 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<PlayerMeleeOutcome, CoreError> {
+        if self.samurai.posture == 1 {
+            self.samurai.posture = 0;
+        }
         self.resolve_player_melee_with_draconian_strike(
             index,
             train_weapon,
             None,
             false,
+            None,
             events,
             changed,
             removed_entities,
@@ -2087,6 +2224,7 @@ impl Game {
             false,
             Some(mode),
             false,
+            None,
             events,
             changed,
             removed_entities,
@@ -2105,6 +2243,7 @@ impl Game {
             false,
             None,
             true,
+            None,
             events,
             changed,
             removed_entities,
@@ -2118,10 +2257,12 @@ impl Game {
         train_weapon: bool,
         strike_mode: Option<DraconianStrikeModeDefinition>,
         revenge: bool,
+        hissatsu: Option<u8>,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<PlayerMeleeOutcome, CoreError> {
+        let samurai = self.player_is_samurai();
         // py_attack rejects without refunding the action's energy. Do this before
         // proficiency, attack rolls, contact effects, or retaliation.
         if self.dungeon_blocks_melee() {
@@ -2190,7 +2331,26 @@ impl Game {
         } else {
             self.player_melee_profiles(&attacker)
         };
-        profiles.extend(self.player_mutation_innate_attack_profiles(&attacker));
+        if let Some(spell) = hissatsu {
+            profiles.retain(|p| p.source_item_id.is_some());
+            for p in &mut profiles {
+                if matches!(spell, 0 | 5 | 14 | 23 | 99) {
+                    p.attacks = 1;
+                    p.extra_attack_chance_percent = 0;
+                }
+                if spell == 13 {
+                    p.attacks += 2;
+                }
+                if spell == 14 {
+                    p.poison_needle = true;
+                }
+                if spell == 99 {
+                    p.melee_skill.value += 60;
+                }
+            }
+        } else {
+            profiles.extend(self.player_mutation_innate_attack_profiles(&attacker));
+        }
         if train_weapon && self.equipped_melee_weapons().len() >= 2 {
             self.train_dual_wielding(definition.level);
         }
@@ -2260,7 +2420,7 @@ impl Game {
             if profile.attack_name.as_deref() == Some("马蹄") {
                 self.train_centaur_hooves(definition.level, events);
             }
-            let vampiric_weapon =
+            let vampiric_weapon = hissatsu == Some(24) ||
                 matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
                     || (profile.source_item_id.is_some() && self.items.iter().any(|item| {
                         matches!(&item.location, ItemLocation::Equipped { slot_id }
@@ -2283,6 +2443,8 @@ impl Game {
                 &definition,
                 strike_mode,
             );
+            let base_damage_multiplier =
+                self.hissatsu_damage_multiplier(index, hissatsu, &profile, base_damage_multiplier);
             let mut stop_attacking = false;
             for attack_number in 1..=if assassination {
                 profile_attacks.min(1)
@@ -2317,6 +2479,7 @@ impl Game {
                                 })
                                 .succeeded())
                 };
+                let hit = hit && (hissatsu != Some(15) || self.rng.bounded(2) == 0);
                 if !hit {
                     events.push(profile.miss_event(&target_kind));
                     if let Some(item) = profile
@@ -2355,7 +2518,8 @@ impl Game {
                 let order = has_trait(WeaponTraitDto::Order);
                 // master:equip.c::_weapon_info_flag grants Quaker's glove
                 // IMPACT to both wielded weapons, without altering the items.
-                let impact = has_trait(WeaponTraitDto::Impact)
+                let impact = hissatsu == Some(20)
+                    || has_trait(WeaponTraitDto::Impact)
                     || (source_weapon_index.is_some()
                         && self.items.iter().any(|item| {
                             matches!(&item.location, ItemLocation::Equipped { slot_id }
@@ -2382,7 +2546,7 @@ impl Game {
                         .map(|profile| profile.resource_id.clone())
                     && let Some(pool) = self.resources.get_mut(&resource_id)
                 {
-                    let cost = mana_brand_cost(profile.damage_dice, profile.damage_sides);
+                    let cost = mana_brand_cost(profile.damage_dice, profile.damage_sides, samurai);
                     if pool.current >= cost {
                         pool.current -= cost;
                         damage_multiplier = mana_brand_multiplier(damage_multiplier);
@@ -2401,11 +2565,26 @@ impl Game {
                     && let Some(weight) = profile.critical_weight_tenths_pound
                 {
                     base_damage = base_damage
-                        .saturating_mul(self.roll_player_melee_critical_multiplier(
-                            weight,
-                            profile.to_hit,
-                            &mut allow_criticals,
-                        ))
+                        .saturating_mul(if matches!(hissatsu, Some(15 | 23)) {
+                            let quality = u32::from(weight) + self.rng.bounded(650) as u32 + 1;
+                            if quality < 400 {
+                                200
+                            } else if quality < 700 {
+                                250
+                            } else if quality < 900 {
+                                300
+                            } else if quality < 1300 {
+                                350
+                            } else {
+                                400
+                            }
+                        } else {
+                            self.roll_player_melee_critical_multiplier(
+                                weight,
+                                profile.to_hit,
+                                &mut allow_criticals,
+                            )
+                        })
                         .saturating_div(100);
                 }
                 let impact_triggered = impact && (base_damage > 50 || self.rng.bounded(7) == 0);
@@ -2445,6 +2624,40 @@ impl Game {
                     ordinary_drain = ordinary_drain.saturating_mul(3) / 2;
                 }
                 let mut rolled_damage = base_damage.saturating_add(profile.to_damage).max(0);
+                if matches!(hissatsu, Some(16 | 23)) {
+                    rolled_damage = rolled_damage.saturating_mul(2);
+                }
+                if hissatsu == Some(5) {
+                    rolled_damage = 0;
+                    if !self.actor_has_status_immunity(index, STATUS_STUN) {
+                        let mut duration = 10
+                            + self.rng.bounded(15) as u32
+                            + 1
+                            + u32::from(self.progress.level / 5);
+                        if self.entities[index]
+                            .statuses
+                            .iter()
+                            .any(|s| s.kind_id == STATUS_STUN)
+                        {
+                            duration /= 2;
+                        }
+                        apply_status(
+                            &mut self.entities[index].statuses,
+                            super::monster_combat::melee_status(
+                                STATUS_STUN,
+                                duration,
+                                "demo.ability.hissatsu-stunning-strike",
+                            ),
+                        );
+                    }
+                }
+                if hissatsu == Some(9)
+                    && !(actor_matches_category(&definition, "nonliving")
+                        && actor_matches_category(&definition, "evil"))
+                    || hissatsu == Some(19) && !actor_matches_category(&definition, "living")
+                {
+                    rolled_damage = 0;
+                }
                 if matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vorpal))
                     && self.rng.bounded(6) == 0
                 {

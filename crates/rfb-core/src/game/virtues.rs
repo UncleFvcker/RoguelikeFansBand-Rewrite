@@ -103,7 +103,7 @@ fn roll_virtues(
             "demo.class.magic-eater" => {
                 kinds.extend([VirtueKindDto::Enchantment, VirtueKindDto::Knowledge]);
             }
-            "demo.class.warrior" => {
+            "demo.class.warrior" | "demo.class.samurai" => {
                 kinds.extend([VirtueKindDto::Valour, VirtueKindDto::Honour]);
             }
             _ => {}

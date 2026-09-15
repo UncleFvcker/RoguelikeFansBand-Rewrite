@@ -237,7 +237,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 135;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 136;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -895,6 +895,7 @@ pub struct Game {
     chaos_patron_id: Option<String>,
     reality_change_ticks: u8,
     music: rfb_protocol::MusicStateDto,
+    samurai: rfb_protocol::SamuraiStateDto,
     pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pending_ability_direction: Option<PendingAbilityDirectionDto>,
     pending_ability_glyph: Option<rfb_protocol::PendingAbilityGlyphDto>,
@@ -1397,6 +1398,7 @@ impl Game {
         if !matches!(&action, GameAction::ContinueFishing) {
             self.fishing_direction = None;
         }
+        self.samurai_before_action(&action, advances_world);
         match action {
             GameAction::SelectMagicAbsorptionSlot { slot } => {
                 self.select_magic_absorption_slot(slot, &mut events);
@@ -1940,7 +1942,9 @@ impl Game {
                 if self.pending_ability_direction.as_ref().is_some_and(|p| {
                     matches!(
                         p.ability_id.as_str(),
-                        "demo.ability.chaos-call-chaos" | "demo.ability.trump-shuffle"
+                        "demo.ability.chaos-call-chaos"
+                            | "demo.ability.trump-shuffle"
+                            | "demo.ability.hissatsu-hundred-slaughter"
                     )
                 }) {
                     self.resolve_pending_call_chaos(
@@ -1963,6 +1967,11 @@ impl Game {
                     &mut changed,
                     &mut removed_entities,
                 )?;
+                if self.pending_ability_direction.is_some() {
+                    advances_world = false;
+                    action_cost = 0;
+                    turn_advance = 0;
+                }
             }
             GameAction::Fire { direction } => self.resolve_player_projectile(
                 TargetSelection::Direction { direction },
@@ -3998,7 +4007,8 @@ impl Game {
     }
 
     fn player_has_status_kind(&self, kind_id: &str) -> bool {
-        self.music_grants_status(kind_id)
+        self.samurai_grants_status(kind_id)
+            || self.music_grants_status(kind_id)
             || (kind_id == STATUS_BERSERK && self.player_is_berserker())
             || self
                 .player

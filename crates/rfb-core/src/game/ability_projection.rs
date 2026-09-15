@@ -483,6 +483,13 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
         }
         AbilityEffectDefinition::TrumpShuffle => AbilityEffectSpecDto::TrumpShuffle,
         AbilityEffectDefinition::Music { spell } => AbilityEffectSpecDto::Music { spell: *spell },
+        AbilityEffectDefinition::Hissatsu { spell } => {
+            AbilityEffectSpecDto::Hissatsu { spell: *spell }
+        }
+        AbilityEffectDefinition::SamuraiConcentration => AbilityEffectSpecDto::SamuraiConcentration,
+        AbilityEffectDefinition::SamuraiPosture { posture } => {
+            AbilityEffectSpecDto::SamuraiPosture { posture: *posture }
+        }
         AbilityEffectDefinition::StopSinging => AbilityEffectSpecDto::StopSinging,
         AbilityEffectDefinition::Law { spell } => AbilityEffectSpecDto::Law { spell: *spell },
         AbilityEffectDefinition::Necromancy { spell } => {

@@ -2011,6 +2011,59 @@
               "type": "integer"
             },
             "type": {
+              "const": "hissatsu",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "samurai-concentration",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "posture": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "samurai-posture",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "posture"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "spell": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
               "const": "law",
               "type": "string"
             }

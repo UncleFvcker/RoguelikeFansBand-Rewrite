@@ -1003,6 +1003,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.bugei-shofu",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.jo-staff",
       "maxDepth": 65535,
       "minDepth": 11,
@@ -1585,6 +1592,13 @@
     },
     {
       "itemKindId": "demo.item.minstrels-music",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.yagyuu-bugeichou",
       "maxDepth": 50,
       "minDepth": 20,
       "quantity": 1,
@@ -2459,6 +2473,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.gorinnosho",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.dwarven-pick",
       "maxDepth": 65535,
       "minDepth": 50,
@@ -2999,6 +3020,13 @@
     },
     {
       "itemKindId": "demo.item.lays-of-beleriand",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.hokusin-ittouryuu-kaiden",
       "maxDepth": 65535,
       "minDepth": 80,
       "quantity": 1,

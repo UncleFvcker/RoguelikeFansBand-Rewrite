@@ -69,7 +69,9 @@
       "initialMaximum": 1,
       "maintenanceMinimum": 1,
       "maintenanceMaximum": 1
-    }
+    },
+    {"itemKindId": "demo.item.bugei-shofu", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
+    {"itemKindId": "demo.item.yagyuu-bugeichou", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1}
   ],
   "maintenance": { "intervalWorldTicks": 10000 }
 }

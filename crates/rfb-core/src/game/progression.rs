@@ -874,26 +874,33 @@ impl Game {
             name_key: None,
             modifiers: self.equipment_modifiers(),
         });
-        steps.extend(self.player.statuses.iter().map(|status| {
-            let mut modifiers = status.granted_modifiers;
-            if status.kind_id == STATUS_UNWELL {
-                let penalty = if status.remaining_ticks > 55 {
-                    0
-                } else if status.remaining_ticks > 30 {
-                    4
-                } else {
-                    i32::try_from(status.remaining_ticks.div_ceil(10)).unwrap_or(i32::MAX)
-                };
-                modifiers.dexterity = modifiers.dexterity.saturating_sub(penalty);
-                modifiers.constitution = modifiers.constitution.saturating_sub(penalty);
-            }
-            AttributeStep {
-                kind: AttributeSourceKindDto::TemporaryEffect,
-                source_id: Some(&status.kind_id),
-                name_key: None,
-                modifiers,
-            }
-        }));
+        let samurai = self.samurai_status();
+        steps.extend(
+            self.player
+                .statuses
+                .iter()
+                .chain(samurai.iter())
+                .map(|status| {
+                    let mut modifiers = status.granted_modifiers;
+                    if status.kind_id == STATUS_UNWELL {
+                        let penalty = if status.remaining_ticks > 55 {
+                            0
+                        } else if status.remaining_ticks > 30 {
+                            4
+                        } else {
+                            i32::try_from(status.remaining_ticks.div_ceil(10)).unwrap_or(i32::MAX)
+                        };
+                        modifiers.dexterity = modifiers.dexterity.saturating_sub(penalty);
+                        modifiers.constitution = modifiers.constitution.saturating_sub(penalty);
+                    }
+                    AttributeStep {
+                        kind: AttributeSourceKindDto::TemporaryEffect,
+                        source_id: Some(&status.kind_id),
+                        name_key: None,
+                        modifiers,
+                    }
+                }),
+        );
         let kinds = [
             (AttributeKind::Strength, AttributeKindDto::Strength),
             (AttributeKind::Intelligence, AttributeKindDto::Intelligence),

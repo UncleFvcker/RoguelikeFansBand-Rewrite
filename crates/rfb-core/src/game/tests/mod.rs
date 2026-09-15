@@ -100,6 +100,7 @@ mod weapon_proficiency;
 mod weapon_traits;
 mod world;
 
+mod hissatsu;
 mod law;
 mod music;
 mod necromancy;

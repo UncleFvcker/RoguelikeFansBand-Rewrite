@@ -1,6 +1,6 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 443,
+  "allocationRowCount": 447,
   "explicitItems": [
     {
       "itemId": "demo.item.aegir",
@@ -10302,12 +10302,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.bugei-shofu",
       "maxDepth": 30,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 556,
       "sourceName": "[Bugei Shofu]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 0,
       "tval": 106
     },
@@ -10321,12 +10321,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.yagyuu-bugeichou",
       "maxDepth": 50,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 557,
       "sourceName": "[Yagyuu Bugeichou]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 1,
       "tval": 106
     },
@@ -10340,12 +10340,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.gorinnosho",
       "maxDepth": 90,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 558,
       "sourceName": "[Gorinnosho]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 2,
       "tval": 106
     },
@@ -10359,12 +10359,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.hokusin-ittouryuu-kaiden",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 559,
       "sourceName": "[Hokusin Ittouryuu Kaiden]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 3,
       "tval": 106
     },

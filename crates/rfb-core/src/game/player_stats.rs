@@ -565,6 +565,7 @@ impl Game {
             .statuses
             .iter()
             .chain(self.music_status().iter())
+            .chain(self.samurai_status().iter())
         {
             for (damage_type, level) in &status.granted_resistances {
                 if *level == ResistanceLevel::Resistant
@@ -744,7 +745,8 @@ impl Game {
     }
 
     pub(super) fn player_incoming_damage_percent(&self) -> u8 {
-        self.player
+        let percent = self
+            .player
             .statuses
             .iter()
             .filter(|status| {
@@ -756,7 +758,19 @@ impl Game {
             })
             .map(|status| status.incoming_damage_percent)
             .min()
-            .unwrap_or(100)
+            .unwrap_or(100);
+        ((u16::from(percent)
+            * if self.samurai.sutemi {
+                200
+            } else if self.samurai.posture == 1 {
+                120
+            } else if self.samurai.posture == 4 {
+                50
+            } else {
+                100
+            })
+            / 100)
+            .min(255) as u8
     }
 
     pub(super) fn adjust_player_resistance_percent(
@@ -881,6 +895,7 @@ impl Game {
             .statuses
             .iter()
             .chain(self.music_status().iter())
+            .chain(self.samurai_status().iter())
         {
             immunities.extend(status.granted_status_immunities.iter().cloned());
         }
@@ -1200,6 +1215,7 @@ impl Game {
                 EquipmentPassive::SustainCharisma,
             ]);
         }
+        passives.extend(self.samurai_passives());
         passives
     }
 
@@ -2600,6 +2616,7 @@ impl Game {
             || self.player_is_mage()
             || self.player_is_necromancer()
             || self.player_is_bard()
+            || self.player_is_samurai()
             || self.player_is_ranger()
             || self.player_is_priest()
             || self.player_is_warrior_mage()
@@ -2625,6 +2642,12 @@ impl Game {
                 (
                     "demo.class.ranger",
                     self.class_base_blows(weapon, 500, 70, 40),
+                    0,
+                )
+            } else if self.player_is_samurai() {
+                (
+                    "demo.class.samurai",
+                    self.class_base_blows(weapon, 550, 70, 45),
                     0,
                 )
             } else if self.player_is_bard() {
@@ -2678,6 +2701,13 @@ impl Game {
             attack_sources.push(rfb_protocol::CharacterStatSourceDto {
                 source_id: weapon.id.clone(),
                 amount: 100,
+            });
+        }
+        if self.samurai.posture == 2 && source_item_id.is_some() {
+            blows -= 100;
+            attack_sources.push(rfb_protocol::CharacterStatSourceDto {
+                source_id: "demo.ability.samurai-fuujin".into(),
+                amount: -100,
             });
         }
         blows = blows.max(0);
@@ -3143,6 +3173,7 @@ impl Game {
             .statuses
             .iter()
             .chain(self.music_status().iter())
+            .chain(self.samurai_status().iter())
         {
             for brand in &status.granted_brands {
                 if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
@@ -3878,7 +3909,13 @@ impl Game {
         }
 
         let music = include_equipment.then(|| self.music_status()).flatten();
-        for status in actor.statuses.iter().chain(music.iter()) {
+        let samurai = include_equipment.then(|| self.samurai_status()).flatten();
+        for status in actor
+            .statuses
+            .iter()
+            .chain(music.iter())
+            .chain(samurai.iter())
+        {
             if include_equipment && self.player_is_berserker() && status.kind_id == STATUS_BERSERK {
                 continue;
             }

@@ -663,6 +663,13 @@ pub enum AbilityEffectDefinition {
         spell: u8,
     },
     StopSinging,
+    Hissatsu {
+        spell: u8,
+    },
+    SamuraiConcentration,
+    SamuraiPosture {
+        posture: u8,
+    },
     Law {
         spell: u8,
     },

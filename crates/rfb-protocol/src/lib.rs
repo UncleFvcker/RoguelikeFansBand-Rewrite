@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.271";
+pub const PROTOCOL_VERSION: &str = "1.272";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 29;
 
@@ -76,6 +76,16 @@ impl Direction {
             Self::NorthWest => (-1, -1),
         }
     }
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct SamuraiStateDto {
+    pub mana_decay_fraction: u16,
+    pub posture: u8,
+    pub counter: bool,
+    pub sutemi: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1629,6 +1639,13 @@ pub enum AbilityEffectSpecDto {
         spell: u8,
     },
     StopSinging,
+    Hissatsu {
+        spell: u8,
+    },
+    SamuraiConcentration,
+    SamuraiPosture {
+        posture: u8,
+    },
     Law {
         spell: u8,
     },
@@ -4010,6 +4027,7 @@ pub struct PlayerDto {
     #[serde(default)]
     pub reality_change_ticks: u8,
     pub music: MusicStateDto,
+    pub samurai: SamuraiStateDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5415,6 +5433,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(TargetSpecDto);
     push_declaration!(ResourcePoolDto);
     push_declaration!(MusicStateDto);
+    push_declaration!(SamuraiStateDto);
     push_declaration!(AbilityLearningDto);
     push_declaration!(SpellRealmsDto);
     push_declaration!(RealmChangeBookDto);
@@ -5636,6 +5655,7 @@ pub struct PlayerSaveDto {
     #[serde(default)]
     pub reality_change_ticks: u8,
     pub music: MusicStateDto,
+    pub samurai: SamuraiStateDto,
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
     pub pending_ability_glyph: Option<PendingAbilityGlyphDto>,
@@ -6852,6 +6872,7 @@ mod tests {
                 minor_slow: 0,
                 reality_change_ticks: 0,
                 music: MusicStateDto::default(),
+                samurai: SamuraiStateDto::default(),
                 pending_mutation_direction: None,
                 pending_ability_direction: None,
                 pending_ability_glyph: None,
@@ -7177,6 +7198,7 @@ mod tests {
             chaos_patron_id: None,
             reality_change_ticks: 0,
             music: MusicStateDto::default(),
+            samurai: SamuraiStateDto::default(),
             pending_mutation_direction: None,
             pending_ability_direction: None,
             pending_ability_glyph: None,

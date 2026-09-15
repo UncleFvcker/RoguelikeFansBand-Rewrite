@@ -303,6 +303,7 @@ mod tests {
                 100 => Some("necromancy"),
                 104 => Some("law"),
                 105 => Some("music"),
+                106 => Some("hissatsu"),
                 _ => None,
             };
             if let Some(realm) = authored_realm {

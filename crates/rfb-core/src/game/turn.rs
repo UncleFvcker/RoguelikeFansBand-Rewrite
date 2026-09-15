@@ -168,6 +168,7 @@ impl Game {
             if let Some((source, poison)) = &waste_exposure {
                 self.apply_player_melee_status(STATUS_POISON, *poison, source);
             }
+            self.decay_samurai_mana();
             self.process_hunger(events);
             if self.player_is_dead() {
                 break;
@@ -290,6 +291,7 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        self.advance_samurai();
         self.advance_music(events, changed, removed_entities)?;
         if local_floor_active {
             self.advance_summon_lifetimes(events, changed, removed_entities);
@@ -667,6 +669,9 @@ impl Game {
     }
 
     pub(super) fn process_natural_hp_regeneration(&mut self, resting: bool) {
+        if self.samurai.posture == 3 {
+            return;
+        }
         if self.wilderness_blocks_regeneration()
             || (self.player_has_status_kind(STATUS_NO_AIR) && !self.player_ignores_suffocation())
             || !self
@@ -743,6 +748,9 @@ impl Game {
     }
 
     fn process_equipment_regeneration(&mut self, events: &mut Vec<DomainEvent>) {
+        if self.samurai.posture == 3 {
+            return;
+        }
         if self.wilderness_blocks_regeneration()
             || (self.player_has_status_kind(STATUS_NO_AIR) && !self.player_ignores_suffocation())
             || !self.world_tick.is_multiple_of(

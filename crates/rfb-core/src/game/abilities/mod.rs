@@ -9,6 +9,7 @@ mod control;
 mod damage;
 mod duelist;
 mod duelist_choices;
+pub(in crate::game) mod hissatsu;
 mod items;
 mod law;
 pub(in crate::game) mod mindcraft;
@@ -42,6 +43,24 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<Position>, CoreError> {
         match (ability.effect.clone(), target_plan) {
+            (AbilityEffectDefinition::Hissatsu { spell }, plan) => {
+                return self.resolve_hissatsu(
+                    &ability,
+                    spell,
+                    plan,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
+            (AbilityEffectDefinition::SamuraiConcentration, _) => {
+                self.samurai_concentrate();
+                return Ok(None);
+            }
+            (AbilityEffectDefinition::SamuraiPosture { posture }, _) => {
+                self.set_samurai_posture(posture);
+                return Ok(None);
+            }
             (AbilityEffectDefinition::Music { spell }, plan) => {
                 return self.resolve_music(
                     &ability,

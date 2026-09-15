@@ -1524,3 +1524,10 @@ status-law-tread-softly-name = 轻声潜行
 creation-realm-music = 音乐
 
 status-music-active = 持续演唱：{ $song }（可用“停止唱歌”结束）
+
+creation-realm-hissatsu = 剑道
+
+hissatsu-harakiri-confirm = 切腹会结束本次生命。确定执行吗？
+hissatsu-harakiri-type = 输入 @ 确认切腹。
+
+status-samurai-posture = 架势：{ $posture }

@@ -96,7 +96,7 @@ impl Game {
         use AbilityEffectDefinition as E;
         if matches!(
             ability.effect,
-            E::BrandWeapon { .. } | E::RechargeFromPlayer { .. }
+            E::BrandWeapon { .. } | E::RechargeFromPlayer { .. } | E::Hissatsu { spell: 11 }
         ) {
             return Some(
                 self.items

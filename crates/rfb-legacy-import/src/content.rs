@@ -17178,6 +17178,7 @@ pub fn audit_demo_weapon_proficiencies(
         ("high-mage.json", 10),
         ("necromancer.json", 37),
         ("bard.json", 17),
+        ("samurai.json", 19),
         ("archer.json", 15),
         ("magic-eater.json", 16),
         ("cavalry.json", 22),

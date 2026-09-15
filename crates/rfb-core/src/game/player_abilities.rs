@@ -816,6 +816,14 @@ impl Game {
                     profile.capacity_per_attribute_index,
                 ),
             ),
+            CastingCapacityFormula::RfbMana if self.player_is_samurai() => {
+                let value = (u32::from(RFB_MAGIC_MANA[usize::from(attribute_index)]) + 10) * 2;
+                let adj = self
+                    .character_definitions()
+                    .map_or(0, |(_, r, _, _)| r.modifiers.wisdom)
+                    .clamp(-5, 5);
+                (i64::from(value) + i64::from(value) * i64::from(adj) / 20).max(0) as u32
+            }
             CastingCapacityFormula::RfbMana => {
                 let mut value =
                     u32::from(RFB_MAGIC_MANA[usize::from(attribute_index)]).saturating_mul(
@@ -845,7 +853,9 @@ impl Game {
                 value
             }
         };
-        if let Some(encumbrance) = &profile.encumbrance {
+        if let Some(encumbrance) = &profile.encumbrance
+            && !self.player_is_samurai()
+        {
             let equipped = self.items.iter().filter_map(|item| {
                 let ItemLocation::Equipped { .. } = &item.location else {
                     return None;
@@ -1156,6 +1166,33 @@ impl Game {
         book_item_id: &str,
         ability_id: &str,
     ) -> Result<(), &'static str> {
+        self.study_single_player_ability(book_item_id, ability_id)?;
+        if self.player_is_samurai() {
+            let book = self.study_book_id(book_item_id).expect("validated book");
+            let ids = self
+                .content
+                .ability_book(book)
+                .expect("validated book")
+                .ability_ids
+                .clone();
+            for id in ids {
+                if self.learned_abilities.contains(&id) {
+                    continue;
+                }
+                let ability = self.content.ability(&id).expect("book spell");
+                if self.progress.level >= Self::player_ability_parameters(ability).minimum_level {
+                    self.study_single_player_ability(book_item_id, &id)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn study_single_player_ability(
+        &mut self,
+        book_item_id: &str,
+        ability_id: &str,
+    ) -> Result<(), &'static str> {
         let Some(profile) = self.casting_profile().cloned() else {
             return Err("no-casting-profile");
         };
@@ -1345,7 +1382,10 @@ impl Game {
     }
 
     pub(super) fn forget_player_ability(&mut self, ability_id: &str) -> Result<(), &'static str> {
-        if self.player_uses_dual_realm_learning() || self.player_is_bard() {
+        if self.player_uses_dual_realm_learning()
+            || self.player_is_bard()
+            || self.player_is_samurai()
+        {
             return Err("manual-forgetting-unavailable");
         }
         let Some(profile) = self.casting_profile().cloned() else {
@@ -1605,13 +1645,20 @@ impl Game {
     ) -> Result<(), CoreError> {
         self.initialize_player_ability_state();
         let mut seen = BTreeSet::new();
+        let samurai = self.player_is_samurai();
+        let level = self.progress.level;
         for saved in saved_resources {
             let Some(pool) = self.resources.get_mut(&saved.id) else {
                 return Err(CoreError::InvalidSave("player resource ID is invalid"));
             };
             if !seen.insert(saved.id)
                 || saved.maximum != pool.maximum
-                || saved.current > saved.maximum
+                || saved.current
+                    > if samurai {
+                        Self::samurai_mana_limit(saved.maximum, level)
+                    } else {
+                        saved.maximum
+                    }
             {
                 return Err(CoreError::InvalidSave("player resource pool is invalid"));
             }
@@ -1682,11 +1729,16 @@ impl Game {
 
     pub(super) fn refresh_player_resource_maxima(&mut self) {
         let (pool_maxima, _) = self.player_ability_baseline();
+        let samurai = self.player_is_samurai();
         for (resource_id, maximum) in &pool_maxima {
             let initial = initial_resource_pool(*maximum);
             let pool = self.resources.entry(resource_id.clone()).or_insert(initial);
             pool.maximum = *maximum;
-            pool.current = pool.current.min(*maximum);
+            pool.current = pool.current.min(if samurai {
+                Self::samurai_mana_limit(*maximum, self.progress.level)
+            } else {
+                *maximum
+            });
         }
         self.resources.retain(|id, _| pool_maxima.contains_key(id));
         self.refresh_player_spell_memory();
@@ -1764,6 +1816,9 @@ impl Game {
         progress: AbilityProgress,
     ) -> u32 {
         let player = Self::player_ability_parameters(ability);
+        if matches!(ability.effect, AbilityEffectDefinition::Hissatsu { .. }) {
+            return player.resource_cost;
+        }
         let proficiency = u64::from(progress.proficiency.min(SPELL_EXP_MASTER));
         let factor = SPELL_MANA_CONST
             .saturating_add(SPELL_MANA_EXPERT)
@@ -1922,6 +1977,9 @@ impl Game {
         profile: &CastingProfileDefinition,
         ability: &AbilityDefinition,
     ) -> u8 {
+        if matches!(ability.effect, AbilityEffectDefinition::Hissatsu { .. }) {
+            return 0;
+        }
         self.profile_failure_percent(
             profile,
             ability,
@@ -1938,6 +1996,15 @@ impl Game {
         resting: bool,
         events: &mut Vec<DomainEvent>,
     ) {
+        let samurai = self.player_is_samurai();
+        if samurai
+            && resting
+            && self
+                .samurai_ability_unavailable_reason("demo.ability.samurai-concentration")
+                .is_none()
+        {
+            self.samurai_concentrate();
+        }
         let changes = self
             .resources
             .keys()
@@ -1956,7 +2023,11 @@ impl Game {
                 pool.current = pool
                     .current
                     .saturating_add(u32::try_from(change).unwrap_or(u32::MAX))
-                    .min(pool.maximum);
+                    .min(if samurai {
+                        before.max(pool.maximum)
+                    } else {
+                        pool.maximum
+                    });
             } else {
                 pool.current = pool
                     .current
@@ -1996,6 +2067,14 @@ impl Game {
 
     fn player_has_rest_need(&self) -> bool {
         self.player.hp < self.effective_player_max_hp()
+            || (self.player_is_samurai()
+                && self
+                    .samurai_ability_unavailable_reason("demo.ability.samurai-concentration")
+                    .is_none()
+                && self
+                    .resources
+                    .values()
+                    .any(|p| p.current < Self::samurai_mana_limit(p.maximum, self.progress.level)))
             || self.player_has_depleted_recoverable_resource(true)
             || self.magic_eater_can_regen()
             || self.recall_is_active()

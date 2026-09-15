@@ -39,6 +39,7 @@ test("new character creation exposes all formal class slices", () => {
     "demo.build.mindcrafter",
     "demo.build.necromancer",
     "demo.build.bard",
+    "demo.build.samurai",
     "demo.build.magic-eater",
     "demo.build.berserker",
     "demo.build.duelist",
@@ -124,9 +125,9 @@ test("random session seeds combine two entropy words without truncation", () => 
 
 test("career leaves retain the existing class and realm mapping", () => {
   assert.equal(CAREER_GROUPS.length, 8);
-  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 212);
+  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 213);
   assert.equal(CAREER_GROUPS.find(group => group.id === "device").options[0].id, "demo.build.magic-eater");
-  assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.berserker", "demo.build.duelist"]);
+  assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.samurai", "demo.build.berserker", "demo.build.duelist"]);
   assert.equal(CAREER_GROUPS.find(group => group.id === "mind").options[0].id, "demo.build.mindcrafter");
   assert.deepEqual(createNewSessionRequest("83", "demo.build.mindcrafter", "demo.race.rfb-human", "心灵术士"), {
     seed: "83", buildId: "demo.build.mindcrafter", raceId: "demo.race.rfb-human", playerName: "心灵术士",
@@ -161,7 +162,7 @@ test("career leaves retain the existing class and realm mapping", () => {
         } else assert.equal(build.firstRealmId, leaf.id.split("-").at(-1));
         assert.equal(leaf.descriptionKey, build.descriptionKey);
         assert.ok(!PLAYTEST_BUILD_IDS.includes(entry.id));
-      } else assert.equal(build.firstRealmId, leaf.id === "demo.build.necromancer" ? "necromancy" : leaf.id === "demo.build.bard" ? "music" : undefined);
+      } else assert.equal(build.firstRealmId, leaf.id === "demo.build.necromancer" ? "necromancy" : leaf.id === "demo.build.bard" ? "music" : leaf.id === "demo.build.samurai" ? "hissatsu" : undefined);
     }
   }
 });

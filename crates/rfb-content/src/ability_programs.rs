@@ -210,6 +210,16 @@ fn ability_program_input_accepts_step(
     input: AbilityProgramInputDefinition,
     effect: &AbilityEffectDefinition,
 ) -> bool {
+    if let AbilityEffectDefinition::Hissatsu { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::Item => *spell == 11,
+            AbilityProgramInputDefinition::SelfTarget => matches!(spell, 4 | 6 | 19 | 22 | 25 | 31),
+            AbilityProgramInputDefinition::CastTarget => {
+                *spell < 32 && !matches!(spell, 4 | 6 | 11 | 19 | 22 | 25 | 31)
+            }
+            _ => false,
+        };
+    }
     if let AbilityEffectDefinition::Music { spell } = effect {
         return match input {
             AbilityProgramInputDefinition::CastTarget => matches!(spell, 2 | 22 | 30),
@@ -285,6 +295,8 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::PrepareConfusingStrike
                     | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
                     | AbilityEffectDefinition::StopSinging
+                    | AbilityEffectDefinition::SamuraiConcentration
+                    | AbilityEffectDefinition::SamuraiPosture { .. }
                     | AbilityEffectDefinition::SatisfyHunger
                     | AbilityEffectDefinition::DevourFlesh { .. }
                     | AbilityEffectDefinition::Vomit

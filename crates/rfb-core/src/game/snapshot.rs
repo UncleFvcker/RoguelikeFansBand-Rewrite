@@ -120,6 +120,7 @@ impl Game {
             minor_slow: self.minor_slow,
             reality_change_ticks: self.reality_change_ticks,
             music: self.music.clone(),
+            samurai: self.samurai,
             pending_mutation_direction: self.pending_mutation_direction.clone(),
             pending_ability_direction: self.pending_ability_direction.clone(),
             pending_ability_glyph: self.pending_ability_glyph.clone(),
@@ -153,6 +154,7 @@ impl Game {
                 .statuses
                 .iter()
                 .chain(self.music_status().iter())
+                .chain(self.samurai_status().iter())
                 .map(crate::effect::StatusInstance::to_dto)
                 .collect(),
             confusing_strike_ready: self.confusing_strike_ready,
@@ -582,9 +584,13 @@ impl Game {
                     && !ability.tags.iter().any(|tag| tag == "usable-while-afraid")
                 {
                     Some("afraid")
-                } else if source == AbilitySourceDto::Learned && self.player_has_anti_magic() {
+                } else if source == AbilitySourceDto::Learned
+                    && !self.player_is_samurai()
+                    && self.player_has_anti_magic()
+                {
                     Some("anti-magic")
                 } else if source == AbilitySourceDto::Learned
+                    && !self.player_is_samurai()
                     && self.player_has_status_kind(STATUS_BERSERK)
                 {
                     Some("berserk")
@@ -606,7 +612,10 @@ impl Game {
                     Some("projectile-unavailable")
                 } else if cooldown_remaining > 0 {
                     Some("cooldown")
-                } else if source == AbilitySourceDto::Learned && book_item_id.is_none() {
+                } else if source == AbilitySourceDto::Learned
+                    && !self.player_is_samurai()
+                    && book_item_id.is_none()
+                {
                     Some("book-unavailable")
                 } else {
                     None
@@ -751,6 +760,7 @@ impl Game {
                     can_forget: source == AbilitySourceDto::Learned
                         && learned
                         && !self.player_is_bard()
+                        && !self.player_is_samurai()
                         && !self.player_uses_dual_realm_learning(),
                     can_cast: unavailable_reason.is_none(),
                     unavailable_reason: unavailable_reason.map(str::to_owned),

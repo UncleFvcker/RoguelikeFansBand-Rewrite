@@ -12,6 +12,9 @@ use std::collections::BTreeSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::game) enum AbilityTargetPlan {
+    Hissatsu {
+        target: TargetSelection,
+    },
     LawSubpoena {
         target_entity_id: String,
     },
@@ -123,6 +126,14 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
+            AbilityEffectDefinition::Hissatsu { spell } => {
+                self.hissatsu_target_plan(ability, spell, target)
+            }
+            AbilityEffectDefinition::SamuraiConcentration
+            | AbilityEffectDefinition::SamuraiPosture { .. } => {
+                matches!(target, TargetSelection::SelfTarget)
+                    .then_some(AbilityTargetPlan::SelfTarget)
+            }
             AbilityEffectDefinition::StopSinging => Some(AbilityTargetPlan::SelfTarget),
             AbilityEffectDefinition::Music { spell } => {
                 self.music_target_plan(ability, spell, target)

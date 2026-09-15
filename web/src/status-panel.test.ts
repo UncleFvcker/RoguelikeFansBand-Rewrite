@@ -164,6 +164,7 @@ test("character overview projects exact experience, actual resources and current
 });
 
 test("self-harming abilities require their dedicated confirmation", () => {
+  assert.equal(abilityConfirmationMessageKey("demo.ability.hissatsu-harakiri"), "hissatsu-harakiri-confirm");
   assert.equal(
     abilityConfirmationMessageKey("rfb.ability.race.devour-flesh"),
     "confirm-ability-devour-flesh",

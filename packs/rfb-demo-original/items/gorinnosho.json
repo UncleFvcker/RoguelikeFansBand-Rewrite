@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.gorinnosho",
+  "nameKey": "item-demo-gorinnosho-name",
+  "descriptionKey": "item-demo-gorinnosho-description",
+  "abilityBookId": "demo.ability-book.gorinnosho",
+  "rfbBaseKind": {
+    "sourceIndex": 558,
+    "tval": 106,
+    "sval": 2
+  },
+  "baseValue": 15000,
+  "generationLevel": 45,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "hissatsu",
+    "book",
+    "spellbook"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

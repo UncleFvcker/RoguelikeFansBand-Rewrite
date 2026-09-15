@@ -9981,6 +9981,44 @@
         }
       ],
       "gapIds": []
+    },
+    {
+      "buildId": "demo.build.samurai",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Samurai uses the standard body and existing melee favorites. Hissatsu tval106 books preserve source kinds 556-559 in ordinary allocation and use the actual learned-book predicate.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/hissatsu.rs#hissatsu_four_books_generate_in_the_full_pool_and_teach_after_pickup"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "master ego.c contains no direct Samurai condition. Existing Samurai equipment favorites, ordinary ego and curse consumers apply."
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "master artifact.c uses the existing Warrior scroll bias for Samurai and the ordinary non-Berserker generation branch. These shared class-slug consumers already include samurai."
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "no-special-difference",
+          "reason": "The source Muramasa Samurai exception belongs to an unavailable fixed artifact. No new fixed-artifact identity or class-specific quest reward is claimed in the Hissatsu realm batch."
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Formal equipped weapons use shared melee, throws and equipment passives. Actual attacks, counter/posture effects, overcharged mana boundaries, learned books and pending directions survive saves.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/hissatsu.rs#hissatsu_formal_books_batch_study_and_all_32_execute_without_books",
+            "crates/rfb-core/src/game/tests/hissatsu.rs#hissatsu_counter_and_iai_use_actual_melee"
+          ]
+        }
+      ],
+      "gapIds": []
     }
   ]
 }

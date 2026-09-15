@@ -599,6 +599,7 @@ export function wildernessClock(worldTick: number): WildernessClock {
 }
 
 export function abilityConfirmationMessageKey(abilityId: string): MessageKey | undefined {
+  if (abilityId === "demo.ability.hissatsu-harakiri") return "hissatsu-harakiri-confirm";
   if (abilityId === "demo.ability.necromancy-repose-of-the-dead") return "confirm-ability-necromancy-repose";
   return abilityId === "rfb.ability.race.devour-flesh"
     ? "confirm-ability-devour-flesh"
@@ -1089,6 +1090,10 @@ export class StatusPanel {
     );
     this.#renderNearby(state);
     const activeEffects = state.player.statuses.map((status) => {
+      if (status.kindId === "rfb.status.samurai-posture") {
+        const posture = state.player.abilities?.find(ability => ability.effects.some(effect => effect.type === "samurai-posture" && effect.posture === state.player.samurai.posture));
+        return this.#localization.format("status-samurai-posture", { posture: this.#localization.format((posture?.nameKey ?? "class-demo-samurai-name") as MessageKey) });
+      }
       if (status.kindId === "rfb.status.music") {
         const song = state.player.abilities?.find(ability => ability.effects.some(effect => effect.type === "music" && effect.spell === state.player.music.spell));
         return this.#localization.format("status-music-active", { song: this.#localization.format((song?.nameKey ?? "status-music-name") as MessageKey) });
@@ -1782,6 +1787,7 @@ export class StatusPanel {
     if (confirmationKey && view && !view.confirm(this.#localization.format(confirmationKey))) {
       return;
     }
+    if (ability.id === "demo.ability.hissatsu-harakiri" && view?.prompt(this.#localization.format("hissatsu-harakiri-type")) !== "@") return;
     if (ability.targetSpec.modes.includes("element")) {
       const element = ability.elementTargets?.find(element => element === elementId);
       if (!element) return;

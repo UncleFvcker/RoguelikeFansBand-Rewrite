@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.hissatsu-hundred-slaughter",
+  "minimumLevel": 31,
+  "resourceCost": 35,
+  "baseFailurePercent": 0,
+  "firstSuccessExperience": 0,
+  "resourceId": "demo.resource.mana",
+  "proficiency": {
+    "initial": 1600,
+    "cap": 1600
+  }
+}

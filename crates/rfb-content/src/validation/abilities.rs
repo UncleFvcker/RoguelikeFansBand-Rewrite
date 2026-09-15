@@ -591,7 +591,9 @@ pub(super) fn validate_abilities(
                 }
                 AbilityEffectDefinition::Necromancy { spell }
                 | AbilityEffectDefinition::Law { spell }
-                | AbilityEffectDefinition::Music { spell } => *spell < 32,
+                | AbilityEffectDefinition::Music { spell }
+                | AbilityEffectDefinition::Hissatsu { spell } => *spell < 32,
+                AbilityEffectDefinition::SamuraiPosture { posture } => *posture <= 4,
                 AbilityEffectDefinition::TrumpSummoning { category } => matches!(
                     category.as_str(),
                     "spider"
@@ -1015,6 +1017,7 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::PrepareConfusingStrike
                 | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
                 | AbilityEffectDefinition::StopSinging
+                | AbilityEffectDefinition::SamuraiConcentration
                 | AbilityEffectDefinition::SatisfyHunger => true,
                 AbilityEffectDefinition::DevourFlesh {
                     maximum_hp_divisor,
@@ -1421,7 +1424,9 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::MeleeAdjacent
             | AbilityEffectDefinition::ProbeMonsters
             | AbilityEffectDefinition::Concentrate
-            | AbilityEffectDefinition::StopSinging => self_target_rule,
+            | AbilityEffectDefinition::StopSinging
+            | AbilityEffectDefinition::SamuraiConcentration
+            | AbilityEffectDefinition::SamuraiPosture { .. } => self_target_rule,
             AbilityEffectDefinition::BreathDamage { .. } => projectile_target_rule,
             AbilityEffectDefinition::Teleport => {
                 !self_targeted
@@ -1442,6 +1447,15 @@ pub(super) fn validate_abilities(
                         })
                 } else {
                     ability.target.modes == [AbilityTargetModeDefinition::SelfTarget]
+                }
+            }
+            AbilityEffectDefinition::Hissatsu { spell } => {
+                if *spell == 11 {
+                    item_target_rule
+                } else if matches!(spell, 4 | 6 | 19 | 22 | 25 | 31) {
+                    self_target_rule
+                } else {
+                    projectile_target_rule
                 }
             }
             AbilityEffectDefinition::Law { spell } => match spell {

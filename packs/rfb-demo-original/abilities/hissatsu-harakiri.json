@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.hissatsu-harakiri",
+  "nameKey": "ability-demo-hissatsu-harakiri-name",
+  "descriptionKey": "ability-demo-hissatsu-harakiri-description",
+  "abilityProgramId": "demo.ability-program.hissatsu-harakiri",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "hissatsu",
+    "technique"
+  ]
+}

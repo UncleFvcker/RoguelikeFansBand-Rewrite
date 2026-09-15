@@ -244,6 +244,7 @@ impl Game {
             || self.player_is_mage()
             || self.player_is_necromancer()
             || self.player_is_bard()
+            || self.player_is_samurai()
             || self.player_is_ranger()
             || self.player_is_priest()
             || self.player_is_warrior_mage()
@@ -261,7 +262,9 @@ impl Game {
         let knowledge = i32::from(self.virtue_current(VirtueKindDto::Knowledge));
         // ponytail: pack, quiver and bag share one inventory; use the pack's
         // 1-in-3 gate until items carry an actual container identity.
-        let frequencies = if self.player_is_mage()
+        let frequencies = if self.player_is_samurai() {
+            [(false, 9_000_u32), (true, 0)]
+        } else if self.player_is_mage()
             || self.player_is_magic_eater()
             || self.player_is_necromancer()
         {
@@ -277,6 +280,9 @@ impl Game {
             [(false, 80_000_u32), (true, 20_000)]
         };
         for (second, frequency) in frequencies {
+            if self.player_is_samurai() && second {
+                continue;
+            }
             let adjusted =
                 frequency * u32::from(RFB_PSEUDO_ID_ADJUSTMENT[usize::from(wisdom)]) / 100;
             let adjusted = adjusted * (625 - knowledge) as u32 / 625;
@@ -323,7 +329,8 @@ impl Game {
                 if in_pack && self.rng.bounded(3) != 0 {
                     continue;
                 }
-                let strong = self.player_is_ranger()
+                let strong = self.player_is_samurai()
+                    || self.player_is_ranger()
                     || second
                     || knowledge >= 100
                     || (self.player_has_mutation("rfb.mutation.good-luck")

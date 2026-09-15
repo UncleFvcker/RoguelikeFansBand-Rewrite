@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.hissatsu-tobi-izuna",
+  "nameKey": "ability-demo-hissatsu-tobi-izuna-name",
+  "descriptionKey": "ability-demo-hissatsu-tobi-izuna-description",
+  "abilityProgramId": "demo.ability-program.hissatsu-tobi-izuna",
+  "target": {
+    "modes": [
+      "direction",
+      "entity",
+      "position"
+    ],
+    "range": 2,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "hissatsu",
+    "technique"
+  ]
+}

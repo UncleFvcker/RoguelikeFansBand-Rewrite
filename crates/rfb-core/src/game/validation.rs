@@ -1739,7 +1739,13 @@ impl Game {
             let pools_valid = self.resources.len() == expected_pool_maxima.len()
                 && expected_pool_maxima.iter().all(|(id, expected_maximum)| {
                     self.resources.get(id).is_some_and(|pool| {
-                        pool.maximum == *expected_maximum && pool.current <= pool.maximum
+                        pool.maximum == *expected_maximum
+                            && pool.current
+                                <= if self.player_is_samurai() {
+                                    Self::samurai_mana_limit(pool.maximum, self.progress.level)
+                                } else {
+                                    pool.maximum
+                                }
                     })
                 });
             let learned_valid = match &casting_profile {
@@ -1787,11 +1793,16 @@ impl Game {
             if let Some(pending) = &self.pending_ability_direction
                 && matches!(
                     pending.ability_id.as_str(),
-                    "demo.ability.chaos-call-chaos" | "demo.ability.trump-shuffle"
+                    "demo.ability.chaos-call-chaos"
+                        | "demo.ability.trump-shuffle"
+                        | "demo.ability.hissatsu-hundred-slaughter"
                 )
             {
                 let cast = &pending.cast_resolution;
-                if !(if pending.ability_id == "demo.ability.trump-shuffle" {
+                if !(if matches!(
+                    pending.ability_id.as_str(),
+                    "demo.ability.trump-shuffle" | "demo.ability.hissatsu-hundred-slaughter"
+                ) {
                     pending.branch_roll == 1
                 } else {
                     (1..=62).contains(&pending.branch_roll)
@@ -1829,7 +1840,9 @@ impl Game {
                 && self.pending_ability_direction.as_ref().is_some_and(|p| {
                     !matches!(
                         p.ability_id.as_str(),
-                        "demo.ability.chaos-call-chaos" | "demo.ability.trump-shuffle"
+                        "demo.ability.chaos-call-chaos"
+                            | "demo.ability.trump-shuffle"
+                            | "demo.ability.hissatsu-hundred-slaughter"
                     )
                 })
                 && self

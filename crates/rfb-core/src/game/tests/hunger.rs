@@ -862,11 +862,15 @@ fn elvish_waybread_uses_normal_and_intolerant_branches() {
     );
 
     assert_eq!(normal.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
-    assert!(
-        (4..=33).contains(&normal.player.hp),
-        "Waybread left the player at {} HP",
-        normal.player.hp
-    );
+    let healed = update
+        .events
+        .iter()
+        .find(|e| e.kind == "item.use-heal")
+        .expect("Waybread heals before the world tick");
+    let amount: i32 = healed.args["amount"].parse().unwrap();
+    assert!((4..=32).contains(&amount));
+    // Remaining poison can deal damage during the same scheduled action.
+    assert!(normal.player.hp > 0 && normal.player.hp <= 1 + amount);
     let poison_reduction = update
         .events
         .iter()

@@ -4816,6 +4816,56 @@
             },
             "type": {
               "type": "string",
+              "const": "hissatsu"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "samurai-concentration"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "posture": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "samurai-posture"
+            }
+          },
+          "required": [
+            "type",
+            "posture"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
               "const": "law"
             }
           },
@@ -14748,6 +14798,9 @@
             "null"
           ]
         },
+        "samurai": {
+          "$ref": "#/$defs/SamuraiStateDto"
+        },
         "sniperConcentration": {
           "anyOf": [
             {
@@ -14797,6 +14850,7 @@
         "fame",
         "fasting",
         "music",
+        "samurai",
         "virtues"
       ]
     },
@@ -15433,6 +15487,35 @@
         "rank",
         "current",
         "maximum"
+      ]
+    },
+    "SamuraiStateDto": {
+      "type": "object",
+      "properties": {
+        "counter": {
+          "type": "boolean"
+        },
+        "manaDecayFraction": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "posture": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "sutemi": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "manaDecayFraction",
+        "posture",
+        "counter",
+        "sutemi"
       ]
     },
     "ShopCategoryDto": {

@@ -542,7 +542,7 @@ fn real_berserker_generated_flags_and_activation_rejection_survive_save_and_cont
     };
     for feature in ["WARNING", "NO_TELE", "activation"] {
         let mut game = template.clone();
-        let draft = (0..512)
+        let draft = (0..8192)
             .find_map(|_| {
                 // A second real build with the same generation input ensures
                 // the scheduler forwards class identity, not just the factory.

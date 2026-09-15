@@ -1067,6 +1067,7 @@ impl Game {
         }
         let reality_change_ticks = payload.player.reality_change_ticks;
         let music = payload.player.music.clone();
+        let samurai = payload.player.samurai;
         if reality_change_ticks > 35 {
             return Err(CoreError::InvalidSave(
                 "player reality change countdown is invalid",
@@ -1104,7 +1105,9 @@ impl Game {
             !match pending.ability_id.as_str() {
                 "demo.ability.nature-natures-wrath" => matches!(pending.branch_roll, 2 | 6),
                 "demo.ability.chaos-call-chaos" => (1..=62).contains(&pending.branch_roll),
-                "demo.ability.trump-shuffle" => pending.branch_roll == 1,
+                "demo.ability.trump-shuffle" | "demo.ability.hissatsu-hundred-slaughter" => {
+                    pending.branch_roll == 1
+                }
                 _ => false,
             } || pending.cast_resolution.ability_id != pending.ability_id
                 || !pending.cast_resolution.succeeded
@@ -1121,6 +1124,9 @@ impl Game {
                         ) | (
                             AbilityEffectDefinition::TrumpShuffle,
                             "demo.ability.trump-shuffle"
+                        ) | (
+                            AbilityEffectDefinition::Hissatsu { spell: 26 },
+                            "demo.ability.hissatsu-hundred-slaughter"
                         )
                     )
                 })
@@ -1555,6 +1561,7 @@ impl Game {
             chaos_patron_id,
             reality_change_ticks,
             music,
+            samurai,
             pending_mutation_direction,
             pending_ability_direction,
             pending_ability_glyph,
@@ -1599,6 +1606,9 @@ impl Game {
         game.reveal_current_visibility();
         game.clear_stale_mogaminator_query();
         game.validate_loaded_state()?;
+        if !game.samurai_state_is_valid() {
+            return Err(CoreError::InvalidSave("invalid Samurai state"));
+        }
         if !game.music_state_is_valid() {
             return Err(CoreError::InvalidSave("invalid Music state"));
         }
@@ -1867,6 +1877,7 @@ impl Game {
         player.chaos_patron_id = self.chaos_patron_id.clone();
         player.reality_change_ticks = self.reality_change_ticks;
         player.music = self.music.clone();
+        player.samurai = self.samurai;
         player.pending_mutation_direction = self.pending_mutation_direction.clone();
         player.pending_ability_direction = self.pending_ability_direction.clone();
         player.pending_ability_glyph = self.pending_ability_glyph.clone();

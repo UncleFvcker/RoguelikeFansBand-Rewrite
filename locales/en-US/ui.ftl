@@ -1528,3 +1528,10 @@ status-law-tread-softly-name = Tread Softly
 creation-realm-music = Music
 
 status-music-active = Singing: { $song } (use Stop Singing to end)
+
+creation-realm-hissatsu = Hissatsu
+
+hissatsu-harakiri-confirm = Harakiri will end this life. Proceed?
+hissatsu-harakiri-type = Type @ to confirm Harakiri.
+
+status-samurai-posture = Posture: { $posture }

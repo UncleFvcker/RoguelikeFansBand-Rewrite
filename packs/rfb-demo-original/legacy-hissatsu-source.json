@@ -1,0 +1,245 @@
+{
+  "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+  "sourceFiles": [
+    "src/samurai.c",
+    "src/hissatsu.c",
+    "src/tables.c",
+    "src/combat.c",
+    "src/cmd1.c",
+    "src/melee1.c",
+    "src/xtra1.c",
+    "src/dungeon.c",
+    "lib/edit/s_info.txt",
+    "lib/edit/k_info.txt",
+    "src/kind_name_zh.inc"
+  ],
+  "spells": [
+    {
+      "slot": 0,
+      "name": "飞饭纲",
+      "abilityId": "demo.ability.hissatsu-tobi-izuna",
+      "minimumLevel": 1,
+      "resourceCost": 15
+    },
+    {
+      "slot": 1,
+      "name": "三向攻击",
+      "abilityId": "demo.ability.hissatsu-three-way-attack",
+      "minimumLevel": 3,
+      "resourceCost": 10
+    },
+    {
+      "slot": 2,
+      "name": "回旋镖",
+      "abilityId": "demo.ability.hissatsu-boomerang",
+      "minimumLevel": 6,
+      "resourceCost": 15
+    },
+    {
+      "slot": 3,
+      "name": "燃烧打击",
+      "abilityId": "demo.ability.hissatsu-burning-strike",
+      "minimumLevel": 9,
+      "resourceCost": 8
+    },
+    {
+      "slot": 4,
+      "name": "探测凶意",
+      "abilityId": "demo.ability.hissatsu-detect-ferocity",
+      "minimumLevel": 10,
+      "resourceCost": 12
+    },
+    {
+      "slot": 5,
+      "name": "震慑打击",
+      "abilityId": "demo.ability.hissatsu-stunning-strike",
+      "minimumLevel": 12,
+      "resourceCost": 25
+    },
+    {
+      "slot": 6,
+      "name": "反击",
+      "abilityId": "demo.ability.hissatsu-counter",
+      "minimumLevel": 14,
+      "resourceCost": 7
+    },
+    {
+      "slot": 7,
+      "name": "拂拔",
+      "abilityId": "demo.ability.hissatsu-harainuke",
+      "minimumLevel": 17,
+      "resourceCost": 20
+    },
+    {
+      "slot": 8,
+      "name": "毒蛇之舌",
+      "abilityId": "demo.ability.hissatsu-serpents-tongue",
+      "minimumLevel": 19,
+      "resourceCost": 10
+    },
+    {
+      "slot": 9,
+      "name": "斩魔剑",
+      "abilityId": "demo.ability.hissatsu-zammaken",
+      "minimumLevel": 22,
+      "resourceCost": 20
+    },
+    {
+      "slot": 10,
+      "name": "风之冲击",
+      "abilityId": "demo.ability.hissatsu-wind-blast",
+      "minimumLevel": 24,
+      "resourceCost": 30
+    },
+    {
+      "slot": 11,
+      "name": "判定",
+      "abilityId": "demo.ability.hissatsu-judge",
+      "minimumLevel": 25,
+      "resourceCost": 10
+    },
+    {
+      "slot": 12,
+      "name": "碎岩击",
+      "abilityId": "demo.ability.hissatsu-rock-smash",
+      "minimumLevel": 27,
+      "resourceCost": 15
+    },
+    {
+      "slot": 13,
+      "name": "乱雪月花",
+      "abilityId": "demo.ability.hissatsu-midare-setsugekka",
+      "minimumLevel": 29,
+      "resourceCost": 45
+    },
+    {
+      "slot": 14,
+      "name": "弱点瞄准",
+      "abilityId": "demo.ability.hissatsu-spot-aiming",
+      "minimumLevel": 32,
+      "resourceCost": 70
+    },
+    {
+      "slot": 15,
+      "name": "魔神斩",
+      "abilityId": "demo.ability.hissatsu-majin-giri",
+      "minimumLevel": 35,
+      "resourceCost": 50
+    },
+    {
+      "slot": 16,
+      "name": "舍身一击",
+      "abilityId": "demo.ability.hissatsu-sutemi",
+      "minimumLevel": 18,
+      "resourceCost": 40
+    },
+    {
+      "slot": 17,
+      "name": "雷鹰斩",
+      "abilityId": "demo.ability.hissatsu-raigeki",
+      "minimumLevel": 22,
+      "resourceCost": 22
+    },
+    {
+      "slot": 18,
+      "name": "突进攻击",
+      "abilityId": "demo.ability.hissatsu-rush",
+      "minimumLevel": 24,
+      "resourceCost": 30
+    },
+    {
+      "slot": 19,
+      "name": "鲜血漩涡",
+      "abilityId": "demo.ability.hissatsu-blood-whirlwind",
+      "minimumLevel": 26,
+      "resourceCost": 35
+    },
+    {
+      "slot": 20,
+      "name": "地震击",
+      "abilityId": "demo.ability.hissatsu-earthquake-strike",
+      "minimumLevel": 30,
+      "resourceCost": 30
+    },
+    {
+      "slot": 21,
+      "name": "裂地击",
+      "abilityId": "demo.ability.hissatsu-cracking-strike",
+      "minimumLevel": 32,
+      "resourceCost": 60
+    },
+    {
+      "slot": 22,
+      "name": "战吼",
+      "abilityId": "demo.ability.hissatsu-war-cry",
+      "minimumLevel": 36,
+      "resourceCost": 40
+    },
+    {
+      "slot": 23,
+      "name": "无双三段",
+      "abilityId": "demo.ability.hissatsu-musou-sandan",
+      "minimumLevel": 39,
+      "resourceCost": 80
+    },
+    {
+      "slot": 24,
+      "name": "吸血鬼之牙",
+      "abilityId": "demo.ability.hissatsu-vampiric-fang",
+      "minimumLevel": 26,
+      "resourceCost": 20
+    },
+    {
+      "slot": 25,
+      "name": "幻月",
+      "abilityId": "demo.ability.hissatsu-moon-dazzling",
+      "minimumLevel": 29,
+      "resourceCost": 40
+    },
+    {
+      "slot": 26,
+      "name": "百人斩",
+      "abilityId": "demo.ability.hissatsu-hundred-slaughter",
+      "minimumLevel": 31,
+      "resourceCost": 35
+    },
+    {
+      "slot": 27,
+      "name": "龙闪",
+      "abilityId": "demo.ability.hissatsu-dragonic-flash",
+      "minimumLevel": 36,
+      "resourceCost": 80
+    },
+    {
+      "slot": 28,
+      "name": "双重斩",
+      "abilityId": "demo.ability.hissatsu-twin-slash",
+      "minimumLevel": 39,
+      "resourceCost": 100
+    },
+    {
+      "slot": 29,
+      "name": "降伏绝刀势",
+      "abilityId": "demo.ability.hissatsu-kofu-zettousei",
+      "minimumLevel": 42,
+      "resourceCost": 110
+    },
+    {
+      "slot": 30,
+      "name": "庆云鬼忍剑",
+      "abilityId": "demo.ability.hissatsu-keiun-kininken",
+      "minimumLevel": 45,
+      "resourceCost": 130
+    },
+    {
+      "slot": 31,
+      "name": "切腹",
+      "abilityId": "demo.ability.hissatsu-harakiri",
+      "minimumLevel": 50,
+      "resourceCost": 255
+    }
+  ],
+  "buildIds": [
+    "demo.build.samurai"
+  ]
+}

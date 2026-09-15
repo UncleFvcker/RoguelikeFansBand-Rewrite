@@ -1633,6 +1633,15 @@ impl Game {
         if self.dungeon_blocks_melee() {
             return Ok(false);
         }
+        if only_blow_index.is_none()
+            && self.samurai.posture == 1
+            && self
+                .resolve_hissatsu_melee(index, 99, events, changed, removed_entities)?
+                .killed
+        {
+            self.samurai.posture = 0;
+            return Ok(false);
+        }
         let source_entity_id = self.entities[index].id.clone();
         let kind_id = self.entities[index].kind_id.clone();
         let nice = self.entities[index].nice;
@@ -2251,6 +2260,21 @@ impl Game {
             }
             if melee_method_triggers_contact_aura(blow.method_id.as_deref())
                 && self.resolve_mutation_contact_auras(index, events, changed, removed_entities)?
+            {
+                return Ok(false);
+            }
+        }
+        if only_blow_index.is_none()
+            && (self.samurai.counter || self.samurai.posture == 4)
+            && self.player.hp > 0
+            && self.entity_is_visible_to_player(&self.entities[index])
+            && let Some(pool) = self.resources.values_mut().next()
+            && pool.current > 7
+        {
+            pool.current -= 7;
+            if self
+                .resolve_hissatsu_melee(index, 6, events, changed, removed_entities)?
+                .killed
             {
                 return Ok(false);
             }
