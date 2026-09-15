@@ -385,6 +385,14 @@ fn danger_damage_other_commands_and_floor_changes_stop_exploration() {
         FatalityPolicy::BelowZero,
     );
     assert!(game.auto_explore.is_none());
+    let mut events = Vec::new();
+    game.finish_auto_explore_step(true, None, false, 0, &mut events);
+    assert!(matches!(
+        events.last(),
+        Some(DomainEvent::AutoExploreStopped {
+            reason: "game-auto-explore-damaged"
+        })
+    ));
     dispatch_next(&mut game, GameCommand::AutoExplore);
     game.auto_explore.as_mut().unwrap().floor_id = "old.floor".into();
     let before = (game.turn, game.world_tick, game.player.position);
@@ -396,9 +404,79 @@ fn danger_damage_other_commands_and_floor_changes_stop_exploration() {
         "demo.actor.war-bear",
         at(5, 1),
     );
-    dispatch_next(&mut game, GameCommand::AutoExplore);
+    let update = dispatch_next(&mut game, GameCommand::AutoExplore);
     assert!(game.auto_explore.is_none());
     assert_eq!((game.turn, game.world_tick, game.player.position), before);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.message_key == "game-auto-explore-enemy-in-sight")
+    );
+}
+
+#[test]
+fn offscreen_and_telepathic_hostiles_do_not_stop_exploration_until_visually_seen() {
+    let mut game = arena();
+    let hidden = at(5, 3);
+    replace_terrain(&mut game, hidden, "demo.terrain.floor");
+    game.push_generated_actor("test.esp.enemy".into(), "demo.actor.newt", hidden);
+    game.player.statuses.push(
+        crate::game::monster_combat::melee_status("rfb.status.telepathy", 100, "test.esp").status,
+    );
+    assert!(game.entity_is_visible_by_telepathy(&game.entities[0]));
+    assert!(!game.entity_is_visually_visible_to_player(&game.entities[0]));
+    let before = game.player.position;
+    let update = dispatch_next(&mut game, GameCommand::AutoExplore);
+    assert_ne!(game.player.position, before);
+    assert!(game.auto_explore.is_some());
+    assert!(
+        !update
+            .events
+            .iter()
+            .any(|event| event.kind == "auto-explore.stopped")
+    );
+    dispatch_next(&mut game, GameCommand::ContinueAutoExplore);
+    assert!(game.auto_explore.is_some());
+
+    game.entities[0].position = at(5, 1);
+    assert!(game.entity_is_visually_visible_to_player(&game.entities[0]));
+    let before = (game.player.position, game.world_tick);
+    let update = dispatch_next(&mut game, GameCommand::ContinueAutoExplore);
+    assert!(game.auto_explore.is_none());
+    assert_eq!((game.player.position, game.world_tick), before);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.message_key == "game-auto-explore-enemy-in-sight")
+    );
+}
+
+#[test]
+fn blocking_status_reports_its_reason_without_advancing_a_turn() {
+    let mut game = arena();
+    game.player.statuses.push(
+        crate::game::monster_combat::melee_status(STATUS_CONFUSION, 10, "test.confusion").status,
+    );
+    let before = (game.player.position, game.world_tick);
+    let update = dispatch_next(&mut game, GameCommand::AutoExplore);
+    assert!(game.auto_explore.is_none());
+    assert_eq!((game.player.position, game.world_tick), before);
+    assert_eq!(
+        update
+            .events
+            .iter()
+            .filter(|event| event.kind == "auto-explore.stopped")
+            .count(),
+        1
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.message_key == "game-auto-explore-confused")
+    );
 }
 
 #[test]
@@ -416,6 +494,12 @@ fn detection_boundary_uses_travel_preflight_without_an_extra_step() {
             .events
             .iter()
             .any(|event| event.kind == "travel.left-detection-area")
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.message_key == "game-auto-explore-detection-boundary")
     );
 }
 
@@ -442,8 +526,20 @@ fn query_and_full_pack_stop_without_retrying_the_same_item() {
         game.items.last_mut().unwrap().location = ItemLocation::Ground(game.player.position);
         game.reveal_current_visibility();
         let before = game.player.position;
-        dispatch_next(&mut game, GameCommand::AutoExplore);
+        let update = dispatch_next(&mut game, GameCommand::AutoExplore);
         assert!(game.auto_explore.is_none(), "query={query}");
+        let reason = if query {
+            "game-auto-explore-pickup-query"
+        } else {
+            "game-auto-explore-pack-full"
+        };
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.message_key == reason),
+            "{reason}"
+        );
         assert_eq!(game.player.position, before);
         assert_eq!(game.mogaminator.pending_query.is_some(), query);
         assert!(

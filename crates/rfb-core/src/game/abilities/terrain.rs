@@ -232,6 +232,7 @@ impl Game {
         let damage = application.damage;
         let center = self.player.position;
         events.push(DomainEvent::AbilityHit {
+            player_target_id: None,
             ability_id: ability_id.to_owned(),
             target_kind_id: self.player.kind_id.clone(),
             damage,
@@ -1083,6 +1084,7 @@ impl Game {
                 match &source {
                     EarthquakeSource::Ability(ability_id) => {
                         events.push(DomainEvent::AbilityHit {
+                            player_target_id: None,
                             ability_id: ability_id.clone(),
                             target_kind_id: self.player.kind_id.clone(),
                             damage,
@@ -1153,6 +1155,7 @@ impl Game {
                 };
                 if let EarthquakeSource::Ability(ability_id) = &source {
                     events.push(DomainEvent::AbilityHit {
+                        player_target_id: Some(self.entities[actor_index].id.clone()),
                         ability_id: ability_id.clone(),
                         target_kind_id: target_kind_id.clone(),
                         damage,
@@ -1169,6 +1172,7 @@ impl Game {
                             .resolve_actor_death(
                                 actor_index,
                                 DomainEvent::AbilitySlew {
+                                    player_target_id: Some(self.entities[actor_index].id.clone()),
                                     ability_id: ability_id.clone(),
                                     target_kind_id,
                                     damage,

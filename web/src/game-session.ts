@@ -136,7 +136,7 @@ function canRepeatLast(command: GameCommand): boolean {
     case "run": case "auto-explore": case "rest": case "rest-for-turns": case "rest-until-resources":
     case "travel-local": case "travel-world": case "travel-unknown-item":
     case "find-nearest-unknown-item": case "enter-world-map": case "leave-world-map":
-    case "pick-up": case "equip": case "unequip": case "drop": case "drop-quantity":
+    case "pick-up": case "pick-up-item": case "equip": case "unequip": case "drop": case "drop-quantity":
     case "destroy-item": case "inscribe-item": case "refuel-light":
     case "fire": case "fire-target": case "throw": case "cast-ability":
     case "use-item": case "use-item-by-glyph": case "use-item-for-recharge":

@@ -57,10 +57,10 @@ export async function runCraftScenario(driver, directory) {
   const beforeCancel = snapshot.stateHash;
   await openAbilities(); await click(`${row("enchantment")} .ability-cast-action`);
   await driver.waitFor('return document.querySelector(".item-target-dialog")?.open', "enchantment targets");
-  await click('.item-target-dialog button[type="button"]');
+  await click('.item-selection-dialog .item-target-actions button[type="button"]');
   assert.equal((await invoke("inspect_game_e2e")).stateHash, beforeCancel);
   await click(`${row("enchantment")} .ability-cast-action`);
-  await driver.execute('const dialog=document.querySelector(".item-target-dialog");dialog.querySelector("select").value="e2e.craft.dagger";dialog.querySelector("form").requestSubmit();return true;');
+  await driver.execute('const dialog=document.querySelector(".item-target-dialog");[...dialog.querySelectorAll(".item-selection-row")].find(row => row.dataset.itemId === "e2e.craft.dagger").click();dialog.querySelector("form").requestSubmit();return true;');
   await driver.waitFor('return document.querySelector("#hash-value").title !== arguments[0]', "weapon enchantment completed", 10_000, [beforeCancel]);
   await ready(); snapshot = await invoke("inspect_game_e2e");
   const dagger = snapshot.inventory.find(i => i.id === "e2e.craft.dagger");

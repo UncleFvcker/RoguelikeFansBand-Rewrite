@@ -1037,12 +1037,14 @@ export class StatusPanel {
             current: dungeon.currentDepth,
             maximum: dungeon.maximumDepth,
           });
-    this.#dom.dungeonInfoBossRow.hidden = dungeon.bossNameKey === undefined;
+    this.#dom.dungeonInfoBossRow.hidden = dungeon.currentDepth === undefined;
     this.#dom.hudLocationValue.textContent = hudLocationText(state, this.#localization, this.#contentName);
     this.#dom.hudLocationValue.title = this.#dom.hudLocationValue.textContent;
     this.#dom.dungeonInfoBoss.textContent = dungeon.bossNameKey
-      ? this.#localization.format(dungeon.bossNameKey)
-      : "";
+      ? this.#localization.format(dungeon.bossDefeated ? "dungeon-boss-defeated" : "dungeon-boss-undefeated", {
+          boss: this.#localization.format(dungeon.bossNameKey),
+        })
+      : this.#localization.format("dungeon-boss-none");
     this.#renderCombatStat(
       this.#dom.attackValue,
       state.player.attack,

@@ -332,12 +332,14 @@ pub(crate) enum DomainEvent {
         quantity: u32,
     },
     AbilityHit {
+        player_target_id: Option<String>,
         ability_id: String,
         target_kind_id: String,
         damage: DamageOutcome,
         trace: ProjectileTrace,
     },
     AbilitySlew {
+        player_target_id: Option<String>,
         ability_id: String,
         target_kind_id: String,
         damage: DamageOutcome,
@@ -984,15 +986,18 @@ pub(crate) enum DomainEvent {
         trace: ProjectileTrace,
     },
     ProjectileMissed {
+        target_entity_id: String,
         target_kind_id: String,
         trace: ProjectileTrace,
     },
     ProjectileHit {
+        target_entity_id: String,
         target_kind_id: String,
         damage: DamageOutcome,
         trace: ProjectileTrace,
     },
     ProjectileSlew {
+        target_entity_id: String,
         target_kind_id: String,
         damage: DamageOutcome,
         trace: ProjectileTrace,
@@ -1008,17 +1013,20 @@ pub(crate) enum DomainEvent {
         trace: ProjectileTrace,
     },
     ItemThrowMissed {
+        target_entity_id: String,
         source_kind_id: String,
         target_kind_id: String,
         trace: ProjectileTrace,
     },
     ItemThrowHit {
+        target_entity_id: String,
         source_kind_id: String,
         target_kind_id: String,
         damage: DamageOutcome,
         trace: ProjectileTrace,
     },
     ItemThrowSlew {
+        target_entity_id: String,
         source_kind_id: String,
         target_kind_id: String,
         damage: DamageOutcome,
@@ -1470,9 +1478,11 @@ pub(crate) enum DomainEvent {
     MiningProficiencyImproved,
     TerrainFoundSomething,
     PlayerMeleeMissed {
+        target_entity_id: String,
         target_kind_id: String,
     },
     MutationMeleeMissed {
+        target_entity_id: String,
         mutation_id: String,
         attack_name: String,
         target_kind_id: String,
@@ -1507,10 +1517,12 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
     },
     PlayerMeleeHit {
+        target_entity_id: String,
         target_kind_id: String,
         damage: DamageOutcome,
     },
     MutationMeleeHit {
+        target_entity_id: String,
         mutation_id: String,
         attack_name: String,
         target_kind_id: String,
@@ -1527,10 +1539,12 @@ pub(crate) enum DomainEvent {
         duration: u32,
     },
     PlayerSlew {
+        target_entity_id: String,
         target_kind_id: String,
         damage: DamageOutcome,
     },
     MutationMeleeSlew {
+        target_entity_id: String,
         mutation_id: String,
         attack_name: String,
         target_kind_id: String,
@@ -1733,7 +1747,52 @@ pub(crate) enum DomainEvent {
 
 impl DomainEvent {
     pub(crate) fn into_dto(self) -> GameEventDto {
-        match self {
+        let attack_target = match &self {
+            Self::PlayerMeleeMissed {
+                target_entity_id, ..
+            }
+            | Self::PlayerMeleeHit {
+                target_entity_id, ..
+            }
+            | Self::PlayerSlew {
+                target_entity_id, ..
+            }
+            | Self::MutationMeleeMissed {
+                target_entity_id, ..
+            }
+            | Self::MutationMeleeHit {
+                target_entity_id, ..
+            }
+            | Self::MutationMeleeSlew {
+                target_entity_id, ..
+            }
+            | Self::ProjectileMissed {
+                target_entity_id, ..
+            }
+            | Self::ProjectileHit {
+                target_entity_id, ..
+            }
+            | Self::ProjectileSlew {
+                target_entity_id, ..
+            }
+            | Self::ItemThrowMissed {
+                target_entity_id, ..
+            }
+            | Self::ItemThrowHit {
+                target_entity_id, ..
+            }
+            | Self::ItemThrowSlew {
+                target_entity_id, ..
+            } => Some(target_entity_id.clone()),
+            Self::AbilityHit {
+                player_target_id, ..
+            }
+            | Self::AbilitySlew {
+                player_target_id, ..
+            } => player_target_id.clone(),
+            _ => None,
+        };
+        let mut projected = match self {
             Self::ItemSpecialMessage { message_key } => {
                 dto_without_args("item.special", &message_key)
             }
@@ -2275,6 +2334,7 @@ impl DomainEvent {
                 target_kind_id,
                 damage,
                 trace,
+                ..
             } => with_trace(
                 dto_with_outcome(
                     "ability.hit",
@@ -2295,6 +2355,7 @@ impl DomainEvent {
                 target_kind_id,
                 damage,
                 trace,
+                ..
             } => with_trace(
                 dto_with_outcome(
                     "ability.slay",
@@ -4145,6 +4206,7 @@ impl DomainEvent {
             Self::ProjectileMissed {
                 target_kind_id,
                 trace,
+                ..
             } => with_trace(
                 dto(
                     "combat.projectile-miss",
@@ -4157,6 +4219,7 @@ impl DomainEvent {
                 target_kind_id,
                 damage,
                 trace,
+                ..
             } => with_trace(
                 dto_with_outcome(
                     "combat.projectile-hit",
@@ -4175,6 +4238,7 @@ impl DomainEvent {
                 target_kind_id,
                 damage,
                 trace,
+                ..
             } => with_trace(
                 dto_with_outcome(
                     "combat.projectile-slay",
@@ -4232,6 +4296,7 @@ impl DomainEvent {
                 source_kind_id,
                 target_kind_id,
                 trace,
+                ..
             } => with_trace(
                 dto(
                     "combat.throw-miss",
@@ -4245,6 +4310,7 @@ impl DomainEvent {
                 target_kind_id,
                 damage,
                 trace,
+                ..
             } => with_trace(
                 dto_with_outcome(
                     "combat.throw-hit",
@@ -4265,6 +4331,7 @@ impl DomainEvent {
                 target_kind_id,
                 damage,
                 trace,
+                ..
             } => with_trace(
                 dto_with_outcome(
                     "combat.throw-slay",
@@ -5709,7 +5776,7 @@ impl DomainEvent {
             Self::TerrainFoundSomething => {
                 dto_without_args("terrain.found-something", "terrain-found-something")
             }
-            Self::PlayerMeleeMissed { target_kind_id } => dto(
+            Self::PlayerMeleeMissed { target_kind_id, .. } => dto(
                 "combat.miss",
                 "combat-player-miss",
                 [("target", target_kind_id)],
@@ -5718,6 +5785,7 @@ impl DomainEvent {
                 mutation_id,
                 attack_name,
                 target_kind_id,
+                ..
             } => dto(
                 "mutation.melee-miss",
                 "mutation-melee-miss",
@@ -5784,6 +5852,7 @@ impl DomainEvent {
             Self::PlayerMeleeHit {
                 target_kind_id,
                 damage,
+                ..
             } => dto_with_outcome(
                 "combat.hit",
                 "combat-player-hit",
@@ -5800,6 +5869,7 @@ impl DomainEvent {
                 attack_name,
                 target_kind_id,
                 damage,
+                ..
             } => dto_with_outcome(
                 "mutation.melee-hit",
                 "mutation-melee-hit",
@@ -5842,6 +5912,7 @@ impl DomainEvent {
             Self::PlayerSlew {
                 target_kind_id,
                 damage,
+                ..
             } => dto_with_outcome(
                 "combat.slay",
                 "combat-player-slay",
@@ -5855,6 +5926,7 @@ impl DomainEvent {
                 attack_name,
                 target_kind_id,
                 damage,
+                ..
             } => dto_with_outcome(
                 "mutation.melee-slay",
                 "mutation-melee-slay",
@@ -6376,7 +6448,11 @@ impl DomainEvent {
                     resolution: damage.into(),
                 },
             ),
+        };
+        if let Some(id) = attack_target {
+            projected.args.insert("attackTarget".to_owned(), id);
         }
+        projected
     }
 }
 

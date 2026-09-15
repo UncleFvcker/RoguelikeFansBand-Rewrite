@@ -1399,6 +1399,7 @@ impl Game {
                     | GameAction::ConfigureMogaminator { .. }
                     | GameAction::AutoGet { .. }
                     | GameAction::PickUp
+                    | GameAction::PickUpItem { .. }
                     | GameAction::SwapRings { .. }
                     | GameAction::ResolveMogaminatorQuery { .. }
                     | GameAction::ResolveMutationDirection { .. }
@@ -2469,6 +2470,13 @@ impl Game {
             GameAction::PickUp => {
                 self.pick_up_floor(true, true, &mut events, &mut changed)?;
             }
+            GameAction::PickUpItem { item_id } => {
+                let outcome = self.pick_up_item_at_player(Some(&item_id))?;
+                if matches!(&outcome, PickUpOutcome::Nothing) {
+                    events.push(DomainEvent::NothingToPickUp);
+                }
+                self.record_pick_up_outcome(outcome, &mut events, &mut changed);
+            }
             GameAction::Unequip { slot_id } => {
                 if let Some((target_kind_id, severity)) = self
                     .cursed_equipment_in_slot(&slot_id)
@@ -3029,7 +3037,7 @@ impl Game {
         if run_command {
             self.finish_run_step(player_moved, map_translation, &mut events);
         }
-        if explore_command {
+        if explore_command && !unavailable_explore {
             self.finish_auto_explore_step(
                 player_moved,
                 map_translation,

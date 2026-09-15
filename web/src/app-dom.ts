@@ -18,6 +18,8 @@ export interface AppDom {
   readonly targetModeStatus: HTMLElement;
   readonly combatContext: HTMLElement;
   readonly combatSummaryList: HTMLOListElement;
+  readonly combatTargetTitle: HTMLElement;
+  readonly combatTargetHealth: HTMLElement;
   readonly connectionStatus: HTMLElement;
   readonly dungeonInfoName: HTMLElement;
   readonly dungeonInfoDepthRow: HTMLElement;
@@ -149,6 +151,8 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     targetModeStatus: element<HTMLElement>(document, "target-mode-status"),
     combatContext: element<HTMLElement>(document, "combat-context"),
     combatSummaryList: element<HTMLOListElement>(document, "combat-summary-list"),
+    combatTargetTitle: element<HTMLElement>(document, "combat-target-title"),
+    combatTargetHealth: element<HTMLElement>(document, "combat-target-health"),
     connectionStatus: element<HTMLElement>(document, "connection-status"),
     dungeonInfoName: element<HTMLElement>(document, "dungeon-info-name"),
     dungeonInfoDepthRow: element<HTMLElement>(document, "dungeon-info-depth-row"),

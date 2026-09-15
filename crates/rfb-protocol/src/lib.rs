@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.297";
+pub const PROTOCOL_VERSION: &str = "1.299";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 45;
 
@@ -526,6 +526,9 @@ pub enum GameCommand {
         direction: Direction,
     },
     PickUp,
+    PickUpItem {
+        item_id: String,
+    },
     Retire,
     EndCharacter,
     ContinueFishing,
@@ -942,7 +945,7 @@ impl Default for OperationOptionsDto {
             },
             cut_corners: false,
             travel_ignore_items: true,
-            default_target: DefaultTargetModeDto::Manual,
+            default_target: DefaultTargetModeDto::OldThenNearest,
             target_pets: false,
             easy_open: true,
             easy_disarm: true,
@@ -5120,6 +5123,15 @@ pub struct DungeonStatusDto {
     pub name_key: String,
     pub current_depth: u16,
     pub maximum_depth: u16,
+    pub guardian: Option<FloorGuardianDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct FloorGuardianDto {
+    pub name_key: String,
+    pub defeated: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -6074,6 +6086,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(CampaignStatusDto);
     push_declaration!(CampaignStateDto);
     push_declaration!(DungeonStatusDto);
+    push_declaration!(FloorGuardianDto);
     push_declaration!(TownDto);
     push_declaration!(ShopCategoryDto);
     push_declaration!(ShopOwnerDto);
@@ -7271,6 +7284,9 @@ mod tests {
                 second_slot_id: "ring-2".into(),
             },
             GameCommand::PickUp,
+            GameCommand::PickUpItem {
+                item_id: "demo.item.shovel.1".to_owned(),
+            },
             GameCommand::AutoGet {
                 object_id: "generated.gold.1".to_owned(),
             },

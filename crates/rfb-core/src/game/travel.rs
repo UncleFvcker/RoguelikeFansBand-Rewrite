@@ -21,6 +21,14 @@ const DIRECTIONS: [Direction; 8] = [
 ];
 
 impl Game {
+    fn automatic_movement_hostile_exists(&self) -> bool {
+        if self.auto_explore.is_some() {
+            self.auto_explore_hostile_in_sight()
+        } else {
+            self.visible_hostile_exists()
+        }
+    }
+
     pub(super) fn record_detection_coverage(
         &mut self,
         category: &str,
@@ -81,7 +89,7 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
-        if self.visible_hostile_exists()
+        if self.automatic_movement_hostile_exists()
             || self.player_has_status_kind(STATUS_BLINDNESS)
             || self.player_has_status_kind(STATUS_CONFUSION)
         {
@@ -134,12 +142,16 @@ impl Game {
             };
             resolution.detected_entity_ids.iter().any(|id| {
                 self.entities.iter().any(|actor| {
-                    actor.id == *id && actor.hp > 0 && !self.actor_is_player_side(actor)
+                    actor.id == *id
+                        && actor.hp > 0
+                        && !self.actor_is_player_side(actor)
+                        && (self.auto_explore.is_none()
+                            || self.entity_is_visually_visible_to_player(actor))
                 })
             })
         });
         Ok(!found_hostile
-            && !self.visible_hostile_exists()
+            && !self.automatic_movement_hostile_exists()
             && self
                 .content
                 .terrain(self.known_terrain_at(next))
@@ -265,11 +277,7 @@ impl Game {
             || start == destination
             || self.player_has_status_kind(STATUS_BLINDNESS)
             || self.player_has_status_kind(STATUS_CONFUSION)
-            || self.entities.iter().any(|entity| {
-                entity.hp > 0
-                    && !self.actor_is_player_side(entity)
-                    && self.entity_is_visible_to_player(entity)
-            })
+            || self.automatic_movement_hostile_exists()
             || !self.local_travel_position_is_available(destination)
         {
             return None;

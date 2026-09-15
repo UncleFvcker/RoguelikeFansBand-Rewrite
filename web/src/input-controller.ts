@@ -81,9 +81,11 @@ export class InputController {
   readonly #onContinuousActionChange: () => void;
   readonly #describeLook: (position: { readonly x: number; readonly y: number }) => string;
   readonly #openObjectList: () => void;
+  readonly #openMonsterRecall?: (position: Position) => void;
   readonly #openMogaminator: () => void;
   readonly #openDeviceCommand: (key: string) => boolean;
   readonly #onLookFocusChange: (position: Position | undefined) => void;
+  readonly #onTargetChange?: (target: TargetSelection | undefined) => void;
   readonly #announce: (
     key: MessageKey,
     args: Record<string, string | number> | undefined,
@@ -125,9 +127,11 @@ export class InputController {
     onContinuousActionChange?: () => void;
     describeLook: (position: { readonly x: number; readonly y: number }) => string;
     openObjectList: () => void;
+    openMonsterRecall?: (position: Position) => void;
     openMogaminator: () => void;
     openDeviceCommand?: (key: string) => boolean;
     onLookFocusChange: (position: Position | undefined) => void;
+    onTargetChange?: (target: TargetSelection | undefined) => void;
     announce: (
       key: MessageKey,
       args: Record<string, string | number> | undefined,
@@ -151,9 +155,11 @@ export class InputController {
     this.#onContinuousActionChange = options.onContinuousActionChange ?? (() => {});
     this.#describeLook = options.describeLook;
     this.#openObjectList = options.openObjectList;
+    this.#openMonsterRecall = options.openMonsterRecall;
     this.#openMogaminator = options.openMogaminator;
     this.#openDeviceCommand = options.openDeviceCommand ?? (() => false);
     this.#onLookFocusChange = options.onLookFocusChange;
+    this.#onTargetChange = options.onTargetChange;
     this.#announce = options.announce;
   }
 
@@ -168,6 +174,7 @@ export class InputController {
     this.#window.document.addEventListener("visibilitychange", this.#stopWhenHidden);
     this.#window.addEventListener("resize", this.#handleResize);
     this.#dom.mapHost.addEventListener("map-camera-change", this.#handleResize);
+    this.#dom.mapHost.addEventListener("click", this.#handleMapClick);
     this.#dom.traverseStairs.addEventListener("click", this.#handleTraverseStairs);
     this.#dom.searchModeToggle.addEventListener("click", this.#handleSearchModeToggle);
     this.#dom.autoExplore.addEventListener("click", this.#handleAutoExplore);
@@ -188,6 +195,7 @@ export class InputController {
     this.#window.document.removeEventListener("visibilitychange", this.#stopWhenHidden);
     this.#window.removeEventListener("resize", this.#handleResize);
     this.#dom.mapHost.removeEventListener("map-camera-change", this.#handleResize);
+    this.#dom.mapHost.removeEventListener("click", this.#handleMapClick);
     this.#dom.traverseStairs.removeEventListener("click", this.#handleTraverseStairs);
     this.#dom.searchModeToggle.removeEventListener("click", this.#handleSearchModeToggle);
     this.#dom.autoExplore.removeEventListener("click", this.#handleAutoExplore);
@@ -209,9 +217,6 @@ export class InputController {
     const status = this.#state.status;
     if (!status || this.#state.busy || this.#state.commandBlocked) return;
     this.startTargetingWithSpec({ modes: ["entity", "position"], range: Math.max(status.width, status.height), requiresLineOfEffect: false }, { type: "select-target" });
-    this.#rememberedTarget = undefined;
-    if (this.#state.targeting) this.#state.targeting = cycleTarget(this.#state.targeting, status.entities, 0);
-    this.render();
   }
 
   startLookMode(): void {
@@ -386,8 +391,9 @@ export class InputController {
     const options = this.#state.status.operationOptions;
     next.targetPets = options.targetPets;
     const remembered = this.#rememberedTarget?.floorId === this.#state.status.floorId ? this.#rememberedTarget.target : undefined;
-    this.#state.targeting = intent.type === "select-target" ? next
-      : defaultTargetState(next, options.defaultTarget, remembered, this.#state.status.entities);
+    this.#state.targeting = defaultTargetState(next,
+      intent.type === "select-target" ? "old-then-nearest" : options.defaultTarget,
+      remembered, this.#state.status.entities);
     this.#state.targetingIntent = intent;
     this.#announce("message-target-mode-started", undefined, "system");
     this.render();
@@ -551,7 +557,13 @@ export class InputController {
     }
   }
 
+  get selectedTarget(): TargetSelection | undefined {
+    return this.#rememberedTarget?.floorId === this.#state.status?.floorId
+      ? this.#rememberedTarget?.target : undefined;
+  }
+
   render(): void {
+    this.#onTargetChange?.(this.selectedTarget);
     if (this.#mapDisplay.render(this.#dom.mapHost, this.#state, this.#getZoom()))
       this.#announce("display-left-trap-detection", undefined, "system");
     const looking = this.#state.targetingIntent?.type === "look";
@@ -687,6 +699,48 @@ export class InputController {
 
   readonly #handleResize = (): void => {
     this.#window.requestAnimationFrame(() => this.render());
+  };
+
+  readonly #handleMapClick = (event: MouseEvent): void => {
+    const status = this.#state.status;
+    const host = this.#dom.mapHost;
+    if (event.defaultPrevented || event.button !== 0 || event.detail > 1 ||
+        event.ctrlKey || event.altKey || event.metaKey || event.shiftKey ||
+        !host.contains(event.target as Node) || !status || this.#state.busy ||
+        this.#state.mode !== "playing" || this.#state.playerDead || this.#state.campaignEnded ||
+        this.continuousAction || this.#window.document.hidden ||
+        host.ownerDocument.querySelector("dialog[open]") || status.mogaminator.pendingQuery ||
+        (!this.#state.targeting && (this.#state.commandBlocked || this.#state.terrainInteractionMode ||
+          this.#ridingDirection || this.#runDirectionPreset || this.#walkDirection))) return;
+    const bounds = host.getBoundingClientRect();
+    const x = event.clientX - bounds.left - host.clientLeft;
+    const y = event.clientY - bounds.top - host.clientTop;
+    if (x < 0 || y < 0 || x >= host.clientWidth || y >= host.clientHeight) return;
+    const size = MAP_CELL_SIZE * this.#getZoom();
+    const position = {
+      x: Math.floor((x + host.scrollLeft - Number(host.dataset.cameraX ?? 0)) / size),
+      y: Math.floor((y + host.scrollTop - Number(host.dataset.cameraY ?? 0)) / size),
+    };
+    if (position.x < 0 || position.y < 0 || position.x >= status.width || position.y >= status.height) return;
+    event.preventDefault();
+    if (this.#state.targeting) {
+      this.#state.targeting = { ...this.#state.targeting, cursor: position,
+        list: status.entities.some(entity => samePosition(entity.position, position)) };
+      if (this.#state.targetingIntent?.type === "look") {
+        this.#onLookFocusChange(position);
+        this.render();
+        return;
+      }
+      if (this.#state.targetingIntent?.type !== "local-travel") {
+        void this.#confirmTargeting();
+        this.render();
+        return;
+      }
+      this.cancelTargeting(false);
+    }
+    if (samePosition(position, status.player.position)) return;
+    if (this.#state.worldMap) void this.#travelWorldTo(position);
+    else void this.travelLocalTo(position);
   };
 
   readonly #handleKeydown = (event: KeyboardEvent): void => this.#processKeydown(event);
@@ -896,7 +950,6 @@ export class InputController {
     else if (shortcut === "search") void this.dispatchCounted({ type: "search" }, count);
     else if (shortcut === "fire") this.startProjectileTargeting();
     else if (shortcut === "rest") void this.chooseRestMode(count);
-    else if (shortcut === "pickup") void this.#dispatch({ type: "pick-up" });
     else if (shortcut === "nearest-unknown-item") void this.travelToNearestUnknownItem();
     else if (shortcut === "resume-travel") {
       const destination = this.#state.worldMap ? (this.#worldTravelDestination ?? this.#state.status?.worldTravelDestination) : this.#localTravelDestination;
@@ -932,6 +985,12 @@ export class InputController {
     const aim = this.#state.targeting;
     const intent = this.#state.targetingIntent;
     const interactiveTarget = aim && intent && !["look", "local-travel", "mutation-direction", "ability-direction"].includes(intent.type);
+    if (aim && (intent?.type === "look" || interactiveTarget) && event.key === "r" &&
+        !event.ctrlKey && !event.altKey && !event.metaKey) {
+      event.preventDefault();
+      this.#openMonsterRecall?.(aim.cursor);
+      return;
+    }
     if (interactiveTarget && [" ", "*", "+", "-", "m", "o", "p"].includes(event.key)) {
       event.preventDefault();
       if (event.key === "o" || event.key === "p") {
@@ -1153,7 +1212,11 @@ export class InputController {
       this.#announce("message-target-selection-invalid", undefined, "system");
       return;
     }
-    if (target.type !== "direction") this.#rememberedTarget = { target, floorId: status.floorId };
+    // Remember the monster even when this command aims at a grid or direction.
+    // Its death or movement must not leave future shots attached to the old square.
+    const entity = status.entities.find(entity => samePosition(entity.position, state.cursor));
+    const remembered: TargetSelection = entity ? { type: "entity", entityId: entity.id } : target;
+    if (remembered.type !== "direction") this.#rememberedTarget = { target: remembered, floorId: status.floorId };
     this.cancelTargeting(false);
     if (intent.type === "select-target") {
       this.#announce("message-target-selected", undefined, "system");

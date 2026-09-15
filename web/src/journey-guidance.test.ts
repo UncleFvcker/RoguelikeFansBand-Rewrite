@@ -25,23 +25,25 @@ function state(overrides = {}) {
   };
 }
 
-test("journey status shows dungeon depth and only an undefeated boss", () => {
+test("journey status uses only the current floor guardian, including defeated guardians", () => {
   assert.deepEqual(
     selectJourneyDungeonStatus(state()),
     {
       dungeonNameKey: "floor-demo-surface-name",
       currentDepth: undefined,
       maximumDepth: undefined,
-      bossNameKey: "actor-demo-the-serpent-of-chaos-name",
+      bossNameKey: undefined,
+      bossDefeated: undefined,
     },
   );
   assert.deepEqual(
-    selectJourneyDungeonStatus(state({ floorId: "demo.floor.angband-depth-100", dungeon: { nameKey: "floor-demo-angband-depth-name", currentDepth: 100, maximumDepth: 127 } })),
+    selectJourneyDungeonStatus(state({ floorId: "demo.floor.angband-depth-99", dungeon: { nameKey: "floor-demo-angband-depth-name", currentDepth: 99, maximumDepth: 127, guardian: { nameKey: "actor-demo-oberon-king-of-amber-name", defeated: false } } })),
     {
       dungeonNameKey: "floor-demo-angband-depth-name",
-      currentDepth: 100,
+      currentDepth: 99,
       maximumDepth: 127,
-      bossNameKey: "actor-demo-the-serpent-of-chaos-name",
+      bossNameKey: "actor-demo-oberon-king-of-amber-name",
+      bossDefeated: false,
     },
   );
   assert.deepEqual(
@@ -53,12 +55,16 @@ test("journey status shows dungeon depth and only an undefeated boss", () => {
       currentDepth: 101,
       maximumDepth: 127,
       bossNameKey: undefined,
+      bossDefeated: undefined,
     },
   );
   assert.deepEqual(
     selectJourneyDungeonStatus(state({ worldId: "demo.world.original-v1" })),
     { dungeonNameKey: "journey-dungeon-none" },
   );
+  const defeated = selectJourneyDungeonStatus(state({ dungeon: { nameKey: "warrens", currentDepth: 9, maximumDepth: 9, guardian: { nameKey: "guardian", defeated: true } } }));
+  assert.equal(defeated.bossNameKey, "guardian");
+  assert.equal(defeated.bossDefeated, true);
 });
 
 test("onboarding distinguishes journey prompts from suppressible optional help", () => {

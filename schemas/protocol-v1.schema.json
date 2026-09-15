@@ -9595,6 +9595,16 @@
           "maximum": 65535,
           "minimum": 0
         },
+        "guardian": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FloorGuardianDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "maximumDepth": {
           "type": "integer",
           "format": "uint16",
@@ -10347,6 +10357,21 @@
       "required": [
         "itemId",
         "choices"
+      ]
+    },
+    "FloorGuardianDto": {
+      "type": "object",
+      "properties": {
+        "defeated": {
+          "type": "boolean"
+        },
+        "nameKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "nameKey",
+        "defeated"
       ]
     },
     "GameCommand": {
@@ -11400,6 +11425,22 @@
           },
           "required": [
             "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "pick-up-item"
+            }
+          },
+          "required": [
+            "type",
+            "itemId"
           ]
         },
         {

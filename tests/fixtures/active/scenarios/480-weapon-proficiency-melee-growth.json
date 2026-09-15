@@ -66,7 +66,7 @@
       },
       "revision": 1,
       "rngDrawCounter": 635,
-      "stateHash": "d318ff6aee469e6d54a89f79c723209793191690c2128aa5bd08f62359825efd",
+      "stateHash": "98ed059e3b95358a773ebbe984d99dc8329719e40f8fc3a0fd2128955c52325d",
       "turn": 1
     },
     "events": [
@@ -74,6 +74,7 @@
         "kind": "combat.miss",
         "messageKey": "combat-player-miss",
         "args": {
+          "attackTarget": "contract.weapon-proficiency-target",
           "target": "demo.actor.adobe-golem"
         }
       }

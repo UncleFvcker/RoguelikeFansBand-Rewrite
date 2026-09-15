@@ -174,6 +174,14 @@ fn stay_searches_and_discoveries_stop_run_and_exploration_without_switching_off(
         assert!(game.searching);
         assert!(game.running.is_none());
         assert!(game.auto_explore.is_none());
+        if command == GameCommand::AutoExplore {
+            assert!(
+                update
+                    .events
+                    .iter()
+                    .any(|event| event.message_key == "game-auto-explore-discovery")
+            );
+        }
         assert_eq!(game.turn, 1);
     }
 }

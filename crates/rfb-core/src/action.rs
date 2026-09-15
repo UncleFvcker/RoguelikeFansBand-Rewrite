@@ -165,6 +165,9 @@ pub(crate) enum GameAction {
     ContinueFishing,
     CancelFishing,
     PickUp,
+    PickUpItem {
+        item_id: String,
+    },
     Retire,
     EndCharacter,
     Rest {
@@ -377,6 +380,7 @@ impl GameAction {
             | Self::ConfigureMogaminator { .. }
             | Self::AutoGet { .. }
             | Self::PickUp
+            | Self::PickUpItem { .. }
             | Self::SwapRings { .. }
             | Self::ResolveMogaminatorQuery { .. }
             | Self::ResolveMutationDirection { .. }
@@ -579,6 +583,7 @@ impl From<GameCommand> for GameAction {
             GameCommand::ContinueFishing => Self::ContinueFishing,
             GameCommand::CancelFishing => Self::CancelFishing,
             GameCommand::PickUp => Self::PickUp,
+            GameCommand::PickUpItem { item_id } => Self::PickUpItem { item_id },
             GameCommand::Retire => Self::Retire,
             GameCommand::EndCharacter => Self::EndCharacter,
             GameCommand::Rest { turns } => Self::Rest {

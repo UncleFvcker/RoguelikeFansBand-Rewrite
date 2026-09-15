@@ -207,8 +207,11 @@ fn plan_disarm_trap(
     direction: Direction,
 ) -> Option<TerrainMutationPlan> {
     let position = context.position_in_direction(direction);
+    // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, cmd2.c do_cmd_disarm:
+    // loose ground objects do not block access to a floor trap.
     if !context.revealed_terrain.contains(&position)
-        || context.unavailable_reason(position).is_some()
+        || context.unavailable_reason(position)
+            == Some(TerrainInteractionUnavailableReasonDto::OccupiedByActor)
     {
         return None;
     }

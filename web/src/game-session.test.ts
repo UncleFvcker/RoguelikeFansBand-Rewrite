@@ -45,6 +45,8 @@ test("last command keeps independent copies of chosen parameters and ignores int
   assert.equal(session.lastCommand.itemId, "device-a");
   await session.dispatch({ type: "buy-from-shop", shopId: "shop", itemId: "x", quantity: 1 });
   assert.equal(session.lastCommand, undefined, "unsupported user actions clear history instead of replaying an older action");
+  await session.dispatch({ type: "pick-up-item", itemId: "chosen" });
+  assert.deepEqual(session.lastCommand, { type: "pick-up-item", itemId: "chosen" });
 });
 
 test("history clears on failures, new sessions, floor changes and map translations", async () => {

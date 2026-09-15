@@ -121,8 +121,8 @@ try {
         if (command.type === "study-prayer") await click(`[data-book-item-id="${command.bookItemId}"] [data-ability-action="study-prayer"]`);
         else await click(`[data-ability-id="${command.abilityId}"] ${command.type === "study-ability" ? '[data-ability-action="study"]' : '.ability-cast-action'}`);
         if (command.target?.type === "item") {
-          await driver.waitFor('return !!document.querySelector("dialog.item-target-dialog[open] select")', "spell item target");
-          await driver.execute('const dialog=document.querySelector("dialog.item-target-dialog[open]");const select=dialog.querySelector("select");select.value=arguments[0];select.dispatchEvent(new Event("change",{bubbles:true}));dialog.querySelector("button[type=submit]").click();return true;', [command.target.itemId]);
+          await driver.waitFor('return !!document.querySelector(".item-selection-dialog[open] .item-selection-row")', "spell item target");
+          await driver.execute('const dialog=document.querySelector("dialog.item-target-dialog[open]");[...dialog.querySelectorAll(".item-selection-row")].find(row=>row.dataset.itemId===arguments[0]).click();dialog.querySelector("button[type=submit]").click();return true;', [command.target.itemId]);
         }
         if (command.target?.type === "direction") { await keyboard.key("6"); await keyboard.key("Enter"); }
         if (command.target?.type === "position") await keyboard.key("Enter");

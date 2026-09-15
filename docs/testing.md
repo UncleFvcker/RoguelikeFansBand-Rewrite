@@ -1,6 +1,6 @@
 # 验证与契约
 
-本次 v0.0.1 发布批次的回归、契约差异和普通 EXE 验收已记录于[发布验证](release-0.0.1-validation.md)。当前协议 1.297、payload 45、State Hash Schema 150，生成物及内容 lock 已同步。
+本次 v0.0.2 发布批次的回归、契约差异和普通 EXE 验收已记录于[发布验证](release-0.0.2-validation.md)。当前协议 1.299、payload 45、State Hash Schema 150，生成物及内容 lock 已同步。当前功能与验证范围见[状态快照](status.md)。
 
 ## 选择范围
 

@@ -62,6 +62,13 @@ test("target list skips pets and out-of-range entities; directional selection fa
   assert.deepEqual(targetSelectionAtCursor({ ...state, list: false, spec: { ...SPEC, modes: ["entity"] } }, entities), { type: "entity", entityId: "east" });
 });
 
+test("nearest fallback measures from the player rather than the previous cursor", () => {
+  const state = { ...beginTargeting({ x: 1, y: 1 }, { ...SPEC, range: 10 }), cursor: { x: 8, y: 1 }, list: true };
+  const entities = [{ id: "near-player", faction: "hostile", position: { x: 2, y: 1 } },
+    { id: "near-corpse", faction: "hostile", position: { x: 7, y: 1 } }];
+  assert.deepEqual(defaultTargetState(state, "old-then-nearest", { type: "entity", entityId: "dead" }, entities).cursor, { x: 2, y: 1 });
+});
+
 test("target mode accepts direction, grid, or entity selection", () => {
   assert.equal(beginTargeting({ x: 3, y: 3 }, undefined), undefined);
   assert.deepEqual(

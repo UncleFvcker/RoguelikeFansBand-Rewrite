@@ -52,12 +52,12 @@ export async function runOneRingScenario(driver, directory) {
   await click("#player-ui-inventory-open");
   async function openRead() {
     await click("#inventory-more");await click("#inventory-read");
-    await driver.waitFor('return !!document.querySelector(".item-target-dialog[open] select")', "readable item selector");
-    assert.deepEqual(await driver.execute('return [...document.querySelector(".item-target-dialog[open] select").options].map(option=>option.value)'), [id]);
+    await driver.waitFor('return !!document.querySelector(".item-selection-dialog[open] .item-selection-row")', "readable item selector");
+    assert.deepEqual(await driver.execute('return [...document.querySelectorAll(".item-selection-dialog[open] .item-selection-row")].map(option=>option.dataset.itemId)'), [id]);
   }
   await openRead();const beforeCancel=await hash();
   await writeFile(path.join(directory,"selector.png"),await driver.screenshot(),"base64");
-  await click('.item-target-dialog[open] button[type="button"]');
+  await click('.item-selection-dialog[open] .item-target-actions button[type="button"]');
   assert.equal(await hash(), beforeCancel);
   async function read() {
     await openRead();const before=await hash();await click('.item-target-dialog[open] button[type="submit"]');await changed(before);

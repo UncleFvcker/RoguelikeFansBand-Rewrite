@@ -50,6 +50,11 @@ def main():
         index = actor.get("allocation", {}).get("legacyIndex", indexes.get(actor["id"]))
         monsters[actor["id"]] = (colors[index] if index is not None
                                  else palette[attrs[original[actor["id"].removeprefix("demo.actor.")]]])
+    write_colors(root, monsters)
+    print(f"Synced {len(monsters)} monster colors to three tilesets from master@{commit}")
+
+
+def write_colors(root, colors):
     for name in ("ascii-default", "image-demo", "rfb-pixel-28"):
         path = root / "web/public/tilesets" / name / "tileset.json"
         raw = path.read_bytes()
@@ -62,23 +67,24 @@ def main():
             cursor += len(text[cursor:]) - len(text[cursor:].lstrip(" \n\t,"))
             if text[cursor] == "}":
                 break
-            actor, end = decoder.raw_decode(text, cursor)
+            identity, end = decoder.raw_decode(text, cursor)
             start = text.index("{", end)
             _, cursor = decoder.raw_decode(text, start)
-            if actor in monsters:
-                found.add(actor)
+            if identity in colors:
+                found.add(identity)
                 value = re.sub(r'("foreground"\s*:\s*)"#[0-9a-fA-F]{6}"',
-                               lambda m: m[1] + json.dumps(monsters[actor]), text[start:cursor])
+                               lambda m: m[1] + json.dumps(colors[identity]), text[start:cursor])
+                if '"foreground"' not in value:
+                    value = value.rstrip()[:-1].rstrip() + ', "foreground": ' + json.dumps(colors[identity]) + " }"
                 replacements.append((start, cursor, value))
-        additions = [f'    "{actor}": {{ "foreground": "{color}" }}'
-                     for actor, color in monsters.items() if actor not in found]
+        additions = [f'    "{identity}": {{ "foreground": "{color}" }}'
+                     for identity, color in colors.items() if identity not in found]
         if additions:
             insert = len(text[:cursor].rstrip())
             replacements.append((insert, cursor, ",\n" + ",\n".join(additions) + "\n  "))
         for start, end, value in reversed(replacements):
             text = text[:start] + value + text[end:]
         path.write_bytes(text.replace("\n", "\r\n" if b"\r\n" in raw else "\n").encode("utf-8"))
-    print(f"Synced {len(monsters)} monster colors to three tilesets from master@{commit}")
 
 
 if __name__ == "__main__":

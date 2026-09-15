@@ -19,6 +19,38 @@ function readManifest(path: string): unknown {
   return JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 }
 
+test("all item kinds, public appearances, players and gold have explicit ASCII colors", () => {
+  const ids = new Set<string>();
+  const glyphs: Record<string, string> = {};
+  for (const category of ["items", "actors"]) {
+    const directory = new URL(`../../packs/rfb-demo-original/${category}/`, import.meta.url);
+    for (const file of readdirSync(directory).filter(file => file.endsWith(".json"))) {
+      const item = JSON.parse(readFileSync(new URL(file, directory), "utf8"));
+      if (category === "actors" && item.role === "monster") continue;
+      ids.add(item.id); glyphs[item.id] = item.glyph;
+      if (item.appearanceNameKey) ids.add(`core.appearance.${item.appearanceNameKey}`);
+      if (item.tags?.includes("artifact") && !item.artifactGeneration) ids.add(`core.appearance.symbol-${item.glyph.codePointAt(0).toString(16)}`);
+    }
+  }
+  const gold = readFileSync(new URL("../../crates/rfb-core/src/game/gold.rs", import.meta.url), "utf8");
+  for (const match of gold.matchAll(/"(core\.gold\.[a-z-]+)"/g)) ids.add(match[1]);
+  for (const name of ["ascii-default", "image-demo", "rfb-pixel-28"]) {
+    const manifest = parseTilesetManifest(readManifest(`../public/tilesets/${name}/tileset.json`));
+    for (const id of ids) {
+      assert.ok(manifest.mappings[id]?.foreground, `${name}: ${id}`);
+      const visual = resolveTilesetVisual(manifest, id, glyphs, false);
+      assert.equal(visual.foreground, Number.parseInt(manifest.mappings[id].foreground.slice(1), 16), `${name}: ${id}`);
+      assert.notEqual(visual.background, Number.parseInt(manifest.fallback.background.slice(1), 16), `${name}: ${id}`);
+    }
+    assert.equal(manifest.mappings["demo.item.corpse-remains"].foreground, "#404040");
+    assert.equal(manifest.mappings["demo.item.skeleton-remains"].foreground, "#ffffff");
+    assert.equal(manifest.mappings["demo.item.cure-serious-wounds-potion"].foreground, "#ffff00");
+    assert.equal(manifest.mappings["core.appearance.item-demo-cure-serious-wounds-potion-appearance"].foreground, "#ffff00");
+    assert.equal(manifest.mappings["core.appearance.symbol-2f"].foreground, "#c0c0c0");
+    assert.equal(manifest.mappings["core.appearance.item-demo-unfamiliar-food-name"].foreground, "#804000");
+  }
+});
+
 test("every monster has a color mapping and same-glyph birds retain their source colors", () => {
   const directory = new URL("../../packs/rfb-demo-original/actors/", import.meta.url);
   const monsters = readdirSync(directory).filter(name => name.endsWith(".json"))

@@ -287,7 +287,7 @@ export async function runPriestUiScenario(driver, directory, profile, playthroug
           await focus(`${powerRow(power)} .ability-cast-action`); await keyboard.key("Enter");
           if (good) {
             await driver.waitFor('return document.querySelector(".item-target-dialog")?.open', "blessing target selection");
-            await driver.execute('const dialog=document.querySelector(".item-target-dialog");dialog.querySelector("select").value="e2e.priest-dagger";dialog.querySelector("form").requestSubmit();return true;');
+            await driver.execute('const dialog=document.querySelector(".item-target-dialog");[...dialog.querySelectorAll(".item-selection-row")].find(row => row.dataset.itemId === "e2e.priest-dagger").click();dialog.querySelector("form").requestSubmit();return true;');
           }
           current = await changed(before.stateHash, "class power");
           const resolution = await driver.execute('return window.__priestUpdate.events.find(e=>e.outcome?.type==="ability-cast")?.outcome.resolution');

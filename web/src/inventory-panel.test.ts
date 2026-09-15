@@ -11,12 +11,41 @@ import {
   filterInventoryItems,
   formatTenthsPound,
   itemIdentificationMessageKey,
+  itemCombatSummary,
   itemTargetCandidates,
   itemSelectionSource,
   itemFitsBodySlot,
   parseDropQuantity,
   selectedRechargingItems,
 } from "./inventory-panel.ts";
+
+test("combat summaries retain dice and zero bonuses while hiding unidentified enchantments", () => {
+  const meleeProfile = { damage: { dice: 1, sides: 6 }, toHit: 1, toDamage: 0 };
+  const weapon = item("sword", { identification: "appraised", meleeProfile });
+  assert.equal(itemCombatSummary(weapon), "(1d6) (+1,0)");
+  assert.equal(itemCombatSummary({ ...weapon, identification: "unexamined" }), "(1d6)");
+  assert.equal(itemCombatSummary(item("unknown")), "");
+  const armor = item("armor", { modifiers: { defense: 5 }, enchantments: { toHit: 0, toDamage: 0, toArmor: 2 } });
+  assert.equal(itemCombatSummary(armor), "[5]");
+  assert.equal(itemCombatSummary({ ...armor, identification: "appraised" }), "[5,+2]");
+  assert.equal(itemCombatSummary({ ...weapon, meleeProfile: { ...meleeProfile, toHit: -2, toDamage: -1 } }), "(1d6) (-2,-1)");
+  assert.equal(itemCombatSummary(item("bow", { identification: "identified", projectileProfile: { damage: { dice: 99, sides: 99 } } })), "(0,0)", "launcher summary must not mistake its reference ammunition for bow dice");
+});
+
+test("equipped weapon details and inventory names share visible combat numbers", (t) => {
+  const { panel, dom } = createInventoryFixture(t);
+  const weapon = item("sword", { identification: "appraised", equipmentSlot: "weapon",
+    meleeProfile: { damage: { dice: 2, sides: 4 }, toHit: 1, toDamage: 0 }, modifiers: { strength: 2 } });
+  panel.render([weapon], []);
+  assert.match(dom.inventoryList.children[0].children[0].children[2].textContent, /sword \(2d4\) \(\+1,0\)/);
+  panel.render([], [{ ...weapon, slotId: "right-hand" }]);
+  panel.openDetail(weapon.id);
+  assert.equal(dom.inventoryDetailTitle.textContent, "sword (2d4) (+1,0)");
+  const details = dom.inventoryDetailBody.children;
+  assert.match(details.find(child => child.className === "item-combat-dice").textContent, /"dice":2,"sides":4/);
+  assert.match(details.find(child => child.className === "item-combat-bonuses").textContent, /"hit":"\+1","damage":"0"/);
+  assert.ok(details.some(child => child.textContent?.includes("item-modifier-strength") && child.textContent.includes("+2")));
+});
 
 test("inventory rows and search use the projected instance artifact name", (t) => {
   const { panel, dom } = createInventoryFixture(t);
@@ -129,7 +158,7 @@ test("counted item commands use quantities, clamp to the stack, and retain destr
     f.panel.render([item("stack", { quantity: 4 })], []);
     f.panel.openCommand(command, count);
     const dialog = f.document.body.children.at(-1), form = dialog.children[0];
-    form.children[1].children[1].value = "stack";
+    selectItem(selectionList(form), "stack");
     form.dispatchEvent(new Event("submit", { cancelable: true }));
     await Promise.resolve();
   };
@@ -152,9 +181,9 @@ test("item shortcuts choose authoritative categories and use the existing target
   const choose = (command, id) => {
     f.panel.openCommand(command);
     const dialog = f.document.body.children.at(-1);
-    const form = dialog.children[0], select = form.children[1].children[1];
-    const ids = select.children.map(option => option.value);
-    select.value = id;
+    const form = dialog.children[0], select = selectionList(form);
+    const ids = select.children.map(option => option.dataset.itemId ?? option.value);
+    selectItem(select, id);
     form.dispatchEvent(new Event("submit", { cancelable: true }));
     return ids;
   };
@@ -205,10 +234,10 @@ test("item shortcuts choose authoritative categories and use the existing target
   f.panel.openCommand("inspect");
   f.document.body.children.at(-1).close();
   assert.equal(f.commands.length, before, "cancelled selection never dispatches");
-  f.state.status.items = [{ id: "adjacent", kindId: "chest", displayNameKey: "chest", position: { x: 2, y: 1 } }];
+  f.state.status.items = [{ id: "adjacent", kindId: "chest", displayNameKey: "chest", visual: { id: "chest", glyph: "~" }, quantity: 1, position: { x: 2, y: 1 } }];
   f.panel.selectChest("open-chest", f.state.status.items);
   const chestForm = f.document.body.children.at(-1).children[0];
-  chestForm.children[1].children[1].value = "adjacent";
+  selectItem(selectionList(chestForm), "adjacent");
   chestForm.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.deepEqual(f.commands.at(-1), { type: "open-chest", itemId: "adjacent" });
   f.state.busy = true;
@@ -223,6 +252,9 @@ function item(id, extra = {}) {
     identification: "unexamined",
     modifiers: { attack: 0, defense: 0, maxHp: 0, speed: 0 },
     ...extra,
+    modifiers: { attack: 0, defense: 0, maxHp: 0, speed: 0,
+      strength: 0, intelligence: 0, wisdom: 0, dexterity: 0, constitution: 0, charisma: 0,
+      spellPowerBonus: 0, devicePowerBonus: 0, ...extra.modifiers },
   };
 }
 
@@ -248,14 +280,14 @@ test("multiple ring slots choose distinct fingers and cancellation at either ste
   f.state.equipment = [{ ...item("ring"), slotId: "ring-6" }];
   const select = id => {
     const form = f.document.body.children[0].children[0];
-    form.children[1].children[1].value = id;
+    selectItem(selectionList(form), id);
     form.dispatchEvent(new Event("submit", { cancelable: true }));
   };
   f.panel.swapRings(); f.document.body.children[0].close();
   assert.equal(f.commands.length, 0);
   f.panel.swapRings(); select("ring-3");
   let second = f.document.body.children[0];
-  assert.deepEqual(second.children[0].children[1].children[1].children.map(option => option.value),
+  assert.deepEqual(second.children[0].children[1].children[1].children.map(option => option.dataset.itemId ?? option.value),
     ["ring-1", "ring-2", "ring-4", "ring-5", "ring-6"]);
   second.close(); assert.equal(f.commands.length, 0);
   f.panel.swapRings(); select("ring-3"); select("ring-6");
@@ -288,9 +320,9 @@ test("body-slot cards retain repeated slots and empty-slot choices target the ex
   third.dispatchEvent(new Event("click"));
   const chooser = document.body.children[0];
   const form = chooser.children[0];
-  const select = form.children[1].children[1];
-  assert.deepEqual(select.children.map((option) => option.value), ["sword", "pick"]);
-  select.value = "pick";
+  const select = selectionList(form);
+  assert.deepEqual(select.children.map((option) => option.dataset.itemId ?? option.value), ["sword", "pick"]);
+  selectItem(select, "pick");
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.deepEqual(commands, [{ type: "equip", itemId: "pick", slotId: "hand-c" }]);
 });
@@ -557,7 +589,7 @@ test("using items starts map targeting only for map targets and preserves rechar
   const chooser = document.body.children[0];
   assert.equal(chooser.open, true);
   const form = chooser.children[0];
-  form.children[1].children[1].value = "target";
+  selectItem(selectionList(form), "target");
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.deepEqual(commands[1], { type: "use-item-for-recharge", itemId: "wand", sourceItemId: "source", targetItemId: "target" });
 });
@@ -574,8 +606,8 @@ test("Jewel activation offers both recall choices and cancels without using the 
     const dialog = open();
     const form = dialog.children[0];
     assert.match(form.children[0].textContent, /^jewel-recall-title/);
-    assert.deepEqual(form.children[1].children[1].children.map(option => option.value), ["no", "yes"]);
-    form.children[1].children[1].value = choice;
+    assert.deepEqual(selectionList(form).children.map(option => option.dataset.itemId ?? option.value), ["no", "yes"]);
+    selectItem(selectionList(form), choice);
     form.dispatchEvent(new Event("submit", { cancelable: true }));
   }
   assert.deepEqual(commands, [
@@ -616,8 +648,8 @@ test("recharge activation selects distinct pack or ground devices and cancels ei
     const source = start();
     const form = source.children[0];
     assert.match(form.children[0].textContent, /^inventory-recharge-source-title/);
-    assert.deepEqual(form.children[1].children[1].children.map(option => option.value), ["donor"]);
-    form.children[1].children[1].value = "donor";
+    assert.deepEqual(selectionList(form).children.map(option => option.dataset.itemId ?? option.value), ["donor"]);
+    selectItem(selectionList(form), "donor");
     form.dispatchEvent(new Event("submit", { cancelable: true }));
     return document.body.children[0];
   };
@@ -626,8 +658,8 @@ test("recharge activation selects distinct pack or ground devices and cancels ei
   assert.deepEqual(commands, [{ type: "use-item", itemId: "cloak" }, { type: "use-item", itemId: "cloak" }]);
   const target = selectDonor().children[0];
   assert.match(target.children[0].textContent, /^inventory-recharge-target-title/);
-  assert.deepEqual(target.children[1].children[1].children.map(option => option.value), ["ground"]);
-  target.children[1].children[1].value = "ground";
+  assert.deepEqual(selectionList(target).children.map(option => option.dataset.itemId ?? option.value), ["ground"]);
+  selectItem(selectionList(target), "ground");
   target.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.deepEqual(commands[2], { type: "use-item-for-recharge", itemId: "cloak", sourceItemId: "donor", targetItemId: "ground" });
   panel.render([donor], [{ ...cloak, slotId: "cloak" }]);
@@ -649,7 +681,7 @@ test("item-use target cancellation reaches core once, while a confirmed target d
   assert.deepEqual(commands, [{ type: "use-item", itemId: "staff" }]);
   dom.inventoryUse.dispatchEvent(new Event("click"));
   const form = document.body.children[0].children[0];
-  form.children[1].children[1].value = "target";
+  selectItem(selectionList(form), "target");
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.deepEqual(commands[1], { type: "use-item", itemId: "staff", target: { type: "item", itemId: "target" } });
   assert.equal(commands.length, 2);
@@ -666,7 +698,7 @@ test("crafting confirms risky whole stacks and cancelling dispatches nothing", (
     state.selectedInventoryIds.add("craft");
     dom.inventoryUse.dispatchEvent(new Event("click"));
     const form = document.body.children[0].children[0];
-    form.children[1].children[1].value = "arrows";
+    selectItem(selectionList(form), "arrows");
     form.dispatchEvent(new Event("submit", { cancelable: true }));
   };
   choose(31);
@@ -695,9 +727,9 @@ test("Mundanity uses core targets and cancels resistance loss without a command"
     state.selectedInventoryIds.add("scroll");
     dom.inventoryUse.dispatchEvent(new Event("click"));
     const form = document.body.children[0].children[0];
-    const select = form.children[1].children[1];
-    assert.deepEqual(select.children.map(option => option.value), ["dragon"]);
-    select.value = "dragon";
+    const select = selectionList(form);
+    assert.deepEqual(select.children.map(option => option.dataset.itemId ?? option.value), ["dragon"]);
+    selectItem(select, "dragon");
     form.dispatchEvent(new Event("submit", { cancelable: true }));
   };
   choose();
@@ -723,9 +755,9 @@ test("artifact creation uses core candidates, confirms stack loss, and distingui
     state.selectedInventoryIds.add("scroll");
     dom.inventoryUse.dispatchEvent(new Event("click"));
     const form = document.body.children[0].children[0];
-    const select = form.children[1].children[1];
-    assert.deepEqual(select.children.map((option) => option.value), ["target"]);
-    select.value = "target";
+    const select = selectionList(form);
+    assert.deepEqual(select.children.map((option) => option.dataset.itemId ?? option.value), ["target"]);
+    selectItem(select, "target");
     return form;
   };
   choose(4).children[2].children[0].dispatchEvent(new Event("click"));
@@ -750,19 +782,19 @@ test("inscription reading uses core pack and floor candidates without activation
   const ring = item("ring", { readable: true, usable: true, useTargetSpec: null,
     charges: { current: 0, maximum: 1 } });
   state.status.items = [
-    { id: "floor-ring", kindId: "demo.item.one-ring", displayNameKey: "one-ring", readable: true },
-    { id: "out-of-reach", kindId: "demo.item.one-ring", displayNameKey: "one-ring", readable: false },
+    { id: "floor-ring", kindId: "demo.item.one-ring", displayNameKey: "one-ring", visual: { id: "ring", glyph: "=" }, quantity: 1, readable: true },
+    { id: "out-of-reach", kindId: "demo.item.one-ring", displayNameKey: "one-ring", visual: { id: "ring", glyph: "=" }, quantity: 1, readable: false },
   ];
   panel.render([ring, item("darnya", { readable: false })], []);
   assert.equal(dom.inventoryRead.hidden, false);
   const choose = () => {
     dom.inventoryRead.dispatchEvent(new Event("click"));
     const form = document.body.children[0].children[0];
-    const select = form.children[1].children[1];
-    assert.deepEqual(select.children.map(option => option.value), ["ring"]);
+    const select = selectionList(form);
+    assert.deepEqual(select.children.map(option => option.dataset.itemId ?? option.value), ["ring"]);
     selectionKey(document.body.children[0], "f", { ctrlKey: true });
-    assert.deepEqual(select.children.map(option => option.value), ["floor-ring"]);
-    select.value = "floor-ring";
+    assert.deepEqual(select.children.map(option => option.dataset.itemId ?? option.value), ["floor-ring"]);
+    selectItem(select, "floor-ring");
     return form;
   };
   choose().children[2].children[0].dispatchEvent(new Event("click"));
@@ -796,6 +828,7 @@ function createInventoryFixture(t) {
     setCustomValidity(message) { this.validationMessage = message; }
     reportValidity() { return !this.validationMessage; }
     focus() { document.activeElement = this; }
+    scrollIntoView() {}
     showModal() { this.open = true; }
     close() { this.open = false; this.dispatchEvent(new Event("close")); }
     remove() { this.parentElement.children = this.parentElement.children.filter((child) => child !== this); }
@@ -809,7 +842,9 @@ function createInventoryFixture(t) {
     querySelectorAll(selector) {
       return this.children.flatMap((child) => {
         if (typeof child === "string") return [];
-        const matches = ["button", "option"].includes(selector) ? child.tag === selector : child.tag === "input" && child.type === "checkbox";
+        const matches = selector.startsWith(".") ? child.className?.split(" ").includes(selector.slice(1)) :
+          selector.startsWith('[role="') ? child.getAttribute("role") === selector.slice(7, -2) :
+          ["button", "option", "select"].includes(selector) ? child.tag === selector : child.tag === "input" && child.type === "checkbox";
         return [...(matches ? [child] : []), ...child.querySelectorAll(selector)];
       });
     }
@@ -869,7 +904,7 @@ test("selection sources use Core quiver membership without changing eligible can
   const options = [];
   for (const key of ["e", "q", "f"]) {
     selectionKey(dialog, key, { ctrlKey: true });
-    options.push(...document.body.querySelectorAll("option").map(option => [option.value, option.dataset.source]));
+    options.push(...document.body.querySelectorAll('[role="option"]').map(option => [option.dataset.itemId, option.dataset.source]));
   }
   assert.deepEqual(options, [["worn", "equipment"], ["arrows", "quiver"], ["floor", "floor"]]);
   assert.deepEqual(commands, [], "source projection and opening selection do not execute actions");
@@ -878,6 +913,21 @@ test("selection sources use Core quiver membership without changing eligible can
   state.inventory = state.inventory.filter(entry => entry.id !== "arrows");
   assert.equal(itemSelectionSource(state, "arrows"), undefined);
 });
+
+function selectionList(form) {
+  return form.querySelectorAll('[role="listbox"]')[0] ?? form.querySelectorAll("select")[0];
+}
+function selectedItem(list) {
+  return list.tag === "select" ? list.value : list.children.find(row => row.getAttribute("aria-selected") === "true")?.dataset.itemId;
+}
+function selectItem(list, id) {
+  if (list.tag === "select") list.value = id;
+  else list.children.find(row => row.dataset.itemId === id).dispatchEvent(new Event("click"));
+}
+function selectionPart(form, name) { return form.querySelectorAll(`.item-selection-${name}`)[0]; }
+function optionLabel(row) {
+  return row.tag === "option" ? row.textContent : `${row.children[0].textContent}) ${row.children.find(child => child.className === "inventory-item-name").textContent}`;
+}
 
 function selectionKey(dialog, key, extra = {}) {
   const event = new Event("keydown", { cancelable: true });
@@ -888,6 +938,78 @@ function selectionKey(dialog, key, extra = {}) {
   return event;
 }
 
+test("manual pickup selects only underfoot items using the shared picker", async t => {
+  const f = createInventoryFixture(t);
+  f.state.status.player.position = { x: 4, y: 7 };
+  const ground = (id, x = 4) => ({ id, kindId: id, displayNameKey: id, knowledge: "unknown",
+    quantity: 2, visual: { kind: "item", id, glyph: "!" }, position: { x, y: 7 } });
+  f.panel.render([item("carried")], []);
+  f.state.status.items = [ground("first"), ground("chosen"), ground("distant", 5)];
+  f.panel.pickUp();
+  let dialog = f.document.body.children.at(-1), form = dialog.children[0], list = selectionList(form);
+  assert.match(form.children[0].textContent, /^item-pickup-title /);
+  assert.deepEqual(list.children.map(row => row.dataset.itemId), ["first", "chosen"]);
+  assert.ok(list.children.every(row => row.dataset.source === "floor"));
+  selectItem(list, "chosen");
+  assert.deepEqual(f.commands, [], "browsing the floor is not a pickup");
+  selectionKey(dialog, "Enter");
+  await Promise.resolve();
+  assert.deepEqual(f.commands, [{ type: "pick-up-item", itemId: "chosen" }]);
+  assert.equal(dialog.open, false);
+
+  f.panel.pickUp();
+  dialog = f.document.body.children.at(-1);
+  selectionKey(dialog, "Escape");
+  assert.equal(dialog.open, false);
+  assert.equal(f.commands.length, 1, "cancel leaves all items untouched");
+  f.panel.pickUp();
+  dialog = f.document.body.children.at(-1);
+  f.state.status = { ...f.state.status, items: [] };
+  selectionKey(dialog, "Enter");
+  assert.equal(f.commands.length, 1, "an old selection cannot pick up a different item");
+  f.panel.reset();
+
+  for (const items of [[], [ground("only")], [ground("only"), ground("distant", 5)]]) {
+    f.state.status.items = items;
+    f.panel.pickUp();
+    assert.deepEqual(f.commands.at(-1), { type: "pick-up" });
+    assert.equal(f.document.body.children.length, 0, "at most one underfoot item needs no picker");
+  }
+});
+
+test("drop, equip and unequip share inventory rows with read-only mouse and keyboard previews", async t => {
+  for (const command of ["drop", "equip", "unequip"]) {
+    const f = createInventoryFixture(t);
+    const sword = item("sword", { equipmentSlot: "weapon", identification: "appraised",
+      meleeProfile: { damage: { dice: 1, sides: 6 }, toHit: 1, toDamage: 0 } });
+    const armor = item("armor", { equipmentSlot: "body", identification: "appraised", modifiers: { defense: 5 } });
+    f.panel.render(command === "unequip" ? [] : [sword, armor],
+      command === "unequip" ? [{ ...sword, slotId: "weapon" }, { ...armor, slotId: "body" }] : []);
+    f.panel.openCommand(command);
+    const dialog = f.document.body.children[0], form = dialog.children[0], list = selectionList(form);
+    assert.equal(list.getAttribute("role"), "listbox");
+    assert.equal(list.children[0].getAttribute("role"), "option");
+    assert.match(optionLabel(list.children[0]), /sword \(1d6\) \(\+1,0\)/);
+    assert.equal(selectionPart(form, "help").open, false);
+    assert.equal(selectedItem(list), "sword");
+    selectItem(list, "armor");
+    assert.equal(selectedItem(list), "armor");
+    assert.match(selectionPart(form, "details").children[0].textContent, /armor \[5,0\]/);
+    assert.equal(list.getAttribute("aria-activedescendant"), list.children[1].id);
+    selectionKey(dialog, "Home"); assert.equal(selectedItem(list), "sword");
+    selectionKey(dialog, "ArrowDown"); assert.equal(selectedItem(list), "armor");
+    selectionKey(dialog, "ArrowUp"); assert.equal(selectedItem(list), "sword");
+    selectionKey(dialog, "End"); assert.equal(selectedItem(list), "armor");
+    assert.deepEqual(f.commands, [], "previewing cannot equip, drop or remove an item");
+    list.children[1].dispatchEvent(new Event("dblclick"));
+    await Promise.resolve();
+    assert.equal(dialog.open, false);
+    assert.equal(f.commands.length, 1);
+    assert.equal(f.commands[0].type, command);
+    assert.equal(command === "unequip" ? f.commands[0].slotId : command === "drop" ? f.commands[0].itemIds[0] : f.commands[0].itemId, command === "unequip" ? "body" : "armor");
+  }
+});
+
 test("item letters page all candidates and mouse/Enter resolve the displayed instance", t => {
   const f = createInventoryFixture(t), selected = [];
   f.panel.render(Array.from({ length: 53 }, (_, index) => item(`item-${index + 1}`)), []);
@@ -895,33 +1017,33 @@ test("item letters page all candidates and mouse/Enter resolve the displayed ins
     f.panel.selectItemTarget(undefined, async id => { selected.push(id); });
     return f.document.body.children.at(-1);
   };
-  let dialog = open(), form = dialog.children[0], select = form.children[1].children[1];
+  let dialog = open(), form = dialog.children[0], select = selectionList(form);
   assert.equal(select.children.length, 26);
-  assert.equal(select.children[0].textContent, "a) item-1");
-  assert.equal(select.children[25].textContent, "z) item-26");
+  assert.equal(optionLabel(select.children[0]), "a) item-1");
+  assert.equal(optionLabel(select.children[25]), "z) item-26");
   selectionKey(dialog, "z");
   assert.deepEqual(selected, ["item-26"]);
-  dialog = open(); form = dialog.children[0]; select = form.children[1].children[1];
+  dialog = open(); form = dialog.children[0]; select = selectionList(form);
+  const oldRow = select.children[0];
   selectionKey(dialog, "PageDown");
-  assert.equal(select.children[0].textContent, "a) item-27");
-  select.value = "item-1";
-  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(optionLabel(select.children[0]), "a) item-27");
+  oldRow.dispatchEvent(new Event("dblclick"));
   assert.equal(selected.length, 1, "hidden pages cannot be submitted");
   selectionKey(dialog, "a");
   assert.equal(selected.at(-1), "item-27");
-  dialog = open(); form = dialog.children[0]; select = form.children[1].children[1];
+  dialog = open(); form = dialog.children[0]; select = selectionList(form);
   selectionKey(dialog, "PageUp");
-  assert.deepEqual(select.children.map(option => option.value), ["item-53"]);
+  assert.deepEqual(select.children.map(option => option.dataset.itemId ?? option.value), ["item-53"]);
   selectionKey(dialog, "b");
   assert.equal(dialog.open, true, "unused letters do not wrap onto another page");
   selectionKey(dialog, " ");
-  assert.equal(select.value, "item-1", "last page wraps to first");
-  form.children[3].children[0].dispatchEvent(new Event("click"));
+  assert.equal(selectedItem(select), "item-1", "last page wraps to first");
+  selectionPart(form, "pages").children[0].dispatchEvent(new Event("click"));
   selectionKey(dialog, "Enter");
   assert.equal(selected.at(-1), "item-53");
-  dialog = open(); form = dialog.children[0]; select = form.children[1].children[1];
-  form.children[3].children[2].dispatchEvent(new Event("click"));
-  select.value = "item-28";
+  dialog = open(); form = dialog.children[0]; select = selectionList(form);
+  selectionPart(form, "pages").children[2].dispatchEvent(new Event("click"));
+  selectItem(select, "item-28");
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.equal(selected.at(-1), "item-28");
   assert.deepEqual(f.commands, [], "selection itself never dispatches a game command");
@@ -932,22 +1054,23 @@ test("uppercase inspection is read-only and keyboard selection respects input bo
   f.panel.render([item("potion", { usable: true, useCategory: "potion", inscription: "keep" })], []);
   f.panel.openCommand("potion");
   const dialog = f.document.body.children.at(-1), form = dialog.children[0];
-  assert.equal(form.children[3].hidden, true, "one candidate needs no paging controls");
+  assert.equal(selectionPart(form, "pages").hidden, true, "one candidate needs no paging controls");
   selectionKey(dialog, "A");
   assert.equal(dialog.open, true);
-  assert.equal(form.children[5].hidden, false);
-  assert.equal(form.children[5].children[0].textContent, "potion");
-  assert.equal(form.children[5].querySelectorAll("button").length, 0);
+  assert.equal(selectionPart(form, "details").hidden, false);
+  assert.equal(selectionPart(form, "details").children[0].textContent, "potion");
+  assert.equal(selectionPart(form, "details").querySelectorAll("button").length, 0);
   assert.deepEqual(f.commands, []);
   for (const extra of [{ isComposing: true }, { ctrlKey: true }, { altKey: true }, { metaKey: true }, { repeat: true },
     { target: f.document.createElement("input") }, { target: f.document.createElement("textarea") }, { target: { isContentEditable: true } }]) {
     selectionKey(dialog, "a", extra);
   }
-  for (const key of ["Tab", "ArrowDown", "ArrowUp"]) {
+  for (const key of ["Tab"]) {
     assert.equal(selectionKey(dialog, key).defaultPrevented, false);
   }
   for (const key of ["Enter", " "]) {
-    assert.equal(selectionKey(dialog, key, { target: form.children[2].children[0] }).defaultPrevented, false);
+    assert.equal(selectionKey(dialog, key, { target: form.querySelectorAll(".item-target-actions")[0].children[0] }).defaultPrevented, false);
+    assert.equal(selectionKey(dialog, key, { target: selectionPart(form, "help").children[0] }).defaultPrevented, false);
   }
   f.state.busy = true; selectionKey(dialog, "a"); f.state.busy = false;
   f.state.mode = "title"; selectionKey(dialog, "a"); f.state.mode = "playing";
@@ -1010,7 +1133,7 @@ test("empty and cancelled selections settle once while replacement and disposal 
   dialog.dispatchEvent(new Event("close"));
   assert.equal(cancelled, 2);
   dialog = open();
-  dialog.children[0].children[2].children[0].dispatchEvent(new Event("click"));
+  dialog.children[0].querySelectorAll(".item-target-actions")[0].children[0].dispatchEvent(new Event("click"));
   assert.equal(cancelled, 3);
   const replaced = open();
   dialog = open();
@@ -1035,41 +1158,41 @@ test("source controls split Core quiver membership and retain each source's page
   f.state.status.player = { ...f.state.status.player, position: { x: 2, y: 3 }, quiverItemIds: quiver.map(item => item.id) };
   f.state.status.items = [item("floor", { position: { x: 2, y: 3 } }), item("distant", { position: { x: 3, y: 3 } })];
   f.panel.selectItemTarget(undefined, async id => { chosen.push(id); });
-  const dialog = f.document.body.children[0], form = dialog.children[0], select = form.children[1].children[1];
-  const buttons = form.children[6].children;
+  const dialog = f.document.body.children[0], form = dialog.children[0], select = selectionList(form);
+  const buttons = selectionPart(form, "sources").children;
   assert.deepEqual(buttons.map(button => button.dataset.source), ["pack", "equipment", "quiver", "floor"]);
   assert.equal(buttons[0].getAttribute("aria-pressed"), "true");
-  assert.equal(select.value, "pack-0");
+  assert.equal(selectedItem(select), "pack-0");
   selectionKey(dialog, "PageDown");
-  assert.equal(select.value, "pack-26");
+  assert.equal(selectedItem(select), "pack-26");
   selectionKey(dialog, "/");
-  assert.equal(select.value, "worn");
-  assert.equal(form.children[3].hidden, true);
+  assert.equal(selectedItem(select), "worn");
+  assert.equal(selectionPart(form, "pages").hidden, true);
   selectionKey(dialog, "/");
-  assert.equal(select.value, "quiver-0");
+  assert.equal(selectedItem(select), "quiver-0");
   selectionKey(dialog, "PageDown");
-  assert.deepEqual(select.children.map(option => option.value), ["quiver-26", "quiver-27"]);
-  assert.equal(select.children[0].textContent, "a) quiver-26");
+  assert.deepEqual(select.children.map(option => option.dataset.itemId ?? option.value), ["quiver-26", "quiver-27"]);
+  assert.equal(optionLabel(select.children[0]), "a) quiver-26");
   for (const extra of [{ repeat: true }, { isComposing: true }, { altKey: true }, { metaKey: true },
     { target: f.document.createElement("input") }]) {
     selectionKey(dialog, "p", { ctrlKey: true, ...extra });
-    assert.equal(select.value, "quiver-26");
+    assert.equal(selectedItem(select), "quiver-26");
   }
   assert.equal(selectionKey(dialog, "P", { ctrlKey: true }).defaultPrevented, true);
-  assert.equal(select.value, "pack-26");
+  assert.equal(selectedItem(select), "pack-26");
   buttons[2].dispatchEvent(new Event("click"));
-  assert.equal(select.value, "quiver-26", "mouse source switch restores the same page");
+  assert.equal(selectedItem(select), "quiver-26", "mouse source switch restores the same page");
   selectionKey(dialog, "f", { ctrlKey: true });
-  assert.deepEqual(select.children.map(option => option.value), ["floor"]);
+  assert.deepEqual(select.children.map(option => option.dataset.itemId ?? option.value), ["floor"]);
   assert.equal(chosen.length, 0, "Ctrl+F only switches, even with a sole floor candidate");
   selectionKey(dialog, "/");
-  assert.equal(select.value, "pack-26");
+  assert.equal(selectedItem(select), "pack-26");
   selectionKey(dialog, "\\");
-  assert.equal(select.value, "floor");
+  assert.equal(selectedItem(select), "floor");
+  const oldSourceRow = select.children[0];
   selectionKey(dialog, "q", { ctrlKey: true });
-  select.value = "pack-26";
-  form.dispatchEvent(new Event("submit", { cancelable: true }));
-  assert.equal(chosen.length, 0, "another source cannot be submitted by forging a select value");
+  oldSourceRow.dispatchEvent(new Event("dblclick"));
+  assert.equal(chosen.length, 0, "detached rows from another source cannot select an item");
   selectionKey(dialog, "b");
   assert.deepEqual(chosen, ["quiver-27"]);
 });
@@ -1081,18 +1204,18 @@ test("unavailable sources stay absent and floor shortcut uses only eligible unde
   f.state.status.items = [item("floor", { position: { x: 2, y: 3 } }), item("distant", { position: { x: 3, y: 3 } })];
   f.panel.openCommand("potion");
   let dialog = f.document.body.children[0], form = dialog.children[0];
-  assert.deepEqual(form.children[6].children.map(button => button.dataset.source), ["pack"]);
+  assert.deepEqual(selectionPart(form, "sources").children.map(button => button.dataset.source), ["pack"]);
   for (const key of ["e", "q", "f"]) {
     assert.equal(selectionKey(dialog, key, { ctrlKey: true }).defaultPrevented, true);
   }
   selectionKey(dialog, "-");
-  assert.equal(form.children[1].children[1].value, "potion");
+  assert.equal(selectedItem(selectionList(form)), "potion");
   assert.deepEqual(f.commands, []);
   selectionKey(dialog, "a");
   assert.deepEqual(f.commands, [{ type: "use-item", itemId: "potion" }]);
   f.panel.openCommand("unequip");
   dialog = f.document.body.children[0]; form = dialog.children[0];
-  assert.deepEqual(form.children[6].children.map(button => button.dataset.source), ["equipment"]);
+  assert.deepEqual(selectionPart(form, "sources").children.map(button => button.dataset.source), ["equipment"]);
   selectionKey(dialog, "a");
   assert.deepEqual(f.commands.at(-1), { type: "unequip", slotId: "body" });
   const selected = [];
@@ -1108,7 +1231,7 @@ test("unavailable sources stay absent and floor shortcut uses only eligible unde
   dialog = f.document.body.children[0];
   selectionKey(dialog, "-");
   assert.equal(dialog.open, true, "multiple floor items require an explicit choice");
-  assert.deepEqual(dialog.children[0].children[1].children[1].children.map(option => option.value), ["floor", "second"]);
+  assert.deepEqual(selectionList(dialog.children[0]).children.map(option => option.dataset.itemId ?? option.value), ["floor", "second"]);
   selectionKey(dialog, "b");
   assert.deepEqual(selected, ["floor", "second"]);
 });
@@ -1145,8 +1268,8 @@ test("inscription labels override keys before paging and @ only toggles labels",
     f.panel.selectItemTarget(undefined, async id => { chosen.push(id); }, undefined, undefined, "cast");
     return f.document.body.children[0];
   };
-  let dialog = open(), select = dialog.children[0].children[1].children[1];
-  assert.equal(select.children[0].textContent, "3) target-0");
+  let dialog = open(), select = selectionList(dialog.children[0]);
+  assert.equal(optionLabel(select.children[0]), "3) target-0");
   selectionKey(dialog, "3");
   assert.deepEqual(chosen, ["target-0"]);
   dialog = open();
@@ -1154,18 +1277,18 @@ test("inscription labels override keys before paging and @ only toggles labels",
   assert.equal(chosen.at(-1), "target-1", "an exact uppercase label selects instead of inspecting");
   dialog = open(); selectionKey(dialog, "0");
   assert.equal(chosen.at(-1), "target-2");
-  dialog = open(); select = dialog.children[0].children[1].children[1];
+  dialog = open(); select = selectionList(dialog.children[0]);
   selectionKey(dialog, "@");
-  assert.equal(select.children[0].textContent, "a) target-0");
-  assert.equal(dialog.children[0].children[7].getAttribute("aria-pressed"), "true");
+  assert.equal(optionLabel(select.children[0]), "a) target-0");
+  assert.equal(selectionPart(dialog.children[0], "inscriptions").getAttribute("aria-pressed"), "true");
   selectionKey(dialog, "3");
-  assert.equal(select.value, "target-26", "unassigned 3 is page down");
-  dialog.children[0].children[7].dispatchEvent(new Event("click"));
-  assert.equal(select.children[0].textContent, "9) target-26");
+  assert.equal(selectedItem(select), "target-26", "unassigned 3 is page down");
+  selectionPart(dialog.children[0], "inscriptions").dispatchEvent(new Event("click"));
+  assert.equal(optionLabel(select.children[0]), "9) target-26");
   selectionKey(dialog, "9");
   assert.equal(chosen.at(-1), "target-26");
   dialog = open(); selectionKey(dialog, "@"); selectionKey(dialog, "9"); selectionKey(dialog, "9");
-  assert.equal(dialog.children[0].children[1].children[1].value, "target-0", "unassigned 9 is page up with wrap");
+  assert.equal(selectedItem(selectionList(dialog.children[0])), "target-0", "unassigned 9 is page up with wrap");
   assert.equal(f.state.inventory[0].inscription, "中文 @m3", "the toggle never edits inscription text");
 });
 
@@ -1242,7 +1365,7 @@ test("secondary item choices retain the invoked command when an item has both ca
     f.panel.openCommand(command);
     selectionKey(f.document.body.children[0], "a");
     const dialog = f.document.body.children[0];
-    assert.equal(dialog.children[0].children[1].children[1].children[0].textContent, `${label}) target`);
+    assert.equal(optionLabel(selectionList(dialog.children[0]).children[0]), `${label}) target`);
     selectionKey(dialog, label);
     assert.deepEqual(f.commands.at(-1), { type: "use-item", itemId: "source", target: { type: "item", itemId: "target" } });
   }
@@ -1312,9 +1435,9 @@ test("ordered multi-target choice uses source labels, finish and existing paid c
   const open = () => f.panel.selectItemTargets("source", async ids => { selections.push(ids); }, async () => { cancelled++; }, "cast", true);
   open();
   selectionKey(f.document.body.children[0], "b");
-  assert.deepEqual(f.document.body.children[0].children[0].children[1].children[1].children.map(option => option.value), ["first", "third"]);
+  assert.deepEqual(selectionList(f.document.body.children[0].children[0]).children.map(option => option.dataset.itemId ?? option.value), ["first", "third"]);
   selectionKey(f.document.body.children[0], "a");
-  f.document.body.children[0].children[0].children[8].dispatchEvent(new Event("click"));
+  f.document.body.children[0].querySelectorAll(".item-target-actions")[0].children.at(-1).dispatchEvent(new Event("click"));
   assert.deepEqual(selections, [["second", "first"]]);
   assert.equal(cancelled, 0);
   open(); selectionKey(f.document.body.children[0], "a"); selectionKey(f.document.body.children[0], "Escape");
@@ -1351,7 +1474,7 @@ test("refuel selects among compatible sources with F inscriptions and rejects in
   f.document.defaultView = { confirm: () => accept };
   f.panel.openCommand("refuel"); selectionKey(f.document.body.children[0], "a");
   const dialog = f.document.body.children[0];
-  assert.deepEqual(dialog.children[0].children[1].children[1].children.map(option => option.value), ["oil", "spare"]);
+  assert.deepEqual(selectionList(dialog.children[0]).children.map(option => option.dataset.itemId ?? option.value), ["oil", "spare"]);
   selectionKey(dialog, "2"); assert.deepEqual(f.commands, []);
   accept = true; selectionKey(dialog, "2");
   assert.deepEqual(f.commands, [{ type: "refuel-light", targetItemId: "lamp", sourceItemId: "spare" }]);

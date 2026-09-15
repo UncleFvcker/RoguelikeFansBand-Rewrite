@@ -497,6 +497,7 @@ h1 {
 
 .map-host canvas {
   display: block;
+  cursor: pointer;
 }
 
 .target-cursor {
@@ -1163,9 +1164,14 @@ h1 {
 }
 
 .item-selection-dialog {
+  width: min(68rem, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
   overflow: auto;
   box-sizing: border-box;
+  border-color: var(--ui-line);
+  border-radius: 0;
+  color: var(--ui-text);
+  background: var(--ui-surface);
 }
 
 .item-selection-dialog form,
@@ -1198,9 +1204,70 @@ h1 {
 }
 
 .item-selection-details {
-  max-height: 35vh;
+  min-width: 0;
+  max-height: min(32rem, 55dvh);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 1rem;
+  border: 1px solid var(--ui-line);
   overflow: auto;
   overflow-wrap: anywhere;
+}
+
+.item-selection-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(16rem, 1fr);
+  gap: 0.8rem;
+}
+
+.item-selection-list-column { min-width: 0; }
+.item-selection-list-column > span { display: none; }
+.item-selection-list {
+  max-height: min(32rem, 55dvh);
+  min-height: 12rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--ui-line);
+}
+.item-selection-list:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+.item-selection-row {
+  display: grid;
+  grid-template-columns: 1.5rem 1.7rem minmax(0, 1fr) auto;
+  grid-template-areas: "key glyph name quantity" "key glyph status weight";
+  align-items: center;
+  gap: 0.25rem 0.55rem;
+  padding: 0.65rem;
+  border-bottom: 1px solid var(--ui-line-soft);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+.item-selection-row:hover { background: var(--ui-line-soft); }
+.item-selection-row[aria-selected="true"] {
+  border-left-color: var(--ui-accent);
+  background: color-mix(in srgb, var(--ui-accent) 12%, var(--ui-surface));
+}
+.item-selection-row kbd { grid-area: key; color: var(--ui-muted); }
+.item-selection-row .inventory-item-glyph { grid-area: glyph; font-size: 1.3rem; }
+.item-selection-row .inventory-item-name { grid-area: name; font-size: 0.9rem; }
+.item-selection-row .inventory-quantity { grid-area: quantity; text-align: right; }
+.item-selection-row .inventory-item-status { grid-area: status; font-size: 0.75rem; }
+.item-selection-row .inventory-item-weight { grid-area: weight; font-size: 0.75rem; }
+.item-selection-details .inventory-item-name { white-space: normal; font-size: 1rem; color: var(--ui-accent-strong); }
+.item-selection-details > * { flex: none; }
+.item-selection-help { color: var(--ui-muted); font-size: 0.8rem; }
+.item-selection-help summary { cursor: pointer; }
+.item-selection-help p { line-height: 1.65; }
+.item-selection-dialog .item-target-actions { margin-top: 0; padding-top: 0.65rem; border-top: 1px solid var(--ui-line); }
+.item-selection-dialog .item-selection-sources button[aria-pressed="true"] {
+  border-color: var(--ui-accent);
+  background: color-mix(in srgb, var(--ui-accent) 12%, var(--ui-surface));
+}
+@media (max-width: 760px) {
+  .item-selection-workspace { grid-template-columns: minmax(0, 1fr); }
+  .item-selection-list { max-height: 38dvh; }
+  .item-selection-details { max-height: 22dvh; padding: 0.75rem; }
 }
 
 @media (max-width: 1000px) {
@@ -1820,7 +1887,7 @@ summary:focus-visible {
   display: grid;
   min-width: 0;
   min-height: 5.4rem;
-  grid-template-columns: minmax(11rem, 0.38fr) minmax(0, 0.62fr);
+  grid-template-columns: minmax(0, 0.28fr) minmax(0, 0.47fr) minmax(0, 0.25fr);
   overflow: hidden;
   border: 1px solid var(--ui-line);
   border-radius: 0;
@@ -1828,6 +1895,7 @@ summary:focus-visible {
 }
 
 .context-effects,
+.combat-target,
 .combat-context {
   display: grid;
   min-width: 0;
@@ -1835,9 +1903,45 @@ summary:focus-visible {
   grid-template-rows: auto minmax(0, 1fr);
 }
 
-.combat-context {
+.combat-context,
+.combat-target {
   border-left: 1px solid var(--ui-line-soft);
 }
+
+.combat-target-health {
+  padding: 0.25em 0.6em;
+  min-width: 0;
+  overflow: auto;
+}
+
+.combat-target-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.combat-target-vitals {
+  position: relative;
+  margin-top: 0.15em;
+  text-align: center;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+.combat-target-vitals progress {
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #301f1c;
+}
+
+.combat-target-vitals progress::-webkit-progress-bar { background: #301f1c; }
+.combat-target-vitals progress::-webkit-progress-value { background: #63312b; }
+.combat-target-vitals progress::-moz-progress-bar { background: #63312b; }
+.combat-target-vitals span { position: relative; color: #fff1d8; }
 
 .context-heading {
   min-height: 1.9rem;
@@ -4716,6 +4820,8 @@ kbd {
 }
 @media (max-height: 700px) {
   #app.game-shell .context-panel { height: 4.5em; }
+  #app.game-shell .combat-target .context-heading { min-height: 0; padding-block: 0.15em; }
+  #app.game-shell .combat-target-health { padding-block: 0.1em; }
   #app.game-shell .hud-vitals-host .resource-list { max-height: 4em; }
 }
 

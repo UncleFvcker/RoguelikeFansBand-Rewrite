@@ -5,6 +5,75 @@ use crate::game::initialization::dungeon_substitution_uses_alternate;
 use crate::game::lighting::{DUNGEON_AMBIENT_LIGHT, SURFACE_AMBIENT_LIGHT};
 
 #[test]
+fn floor_guardian_status_tracks_this_floor_death_and_save_restore() {
+    let mut game = Game::new_with_build(2, "demo.build.warrior").unwrap();
+    assert!(game.dungeon_status_dto().is_none());
+    game.transition_floor("demo.floor.warrens-depth-1".to_owned(), None, None, false)
+        .unwrap();
+    assert!(game.dungeon_status_dto().unwrap().guardian.is_none());
+    enter_guardian_floor_from_penultimate(&mut game, "warrens", 9);
+    let guardian = game
+        .entities
+        .iter()
+        .find(|actor| actor.id == "demo.guardian.warrens.1")
+        .unwrap();
+    let expected_name = game
+        .content
+        .actor(&guardian.kind_id)
+        .unwrap()
+        .name_key
+        .clone();
+    let status = game.dungeon_status_dto().unwrap().guardian.unwrap();
+    assert_eq!(status.name_key, expected_name);
+    assert!(
+        !status.defeated,
+        "a living guardian is not defeated just because it is unavailable for spawning"
+    );
+    let (update, _) = p89_defeat_guardian(&mut game, "demo.guardian.warrens.1");
+    assert!(update.dungeon.unwrap().guardian.unwrap().defeated);
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(restored.dungeon_status_dto(), game.dungeon_status_dto());
+    game.transition_floor("demo.floor.warrens-depth-8".to_owned(), None, None, false)
+        .unwrap();
+    assert!(game.dungeon_status_dto().unwrap().guardian.is_none());
+}
+
+#[test]
+fn floor_guardian_status_includes_angband_quest_bosses_at_their_actual_depths() {
+    let mut game = Game::new_with_build(2, "demo.build.warrior").unwrap();
+    for (depth, actor, task) in [
+        (
+            99,
+            "demo.actor.oberon-king-of-amber",
+            "demo.task.angband-oberon",
+        ),
+        (
+            100,
+            "demo.actor.the-serpent-of-chaos",
+            "demo.task.angband-serpent-of-chaos",
+        ),
+    ] {
+        // Projection-only setup: do not generate unrelated floors or simulate travel.
+        game.current_floor_id = format!("demo.floor.angband-depth-{depth}");
+        let status = game.dungeon_status_dto().unwrap().guardian.unwrap();
+        assert_eq!(status.name_key, game.content.actor(actor).unwrap().name_key);
+        assert!(!status.defeated);
+        let state = game.task_states.get_mut(task).unwrap();
+        state.current = state.required;
+        state.status = TaskStatusKindDto::Completed;
+        assert!(
+            game.dungeon_status_dto()
+                .unwrap()
+                .guardian
+                .unwrap()
+                .defeated
+        );
+    }
+    game.current_floor_id = "demo.floor.angband-depth-101".to_owned();
+    assert!(game.dungeon_status_dto().unwrap().guardian.is_none());
+}
+
+#[test]
 fn world_map_party_survives_travel_save_return_and_repeated_town_entry() {
     let mut game = world_map_party();
     // Suppress random low-level road ambushes; the ambush path has its own case.

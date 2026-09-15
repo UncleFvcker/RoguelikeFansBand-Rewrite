@@ -66,7 +66,7 @@
       },
       "revision": 1,
       "rngDrawCounter": 593,
-      "stateHash": "306328a7828af7cc684238c8ad59a9e6bfd0ab727ebe23821404fba76cdc4c30",
+      "stateHash": "1a9049909785b7471cb6831bedad5645f2403eec703cb47d73935c448d04aa51",
       "turn": 1
     },
     "events": [
@@ -74,6 +74,7 @@
         "kind": "combat.projectile-miss",
         "messageKey": "projectile-miss",
         "args": {
+          "attackTarget": "contract.weapon-proficiency-target",
           "target": "demo.actor.adobe-golem"
         },
         "trace": {

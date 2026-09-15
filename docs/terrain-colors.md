@@ -10,4 +10,14 @@
 
 默认值只存于 `web/public/tilesets/*/tileset.json`。不修改角色存档、全局偏好文件或基本调色板；用户已保存的字形／配色覆盖继续优先。
 
+## 物品与其余地图字符
+
+物品同步入口为 `python scripts/sync-item-colors.py D:/codex/Frogcomposband/master`。同样读取上述 master 提交的 Git 对象：`k_info.txt` 的 `G:`、`init1.c` 的颜色字符解析、`variable.c` 的色表。按 `rfbBaseKind.sourceIndex` 关联并校验 tval/sval；固定神器采用已声明的基础物品色，改编设备与遗骸使用脚本中明确列出的原版种类，8 件原创装备单列项目配色。保留字符、背景、图片和用户覆盖。
+
+未鉴定物品按核心公开的 `core.appearance.*` 标识取色。共用“陌生食物”外观统一棕色；没有基础种类的未鉴定原创神器统一按符号使用灰色，不从隐藏种类取色。药水及蘑菇沿当前内容的固定外观色，不引入新的随机外观规则。
+
+当前三个内置 tileset 均覆盖 2,671 个地图视觉标识：257 个局部地形、18 个世界地形、1,396 个怪物、19 个玩家角色、820 个物品种类、150 个公开物品外观、11 个金钱／宝石外观。补齐的 13 个玩家职业沿用战士的浅蓝前景。模糊感知通过独立的白色字符入口显示，幻觉沿现有替换身份取色，目标准星等覆盖标记沿既有 UI 样式显示；不将所有字符都改成动画，流动彩虹仍仅用于已公开的 unique。
+
+覆盖检查位于 `tileset-manifest.test.ts`，同时保留源色样例和图片资源断言；来源中的紫红色允许正常出现，不能把所有粉色都判定为缺失映射。本批源码检查通过，尚未重建 EXE 或验收桌面视觉效果。
+
 验证：在 `web` 执行 `node --test src/tileset-manifest.test.ts src/visual-preferences.test.ts src/render-world.test.ts`，覆盖现有地形完整映射、颜色区分、隐藏矿物外观及偏好覆盖。普通 standalone 构建后执行 `node e2e/global-preferences-standalone.e2e.mjs --terrain-colors`，正常新建人类战士，查看局部地图、进入世界地图并切换图片方案；报告与截图在 `test-results/terrain-colors/`。脚本复用偏好验收的启动／退出和原偏好恢复流程，运行时不能同时打开其他游戏进程。

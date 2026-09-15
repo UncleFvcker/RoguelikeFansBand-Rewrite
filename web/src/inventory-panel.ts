@@ -295,6 +295,21 @@ export class InventoryPanel {
     this.#selectItemTargetFrom(candidates.filter(candidate => !allowedItemIds || allowedItemIds.includes(candidate.id)), onSelect, onCancel, "item-target-title", command);
   }
 
+  pickUp(): void {
+    if (this.#state.busy || this.#state.commandBlocked || this.#state.worldMap) return;
+    const status = this.#state.status;
+    if (!status) return;
+    const { x, y } = status.player.position;
+    const items = status.items.filter(item => item.position.x === x && item.position.y === y);
+    if (items.length <= 1) {
+      void this.#dispatch({ type: "pick-up" });
+      return;
+    }
+    this.#selectItemTargetFrom(items.map(item => ({ id: item.id,
+      label: this.#formatter.visibleItemName(item.displayNameKey, item.kindId, item.artifactName),
+    })), itemId => this.#dispatch({ type: "pick-up-item", itemId }), undefined, "item-pickup-title", "pickup");
+  }
+
   swapRings(): void {
     if (this.#state.busy || this.#state.commandBlocked || this.#state.worldMap) return;
     const slots = this.#state.bodySlots.filter(slot => slot.slotType === "ring");
@@ -371,6 +386,7 @@ export class InventoryPanel {
     let ids: string[] = [];
     let shortcut: CommandShortcut | undefined;
     switch (command.type) {
+      case "pick-up-item": ids = [command.itemId]; shortcut = "pickup"; break;
       case "drop": ids = command.itemIds; shortcut = "drop"; break;
       case "drop-quantity": ids = [command.itemId]; shortcut = "drop"; break;
       case "equip": ids = [command.itemId]; shortcut = "equip"; break;
@@ -728,7 +744,7 @@ export class InventoryPanel {
     this.#dom.equipmentList.scrollTop = scrollTop;
   }
 
-  #itemGlyph(item?: InventoryItemDto | EquipmentItemDto): HTMLElement {
+  #itemGlyph(item?: Pick<InventoryItemDto, "visual">): HTMLElement {
     const glyph = this.#dom.inventoryList.ownerDocument.createElement("span");
     glyph.className = "inventory-item-glyph";
     glyph.hidden = !this.#state.display.showItemIcons;
@@ -1002,6 +1018,18 @@ export class InventoryPanel {
       container.append(identification);
     }
     this.#appendItemModifiers(container, item.modifiers);
+    if (item.meleeProfile) {
+      this.#appendDetail(container, "item-combat-dice", this.#localization.format("item-combat-dice", {
+        dice: item.meleeProfile.damage.dice, sides: item.meleeProfile.damage.sides,
+      }));
+    }
+    if (item.identification !== "unexamined" && (item.meleeProfile || item.projectileProfile)) {
+      const profile = item.meleeProfile;
+      this.#appendDetail(container, "item-combat-bonuses", this.#localization.format("item-combat-bonuses", {
+        hit: signedCombatNumber(profile?.toHit ?? item.enchantments?.toHit ?? 0),
+        damage: signedCombatNumber(profile?.toDamage ?? item.enchantments?.toDamage ?? 0),
+      }));
+    }
     if (item.bagCapacity !== undefined && item.bagCapacity !== null) {
       this.#appendDetail(container, "inventory-bag-capacity", this.#localization.format("inventory-bag-capacity", {
         capacity: item.bagCapacity,
@@ -1025,7 +1053,7 @@ export class InventoryPanel {
           ball,
           actor: item.capturedActor.customName ?? this.#localization.format(item.capturedActor.nameKey as MessageKey),
         })
-      : ball;
+      : [ball, itemCombatSummary(item)].filter(Boolean).join(" ");
   }
 
   async #equipSelectedItem(): Promise<void> {
@@ -1303,14 +1331,22 @@ export class InventoryPanel {
     form.method = "dialog";
     const title = document.createElement("h2");
     title.textContent = this.#localization.format(titleKey);
-    const label = document.createElement("label");
+    const label = document.createElement("div");
+    label.className = "item-selection-list-column";
     const labelText = document.createElement("span");
     labelText.textContent = this.#localization.format("item-target-label");
-    const select = document.createElement("select");
+    const list = document.createElement("div");
+    list.className = "item-selection-list";
+    list.tabIndex = 0;
+    list.setAttribute("role", "listbox");
+    list.setAttribute("aria-label", this.#localization.format("item-target-label"));
+    let selectedId = "";
+    title.id = "item-selection-title";
+    dialog.setAttribute("aria-labelledby", title.id);
     let activeTab = tabs[0]!;
     let ignoreInscriptions = false;
     let labels: string[] = [];
-    label.append(labelText, select);
+    label.append(labelText, list);
     const actions = document.createElement("div");
     actions.className = "item-target-actions";
     const cancel = document.createElement("button");
@@ -1321,7 +1357,6 @@ export class InventoryPanel {
     confirm.type = "submit";
     confirm.textContent = this.#localization.format("action-item-target-confirm");
     actions.append(cancel, confirm);
-    form.append(title, label, actions);
     const pages = document.createElement("div");
     pages.className = "item-selection-pages";
     const previous = document.createElement("button");
@@ -1339,7 +1374,11 @@ export class InventoryPanel {
     details.className = "item-selection-details";
     details.setAttribute("aria-live", "polite");
     details.hidden = true;
-    form.append(pages, help, details);
+    const helpDisclosure = document.createElement("details");
+    helpDisclosure.className = "item-selection-help";
+    const helpTitle = document.createElement("summary");
+    helpTitle.textContent = this.#localization.format("item-selection-key-help-title");
+    helpDisclosure.append(helpTitle, help);
     const sourceControls = document.createElement("div");
     sourceControls.className = "item-selection-sources";
     sourceControls.setAttribute("role", "group");
@@ -1353,12 +1392,11 @@ export class InventoryPanel {
       sourceControls.append(button);
       return button;
     });
-    form.append(sourceControls);
     const inscriptionToggle = document.createElement("button");
     inscriptionToggle.type = "button";
+    inscriptionToggle.className = "item-selection-inscriptions";
     inscriptionToggle.textContent = this.#localization.format("item-selection-ignore-inscriptions");
     inscriptionToggle.addEventListener("click", () => toggleInscriptions());
-    form.append(inscriptionToggle);
     if (onFinish) {
       const done = document.createElement("button");
       done.type = "button";
@@ -1367,48 +1405,90 @@ export class InventoryPanel {
         if (!dialog.open || this.#state.busy || this.#state.commandBlocked || snapshot !== this.#state.status) return;
         selected = true; dialog.close(); void onFinish();
       });
-      form.append(done);
+      actions.append(done);
     }
     const visibleEntries = () => activeTab.entries.slice(activeTab.page * 26, (activeTab.page + 1) * 26);
+    const highlight = (itemId: string) => {
+      const candidate = visibleEntries().find(entry => entry.id === itemId);
+      if (!candidate) return;
+      selectedId = candidate.id;
+      for (const row of Array.from(list.children) as HTMLElement[]) {
+        const active = row.dataset.itemId === selectedId;
+        row.setAttribute("aria-selected", String(active));
+        if (active) {
+          list.setAttribute("aria-activedescendant", row.id);
+          row.scrollIntoView({ block: "nearest" });
+        }
+      }
+      details.replaceChildren();
+      details.scrollTop = 0;
+      const item = items.find(item => item.id === candidate.id);
+      if (item && "identification" in item) this.#appendItemDetails(details, item);
+      else {
+        const name = document.createElement("h3"); name.textContent = candidate.label; details.append(name);
+        if (item) this.#appendInscription(details, item.inscription);
+      }
+      details.hidden = false;
+    };
     const renderPage = () => {
-      select.replaceChildren();
+      list.replaceChildren();
       labels = itemSelectionLabels(visibleEntries().map(entry => entry.inscription), commandKey, ignoreInscriptions);
       visibleEntries().forEach((candidate, index) => {
-        const option = document.createElement("option");
-        option.value = candidate.id;
-        option.textContent = `${labels[index]}) ${candidate.label}`;
-        if (candidate.source) option.dataset.source = candidate.source;
-        select.append(option);
+        const row = document.createElement("div");
+        row.className = "item-selection-row";
+        row.id = `item-selection-option-${index}`;
+        row.dataset.itemId = candidate.id;
+        if (candidate.source) row.dataset.source = candidate.source;
+        row.setAttribute("role", "option");
+        const key = document.createElement("kbd"); key.textContent = labels[index]!;
+        const name = document.createElement("span");
+        name.className = "inventory-item-name"; name.textContent = candidate.label; name.title = candidate.label;
+        row.append(key);
+        const item = items.find(item => item.id === candidate.id);
+        if (item) row.append(this.#itemGlyph(item));
+        row.append(name);
+        if (item) {
+          const quantity = document.createElement("span"); quantity.className = "inventory-quantity";
+          quantity.textContent = this.#localization.format("inventory-quantity", { quantity: item.quantity });
+          const status = document.createElement("span"); status.className = "inventory-item-status";
+          status.textContent = "slotId" in item ? this.#formatter.equipmentSlotName(item.slotId) :
+            "equipmentSlot" in item ? this.#briefStatus(item) : item.inscription ?? "";
+          const weight = document.createElement("span"); weight.className = "inventory-item-weight";
+          weight.hidden = !this.#state.display.showWeights || !("weightTenthsPound" in item);
+          if ("weightTenthsPound" in item) weight.textContent = this.#localization.format("inventory-item-weight", { weight: formatTenthsPound(item.weightTenthsPound * item.quantity) });
+          row.append(quantity, status, weight);
+        }
+        row.addEventListener("click", () => { highlight(candidate.id); list.focus(); });
+        row.addEventListener("dblclick", () => choose(candidate.id));
+        list.append(row);
       });
-      select.size = Math.min(10, visibleEntries().length);
-      select.value = activeTab.entries[activeTab.page * 26]!.id;
+      highlight(activeTab.entries[activeTab.page * 26]!.id);
       const pageCount = Math.ceil(activeTab.entries.length / 26);
       pages.hidden = pageCount === 1;
       pageLabel.textContent = this.#localization.format("item-selection-page", { page: activeTab.page + 1, pages: pageCount });
       sourceButtons.forEach((button, index) => button.setAttribute("aria-pressed", String(tabs[index] === activeTab)));
       inscriptionToggle.setAttribute("aria-pressed", String(ignoreInscriptions));
-      details.hidden = true;
     };
     const toggleInscriptions = () => {
       if (this.#state.busy || !dialog.open) return;
       ignoreInscriptions = !ignoreInscriptions;
-      const itemId = select.value;
+      const itemId = selectedId;
       renderPage();
-      select.value = itemId;
-      select.focus();
+      highlight(itemId);
+      list.focus();
     };
     const selectSource = (source: ItemSelectionSource) => {
       if (this.#state.busy || this.#state.commandBlocked || this.#state.worldMap || !dialog.open) return;
       const tab = tabs.find(tab => tab.source === source);
       if (!tab) return;
       activeTab = tab;
-      renderPage(); select.focus();
+      renderPage(); list.focus();
     };
     const turnPage = (step: number) => {
       if (this.#state.busy || !dialog.open) return;
       const pageCount = Math.ceil(activeTab.entries.length / 26);
       activeTab.page = (activeTab.page + step + pageCount) % pageCount;
-      renderPage(); select.focus();
+      renderPage(); list.focus();
     };
     previous.addEventListener("click", () => turnPage(-1));
     next.addEventListener("click", () => turnPage(1));
@@ -1433,12 +1513,13 @@ export class InventoryPanel {
     };
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      choose(select.value);
+      choose(selectedId);
     });
     dialog.addEventListener("keydown", event => {
       if (event.isComposing || event.metaKey || event.altKey) return;
       const target = event.target as HTMLElement | null;
       if (target?.isContentEditable || target?.tagName === "INPUT" || target?.tagName === "TEXTAREA") return;
+      if (target?.tagName === "SUMMARY" && ["Enter", " "].includes(event.key)) return;
       if (event.ctrlKey) {
         const shortcuts: Partial<Record<string, ItemSelectionSource>> = { p: "pack", e: "equipment", q: "quiver", f: "floor" };
         const source = shortcuts[event.key.toLowerCase()];
@@ -1450,6 +1531,14 @@ export class InventoryPanel {
       }
       if (event.repeat && (/^[a-z0-9]$/i.test(event.key) || ["Enter", "Escape", "PageDown", "PageUp", " ", "/", "\\", "-", "@"].includes(event.key))) {
         event.preventDefault(); event.stopImmediatePropagation(); return;
+      }
+      if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key) && target?.tagName !== "BUTTON") {
+        event.preventDefault(); event.stopImmediatePropagation();
+        const entries = visibleEntries();
+        const index = entries.findIndex(entry => entry.id === selectedId);
+        const next = event.key === "Home" ? 0 : event.key === "End" ? entries.length - 1 :
+          Math.max(0, Math.min(entries.length - 1, index + (event.key === "ArrowDown" ? 1 : -1)));
+        highlight(entries[next]!.id); return;
       }
       const exactLabel = labels.indexOf(event.key);
       if (exactLabel >= 0) {
@@ -1480,7 +1569,7 @@ export class InventoryPanel {
         turnPage(event.key === "PageUp" || event.key === "9" ? -1 : 1); return;
       }
       if (event.key === "Enter" && target?.tagName !== "BUTTON") {
-        event.preventDefault(); event.stopImmediatePropagation(); choose(select.value); return;
+        event.preventDefault(); event.stopImmediatePropagation(); choose(selectedId); return;
       }
       if (!/^[a-z0-9]$/i.test(event.key)) return;
       event.preventDefault(); event.stopImmediatePropagation();
@@ -1489,16 +1578,7 @@ export class InventoryPanel {
       if (!entry) return;
       const candidate = currentCandidate(entry.id);
       if (!candidate) return;
-      select.value = candidate.id;
-      const item = [...this.#state.inventory, ...this.#state.equipment, ...(this.#state.status?.items ?? [])].find(item => item.id === candidate.id);
-      if (!item) return;
-      details.replaceChildren();
-      const heading = document.createElement("h3");
-      heading.textContent = candidate.label;
-      details.append(heading);
-      if ("identification" in item) this.#appendItemDetails(details, item);
-      else this.#appendInscription(details, item.inscription);
-      details.hidden = false;
+      highlight(candidate.id);
     }, true);
     const closeSilently = () => { selected = true; dialog.close(); };
     this.#closeItemSelection = closeSilently;
@@ -1509,11 +1589,16 @@ export class InventoryPanel {
       if (this.#closeItemSelection === closeSilently) this.#closeItemSelection = undefined;
       if (!selected && this.#state.status === snapshot) void onCancel?.();
     }, { once: true });
+    const workspace = document.createElement("div");
+    workspace.className = "item-selection-workspace";
+    workspace.append(label, details);
+    helpDisclosure.append(inscriptionToggle);
+    form.replaceChildren(title, sourceControls, workspace, pages, helpDisclosure, actions);
     renderPage();
     dialog.append(form);
     document.body.append(dialog);
     dialog.showModal();
-    select.focus();
+    list.focus();
   }
 
   #selectOptionFrom(
@@ -1638,6 +1723,12 @@ export class InventoryPanel {
       ["item-modifier-defense", modifiers.defense],
       ["item-modifier-max-hp", modifiers.maxHp],
       ["item-modifier-speed", modifiers.speed],
+      ["item-modifier-strength", modifiers.strength],
+      ["item-modifier-intelligence", modifiers.intelligence],
+      ["item-modifier-wisdom", modifiers.wisdom],
+      ["item-modifier-dexterity", modifiers.dexterity],
+      ["item-modifier-constitution", modifiers.constitution],
+      ["item-modifier-charisma", modifiers.charisma],
     ];
     this.#appendSignedEntries(container, entries);
   }
@@ -1829,6 +1920,29 @@ export class InventoryPanel {
 }
 
 export type InventoryFilter = "all" | "equippable" | "usable" | "devices" | "light";
+
+// Format only the core's knowledge-filtered projection; never look up hidden content.
+export function itemCombatSummary(item: InventoryItemDto | EquipmentItemDto): string {
+  const parts: string[] = [];
+  const melee = item.meleeProfile;
+  const known = item.identification !== "unexamined";
+  const enchantments = item.enchantments;
+  if (melee) parts.push(`(${melee.damage.dice}d${melee.damage.sides})`);
+  if (known && (melee || item.projectileProfile || enchantments?.toHit || enchantments?.toDamage)) {
+    parts.push(`(${signedCombatNumber(melee?.toHit ?? enchantments?.toHit ?? 0)},${signedCombatNumber(melee?.toDamage ?? enchantments?.toDamage ?? 0)})`);
+  }
+  // Defense is the known armor contribution already projected for the current form.
+  if (item.modifiers.defense || (known && enchantments?.toArmor)) {
+    parts.push(known
+      ? `[${item.modifiers.defense},${signedCombatNumber(enchantments?.toArmor ?? 0)}]`
+      : `[${item.modifiers.defense}]`);
+  }
+  return parts.join(" ");
+}
+
+function signedCombatNumber(value: number): string {
+  return value > 0 ? `+${value}` : String(value);
+}
 
 export function itemFitsBodySlot(item: InventoryItemDto, slot: BodySlotDto): boolean {
   return item.equipmentSlot === slot.slotType || (item.equipmentSlot === "tool" && slot.slotType === "weapon") || (item.equipmentSlot === "weapon" && slot.slotType === "shield");

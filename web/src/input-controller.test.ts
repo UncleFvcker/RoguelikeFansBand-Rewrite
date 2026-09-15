@@ -25,6 +25,28 @@ import { defaultPreferences } from "./preferences.ts";
 
 const flushCommands = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
 
+test("r opens recall at the look cursor without changing targeting or dispatching a command", t => {
+  installElementIdentities(t);
+  for (const preset of ["original", "roguelike"]) {
+    const positions = [];
+    const h = continuousHarness("local", undefined, preset, { openMonsterRecall: p => positions.push({ ...p }) });
+    h.state.setMapSize(10, 10);
+    h.emit("keydown", { key: preset === "original" ? "l" : "x" });
+    assert.equal(h.state.targetingIntent?.type, "look");
+    h.emit("keydown", { key: "6" });
+    const aim = structuredClone(h.state.targeting);
+    assert.equal(h.emit("keydown", { key: "r" }).defaultPrevented, true);
+    assert.deepEqual(positions, [aim.cursor]);
+    assert.deepEqual(h.state.targeting, aim);
+    assert.equal(h.requests.length, 0);
+    for (const modifier of ["repeat", "ctrlKey", "altKey", "metaKey", "isComposing"]) h.emit("keydown", { key: "r", [modifier]: true });
+    h.document.querySelector = () => ({});
+    h.emit("keydown", { key: "r" });
+    assert.equal(positions.length, 1, "modifiers, repeats and open dialogs do not reopen recall");
+    h.controller.dispose();
+  }
+});
+
 test("held movement uses OS repeats without queueing commands after keyup", async t => {
   installElementIdentities(t);
   for (const preset of ["original", "roguelike"]) {
@@ -236,7 +258,7 @@ test("global targeting cycles without firing and reuses a moving entity for each
     for (const intent of [{ type: "projectile" }, { type: "ability", abilityId: "spell" }, { type: "item", itemId: "wand" }, { type: "absorbed-device", itemId: "absorbed" }, { type: "throw", itemId: "stone" }]) {
       const h = continuousHarness("local", undefined, preset);
       h.state.status.width = h.state.mapWidth = 20; h.state.status.height = h.state.mapHeight = 20;
-      h.state.status.entities = [{ id: "near", position: { x: 2, y: 1 } }, { id: "far", position: { x: 4, y: 1 } }];
+      h.state.status.entities = [{ id: "near", faction: "hostile", position: { x: 2, y: 1 } }, { id: "far", faction: "hostile", position: { x: 4, y: 1 } }];
       h.emit("keydown", { key: "*" });
       assert.equal(h.state.targetingIntent.type, "select-target");
       assert.deepEqual(h.state.targeting.cursor, { x: 2, y: 1 });
@@ -246,6 +268,7 @@ test("global targeting cycles without firing and reuses a moving entity for each
       h.emit("keydown", { key: "t" });
       assert.equal(h.requests.length, 0, "selecting never executes a game action");
       assert.equal(h.state.targeting, undefined);
+      assert.deepEqual(h.controller.selectedTarget, { type: "entity", entityId: "near" }, "the HUD target survives closing target selection");
       h.state.status.entities[0].position = { x: 3, y: 2 };
       h.controller.startTargetingWithSpec({ modes: intent.type === "throw" ? ["direction"] : ["entity", "position"], range: 8, requiresLineOfEffect: true }, intent);
       h.emit("keydown", { key: "5" }); await flushCommands();
@@ -258,13 +281,55 @@ test("global targeting cycles without firing and reuses a moving entity for each
   }
 });
 
+test("grid and direction attacks remember the monster; its death falls back to the nearest enemy", async t => {
+  installElementIdentities(t);
+  for (const modes of [["entity", "position"], ["position"], ["direction"]]) {
+    const h = continuousHarness("local", undefined, "original");
+    h.state.status.width = h.state.mapWidth = 20; h.state.status.height = h.state.mapHeight = 20;
+    const near = { id: "near", faction: "hostile", position: { x: 2, y: 1 } };
+    const old = { id: "old", faction: "hostile", position: { x: 4, y: 1 } };
+    h.state.status.entities = [near, old];
+    const spec = { modes, range: 8, requiresLineOfEffect: true };
+    const intent = modes[0] === "direction" ? { type: "throw", itemId: "stone" } : { type: "ability", abilityId: "spell" };
+    h.controller.startTargetingWithSpec(spec, intent);
+    assert.deepEqual(h.state.targeting.cursor, near.position);
+    h.state.targeting = { ...h.state.targeting, cursor: old.position, list: false };
+    h.emit("keydown", { key: "Enter" }); await flushCommands();
+    assert.deepEqual(h.controller.selectedTarget, { type: "entity", entityId: "old" });
+    await h.finish(update => { update.player.position = { x: 1, y: 1 }; });
+    old.position = { x: 5, y: 1 };
+    h.state.status.entities.find(entity => entity.id === old.id).position = old.position;
+    h.controller.startTargetingWithSpec(spec, intent);
+    assert.deepEqual(h.state.targeting.cursor, old.position, "living old monster wins over a nearer enemy");
+    h.controller.cancelTargeting(false);
+    h.controller.startTargetSelection();
+    assert.deepEqual(h.state.targeting.cursor, old.position, "opening global selection retains the old monster too");
+    h.controller.cancelTargeting(false);
+    h.state.status.entities = [near];
+    h.controller.reconcileStatus(h.state.status);
+    h.controller.startTargetingWithSpec(spec, intent);
+    assert.deepEqual(h.state.targeting.cursor, near.position, "death releases the original square");
+    h.emit("keydown", { key: "Enter" }); await flushCommands();
+    assert.deepEqual(h.controller.selectedTarget, { type: "entity", entityId: "near" });
+    await h.finish(update => { update.player.position = { x: 1, y: 1 }; });
+    h.state.status.entities = [];
+    h.controller.reconcileStatus(h.state.status);
+    h.controller.startTargetingWithSpec(spec, intent);
+    assert.deepEqual(h.state.targeting.cursor, h.state.status.player.position);
+    h.emit("keydown", { key: "t" }); await flushCommands();
+    assert.equal(h.requests.length, 2, "no enemy does not fire at a dead target's square");
+    h.controller.dispose();
+  }
+});
+
 test("target cancellation, invalid old targets, floor changes and reset cannot fire stale selections", async t => {
   installElementIdentities(t);
   const spec = { modes: ["entity", "position"], range: 5, requiresLineOfEffect: true };
   for (const invalidate of ["vanished", "range", "floor", "reset"]) {
     const h = continuousHarness("local", undefined, "original");
+    h.state.status.operationOptions.defaultTarget = "manual";
     h.state.status.width = h.state.mapWidth = 20; h.state.status.height = h.state.mapHeight = 20;
-    h.state.status.entities = [{ id: "enemy", position: { x: 2, y: 1 } }];
+    h.state.status.entities = [{ id: "enemy", faction: "hostile", position: { x: 2, y: 1 } }];
     h.emit("keydown", { key: "*" }); h.emit("keydown", { key: "0" });
     if (invalidate === "vanished") h.state.status.entities = [];
     if (invalidate === "range") h.state.status.entities[0].position.x = 15;
@@ -1485,6 +1550,99 @@ function installElementIdentities(t) {
   }
 }
 
+function clickableMapHarness(options = {}, kind = "local") {
+  const h = continuousHarness(kind, undefined, "original", options);
+  Object.setPrototypeOf(h.mapHost, Node.prototype);
+  Object.assign(h.mapHost, { dataset: { cameraX: "0", cameraY: "0" },
+    clientLeft: 2, clientTop: 2, clientWidth: 500, clientHeight: 300, scrollLeft: 0, scrollTop: 0,
+    getBoundingClientRect: () => ({ left: 100, top: 50 }) });
+  h.state.status.width = h.state.mapWidth = 20;
+  h.state.status.height = h.state.mapHeight = 20;
+  h.click = (extra = {}) => h.emit("click", { target: h.mapHost, button: 0, detail: 1,
+    clientX: 100 + 2 + 4.5 * 28, clientY: 50 + 2 + 1.5 * 28, ...extra });
+  return h;
+}
+
+test("map clicks travel to the displayed cell across camera offsets, zoom and scrolling", async t => {
+  installElementIdentities(t);
+  for (const [zoom, cameraX, cameraY, scrollLeft, scrollTop] of [[1, 0, 0, 0, 0], [2, -56, 28, 0, 0], [0.75, 0, 0, 28, 14]]) {
+    const h = clickableMapHarness({ getZoom: () => zoom });
+    Object.assign(h.mapHost.dataset, { cameraX: String(cameraX), cameraY: String(cameraY) });
+    Object.assign(h.mapHost, { scrollLeft, scrollTop });
+    const destination = { x: 4, y: 3 };
+    h.click({ clientX: 102 + (4.5 * 28 * zoom) + cameraX - scrollLeft,
+      clientY: 52 + (3.5 * 28 * zoom) + cameraY - scrollTop });
+    await flushCommands();
+    assert.deepEqual(h.requests.map(request => request.command), [{ type: "travel-local", destination }]);
+    await h.finish(update => { update.player.position = destination; });
+    await h.tick();
+    assert.equal(h.controller.continuousAction, undefined);
+    h.controller.dispose();
+  }
+  const world = clickableMapHarness({}, "world");
+  world.click(); await flushCommands();
+  assert.deepEqual(world.requests[0].command, { type: "travel-world", destination: { x: 4, y: 1 } });
+  await world.finish(update => { update.player.position = { x: 4, y: 1 }; });
+  await world.tick();
+  world.controller.dispose();
+});
+
+test("map clicks confirm targeting by entity or position and only inspect in look mode", async t => {
+  installElementIdentities(t);
+  for (const intent of [{ type: "select-target" }, { type: "projectile" }, { type: "ability", abilityId: "spell" },
+    { type: "item", itemId: "wand" }, { type: "absorbed-device", itemId: "absorbed" }, { type: "throw", itemId: "stone" }]) {
+    const h = clickableMapHarness();
+    h.state.status.entities = [{ id: "chosen", faction: "hostile", position: { x: 4, y: 1 } }];
+    h.controller.startTargetingWithSpec({ modes: intent.type === "throw" ? ["direction"] : ["entity", "position"], range: 8, requiresLineOfEffect: true }, intent);
+    h.state.targeting.list = false;
+    h.click(); await flushCommands();
+    assert.equal(h.state.targeting, undefined);
+    assert.deepEqual(h.controller.selectedTarget, { type: "entity", entityId: "chosen" });
+    if (intent.type === "select-target") assert.equal(h.requests.length, 0);
+    else {
+      assert.equal(h.requests.length, 1);
+      const command = h.requests[0].command;
+      if (intent.type === "throw") assert.deepEqual(command, { type: "throw", itemId: "stone", direction: "east" });
+      else assert.deepEqual(command.target ?? command.targets[0], { type: "entity", entityId: "chosen" });
+      await h.finish();
+    }
+    h.click({ detail: 2 }); await flushCommands();
+    assert.equal(h.controller.continuousAction, undefined, "a double-click cannot start travel after confirming a target");
+    h.controller.dispose();
+  }
+  const focus = [], h = clickableMapHarness({ onLookFocusChange: position => focus.push(position) });
+  h.controller.startLookMode(); h.click();
+  assert.deepEqual(focus.at(-1), { x: 4, y: 1 });
+  assert.equal(h.state.targetingIntent.type, "look");
+  assert.equal(h.requests.length, 0);
+  h.controller.cancelTargeting(false);
+  h.controller.startTargetSelection(); h.click();
+  assert.deepEqual(h.controller.selectedTarget, { type: "position", position: { x: 4, y: 1 } });
+  assert.equal(h.requests.length, 0);
+  h.controller.dispose();
+});
+
+test("map clicks ignore blocked contexts and stop continuous movement without queuing another destination", async t => {
+  installElementIdentities(t);
+  const h = clickableMapHarness();
+  for (const extra of [{ button: 2 }, { detail: 2 }, { shiftKey: true }, { target: null },
+    { clientX: 101 }, { clientX: 602 }, { clientY: 51 }, { clientY: 352 }]) h.click(extra);
+  h.mapHost.dataset.cameraX = "300"; h.click(); h.mapHost.dataset.cameraX = "0";
+  h.state.status.width = 3; h.click(); h.state.status.width = 20;
+  h.document.querySelector = () => ({}); h.click(); h.document.querySelector = () => null;
+  h.state.busy = true; h.click(); h.state.busy = false;
+  h.state.terrainInteractionMode = "open-door"; h.click(); h.state.terrainInteractionMode = undefined;
+  h.state.status.player.pendingMaiaPathChoice = true; h.click(); h.state.status.player.pendingMaiaPathChoice = false;
+  await flushCommands(); assert.equal(h.requests.length, 0);
+  h.start(); await flushCommands();
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.click().stopped, true);
+  await h.finish();
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.controller.continuousAction, undefined);
+  h.controller.dispose();
+});
+
 test("keyboard contexts isolate modifiers, text, aiming and directional prompts", async t => {
   installElementIdentities(t);
   for (const preset of ["original", "roguelike"]) await t.test(preset, async () => {
@@ -2083,6 +2241,17 @@ test("saved Wonder prompts once per session, validates a symbol and can cancel",
     assert.equal(timers.length, 2, "the old callback cannot clear the new session's pending prompt");
     timers[1]();
     assert.deepEqual(commands, [{ type: "resolve-ability-glyph", glyph: answer }]);
+  }
+});
+
+test("manual g delegates to the item picker instead of dispatching automatic pickup", t => {
+  installElementIdentities(t);
+  for (const preset of ["original", "roguelike"]) {
+    const h = continuousHarness("local", undefined, preset);
+    h.emit("keydown", { key: "g" });
+    assert.deepEqual(h.shortcuts, ["pickup"]);
+    assert.equal(h.requests.length, 0);
+    h.controller.dispose();
   }
 });
 

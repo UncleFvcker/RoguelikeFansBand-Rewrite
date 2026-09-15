@@ -93,8 +93,8 @@ test("operation controls share the global draft, cancellation and behavior commi
   f.state.mode = "playing"; await f.panel.open();
   f.element("run-stop-knownTreasure").checked = true;
   f.element("operation-autoRepeat").checked = false;
-  f.change("operation-defaultTarget", "old-then-nearest");
-  assert.equal(f.client.snapshot.preferences.operations.defaultTarget, "manual");
+  f.change("operation-defaultTarget", "manual");
+  assert.equal(f.client.snapshot.preferences.operations.defaultTarget, "old-then-nearest");
   f.panel.close(); await f.panel.open();
   assert.equal(f.element("run-stop-knownTreasure").checked, false);
   f.element("run-stop-knownTreasure").checked = true;

@@ -384,12 +384,18 @@ fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto
 }
 
 impl ResolvedAttackProfile {
-    pub(in crate::game) fn miss_event(&self, target_kind_id: &str) -> DomainEvent {
+    pub(in crate::game) fn miss_event(
+        &self,
+        target_entity_id: &str,
+        target_kind_id: &str,
+    ) -> DomainEvent {
         self.source_mutation_id.as_ref().map_or_else(
             || DomainEvent::PlayerMeleeMissed {
+                target_entity_id: target_entity_id.to_owned(),
                 target_kind_id: target_kind_id.to_owned(),
             },
             |mutation_id| DomainEvent::MutationMeleeMissed {
+                target_entity_id: target_entity_id.to_owned(),
                 mutation_id: mutation_id.clone(),
                 attack_name: self
                     .attack_name
@@ -402,15 +408,18 @@ impl ResolvedAttackProfile {
 
     pub(in crate::game) fn hit_event(
         &self,
+        target_entity_id: &str,
         target_kind_id: &str,
         damage: DamageOutcome,
     ) -> DomainEvent {
         self.source_mutation_id.as_ref().map_or_else(
             || DomainEvent::PlayerMeleeHit {
+                target_entity_id: target_entity_id.to_owned(),
                 target_kind_id: target_kind_id.to_owned(),
                 damage,
             },
             |mutation_id| DomainEvent::MutationMeleeHit {
+                target_entity_id: target_entity_id.to_owned(),
                 mutation_id: mutation_id.clone(),
                 attack_name: self
                     .attack_name
@@ -424,15 +433,18 @@ impl ResolvedAttackProfile {
 
     pub(in crate::game) fn slew_event(
         &self,
+        target_entity_id: &str,
         target_kind_id: &str,
         damage: DamageOutcome,
     ) -> DomainEvent {
         self.source_mutation_id.as_ref().map_or_else(
             || DomainEvent::PlayerSlew {
+                target_entity_id: target_entity_id.to_owned(),
                 target_kind_id: target_kind_id.to_owned(),
                 damage,
             },
             |mutation_id| DomainEvent::MutationMeleeSlew {
+                target_entity_id: target_entity_id.to_owned(),
                 mutation_id: mutation_id.clone(),
                 attack_name: self
                     .attack_name

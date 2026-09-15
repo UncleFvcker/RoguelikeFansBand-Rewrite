@@ -182,6 +182,7 @@ impl Game {
                         );
                         changed.insert(self.player.position);
                         events.push(DomainEvent::AbilityHit {
+                            player_target_id: None,
                             ability_id: source_kind_id.to_owned(),
                             target_kind_id: self.player.kind_id.clone(),
                             damage,

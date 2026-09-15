@@ -176,7 +176,7 @@ test("front-end sources do not reintroduce high-confidence hardcoded UI text", (
     assert.doesNotMatch(source, /[\p{Script=Han}]/u, `${entry.name} contains hardcoded Chinese text`);
     assert.doesNotMatch(
       source,
-      /(?:textContent|innerText)\s*=\s*["']/,
+      /(?:textContent|innerText)\s*=\s*(?:"[^"\r\n]*"|'[^'\r\n]*')(?!\s*in\b)/,
       `${entry.name} assigns a literal directly to visible DOM text`,
     );
     assert.doesNotMatch(source, /\baddMessage\s*\(/, `${entry.name} bypasses localized messages`);

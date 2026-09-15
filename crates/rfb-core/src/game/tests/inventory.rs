@@ -903,6 +903,88 @@ fn pickup_on_empty_ground_is_zero_time() {
 }
 
 #[test]
+fn selected_pickup_takes_exact_underfoot_stack_and_never_falls_back() {
+    let mut game = Game::new(42);
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    let here = game.player.position;
+    let nearby = Position {
+        x: here.x + 1,
+        y: here.y,
+    };
+    for (id, kind, location) in [
+        (
+            "test.a-first",
+            "demo.item.dagger",
+            ItemLocation::Ground(here),
+        ),
+        ("test.chosen", "demo.item.arrow", ItemLocation::Ground(here)),
+        (
+            "test.distant",
+            "demo.item.dagger",
+            ItemLocation::Ground(nearby),
+        ),
+        ("test.carried", "demo.item.arrow", ItemLocation::Inventory),
+    ] {
+        give_inventory_item(&mut game, id, kind);
+        game.items.last_mut().unwrap().location = location;
+    }
+    let total_arrows: u32 = game
+        .items
+        .iter()
+        .filter(|item| item.kind_id == "demo.item.arrow")
+        .map(|item| item.quantity)
+        .sum();
+    let world_tick = game.world_tick;
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::PickUpItem {
+            item_id: "test.chosen".into(),
+        },
+    );
+    assert_eq!(update.world_tick, world_tick);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.message_key == "item-pickup-success")
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.a-first")
+            .unwrap()
+            .location,
+        ItemLocation::Ground(here)
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.carried")
+            .unwrap()
+            .quantity,
+        total_arrows
+    );
+    assert!(!game.items.iter().any(|item| item.id == "test.chosen"));
+    for id in ["test.chosen", "test.distant", "test.carried", "missing"] {
+        let items = game.items.clone();
+        let update = dispatch_next(&mut game, GameCommand::PickUpItem { item_id: id.into() });
+        assert_eq!(
+            game.items, items,
+            "invalid selection must leave every item in place"
+        );
+        assert_eq!(update.world_tick, world_tick);
+        assert!(
+            update
+                .events
+                .iter()
+                .any(|event| event.message_key == "item-pickup-none")
+        );
+    }
+}
+
+#[test]
 fn stale_revision_is_rejected_without_mutation() {
     let mut game = Game::new(1);
     let before = game.state_hash();

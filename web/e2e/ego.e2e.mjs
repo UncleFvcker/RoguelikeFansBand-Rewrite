@@ -31,8 +31,8 @@ export async function runEgoScenario(driver, directory) {
   async function identify(id) {
     for (let attempt = 0; attempt < 10; attempt++) {
       await select('e88.identify'); const before = await turn(); await click('#inventory-use');
-      await driver.waitFor(`return !!document.querySelector('.item-target-dialog[open] select');`, "identify target");
-      await driver.execute(`const select = document.querySelector('.item-target-dialog[open] select'); select.value = arguments[0]; if (select.value !== arguments[0]) throw new Error('Missing target'); select.dispatchEvent(new Event('change',{bubbles:true})); return true;`, [id]);
+      await driver.waitFor(`return !!document.querySelector('.item-selection-dialog[open] .item-selection-row');`, "identify target");
+      await driver.execute(`const row = [...document.querySelectorAll('.item-selection-dialog[open] .item-selection-row')].find(row => row.dataset.itemId === arguments[0]); if (!row) throw new Error('Missing target'); row.click(); return true;`, [id]);
       await click('.item-target-dialog[open] button[type="submit"]'); await after(before);
       const value = await inspect(id); if (value.identified) return value;
     }

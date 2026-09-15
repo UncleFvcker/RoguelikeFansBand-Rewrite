@@ -61,8 +61,8 @@ export async function runMagicEaterUiScenario(driver, directory, profile) {
   }
   async function selectSource(id) {
     await click("#magic-eater-absorb");
-    await driver.waitFor('return !!document.querySelector(".item-target-dialog[open]:not(#magic-eater-dialog) select")', "absorption item selector");
-    await driver.execute('const s=document.querySelector(".item-target-dialog[open]:not(#magic-eater-dialog) select");s.value=arguments[0];s.dispatchEvent(new Event("change"));return true;', [id]);
+    await driver.waitFor('return !!document.querySelector(".item-selection-dialog[open] .item-selection-row")', "absorption item selector");
+    await driver.execute('[...document.querySelectorAll(".item-selection-dialog[open] .item-selection-row")].find(row=>row.dataset.itemId===arguments[0]).click();return true;', [id]);
     await focus('.item-target-dialog[open]:not(#magic-eater-dialog) button[type="submit"]'); await keyboard.key("Enter");
   }
   async function exportSave(name) {

@@ -34,7 +34,7 @@ export function defaultPreferences(): Preferences {
   return { visuals: defaultVisuals(), display: { ...DEFAULT_DISPLAY }, formatVersion: 5, locale: "zh-CN", inputPreset: "original", tilesetPreset: "ascii", cameraMode: "player-centered", zoom: 1, keyBindings: [],
     travel: { alwaysPickup: false, autoDetectTraps: false, autoMapArea: false, disturbTrapDetect: true },
     operations: { runStops: { stairs: true, openDoors: false, knownTreasure: false }, cutCorners: false,
-      travelIgnoreItems: true, defaultTarget: "manual", targetPets: false, easyOpen: true, easyDisarm: true, autoRepeat: true },
+      travelIgnoreItems: true, defaultTarget: "old-then-nearest", targetPets: false, easyOpen: true, easyDisarm: true, autoRepeat: true },
     mogaminator: { enabled: false, leaveDestroyedItems: false, autoGetMode: "off", zhCnSource: "", enUsSource: "" } };
 }
 export function behaviorPreferences(p: Preferences): BehaviorPreferencesDto { return { locale: p.locale, travel: p.travel, operations: p.operations, mogaminator: p.mogaminator }; }

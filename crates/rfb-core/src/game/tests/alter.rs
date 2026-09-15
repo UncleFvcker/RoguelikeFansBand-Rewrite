@@ -19,6 +19,104 @@ fn arena() -> Game {
 }
 
 #[test]
+fn ground_items_do_not_block_manual_automatic_or_alter_trap_disarming() {
+    let mut initial = arena();
+    initial.mogaminator.enabled = false;
+    let target = initial.position_in_direction(Direction::East);
+    replace_terrain(&mut initial, target, "demo.terrain.warren-snare");
+    give_inventory_item(&mut initial, "test.trap.corpse", "demo.item.corpse-remains");
+    initial.items.last_mut().unwrap().location = ItemLocation::Ground(target);
+    initial.reveal_current_visibility();
+    assert!(
+        initial.disarm_trap(Direction::East).is_none(),
+        "items do not reveal hidden traps"
+    );
+    initial.revealed_terrain.insert(target);
+    let interaction = initial
+        .terrain_interactions()
+        .into_iter()
+        .find(|entry| {
+            entry.position == target && entry.kind == TerrainInteractionKindDto::DisarmTrap
+        })
+        .unwrap();
+    assert!(interaction.available);
+    assert_eq!(interaction.unavailable_reason, None);
+
+    for command in [
+        GameCommand::DisarmTrap {
+            direction: Direction::East,
+        },
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+        GameCommand::Alter {
+            direction: Direction::East,
+        },
+    ] {
+        let mut game = initial.clone();
+        for _ in 0..100 {
+            let update = dispatch_next(&mut game, command.clone());
+            assert!(
+                !update
+                    .events
+                    .iter()
+                    .any(|event| event.message_key == "message-terrain-trap-disarm-unavailable")
+            );
+            if game.terrain[game.index(target).unwrap()] == "demo.terrain.floor" {
+                break;
+            }
+        }
+        assert_eq!(
+            game.terrain[game.index(target).unwrap()],
+            "demo.terrain.floor"
+        );
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == "test.trap.corpse")
+                .unwrap()
+                .location,
+            ItemLocation::Ground(target)
+        );
+        dispatch_next(
+            &mut game,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        );
+        assert_eq!(game.player.position, target);
+        dispatch_next(&mut game, GameCommand::PickUp);
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == "test.trap.corpse")
+                .unwrap()
+                .location,
+            ItemLocation::Inventory
+        );
+    }
+
+    initial.push_generated_actor(
+        "test.trap.guard".into(),
+        "demo.actor.clear-icky-thing",
+        target,
+    );
+    assert!(initial.disarm_trap(Direction::East).is_none());
+    let interaction = initial
+        .terrain_interactions()
+        .into_iter()
+        .find(|entry| {
+            entry.position == target && entry.kind == TerrainInteractionKindDto::DisarmTrap
+        })
+        .unwrap();
+    assert_eq!(
+        interaction.unavailable_reason,
+        Some(rfb_protocol::TerrainInteractionUnavailableReasonDto::OccupiedByActor)
+    );
+    assert!(!interaction.available);
+}
+
+#[test]
 fn walking_convenience_uses_existing_actions_and_keeps_explicit_alter_available() {
     for terrain in ["demo.terrain.door-closed", "demo.terrain.created-trap"] {
         let mut game = arena();

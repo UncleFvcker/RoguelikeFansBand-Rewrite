@@ -32,12 +32,20 @@ export function filterMonsterRecall(monsters: readonly ResearchMonsterDto[], que
       mode !== "glyph" || monster.glyph === query || glyph(monster) === query));
 }
 
+export function monsterRecallAt(state: AppState, position: Position): ResearchMonsterDto | undefined {
+  const status = state.status;
+  if (!status || status.player.statuses.some(effect => effect.kindId === "rfb.status.hallucination")) return;
+  const entity = status.entities.find(entity => entity.position.x === position.x && entity.position.y === position.y);
+  return entity && status.player.monsterRecall.find(monster => monster.kindId === entity.kindId);
+}
+
 export class MapIntelligencePanel {
   readonly state: AppState;
   readonly localization: Localization;
   readonly document: Document;
   readonly preset: () => InputPreset;
   readonly contentName: (id: string) => string;
+  readonly statusName: (id: string) => string;
   readonly recenter: () => void;
   readonly #dialog: HTMLDialogElement;
   readonly #body: HTMLElement;
@@ -46,12 +54,14 @@ export class MapIntelligencePanel {
   #queryMode: "glyph" | "all" | "unique" = "glyph";
   #origin: Position = { x: 0, y: 0 };
   #snapshot: AppState["status"];
+  #recalling = false;
 
   constructor(state: AppState, localization: Localization,
     document: Document, preset: () => InputPreset,
-    contentName: (id: string) => string, recenter: () => void) {
+    contentName: (id: string) => string, recenter: () => void, statusName: (id: string) => string) {
     this.state = state; this.localization = localization; this.document = document;
     this.preset = preset; this.contentName = contentName; this.recenter = recenter;
+    this.statusName = statusName;
     this.#dialog = document.createElement("dialog");
     this.#dialog.id = "map-intelligence-dialog";
     this.#dialog.tabIndex = -1;
@@ -66,6 +76,7 @@ export class MapIntelligencePanel {
 
   open(mode: MapInquiry, queryMode: "glyph" | "all" | "unique" = "glyph"): void {
     if (!this.state.status || this.state.busy || this.state.commandBlocked) return;
+    this.#recalling = false;
     this.#mode = mode; this.#queryMode = queryMode; this.#snapshot = this.state.status;
     this.#origin = { ...this.state.status.player.position };
     this.#render();
@@ -74,6 +85,21 @@ export class MapIntelligencePanel {
   }
   close(): void { this.#dialog.close(); }
   reconcileStatus(): void { if (this.#snapshot !== this.state.status) this.close(); }
+
+  openMonsterRecall(position: Position): void {
+    // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, xtra2.c: look recalls the apparent race.
+    if (this.state.busy || this.state.commandBlocked) return;
+    const monster = monsterRecallAt(this.state, position);
+    if (!monster) return;
+    this.#snapshot = this.state.status;
+    this.#recalling = true;
+    this.#title.textContent = this.localization.format(monster.nameKey);
+    const detail = this.#monsterDetail(monster);
+    detail.open = true;
+    this.#body.replaceChildren(this.#button("action-dialog-close", () => this.close()), detail);
+    if (!this.#dialog.open) this.#dialog.showModal();
+    this.#body.querySelector("button")?.focus();
+  }
 
   #button(key: string, action: () => void): HTMLButtonElement {
     const button = this.document.createElement("button"); button.type = "button";
@@ -179,14 +205,7 @@ export class MapIntelligencePanel {
         result.append(text);
       }
       for (const monster of filterMonsterRecall(this.state.status!.player.monsterRecall, query.value, mode.value, key => this.localization.format(key), monster => this.state.visualGlyph(monster.kindId, monster.glyph))) {
-        const detail = this.document.createElement("details");
-        const summary = this.document.createElement("summary"); summary.textContent = ` ${this.localization.format(monster.nameKey)}`;
-        const glyph = this.document.createElement("span"); this.state.paintVisual(glyph, monster.kindId, monster.glyph); summary.prepend(glyph);
-        detail.append(summary);
-        const text = this.document.createElement("p");
-        text.textContent = monster.knowledge ? this.localization.format(monster.knowledge.descriptionKey) +
-          ` · HP ${monster.knowledge.maxHp} · AC ${monster.knowledge.armorClass} · ${this.localization.format("intel-speed", { speed: monster.knowledge.speed })}` : this.localization.format("intel-unresearched");
-        detail.append(text); result.append(detail);
+        result.append(this.#monsterDetail(monster));
       }
       if (!result.children.length) result.textContent = this.localization.format("intel-empty");
     };
@@ -198,9 +217,36 @@ export class MapIntelligencePanel {
     });
     label.append(query); this.#body.append(label, mode, result); render();
   }
+  #monsterDetail(monster: ResearchMonsterDto): HTMLDetailsElement {
+    const detail = this.document.createElement("details");
+    const summary = this.document.createElement("summary"); summary.textContent = ` ${this.localization.format(monster.nameKey)}`;
+    const glyph = this.document.createElement("span"); this.state.paintVisual(glyph, monster.kindId, monster.glyph); summary.prepend(glyph);
+    detail.append(summary);
+    const text = this.document.createElement("p");
+    const knowledge = monster.knowledge;
+    text.textContent = knowledge ? this.localization.format(knowledge.descriptionKey) +
+      ` · HP ${knowledge.maxHp} · AC ${knowledge.armorClass} · ${this.localization.format("intel-speed", { speed: knowledge.speed })}` : this.localization.format("intel-unresearched");
+    detail.append(text);
+    if (knowledge) {
+      const line = (key: string, values: string[]) => {
+        const p = this.document.createElement("p");
+        p.textContent = `${this.localization.format(key)}: ${values.join(", ") || "—"}`;
+        detail.append(p);
+      };
+      line("monster-probe-resistances", knowledge.resistances.filter(r => r.level !== "normal")
+        .map(r => `${this.localization.format(`damage-type-${r.damageType}-name`)}: ${this.localization.format(`resistance-level-${r.level}`)}`));
+      line("monster-probe-status-immunities", knowledge.statusImmunities.map(this.statusName));
+      line("monster-probe-melee", knowledge.meleeRoutine.blows.map(b => `${this.contentName(b.methodId)} ${b.damage.dice}d${b.damage.sides}`));
+      line("monster-probe-abilities", knowledge.abilityIds.map(this.contentName));
+    }
+    return detail;
+  }
   #key(event: KeyboardEvent): void {
     if (event.isComposing || event.repeat) return;
-    if (event.key === "Escape") { event.preventDefault(); this.close(); return; }
+    if (event.key === "Escape" || (this.#recalling && event.key === "r" && !event.ctrlKey && !event.altKey && !event.metaKey)) {
+      event.preventDefault(); event.stopPropagation(); this.close(); return;
+    }
+    if (this.#recalling) return;
     if (this.#mode !== "map-locate") return;
     if (event.ctrlKey && event.key.toLowerCase() === "v") {
       event.preventDefault(); this.#origin = { ...this.state.status!.player.position }; this.recenter(); this.#render(); return;

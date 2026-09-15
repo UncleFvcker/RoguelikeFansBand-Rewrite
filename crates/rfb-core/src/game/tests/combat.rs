@@ -3,6 +3,37 @@ use super::support::*;
 use super::*;
 use crate::game::initialization::resolve_body_slots;
 
+#[test]
+fn player_attack_events_project_the_actual_monster_instance() {
+    let mut game = Game::new_with_build(2, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    game.player.position = Position { x: 3, y: 3 };
+    let actor = game.generated_actor(
+        "test.hud.target".to_owned(),
+        "demo.actor.small-kobold",
+        Position { x: 4, y: 3 },
+    );
+    game.entities.push(actor);
+    let mut events = Vec::new();
+    game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .unwrap();
+    let projected = crate::event::project_events(events);
+    let attacks: Vec<_> = projected
+        .iter()
+        .filter(|event| {
+            matches!(
+                event.kind.as_str(),
+                "combat.hit" | "combat.miss" | "combat.slay"
+            )
+        })
+        .collect();
+    assert!(!attacks.is_empty());
+    for event in attacks {
+        assert_eq!(event.args["attackTarget"], "test.hud.target");
+        assert_eq!(event.args["target"], "demo.actor.small-kobold");
+    }
+}
+
 pub(super) fn monster_effect_game(seed: u64, effect: MeleeBlowEffectDefinition) -> Game {
     monster_effect_game_with_method(seed, "rfb.blow.touch", effect)
 }

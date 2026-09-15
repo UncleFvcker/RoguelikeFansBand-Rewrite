@@ -36,7 +36,7 @@ export function defaultTargetState(state: TargetingState, mode: DefaultTargetMod
   }
   if (mode === "nearest-enemy" || mode === "old-then-nearest") {
     const enemies = entities.filter(entity => entity.faction === "hostile" && isCandidate(state, entity));
-    if (enemies.length) return cycleTarget(state, enemies, 0);
+    if (enemies.length) return cycleTarget({ ...state, cursor: { ...state.origin }, list: false }, enemies, 0);
   }
   return state;
 }

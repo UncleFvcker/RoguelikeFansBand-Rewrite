@@ -924,6 +924,57 @@ impl Game {
         Some(rfb_protocol::DungeonStatusDto {
             name_key: floor.name_key.clone(),
             current_depth: floor.depth,
+            guardian: floor
+                .guardian
+                .as_ref()
+                .map(|guardian| rfb_protocol::FloorGuardianDto {
+                    name_key: self
+                        .content
+                        .actor(&guardian.actor_kind_id)
+                        .expect("floor guardian definition validated")
+                        .name_key
+                        .clone(),
+                    defeated: self
+                        .defeated_limited_actor_counts
+                        .get(&guardian.actor_kind_id)
+                        .is_some_and(|count| *count > 0)
+                        || self
+                            .dungeon_states
+                            .get(dungeon_id)
+                            .is_some_and(|state| state.guardian_defeated),
+                })
+                .or_else(|| {
+                    world.tasks.iter().find_map(|task| {
+                        let state = projected_task_state(world, &self.task_states, &task.id)?;
+                        if !matches!(
+                            state.status,
+                            TaskStatusKindDto::Taken
+                                | TaskStatusKindDto::Active
+                                | TaskStatusKindDto::Completed
+                                | TaskStatusKindDto::RewardAvailable
+                        ) || !super::tasks::task_applies_to_floor(task, floor, Some(&state))
+                        {
+                            return None;
+                        }
+                        let objective = super::tasks::resolved_task_objective(task, &state)?;
+                        if objective.kind != rfb_content::TaskObjectiveKind::KillActorKind
+                            || objective.required != 1
+                        {
+                            return None;
+                        }
+                        let actor = self.content.actor(objective.actor_kind_id.as_deref()?)?;
+                        actor.tags.iter().any(|tag| tag == "unique").then(|| {
+                            rfb_protocol::FloorGuardianDto {
+                                name_key: actor.name_key.clone(),
+                                defeated: state.current >= state.required
+                                    || self
+                                        .defeated_limited_actor_counts
+                                        .get(&actor.id)
+                                        .is_some_and(|count| *count > 0),
+                            }
+                        })
+                    })
+                }),
             maximum_depth: world
                 .procedural_floors
                 .iter()
@@ -1779,13 +1830,16 @@ impl Game {
                 });
             }
             if terrain.trap.is_some() {
+                let unavailable_reason = unavailable_reason.filter(|reason| {
+                    *reason == rfb_protocol::TerrainInteractionUnavailableReasonDto::OccupiedByActor
+                });
                 interactions.push(TerrainInteractionDto {
                     kind: TerrainInteractionKindDto::DisarmTrap,
                     direction,
                     position,
                     terrain_id: terrain.id.clone(),
                     requires_check: true,
-                    available,
+                    available: unavailable_reason.is_none(),
                     unavailable_reason,
                 });
             }

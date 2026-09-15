@@ -41,23 +41,39 @@ impl Game {
                 == state.visited_frontiers.len()
     }
 
-    fn auto_explore_unavailable(&self) -> bool {
-        self.map_scale != MapScaleDto::Local
-            || self.player_is_dead()
-            || self.player_has_status_kind(STATUS_BLINDNESS)
-            || self.player_has_status_kind(STATUS_CONFUSION)
-            || self.player_has_status_kind(STATUS_PARALYSIS)
-            || self.mogaminator.pending_query.is_some()
-            || self.pending_duelist.is_some()
+    pub(super) fn auto_explore_hostile_in_sight(&self) -> bool {
+        self.entities.iter().any(|entity| {
+            entity.hp > 0
+                && !self.actor_is_player_side(entity)
+                && self.entity_is_visually_visible_to_player(entity)
+        })
+    }
+
+    fn auto_explore_unavailable_reason(&self) -> Option<&'static str> {
+        if self.map_scale != MapScaleDto::Local {
+            Some("game-auto-explore-local-only")
+        } else if self.player_is_dead() {
+            Some("game-auto-explore-dead")
+        } else if self.player_has_status_kind(STATUS_BLINDNESS) {
+            Some("game-auto-explore-blind")
+        } else if self.player_has_status_kind(STATUS_CONFUSION) {
+            Some("game-auto-explore-confused")
+        } else if self.player_has_status_kind(STATUS_PARALYSIS) {
+            Some("game-auto-explore-paralyzed")
+        } else if self.mogaminator.pending_query.is_some() {
+            Some("game-auto-explore-pickup-query")
+        } else if self.pending_duelist.is_some()
             || self.pending_mutation_direction.is_some()
             || self.pending_ability_direction.is_some()
             || self.pending_maia_path_choice()
             || self.pending_race_mutation_choice().is_some()
-            || self.entities.iter().any(|entity| {
-                entity.hp > 0
-                    && !self.actor_is_player_side(entity)
-                    && self.entity_is_visible_to_player(entity)
-            })
+        {
+            Some("game-auto-explore-pending-choice")
+        } else if self.auto_explore_hostile_in_sight() {
+            Some("game-auto-explore-enemy-in-sight")
+        } else {
+            None
+        }
     }
 
     pub(super) fn auto_explore_ground_units(&self) -> u64 {
@@ -137,8 +153,8 @@ impl Game {
             return None;
         }
         let result = (|| {
-            if self.auto_explore_unavailable() {
-                return Err("game-auto-explore-interrupted");
+            if let Some(reason) = self.auto_explore_unavailable_reason() {
+                return Err(reason);
             }
             let starting = matches!(action, GameAction::AutoExplore);
             let mut state = if starting {
@@ -156,7 +172,7 @@ impl Game {
                 self.auto_explore
                     .take()
                     .filter(|state| self.auto_explore_state_is_valid(state))
-                    .ok_or("game-auto-explore-interrupted")?
+                    .ok_or("game-auto-explore-state-lost")?
             };
             // Reconsider objects after each reveal, including matching items at our feet.
             // Generic PickUp would also collect items rejected by the rules.
@@ -211,12 +227,25 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) {
         let Some(mut state) = self.auto_explore.take() else {
+            // A prepared step can be cleared by damage or a successful search.
+            let discovered = events.iter().any(|event| match event {
+                DomainEvent::SecretTerrainDiscovered { .. } => true,
+                DomainEvent::ChestInteracted { message_key } => message_key == "chest-trap-found",
+                _ => false,
+            });
+            events.push(DomainEvent::AutoExploreStopped {
+                reason: if discovered {
+                    "game-auto-explore-discovery"
+                } else {
+                    "game-auto-explore-damaged"
+                },
+            });
             return;
         };
-        if self.auto_explore_unavailable() || state.floor_id != self.current_floor_id {
-            events.push(DomainEvent::AutoExploreStopped {
-                reason: "game-auto-explore-interrupted",
-            });
+        if let Some(reason) = self.auto_explore_unavailable_reason().or_else(|| {
+            (state.floor_id != self.current_floor_id).then_some("game-auto-explore-floor-changed")
+        }) {
+            events.push(DomainEvent::AutoExploreStopped { reason });
             return;
         }
         let mut previous = state.position;
@@ -248,7 +277,19 @@ impl Game {
             || (pickup && self.auto_explore_ground_units() >= ground_units_before)
         {
             events.push(DomainEvent::AutoExploreStopped {
-                reason: "game-auto-explore-no-progress",
+                reason: if events
+                    .iter()
+                    .any(|event| matches!(event, DomainEvent::LocalTravelLeftDetectionArea))
+                {
+                    "game-auto-explore-detection-boundary"
+                } else if events
+                    .iter()
+                    .any(|event| matches!(event, DomainEvent::ItemPickupInventoryFull { .. }))
+                {
+                    "game-auto-explore-pack-full"
+                } else {
+                    "game-auto-explore-no-progress"
+                },
             });
             return;
         }

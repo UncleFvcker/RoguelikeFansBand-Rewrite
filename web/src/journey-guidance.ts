@@ -11,6 +11,7 @@ export interface JourneyDungeonStatus {
   readonly currentDepth?: number;
   readonly maximumDepth?: number;
   readonly bossNameKey?: MessageKey;
+  readonly bossDefeated?: boolean;
 }
 
 export type OnboardingPromptId =
@@ -145,7 +146,8 @@ export function selectJourneyDungeonStatus(
     dungeonNameKey: state.dungeon?.nameKey ?? state.town?.nameKey ?? "floor-demo-surface-name",
     currentDepth: state.dungeon?.currentDepth,
     maximumDepth: state.dungeon?.maximumDepth,
-    bossNameKey: state.campaign.targetNameKey ?? undefined,
+    bossNameKey: state.dungeon?.guardian?.nameKey,
+    bossDefeated: state.dungeon?.guardian?.defeated,
   };
 }
 
@@ -253,7 +255,7 @@ export class JourneyGuidance {
         });
     this.#dom.journeyBoss.hidden = dungeon.bossNameKey === undefined;
     this.#dom.journeyBoss.textContent = dungeon.bossNameKey
-      ? this.#localization.format("journey-dungeon-boss", {
+      ? this.#localization.format(dungeon.bossDefeated ? "journey-dungeon-boss-defeated" : "journey-dungeon-boss", {
           boss: this.#localization.format(dungeon.bossNameKey),
         })
       : "";

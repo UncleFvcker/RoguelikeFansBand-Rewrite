@@ -142,7 +142,7 @@ export async function runMageUiScenario(driver, directory, profile, playthrough 
     await focus(`${row(id)} .ability-cast-action`); await keyboard.key("Enter");
     if (typeof target === "string") {
       await driver.waitFor('return document.querySelector(".item-target-dialog")?.open', "item target choice");
-      await driver.execute('document.querySelector(".item-target-dialog select").value = arguments[0]; return true;', [target]);
+      await driver.execute('[...document.querySelectorAll(".item-selection-dialog .item-selection-row")].find(row => row.dataset.itemId === arguments[0]).click(); return true;', [target]);
       await click('.item-target-dialog button[type="submit"]');
     } else if (target) await aim(target, before.player.position);
     const after = await changed(before.stateHash, `cast ${id}`);

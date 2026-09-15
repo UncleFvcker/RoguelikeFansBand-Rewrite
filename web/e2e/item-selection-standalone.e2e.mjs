@@ -90,7 +90,7 @@ try {
   await load(await readFile(path.join(directory, "prepared.rfbsave")), scenario.initialHash);
 
   const selector = ".item-selection-dialog[open]";
-  const options = () => driver.execute('return [...document.querySelector(arguments[0]).querySelector("select").options].map(o=>({id:o.value,label:o.textContent,source:o.dataset.source}))', [selector]);
+  const options = () => driver.execute('return [...document.querySelector(arguments[0]).querySelectorAll(".item-selection-row")].map(o=>({id:o.dataset.itemId,label:o.querySelector("kbd").textContent+") "+o.querySelector(".inventory-item-name").textContent,source:o.dataset.source}))', [selector]);
   const chooseId = async id => {
     const choice = (await options()).find(item => item.id === id);
     assert.ok(choice, "Visible candidate: " + id);
@@ -131,7 +131,7 @@ try {
   checks.push({ action: "paging, collision, uppercase inspection, toggle, narrow layout and IME guard", unchanged: true });
 
   await open("u"); await chooseId("is.staff");
-  await driver.waitFor('return document.querySelectorAll(".item-selection-dialog[open] select option").length>1', "staff target");
+  await driver.waitFor('return document.querySelectorAll(".item-selection-dialog[open] .item-selection-row").length>1', "staff target");
   for (const [key, source] of [["e","equipment"],["q","quiver"],["f","floor"],["p","pack"]]) {
     await keyboard.key(key, 2);
     assert.ok((await options()).every(item => item.source === source));
@@ -159,7 +159,7 @@ try {
   await setPreferences(driver, { inputPreset: "roguelike" });
   // Rogue u is movement: the literal prefix retains the canonical staff command.
   await open("u", ["\\"]); await chooseId("is.staff");
-  await driver.waitFor('return document.querySelectorAll(".item-selection-dialog[open] select option").length>1', "rogue staff target");
+  await driver.waitFor('return document.querySelectorAll(".item-selection-dialog[open] .item-selection-row").length>1', "rogue staff target");
   await keyboard.key("-");
   await readyHash(scenario.steps[2].hash);
   checks.push({ action: "roguelike literal command and sole-floor target", hash: scenario.steps[2].hash });

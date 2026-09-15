@@ -32,7 +32,7 @@ test("syntax, conditions and includes block the whole file while unsupported set
   const subset = parsePrf("\uFEFF# comment\r\nY:always_pickup\r\n Y:auto_target\r\nY:graph_visuals\r\nF:1:1:46", p, known);
   assert.equal(subset.blocked, false); assert.equal(subset.needsSubset, true);
   assert.equal(subset.preferences.travel.alwaysPickup, true);
-  assert.equal(subset.preferences.operations.defaultTarget, "manual");
+  assert.equal(subset.preferences.operations.defaultTarget, "old-then-nearest");
   assert.equal(subset.diagnostics[0].reason, "leading-space");
 });
 test("R/K resolve known source identities; shared K follows later discoveries without coloring appearances", () => {

@@ -1838,6 +1838,7 @@ impl Game {
             commit_damage_application(&mut self.entities[target_index], &application);
             changed.insert(application.position);
             events.push(DomainEvent::AbilityHit {
+                player_target_id: Some(target_entity_id.clone()),
                 ability_id: ability.id.clone(),
                 target_kind_id: target_kind_id.clone(),
                 damage,
@@ -1851,6 +1852,7 @@ impl Game {
                 self.resolve_actor_death(
                     target_index,
                     DomainEvent::AbilitySlew {
+                        player_target_id: Some(target_entity_id.clone()),
                         ability_id: ability.id.clone(),
                         target_kind_id: target_kind_id.clone(),
                         damage,

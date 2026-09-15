@@ -15,21 +15,28 @@ export type MessageRecord =
 
 export class MessageHistory {
   readonly #limit: number;
-  readonly #records: MessageRecord[] = [];
+  readonly #format: (record: MessageRecord) => string;
+  readonly #records: Array<MessageRecord & { count: number }> = [];
 
-  constructor(limit: number) {
+  constructor(limit: number, format: (record: MessageRecord) => string) {
     this.#limit = limit;
+    this.#format = format;
   }
 
-  get records(): readonly MessageRecord[] {
+  get records(): readonly (MessageRecord & { count: number })[] {
     return this.#records;
   }
 
-  append(record: MessageRecord): boolean {
-    this.#records.push(record);
-    if (this.#records.length <= this.#limit) return false;
+  append(record: MessageRecord): "added" | "stacked" | "evicted" {
+    const last = this.#records.at(-1);
+    if (last && last.kind === record.kind && this.#format(last) === this.#format(record)) {
+      this.#records[this.#records.length - 1] = { ...record, count: last.count + 1 };
+      return "stacked";
+    }
+    this.#records.push({ ...record, count: 1 });
+    if (this.#records.length <= this.#limit) return "added";
     this.#records.shift();
-    return true;
+    return "evicted";
   }
 
   clear(): void {
@@ -62,7 +69,7 @@ export class MessagePanel {
     this.#formatEvent = options.formatEvent;
     this.#currentTurn = options.currentTurn;
     this.#localizedArgs = options.localizedArgs;
-    this.#history = new MessageHistory(options.historyLimit);
+    this.#history = new MessageHistory(options.historyLimit, record => this.#formatRecord(record));
   }
 
   addLocalized(
@@ -106,26 +113,32 @@ export class MessagePanel {
 
   #append(record: MessageRecord): void {
     const followEnd = this.#isAtEnd();
-    if (this.#history.append(record)) {
+    const change = this.#history.append(record);
+    if (change === "evicted") {
       this.#list.firstElementChild?.remove();
     }
-    this.#renderRecord(record);
+    const last = this.#history.records.at(-1);
+    if (last) this.#renderRecord(last, change === "stacked" ? this.#list.lastElementChild ?? undefined : undefined);
     if (followEnd) this.#scrollToEnd();
   }
 
-  #renderRecord(record: MessageRecord): void {
-    const item = this.#list.ownerDocument.createElement("li");
+  #formatRecord(record: MessageRecord): string {
+    return record.source === "event"
+      ? this.#formatEvent(record.event)
+      : this.#localization.format(record.key, this.#localizedArgs(record));
+  }
+
+  #renderRecord(record: MessageRecord & { count: number }, existing?: Element): void {
+    const item = existing ?? this.#list.ownerDocument.createElement("li");
+    if (existing) item.replaceChildren();
     item.className = `message message-${record.kind.replaceAll(".", "-")}`;
     const turn = this.#list.ownerDocument.createElement("span");
     turn.className = "message-turn";
     turn.textContent = record.turn;
     const content = this.#list.ownerDocument.createElement("span");
-    content.textContent =
-      record.source === "event"
-        ? this.#formatEvent(record.event)
-        : this.#localization.format(record.key, this.#localizedArgs(record));
+    content.textContent = this.#formatRecord(record) + (record.count > 1 ? ` ×${record.count}` : "");
     item.append(turn, content);
-    this.#list.append(item);
+    if (!existing) this.#list.append(item);
   }
 
   #scrollToEnd(): void {

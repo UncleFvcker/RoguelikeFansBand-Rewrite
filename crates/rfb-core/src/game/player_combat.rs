@@ -1090,6 +1090,7 @@ impl Game {
                     .is_some_and(|artifact| artifact.source_index == 356))
         {
             events.push(DomainEvent::ProjectileMissed {
+                target_entity_id: self.entities[index].id.clone(),
                 target_kind_id,
                 trace,
             });
@@ -1249,6 +1250,7 @@ impl Game {
         self.rage_blood_lust(application.damage.applied);
         commit_damage_application(&mut self.entities[index], &application);
         events.push(DomainEvent::ProjectileHit {
+            target_entity_id: self.entities[index].id.clone(),
             target_kind_id: target_kind_id.clone(),
             damage,
             trace: trace.clone(),
@@ -1262,6 +1264,7 @@ impl Game {
             let fatal = self.resolve_actor_death(
                 index,
                 DomainEvent::ProjectileSlew {
+                    target_entity_id: self.entities[index].id.clone(),
                     target_kind_id,
                     damage,
                     trace,
@@ -1344,6 +1347,7 @@ impl Game {
             self.rage_blood_lust(application.damage.applied);
             commit_damage_application(&mut self.entities[index], &application);
             events.push(DomainEvent::ProjectileHit {
+                target_entity_id: self.entities[index].id.clone(),
                 target_kind_id: definition.id.clone(),
                 damage,
                 trace: trace.clone(),
@@ -1354,6 +1358,7 @@ impl Game {
                 let died = self.resolve_actor_death(
                     index,
                     DomainEvent::ProjectileSlew {
+                        target_entity_id: self.entities[index].id.clone(),
                         target_kind_id: definition.id,
                         damage,
                         trace: trace.clone(),
@@ -1586,6 +1591,7 @@ impl Game {
         self.rage_blood_lust(application.damage.applied);
         commit_damage_application(&mut self.entities[index], &application);
         events.push(DomainEvent::AbilityHit {
+            player_target_id: award_player_kill.then(|| self.entities[index].id.clone()),
             ability_id: ability_id.to_owned(),
             target_kind_id: target_kind_id.clone(),
             damage,
@@ -1609,6 +1615,7 @@ impl Game {
             self.resolve_actor_death(
                 index,
                 DomainEvent::AbilitySlew {
+                    player_target_id: award_player_kill.then(|| self.entities[index].id.clone()),
                     ability_id: ability_id.to_owned(),
                     target_kind_id,
                     damage,
@@ -1622,6 +1629,7 @@ impl Game {
             self.resolve_actor_death_without_rewards(
                 index,
                 Some(DomainEvent::AbilitySlew {
+                    player_target_id: award_player_kill.then(|| self.entities[index].id.clone()),
                     ability_id: ability_id.to_owned(),
                     target_kind_id,
                     damage,
@@ -1816,6 +1824,7 @@ impl Game {
                     .succeeded()
             {
                 events.push(DomainEvent::ItemThrowMissed {
+                    target_entity_id: self.entities[index].id.clone(),
                     source_kind_id: source_kind_id.clone(),
                     target_kind_id,
                     trace: trace.clone(),
@@ -1897,6 +1906,7 @@ impl Game {
                 self.rage_blood_lust(application.damage.applied);
                 commit_damage_application(&mut self.entities[index], &application);
                 events.push(DomainEvent::ItemThrowHit {
+                    target_entity_id: self.entities[index].id.clone(),
                     source_kind_id: source_kind_id.clone(),
                     target_kind_id: target_kind_id.clone(),
                     damage,
@@ -1934,6 +1944,7 @@ impl Game {
                     self.resolve_actor_death(
                         index,
                         DomainEvent::ItemThrowSlew {
+                            target_entity_id: self.entities[index].id.clone(),
                             source_kind_id: source_kind_id.clone(),
                             target_kind_id,
                             damage,
@@ -2587,7 +2598,7 @@ impl Game {
                 };
                 let hit = hit && (hissatsu != Some(15) || self.rng.bounded(2) == 0);
                 if !hit {
-                    events.push(profile.miss_event(&target_kind));
+                    events.push(profile.miss_event(&target_entity_id, &target_kind));
                     if let Some(item) = profile
                         .source_item_id
                         .as_ref()
@@ -2942,7 +2953,7 @@ impl Game {
                 );
                 self.rage_blood_lust(application.damage.applied);
                 commit_damage_application(&mut self.entities[index], &application);
-                events.push(profile.hit_event(&target_kind, damage));
+                events.push(profile.hit_event(&target_entity_id, &target_kind, damage));
                 self.wake_entity_after_damage(index, damage.applied, events);
                 if !application.fatal {
                     if weapon_stun
@@ -2996,7 +3007,7 @@ impl Game {
                     if application.fatal {
                         killed = self.resolve_actor_death(
                             index,
-                            profile.slew_event(&target_kind, damage),
+                            profile.slew_event(&target_entity_id, &target_kind, damage),
                             events,
                             changed,
                             removed_entities,
@@ -3040,7 +3051,7 @@ impl Game {
                 if application.fatal {
                     killed = self.resolve_actor_death(
                         index,
-                        profile.slew_event(&target_kind, damage),
+                        profile.slew_event(&target_entity_id, &target_kind, damage),
                         events,
                         changed,
                         removed_entities,

@@ -54,19 +54,19 @@ export async function runThingolScenario(driver, directory) {
   async function source() {
     await click(`[data-slot-id="${cloak.slotId}"] > button`);
     await click(".equipment-activate");
-    await driver.waitFor('return !!document.querySelector(".item-target-dialog[open] select")',"recharge source");
-    assert.deepEqual(await driver.execute('return [...document.querySelector(".item-target-dialog[open] select").options].map(o=>o.value)'),["donor"]);
+    await driver.waitFor('return !!document.querySelector(".item-selection-dialog[open] .item-selection-row")',"recharge source");
+    assert.deepEqual(await driver.execute('return [...document.querySelectorAll(".item-selection-dialog[open] .item-selection-row")].map(o=>o.dataset.itemId)'),["donor"]);
   }
   async function target() {
     await source();
     await click('.item-target-dialog[open] button[type="submit"]');
-    await driver.waitFor('return document.querySelector(".item-target-dialog[open] select")?.value==="target"',"recharge target");
-    assert.deepEqual(await driver.execute('return [...document.querySelector(".item-target-dialog[open] select").options].map(o=>o.value)'),["target"]);
+    await driver.waitFor('return document.querySelector(".item-selection-dialog[open] [aria-selected=true]")?.dataset.itemId==="target"',"recharge target");
+    assert.deepEqual(await driver.execute('return [...document.querySelectorAll(".item-selection-dialog[open] .item-selection-row")].map(o=>o.dataset.itemId)'),["target"]);
   }
   for(const stage of [source,target]) {
     await stage();const before=await hash();
     await writeFile(path.join(directory,`${stage.name}.png`),await driver.screenshot(),"base64");
-    await click('.item-target-dialog[open] button[type="button"]');await changed(before);
+    await click('.item-selection-dialog[open] .item-target-actions button[type="button"]');await changed(before);
     const cancelled=await snapshot();
     assert.equal(cancelled.equipment.find(item=>item.id===cloak.id).charges.current,1);
     assert.equal(cancelled.inventory.find(item=>item.id==="donor").charges.current,initial.inventory.find(item=>item.id==="donor").charges.current);

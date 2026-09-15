@@ -594,6 +594,7 @@ fn a_flying_monster_killed_above_a_pit_drops_its_carried_item_on_nearby_floor() 
     game.resolve_actor_death(
         0,
         DomainEvent::PlayerSlew {
+            target_entity_id: "test.pit-bat".to_owned(),
             target_kind_id: "demo.actor.fruit-bat".to_owned(),
             damage: DamageOutcome {
                 raw: 1,

@@ -666,6 +666,7 @@ fn waste_monster_carried_loot_and_guardian_rewards_use_legal_drop_search() {
     game.resolve_actor_death(
         0,
         DomainEvent::PlayerSlew {
+            target_entity_id: "test.bat".to_owned(),
             target_kind_id: "demo.actor.fruit-bat".to_owned(),
             damage: resolve_damage(
                 DamagePacket::new(1, DamageType::Physical),

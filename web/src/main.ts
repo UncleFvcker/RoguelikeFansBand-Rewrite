@@ -133,6 +133,9 @@ const messagePanel = new MessagePanel({
 });
 const combatSummaryPanel = new CombatSummaryPanel({
   list: combatSummaryList,
+  targetTitle: appDom.combatTargetTitle,
+  targetHealth: appDom.combatTargetHealth,
+  contentName,
   localization,
   formatEvent,
 });
@@ -165,7 +168,7 @@ const monsterProbePanel = new MonsterProbePanel({
   statusName,
 });
 const mapIntelligencePanel = new MapIntelligencePanel(appState, localization, document,
-  () => settingsPanel.inputPreset, contentName, () => renderer.recenter());
+  () => settingsPanel.inputPreset, contentName, () => renderer.recenter(), statusName);
 document.getElementById("title-high-scores")!.addEventListener("click", () => { void highScorePanel.open(); });
 document.getElementById("result-high-scores")!.addEventListener("click", () => { void highScorePanel.open(); });
 const highScorePanel = new HighScorePanel(document, localization, () => nativeSaveStorage.scores());
@@ -215,6 +218,7 @@ const gameSession = new GameSession({
   state: appState,
   execute: (command) => core.dispatch(command),
   applyUpdate: (update, command) => {
+    const previousEntities = appState.status?.floorId === update.floorId ? appState.status.entities : [];
     const mapResized = renderer.applyUpdate(update);
     if (mapResized) {
       appState.setMapSize(update.width, update.height);
@@ -238,7 +242,7 @@ const gameSession = new GameSession({
     mogaminatorEditor?.render(update.mogaminator);
     promptMogaminatorQuery(update.mogaminator);
     monsterProbePanel.observe(update.events);
-    combatSummaryPanel.observe(update.events, update.turn);
+    combatSummaryPanel.observe(update, previousEntities);
     for (const event of update.events) addGameEvent(event);
     journeyResult.renderUpdate(update);
     refreshSaveControls();
@@ -345,9 +349,11 @@ const inputController = new InputController({
   onContinuousActionChange: renderContinuousAction,
   describeLook: describeLookPosition,
   openObjectList: () => objectListPanel.open(),
+  openMonsterRecall: position => mapIntelligencePanel.openMonsterRecall(position),
   openMogaminator: () => mogaminatorEditor?.open(),
   openDeviceCommand: key => magicEaterPanel.openDeviceCommand(key),
   onLookFocusChange: (position) => renderer.setCameraFocus(position),
+  onTargetChange: target => combatSummaryPanel.renderTarget(appState.status, target),
   announce: addLocalizedMessage,
 });
 const configRecords = new ConfigRecords({
@@ -413,6 +419,7 @@ function handleCommandShortcut(command: CommandShortcut, count?: number): void {
   if (command === "settings") { void settingsPanel.open(); return; }
   if (command === "messages") { playerUiLayout.showMessages(); return; }
   if (command === "pets") { openPetMenu(); return; }
+  if (command === "pickup") { inventoryPanel.pickUp(); return; }
   if (command === "swap-rings") { inventoryPanel.swapRings(); return; }
   if (command === "character" || command === "tasks" || command === "inventory") { playerUiLayout.open(command); return; }
   if (command === "equipment") {

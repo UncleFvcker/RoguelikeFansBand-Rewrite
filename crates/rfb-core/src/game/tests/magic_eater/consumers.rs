@@ -214,8 +214,8 @@ fn local_travel_uses_slot_interleaving_and_stops_before_a_newly_revealed_trap() 
     );
     assert!(!detecting_enemy.entity_is_visible_to_player(detecting_enemy.entities.last().unwrap()));
     dispatch_next(&mut detecting_enemy, GameCommand::AutoExplore);
-    assert!(detecting_enemy.auto_explore.is_none());
-    assert_eq!(detecting_enemy.player.position, start);
+    assert!(detecting_enemy.auto_explore.is_some());
+    assert_eq!(detecting_enemy.player.position, next);
     let update = dispatch_next(&mut exploring, GameCommand::AutoExplore);
     assert_eq!(exploring.player.position, start);
     assert!(exploring.auto_explore.is_none());

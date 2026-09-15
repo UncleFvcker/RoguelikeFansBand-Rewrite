@@ -35,6 +35,7 @@ export function createPresentationFormatter(
   } = helpers;
 
   function formatEvent(event: GameEventDto): string {
+    if (event.kind === "auto-explore.stopped") return localization.format(event.messageKey, event.args);
     switch (event.messageKey) {
       case "pet-name-changed":
       case "pet-named-dismissed":

@@ -24,6 +24,21 @@ const helpers = {
 };
 const formatter = createPresentationFormatter(localization, () => state, helpers);
 
+test("auto-exploration stop events render the actual reason in both languages", () => {
+  const core = readFileSync(new URL("../../crates/rfb-core/src/game/auto_explore.rs", import.meta.url), "utf8");
+  const keys = [...new Set(core.match(/game-auto-explore-[a-z-]+/g))];
+  for (const locale of ["zh-CN", "en-US"]) {
+    localization.setLocale(locale);
+    for (const messageKey of [...keys, "game-auto-explore-interrupted"]) {
+      const text = formatter.formatEvent({ kind: "auto-explore.stopped", messageKey, args: {} });
+      assert.equal(localization.hasMessage(locale, messageKey), true, messageKey);
+      assert.equal(text, localization.format(messageKey));
+      assert.ok(!text.includes(messageKey), `${locale}: ${messageKey}`);
+    }
+  }
+  localization.setLocale("en-US");
+});
+
 test("abandonment formats the final score in both locales", () => {
   for (const [locale, expected] of [["en-US", "You abandon"], ["zh-CN", "你放弃了冒险"]]) {
     localization.setLocale(locale);
