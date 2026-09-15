@@ -95,7 +95,7 @@ fn cast(g: &mut Game, id: &str, target: TargetSelection, success: bool) -> Vec<D
                 "{id}: {events:?}"
             );
         }
-        let mut restored = Game::from_save(saved).unwrap();
+        let mut restored = Game::from_save(saved, Game::default_behavior_preferences()).unwrap();
         restored
             .resolve_player_ability(
                 id,
@@ -108,7 +108,7 @@ fn cast(g: &mut Game, id: &str, target: TargetSelection, success: bool) -> Vec<D
         assert_eq!(trial.state_hash(), restored.state_hash(), "{id}");
         assert_eq!(trial.rng, restored.rng);
         trial.reveal_current_visibility();
-        Game::from_save(trial.to_save()).unwrap();
+        Game::from_save(trial.to_save(), trial.behavior_preferences()).unwrap();
         *g = trial;
         return events;
     }
@@ -261,7 +261,7 @@ fn necromancy_repose_resumes_sleep_and_restores_attributes_without_filling_hp_or
     cast(&mut g, &id, TargetSelection::SelfTarget, true);
     let hp = g.player.hp;
     let mana = g.resources["demo.resource.mana"].current;
-    let mut restored = Game::from_save(g.to_save()).unwrap();
+    let mut restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     for _ in 0..9 {
         for game in [&mut g, &mut restored] {
             super::support::dispatch_next(game, GameCommand::Wait);
@@ -359,7 +359,7 @@ fn necromancy_books_generate_from_ordinary_pool_and_are_studied_after_pickup() {
         g.study_player_ability(&id, &spell).unwrap();
         assert!(g.learned_abilities.contains(&spell));
         g.reveal_current_visibility();
-        Game::from_save(g.to_save()).unwrap();
+        Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     }
 }
 
@@ -484,7 +484,7 @@ fn export_necromancy_desktop_saves() {
             .find_map(|seed| {
                 let mut game = base.clone();
                 game.rng = RfbRng::seeded(0x9e3779b97f4a7c15_u64.wrapping_mul(seed + 1));
-                let start = Game::from_save(game.to_save()).unwrap();
+                let start = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 let mut steps = Vec::new();
                 if slot == 0 {
                     let book = game
@@ -527,7 +527,7 @@ fn export_necromancy_desktop_saves() {
                 steps.push(
                     serde_json::json!({"command":GameCommand::Wait,"hash":game.state_hash()}),
                 );
-                Game::from_save(game.to_save()).unwrap();
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 Some((start, steps))
             })
             .expect("production commands");

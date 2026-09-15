@@ -27,7 +27,7 @@
   "assertions": {
     "finalState": {
       "inventory": {
-        "generated.item.143": {
+        "generated.item.161": {
           "kindId": "demo.item.cure-poison-mushroom",
           "quantity": 1
         }
@@ -46,7 +46,7 @@
           "visited": true
         }
       },
-      "stateHash": "e4034e5eaf85726e60737097464acc8bc185b14b82c5aaeb5e982a37e3f75d3c",
+      "stateHash": "351dcb2f44961c345f89e8e877cffde0fca5c8bff833026350d08caa4a9e2159",
       "turn": 1
     },
     "events": [
@@ -55,7 +55,7 @@
         "messageKey": "shop-purchase-success",
         "args": {
           "balance": "999838",
-          "item": "generated.item.143",
+          "item": "generated.item.161",
           "quantity": "1",
           "shop": "demo.shop.outpost-shroomery",
           "target": "demo.item.cure-poison-mushroom",

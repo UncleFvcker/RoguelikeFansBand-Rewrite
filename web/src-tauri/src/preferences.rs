@@ -608,8 +608,10 @@ mod tests {
             .unwrap();
         let bytes = state.save(String::new()).unwrap();
         let (_, before) = rfb_save::decode(&bytes).unwrap();
-        let mut global = Preferences::default();
-        global.locale = "en-US".into();
+        let mut global = Preferences {
+            locale: "en-US".into(),
+            ..Preferences::default()
+        };
         global.travel.always_pickup = true;
         let persisted = save(&root, None, global.clone()).unwrap();
         let loaded = state

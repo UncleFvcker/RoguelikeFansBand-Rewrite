@@ -562,6 +562,43 @@ test("using items starts map targeting only for map targets and preserves rechar
   assert.deepEqual(commands[1], { type: "use-item-for-recharge", itemId: "wand", sourceItemId: "source", targetItemId: "target" });
 });
 
+test("Jewel activation offers both recall choices and cancels without using the item", (t) => {
+  const { panel, dom, state, commands, document } = createInventoryFixture(t);
+  panel.render([item("jewel", { usable: true, activation: { recallChoice: true }, useTargetSpec: { modes: ["self"] } })], []);
+  state.selectedInventoryIds.add("jewel");
+  const open = () => {
+    dom.inventoryUse.dispatchEvent(new Event("click"));
+    return document.body.children[0];
+  };
+  for (const choice of ["no", "yes"]) {
+    const dialog = open();
+    const form = dialog.children[0];
+    assert.match(form.children[0].textContent, /^jewel-recall-title/);
+    assert.deepEqual(form.children[1].children[1].children.map(option => option.value), ["no", "yes"]);
+    form.children[1].children[1].value = choice;
+    form.dispatchEvent(new Event("submit", { cancelable: true }));
+  }
+  assert.deepEqual(commands, [
+    { type: "use-jewel", itemId: "jewel", recall: false },
+    { type: "use-jewel", itemId: "jewel", recall: true },
+  ]);
+  open().close();
+  assert.equal(commands.length, 2);
+  const dialog = open();
+  state.busy = true;
+  dialog.children[0].dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(commands.length, 2);
+  assert.equal(dialog.open, true);
+  dialog.close();
+  open();
+  assert.equal(document.body.children.length, 0);
+  state.busy = false;
+  const stale = open();
+  panel.reset();
+  stale.children[0].dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(commands.length, 2);
+});
+
 test("recharge activation selects distinct pack or ground devices and cancels either stage once", (t) => {
   const { panel, dom, state, commands, document } = createInventoryFixture(t);
   const cloak = item("cloak", { usable: true, requiresRechargeTargets: true, activation: {} });

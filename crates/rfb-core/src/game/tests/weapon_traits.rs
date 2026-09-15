@@ -1086,7 +1086,7 @@ fn q3_master_tonberry_negative_blows_apply_in_full_to_both_hands() {
     for (actual, control) in profiles.iter().zip(&controls) {
         assert_eq!(rate(actual), rate(control) - 200);
     }
-    let loaded = Game::from_save(game.to_save()).unwrap();
+    let loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), loaded.state_hash());
     assert_eq!(
         profiles.iter().map(rate).collect::<Vec<_>>(),

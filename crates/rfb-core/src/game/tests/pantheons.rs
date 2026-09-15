@@ -222,13 +222,17 @@ fn pantheons_random_allocation_and_category_summons_share_qualification() {
     game.active_pantheons = 2 | 8;
     game.current_floor_id = FLOOR.into();
     let active = game.summon_category_candidate_kind_ids("olympian", None, 100, true, true);
-    assert!(active.iter().any(|id| id == ZEUS));
-    game.defeated_limited_actor_counts.insert(ZEUS.into(), 1);
+    assert!(!active.iter().any(|id| id == ZEUS));
+    let unique = active
+        .first()
+        .expect("ordinary Olympians remain eligible")
+        .clone();
+    game.defeated_limited_actor_counts.insert(unique.clone(), 1);
     assert!(
         !game
             .summon_category_candidate_kind_ids("olympian", None, 100, true, true)
             .iter()
-            .any(|id| id == ZEUS)
+            .any(|id| id == &unique)
     );
     // Requesting an inactive pantheon uses the source's unique-category rule.
     game.current_floor_id = OTHER_FLOOR.into();

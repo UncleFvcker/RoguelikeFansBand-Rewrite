@@ -581,7 +581,8 @@ impl Game {
             .wilderness
             .as_ref()
             .map(|wilderness| position_from_content(wilderness.start_position));
-        let task_states = initial_task_states(world, seed);
+        let mut task_states = initial_task_states(world, seed);
+        super::tasks::assign_random_tasks(world, &content, &mut task_states, &mut rng)?;
         let (town_states, shop_states) = town::initial_town_and_shop_states(
             world,
             &content,

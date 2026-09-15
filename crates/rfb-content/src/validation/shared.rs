@@ -161,11 +161,12 @@ pub(super) fn attribute_modifiers_out_of_range(modifiers: &StatModifiers) -> boo
         modifiers.dexterity,
         modifiers.constitution,
         modifiers.charisma,
-        modifiers.spell_power_bonus,
-        modifiers.device_power_bonus,
     ]
     .into_iter()
-    .any(|value| !(-100..=100).contains(&value))
+    // a_info ART_CHAOS has a source pval of +125 for all six attributes.
+    .any(|value| !(-100..=125).contains(&value))
+        || !(-100..=100).contains(&modifiers.spell_power_bonus)
+        || !(-100..=100).contains(&modifiers.device_power_bonus)
 }
 
 pub(super) fn equipment_bonuses_out_of_range(bonuses: &EquipmentBonuses) -> bool {
@@ -195,7 +196,7 @@ pub(super) fn equipment_bonuses_out_of_range(bonuses: &EquipmentBonuses) -> bool
         || bonuses
             .saving_throw_skill_override
             .is_some_and(|value| !(0..=1_000_000).contains(&value))
-        || !(-64..=64).contains(&bonuses.infravision)
+        || !(-64..=125).contains(&bonuses.infravision)
         || !(-8..=8).contains(&bonuses.light_radius)
 }
 

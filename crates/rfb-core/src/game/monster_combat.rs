@@ -592,7 +592,14 @@ impl Game {
             events,
         );
         let prepared_damage = psychic.damage;
-        let resistance = self.entities[target_index].resistances.level(damage_type);
+        let resistance_type = if damage_type == DamageType::Rocket {
+            DamageType::Shards
+        } else {
+            damage_type
+        };
+        let resistance = self.entities[target_index]
+            .resistances
+            .level(resistance_type);
         let damage = resolve_damage(
             DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
             resistance,
@@ -673,8 +680,13 @@ impl Game {
         } else {
             prepared_damage
         };
-        let resistance = self.effective_player_resistances().level(damage_type);
-        self.record_monster_player_resistance(source_entity_id, damage_type, resistance);
+        let resistance_type = if damage_type == DamageType::Rocket {
+            DamageType::Shards
+        } else {
+            damage_type
+        };
+        let resistance = self.effective_player_resistances().level(resistance_type);
+        self.record_monster_player_resistance(source_entity_id, resistance_type, resistance);
         let damage = self.resist_player_damage(resolve_damage(
             DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
             resistance,
@@ -714,6 +726,22 @@ impl Game {
         let damage = application.damage;
         self.rage_armor_of_fury(source_entity_id, ability_id, damage.applied);
         self.damage_player_inventory(source_kind_id, damage_type, false, damage.applied, events);
+        if damage_type == DamageType::Rocket && !application.fatal {
+            for (resist, status) in [
+                (DamageType::Sound, STATUS_STUN),
+                (DamageType::Shards, STATUS_BLEEDING),
+            ] {
+                let percent = self.player_resistance_percent(resist).max(0) as u64;
+                if self.rng.bounded(33) >= percent {
+                    let duration = if status == STATUS_STUN {
+                        self.rng.bounded(20) as i32 + 1
+                    } else {
+                        damage.applied / 2
+                    };
+                    self.apply_player_melee_status(status, duration, source_kind_id);
+                }
+            }
+        }
         if application.fatal {
             events.push(DomainEvent::PlayerDied {
                 source_kind_id: source_kind_id.to_owned(),

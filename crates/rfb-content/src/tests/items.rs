@@ -1196,6 +1196,7 @@ fn equipment_and_ego_identities_match_source() {
                 "demo.item.glamdring",
                 "demo.item.goln-nova",
                 "demo.item.grayswandir",
+                "demo.item.grond",
                 "demo.item.hagen",
                 "demo.item.heavy-lance",
                 "demo.item.impaler",

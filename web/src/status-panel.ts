@@ -129,7 +129,7 @@ export function renderTaskLog(list: HTMLUListElement, tasks: readonly TaskStatus
   const groups: readonly [string, readonly TaskStatusKindDto[]][] = [
     ['current', ['reward-available', 'active', 'taken', 'paused']],
     ['available', ['available']], ['locked', ['locked']],
-    ['history', ['completed', 'failed', 'abandoned']],
+    ['history', ['completed', 'failed', 'abandoned', 'skipped']],
   ];
   const rows: HTMLElement[] = [];
   for (const [group, statuses] of groups) {
@@ -169,11 +169,13 @@ export function renderTaskLog(list: HTMLUListElement, tasks: readonly TaskStatus
       const body = document.createElement('div');
       body.className = 'task-log-body';
       body.append(text('p', 'task-log-description', localization.format(task.descriptionKey ?? 'task-log-no-description')));
+      if (task.depth != null) body.append(text('p', 'task-log-depth', localization.format('task-log-depth', { depth: task.depth })));
+      if (task.targetNameKey) body.append(text('p', 'task-log-target', localization.format('task-log-target', { target: localization.format(task.targetNameKey) })));
       if (task.maxRetakes != null) body.append(text('p', 'task-log-retakes', localization.format('task-log-retakes', {
         used: task.retakesUsed, maximum: task.maxRetakes,
       })));
       if (focusKey === details.dataset.taskLogKey) focusTarget = section.open ? summary : heading;
-      if (task.status === 'active' || task.status === 'paused') {
+      if (task.canAbandon) {
         const button = document.createElement('button');
         button.type = 'button';
         button.textContent = localization.format('action-task-abandon');
@@ -212,14 +214,12 @@ export function renderHudExperience(meter: HTMLProgressElement, progress: Player
   meter.setAttribute("aria-valuetext", description);
 }
 
-export function hudLocationText(state: Pick<GameSnapshot, "mapScale" | "floorId" | "town">,
+export function hudLocationText(state: Pick<GameSnapshot, "mapScale" | "floorId" | "town" | "dungeon">,
   localization: Localization, contentName: (id: string) => string): string {
   if (state.mapScale === "world") return localization.format("hud-location-world");
   if (state.town) return localization.format(state.town.nameKey);
   if (state.floorId === "core.floor.wilderness") return localization.format("hud-location-wilderness");
-  // Content floor IDs encode depth; the shared name key omits the numeric suffix.
-  const floor = /^(demo\.floor\..+-depth)-(\d+)$/.exec(state.floorId);
-  return floor ? localization.format("hud-location-depth", { name: contentName(floor[1]!), depth: floor[2]! })
+  return state.dungeon ? localization.format("hud-location-depth", { name: localization.format(state.dungeon.nameKey), depth: state.dungeon.currentDepth })
     : contentName(state.floorId);
 }
 

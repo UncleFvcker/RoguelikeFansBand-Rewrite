@@ -6572,6 +6572,20 @@
         },
         {
           "additionalProperties": false,
+          "description": "RFB EFFECT_JEWEL: clairvoyance, life loss, and optional recall.",
+          "properties": {
+            "type": {
+              "const": "jewel",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
           "properties": {
             "type": {
               "const": "list-unique-monsters",

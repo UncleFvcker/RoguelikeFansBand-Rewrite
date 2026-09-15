@@ -56,6 +56,7 @@ fn q2_q3_named_death_equipment_and_saved_continuation() {
                 "demo.build.warrior",
                 "rfb-legacy.race.tonberry",
                 Game::DEFAULT_PLAYER_NAME,
+                Game::default_behavior_preferences(),
             )
             .unwrap()
         } else {
@@ -93,7 +94,7 @@ fn q2_q3_named_death_equipment_and_saved_continuation() {
         // Prepared adjacent source actor and successful seed, not natural leveling.
         prepare_combat(&mut game, &actor_kind);
         game = successful_kill_start(&game, &kind);
-        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let attack = GameCommand::Move {
             direction: Direction::East,
         };
@@ -130,7 +131,7 @@ fn q2_q3_named_death_equipment_and_saved_continuation() {
         game.player.position = position;
         game.pick_up_item_at_player(Some(&reward.id)).unwrap();
         game.reveal_current_visibility();
-        game = Game::from_save(game.to_save()).unwrap();
+        game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         game.identify_item_instance(&reward.id, ItemIdentificationRequest::new(true));
         game.equip_inventory_item(&reward.id, None).unwrap();
         let properties = game.equipment_modifiers();
@@ -213,7 +214,7 @@ fn q2_q3_named_death_equipment_and_saved_continuation() {
             assert_eq!(reward.rolled_affixes.len(), 1);
             assert!(!reward.rolled_affixes[0].properties.resistances.is_empty());
         }
-        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(game.state_hash(), loaded.state_hash());
         assert_eq!(
             dispatch_next(&mut game, GameCommand::Wait).events,
@@ -338,7 +339,7 @@ fn q2_eyes_and_kundry_activate_and_restore_partial_recovery() {
             .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
             .unwrap();
         game.rng = RfbRng::seeded(seed);
-        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(activate(&mut game), activate(&mut loaded));
         assert_eq!(game.state_hash(), loaded.state_hash());
         assert_eq!(game.items[0].charges.unwrap().current, 0);
@@ -353,7 +354,7 @@ fn q2_eyes_and_kundry_activate_and_restore_partial_recovery() {
             game.world_tick = start + tick;
             game.process_inventory_device_recovery(&mut Vec::new());
         }
-        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for tick in 151..=300 {
             for game in [&mut game, &mut loaded] {
                 game.world_tick = start + tick;
@@ -375,7 +376,7 @@ fn export_q1_desktop_save() {
     let directory = input.parent().unwrap();
     let (header, payload) = rfb_save::decode(&std::fs::read(&input).unwrap()).unwrap();
     assert!(header.museum_binding.is_some());
-    let mut game = Game::from_save(payload).unwrap();
+    let mut game = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
     choose_human_talent_if_pending(&mut game);
     prepare_combat(&mut game, "demo.actor.fang-farmer-maggots-dog");
     let start = successful_kill_start(&game, "demo.item.dog-collar-of-fang");
@@ -435,7 +436,9 @@ fn export_q1_desktop_save() {
     ));
     assert_eq!(game.equipment_modifiers().strength, 1);
     assert_eq!(
-        Game::from_save(start.to_save()).unwrap().state_hash(),
+        Game::from_save(start.to_save(), start.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         start.state_hash()
     );
     std::fs::write(
@@ -460,6 +463,7 @@ fn q3_tonberry_drop_tests_permanent_identity_before_both_probability_rolls() {
         "demo.build.warrior",
         "rfb-legacy.race.tonberry",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     prepare_combat(&mut base, "demo.actor.master-tonberry");
@@ -555,6 +559,7 @@ fn q3_playable_balrog_keeps_ordinary_gothmog_construction() {
         "demo.build.warrior",
         "rfb-legacy.race.balrog",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     let context = LootContext {
@@ -571,7 +576,7 @@ fn q3_playable_balrog_keeps_ordinary_gothmog_construction() {
         .unwrap();
     assert_eq!(item.curse, Some(ItemCurseSeverityDto::Heavy));
     game.items.push(item);
-    let loaded = Game::from_save(game.to_save()).unwrap();
+    let loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), loaded.state_hash());
 }
 
@@ -623,7 +628,7 @@ fn q3_hydra_eye_heals_cures_source_statuses_and_preserves_recovery() {
         .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
         .unwrap();
     game.rng = RfbRng::seeded(seed);
-    let mut loaded = Game::from_save(game.to_save()).unwrap();
+    let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let activate = |game: &mut Game| {
         let mut events = Vec::new();
         game.use_inventory_item(
@@ -668,7 +673,7 @@ fn q3_hydra_eye_heals_cures_source_statuses_and_preserves_recovery() {
         game.world_tick = start + tick;
         game.process_inventory_device_recovery(&mut Vec::new());
     }
-    let mut loaded = Game::from_save(game.to_save()).unwrap();
+    let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for tick in 1501..=3000 {
         for game in [&mut game, &mut loaded] {
             game.world_tick = start + tick;
@@ -720,7 +725,7 @@ fn q3_stormbringer_ally_strike_boundary_and_hostile_rng_match_saved_continuation
         game.entities[0].controller_id = Some(game.player.id.clone());
         assert!(game.entity_is_visible_to_player(&game.entities[0]));
         game.rng = RfbRng::seeded(seed);
-        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let result = step(&mut game);
         assert_eq!(result.0, roll == 666);
         assert_eq!(result, step(&mut loaded));
@@ -832,7 +837,7 @@ fn q1_global_allocation_death_equipment_and_saved_continuation() {
         prepare_combat(&mut game, &selected);
         let item_kind = format!("demo.item.{slug}");
         game = successful_kill_start(&game, &item_kind);
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(game.state_hash(), restored.state_hash());
         // Loading publishes a full snapshot; its subsequent visual deltas need
         // not match a session whose last publication predates test preparation.
@@ -872,7 +877,7 @@ fn q1_global_allocation_death_equipment_and_saved_continuation() {
                 .is_some_and(|knowledge| knowledge.identified)
         );
         game.reveal_current_visibility();
-        game = Game::from_save(game.to_save()).unwrap();
+        game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         game.identify_item_instance(&reward.id, ItemIdentificationRequest::new(true));
         game.equip_inventory_item(&reward.id, None).unwrap();
         let properties = game.equipment_modifiers();
@@ -920,7 +925,7 @@ fn q1_global_allocation_death_equipment_and_saved_continuation() {
             }
         }
         game.reveal_current_visibility();
-        restored = Game::from_save(game.to_save()).unwrap();
+        restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(
             dispatch_next(&mut restored, GameCommand::Wait).events,
             dispatch_next(&mut game, GameCommand::Wait).events

@@ -8,7 +8,7 @@
       "damageBonus": 599,
       "damageDice": 1,
       "damageSides": 1,
-      "damageType": "shards",
+      "damageType": "rocket",
       "radius": 2,
       "type": "area-damage"
     }

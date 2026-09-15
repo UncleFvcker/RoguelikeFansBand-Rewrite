@@ -105,7 +105,7 @@ fn check_n1_passive_artifacts(identities: &[(&str, &str)]) {
                 .is_some_and(|knowledge| knowledge.appraised)
         );
         game.reveal_current_visibility();
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         game = restored;
@@ -329,7 +329,7 @@ fn check_n1_passive_artifacts(identities: &[(&str, &str)]) {
         game.player.hp = 1;
         game.world_tick = 0;
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         let update = dispatch_next(&mut game, GameCommand::Wait);
         assert_eq!(
@@ -350,7 +350,8 @@ fn check_n1_passive_artifacts(identities: &[(&str, &str)]) {
             restored.roll_fixed_artifact_kind_id(&context, Some(&base), false),
             Some(kind)
         );
-        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        let mut continued =
+            Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
         assert_eq!(
             continued
                 .generate_loot_instances(&context, ItemLocation::Inventory)
@@ -388,7 +389,8 @@ fn check_n1_passive_artifacts(identities: &[(&str, &str)]) {
             assert_eq!(restored.equipment_modifiers().wisdom, -3);
             assert_eq!(restored.player_equipment_bonuses().spell_capacity_bonus, -3);
             restored.reveal_current_visibility();
-            let saved = Game::from_save(restored.to_save()).unwrap();
+            let saved =
+                Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
             assert_eq!(saved.state_hash(), restored.state_hash());
             assert_eq!(saved.items[0].curse, None);
             restored = saved;
@@ -7705,7 +7707,7 @@ fn n1c_kamui_teleports_and_preserves_failed_checks_and_equipped_cooldown() {
     assert!(!candidates.is_empty());
     let mut expected = rng_after_device_check(&game);
     let destination = candidates[expected.bounded(candidates.len() as u64) as usize];
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(c1_activate(&mut restored, &id), c1_activate(&mut game, &id));
     assert_eq!(game.player.position, destination);
     assert_ne!(destination, origin);
@@ -7719,7 +7721,8 @@ fn n1c_kamui_teleports_and_preserves_failed_checks_and_equipped_cooldown() {
         }
         if offset == 125 {
             restored.reveal_current_visibility();
-            restored = Game::from_save(restored.to_save()).unwrap();
+            restored =
+                Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
         }
         if offset == 249 {
             assert_eq!(game.items[0].charges.unwrap().current, 0);

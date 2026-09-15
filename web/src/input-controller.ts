@@ -254,6 +254,7 @@ export class InputController {
     this.#mapDisplay.reset();
     this.#rememberedTarget = undefined;
     this.#sessionGeneration++;
+    this.#glyphPromptPending = false;
     const action = this.#continuousAction;
     if (action) { action.cancelled = true; action.resume?.(); }
     this.#continuousAction = undefined;
@@ -498,16 +499,18 @@ export class InputController {
     if (state.player.pendingAbilityGlyph && !this.#glyphPromptPending) {
       this.cancelTargeting(false);
       this.#glyphPromptPending = true;
+      const generation = this.#sessionGeneration;
       this.#window.setTimeout(() => {
         try {
-          if (!this.#state.status?.player.pendingAbilityGlyph) return;
+          if (generation !== this.#sessionGeneration || !this.#state.status?.player.pendingAbilityGlyph) return;
           let glyph: string | null;
           do {
             glyph = this.#window.prompt(this.#localization.format("message-ability-glyph-required"));
           } while (glyph !== null && ([...glyph].length !== 1 || /[\u0000-\u001f\u007f-\u009f]/u.test(glyph)));
+          if (generation !== this.#sessionGeneration) return;
           void this.#dispatch({ type: "resolve-ability-glyph", glyph });
         } finally {
-          this.#glyphPromptPending = false;
+          if (generation === this.#sessionGeneration) this.#glyphPromptPending = false;
         }
       }, 0);
     }

@@ -313,8 +313,8 @@ export class InventoryPanel {
         slot: this.#formatter.equipmentSlotName("ring"), ordinal: index + 1,
       }),
     }));
-    this.#selectEquipmentSlotFrom(candidates, async first => {
-      this.#selectEquipmentSlotFrom(candidates.filter(slot => slot.id !== first),
+    this.#selectOptionFrom(candidates, async first => {
+      this.#selectOptionFrom(candidates.filter(slot => slot.id !== first),
         second => swap(first, second), "ring-swap-second-slot");
     }, "ring-swap-first-slot");
   }
@@ -822,6 +822,11 @@ export class InventoryPanel {
 
   #activateEquippedItem(item: EquipmentItemDto): void {
     if (this.#state.busy || this.#state.playerDead || this.#state.worldMap || item.useUnavailableReason || (item.activation && !item.usable)) return;
+    if (item.activation?.recallChoice) {
+      this.#closeDetail();
+      this.#selectJewelRecall(item.id);
+      return;
+    }
     if (item.requiresRechargeTargets) {
       this.#closeDetail();
       this.#selectRechargeSource(item.id, true);
@@ -1051,7 +1056,7 @@ export class InventoryPanel {
             : slotName,
       };
     });
-    this.#selectEquipmentSlotFrom(candidates, (slotId) =>
+    this.#selectOptionFrom(candidates, (slotId) =>
       this.#dispatch({ type: "equip", itemId: item.id, slotId }),
     );
   }
@@ -1081,6 +1086,10 @@ export class InventoryPanel {
     if (selected.length !== 1 || !selected[0]?.usable) return;
     const item = selected[0];
     const command = shortcut ?? this.#itemUseCommand(item.id);
+    if (item.activation?.recallChoice) {
+      this.#selectJewelRecall(item.id);
+      return;
+    }
     if (item.requiresRechargeTargets) {
       this.#selectRechargeSource(item.id, Boolean(item.activation), command);
       return;
@@ -1252,6 +1261,16 @@ export class InventoryPanel {
         targetItemId,
       }), onCancel, "inventory-recharge-target-title", command,
     );
+  }
+
+  #selectJewelRecall(itemId: string): void {
+    this.#selectOptionFrom([
+      { id: "no", label: this.#localization.format("jewel-activate-without-recall") },
+      { id: "yes", label: this.#localization.format("jewel-activate-with-recall") },
+    ], async (choice) => {
+      if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+      await this.#dispatch({ type: "use-jewel", itemId, recall: choice === "yes" });
+    }, "jewel-recall-title", "jewel-recall-choice");
   }
 
   #selectItemTargetFrom(
@@ -1497,10 +1516,11 @@ export class InventoryPanel {
     select.focus();
   }
 
-  #selectEquipmentSlotFrom(
+  #selectOptionFrom(
     candidates: Array<{ id: string; label: string }>,
     onSelect: (slotId: string) => Promise<void>,
     titleKey: MessageKey = "equipment-slot-target-title",
+    labelKey: MessageKey = "equipment-slot-target-label",
   ): void {
     this.#closeItemSelection?.();
     const snapshot = this.#state.status;
@@ -1518,7 +1538,7 @@ export class InventoryPanel {
     title.textContent = this.#localization.format(titleKey);
     const label = document.createElement("label");
     const labelText = document.createElement("span");
-    labelText.textContent = this.#localization.format("equipment-slot-target-label");
+    labelText.textContent = this.#localization.format(labelKey);
     const select = document.createElement("select");
     for (const candidate of candidates) {
       const option = document.createElement("option");

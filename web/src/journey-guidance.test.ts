@@ -20,7 +20,7 @@ function state(overrides = {}) {
     equipment: [],
     items: [],
     entities: [],
-    campaign: { status: "active" },
+    campaign: { status: "active", targetNameKey: "actor-demo-the-serpent-of-chaos-name" },
     ...overrides,
   };
 }
@@ -30,26 +30,28 @@ test("journey status shows dungeon depth and only an undefeated boss", () => {
     selectJourneyDungeonStatus(state()),
     {
       dungeonNameKey: "floor-demo-surface-name",
-      bossNameKey: "actor-demo-warrens-keeper-name",
+      currentDepth: undefined,
+      maximumDepth: undefined,
+      bossNameKey: "actor-demo-the-serpent-of-chaos-name",
     },
   );
   assert.deepEqual(
-    selectJourneyDungeonStatus(state({ floorId: "demo.floor.warrens-depth-7" })),
+    selectJourneyDungeonStatus(state({ floorId: "demo.floor.angband-depth-100", dungeon: { nameKey: "floor-demo-angband-depth-name", currentDepth: 100, maximumDepth: 127 } })),
     {
-      dungeonNameKey: "dungeon-demo-warrens-name",
-      currentDepth: 7,
-      maximumDepth: 9,
-      bossNameKey: "actor-demo-warrens-keeper-name",
+      dungeonNameKey: "floor-demo-angband-depth-name",
+      currentDepth: 100,
+      maximumDepth: 127,
+      bossNameKey: "actor-demo-the-serpent-of-chaos-name",
     },
   );
   assert.deepEqual(
     selectJourneyDungeonStatus(
-      state({ floorId: "demo.floor.warrens-depth-9", campaign: { status: "victorious" } }),
+      state({ floorId: "demo.floor.angband-depth-101", dungeon: { nameKey: "floor-demo-angband-depth-name", currentDepth: 101, maximumDepth: 127 }, campaign: { status: "victorious" } }),
     ),
     {
-      dungeonNameKey: "dungeon-demo-warrens-name",
-      currentDepth: 9,
-      maximumDepth: 9,
+      dungeonNameKey: "floor-demo-angband-depth-name",
+      currentDepth: 101,
+      maximumDepth: 127,
       bossNameKey: undefined,
     },
   );

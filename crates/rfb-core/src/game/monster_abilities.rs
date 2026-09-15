@@ -225,6 +225,7 @@ impl Game {
                         .movement
                         .modes
                         .contains(&ActorMovementMode::Aquatic)
+                    && !self.actor_kind_is_reserved_task_target(&definition.id)
                     && actor_answers_summons(definition)
                     && self.dungeon_allows_monster(&self.current_floor_id, definition, false)
                     && !self.actor_is_pantheon_suppressed(definition)
@@ -1535,16 +1536,34 @@ impl Game {
                 removed_entities,
             );
         }
-        let target_actors =
+        let mut target_actors =
             self.monster_targets_in_footprint(source_index, target, affected_positions);
+        if DamageType::from(*damage_type) == DamageType::Rocket {
+            // PROJECT_KILL also hits creatures on the caster's side of the fight.
+            for (index, actor) in self.entities.iter().enumerate() {
+                if index != source_index
+                    && actor.hp > 0
+                    && affected_positions.contains(&actor.position)
+                    && !target_actors
+                        .iter()
+                        .any(|target| target.entity_id() == actor.id)
+                {
+                    target_actors.push(MonsterHostileTarget::Summon {
+                        entity_id: actor.id.clone(),
+                        kind_id: actor.kind_id.clone(),
+                        position: actor.position,
+                    });
+                }
+            }
+        }
         let mut targets = Vec::with_capacity(target_actors.len());
         for affected_target in target_actors {
             let position = affected_target.position();
-            let distance = target
-                .position()
+            let distance = trace
+                .landing
                 .x
                 .abs_diff(position.x)
-                .max(target.position().y.abs_diff(position.y));
+                .max(trace.landing.y.abs_diff(position.y));
             let prepared = rfb_area_damage(raw_damage, distance);
             let effect = self.resolve_monster_damage_to_hostile(
                 source_entity_id,
@@ -3539,7 +3558,7 @@ impl Game {
                 let available_count = self
                     .actor_kind_available_instance_count(actor_kind_id)
                     .min(usize::from(*count));
-                if available_count == 0 {
+                if available_count == 0 || self.actor_kind_is_reserved_task_target(actor_kind_id) {
                     return Err(MonsterAbilityPlanRejection {
                         reason: MonsterAbilityRejectionReasonDto::NoCandidates,
                         enemy_target_count: 0,
@@ -3597,6 +3616,7 @@ impl Game {
                         && (category == "guardian"
                             || (!definition.tags.iter().any(|tag| tag == "guardian")
                                 && !self.actor_kind_is_dungeon_guardian(&definition.id)))
+                        && !self.actor_kind_is_reserved_task_target(&definition.id)
                         && actor_answers_summons(definition)
                         && self.dungeon_allows_monster(&self.current_floor_id, definition, false)
                         && definition.allocation.as_ref().is_none_or(|allocation| {
@@ -3957,11 +3977,27 @@ impl Game {
                     vec![target_position],
                 )
             }
-            AbilityEffectDefinition::AreaDamage { radius, .. } => {
-                let trace =
+            AbilityEffectDefinition::AreaDamage {
+                radius,
+                damage_type,
+                ..
+            } => {
+                let mut trace =
                     self.monster_projectile_trace(source_index, ability, &target, false, false)?;
+                if DamageType::from(*damage_type) == DamageType::Rocket
+                    && let Some(hit) = trace.traversed.iter().position(|position| {
+                        *position == self.player.position
+                            || self.entities.iter().enumerate().any(|(index, actor)| {
+                                index != source_index && actor.hp > 0 && actor.position == *position
+                            })
+                    })
+                {
+                    trace.impact = trace.traversed[hit];
+                    trace.landing = trace.impact;
+                    trace.traversed.truncate(hit + 1);
+                }
                 let affected_positions = self
-                    .area_damage_cells(target_position, *radius)
+                    .area_damage_cells(trace.landing, *radius)
                     .into_iter()
                     .map(|(_, position)| position)
                     .collect::<Vec<_>>();

@@ -2672,6 +2672,7 @@ fn m4e_cross_system_mutations_reuse_stats_energy_experience_and_item_knowledge()
     assert_eq!(
         game.player_mutation_action_energy_cost(
             &GameAction::UseItem {
+                jewel_recall: None,
                 item_id: SCROLL_ID.to_owned(),
                 target: None,
                 target_glyph: None,

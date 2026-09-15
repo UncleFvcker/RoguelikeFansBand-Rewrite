@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.jewel",
+  "nameKey": "item-demo-jewel-name",
+  "descriptionKey": "item-demo-jewel-description",
+  "glyph": "*",
+  "generationLevel": 70,
+  "weightTenthsPound": 5,
+  "baseValue": 60000,
+  "maxStack": 1,
+  "equipmentSlot": "light",
+  "tags": [
+    "equipment",
+    "light-source",
+    "instant-artifact-base"
+  ],
+  "rfbValue": {
+    "pval": 0,
+    "toArmor": 0,
+    "flags": [
+      "INSTA_ART"
+    ]
+  },
+  "rfbBaseKind": {
+    "sourceIndex": 607,
+    "tval": 39,
+    "sval": 6
+  }
+}

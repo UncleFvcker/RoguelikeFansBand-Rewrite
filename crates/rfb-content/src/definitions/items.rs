@@ -1016,6 +1016,8 @@ pub enum ItemUseEffectDefinition {
     },
     IdentifyInventory,
     SelfKnowledge,
+    /// RFB EFFECT_JEWEL: clairvoyance, life loss, and optional recall.
+    Jewel,
     ListUniqueMonsters,
     RechargeCarriedDevices,
     Acquirement {

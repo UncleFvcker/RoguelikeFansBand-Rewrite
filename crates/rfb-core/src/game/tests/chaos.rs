@@ -106,8 +106,12 @@ fn cast_saved(game: &mut Game, id: &str, target: TargetSelection) -> Vec<DomainE
             continue;
         }
         game.rng = RfbRng::seeded(seed);
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         let mut resumed_events = Vec::new();
         restored
             .resolve_player_ability(
@@ -161,7 +165,12 @@ fn ch1_ordinary_book_is_picked_up_learned_and_cast_after_save() {
     game.items.push(item);
     game.pick_up_item_at_player(Some(&id)).unwrap();
     assert!(game.item_knowledge[BOOK].found_count > 0);
-    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    game = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     let spell = learn(&mut game, "magic-missile");
     target(&mut game);
     cast_saved(
@@ -172,7 +181,12 @@ fn ch1_ordinary_book_is_picked_up_learned_and_cast_after_save() {
         },
     );
     assert!(game.entities[0].hp < 10_000);
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert!(restored.learned_abilities.contains(&spell));
     assert_eq!(game.state_hash(), restored.state_hash());
 }
@@ -353,7 +367,12 @@ fn ch1_confusing_touch_survives_misses_and_is_consumed_by_a_real_melee_hit() {
         })
         .expect("a real hit on a confusion-immune monster");
     assert!(!immune.confusing_strike_ready);
-    let restored = Game::from_save_with_content(immune.to_save(), immune.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        immune.to_save(),
+        immune.content.clone(),
+        immune.behavior_preferences(),
+    )
+    .unwrap();
     assert!(!restored.confusing_strike_ready);
     assert_eq!(immune.state_hash(), restored.state_hash());
 }

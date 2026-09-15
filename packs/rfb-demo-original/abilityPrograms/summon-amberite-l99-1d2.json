@@ -8,7 +8,7 @@
       "category": "amberite",
       "countDice": 1,
       "countSides": 2,
-      "durationTurns": 10000,
+      "durationTurns": 0,
       "maximumLevel": 99,
       "radius": 2,
       "type": "summon-category"

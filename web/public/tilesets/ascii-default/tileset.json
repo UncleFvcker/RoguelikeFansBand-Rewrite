@@ -432,7 +432,19 @@
     "core.wilderness.mountain": {"foreground": "#aaa17d", "background": "#393b32"},
     "core.wilderness.glacier": {"foreground": "#c0c0ff", "background": "#35415e"},
     "core.wilderness.snow": {"foreground": "#ffffff", "background": "#3c4854"},
-    "core.wilderness.pack-ice": {"foreground": "#a5d7ff", "background": "#294758"}
+    "core.wilderness.pack-ice": {"foreground": "#a5d7ff", "background": "#294758"},
+    "demo.terrain.angband-entrance": {"foreground": "#c7a0ef", "background": "#312445"},
+    "demo.terrain.burglary-major-trap": {"foreground": "#ffff00", "background": "#3d3016"},
+    "demo.terrain.burglary-minor-trap": {"foreground": "#ffff00", "background": "#3d3016"},
+    "demo.terrain.burglary-ultimate-trap": {"foreground": "#ffff00", "background": "#3d3016"},
+    "demo.terrain.law-basic-trap": {"foreground": "#ffff00", "background": "#3d3016"},
+    "demo.terrain.law-expert-trap": {"foreground": "#ffff00", "background": "#3d3016"},
+    "demo.terrain.law-semicolon": {"foreground": "#ffff00", "background": "#3d3016"},
+    "demo.terrain.mount-meru-entrance": {"foreground": "#c7a0ef", "background": "#312445"},
+    "demo.terrain.telmora-castle-entrance": {"foreground": "#c7a0ef", "background": "#312445"},
+    "demo.terrain.telmora-thing-under-the-mountain-entry": {"foreground": "#c7a0ef", "background": "#312445"},
+    "demo.terrain.telmora-vault-entry": {"foreground": "#c7a0ef", "background": "#312445"},
+    "demo.terrain.telmora-volcano-entry": {"foreground": "#c7a0ef", "background": "#312445"}
   },
   "fallback": {
     "glyph": "?",

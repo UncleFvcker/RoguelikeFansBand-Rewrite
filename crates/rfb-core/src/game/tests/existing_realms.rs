@@ -20,7 +20,7 @@ pub(super) fn prepared(build: &str) -> Game {
 }
 
 fn cast_after_save(game: &mut Game, ability: &str, target: TargetSelection) {
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     // Repeat actual failure rolls too, until the same successful cast in both saves.
     for _ in 0..64 {
@@ -112,7 +112,7 @@ fn existing_realms_new_builds_generate_pick_up_study_cast_and_resume() {
         game.pick_up_item_at_player(Some(&id)).unwrap();
         assert!(game.item_knowledge[&kind].found_count > 0);
         let before = game.to_save();
-        let mut restored = Game::from_save(before).unwrap();
+        let mut restored = Game::from_save(before, Game::default_behavior_preferences()).unwrap();
         let a = game.generate_one_loot_draft(&context, ItemGenerationMode::Ordinary);
         let b = restored.generate_one_loot_draft(&context, ItemGenerationMode::Ordinary);
         assert_eq!(
@@ -227,7 +227,7 @@ fn existing_realms_mage_changes_into_and_out_of_craft_with_pending_save() {
             book_item_id: "test.craft".into(),
         },
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for current in [&mut game, &mut restored] {
         dispatch_next(current, GameCommand::ResolveRealmChange { confirm: true });
     }
@@ -261,7 +261,7 @@ fn existing_realms_mage_changes_into_and_out_of_craft_with_pending_save() {
             .learned_abilities
             .contains("demo.ability.craft-regeneration")
     );
-    Game::from_save(game.to_save()).unwrap();
+    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
 }
 
 #[test]
@@ -434,7 +434,7 @@ fn export_existing_realms_desktop_saves() {
                     {
                         return None;
                     }
-                    Game::from_save(game.to_save()).unwrap();
+                    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                     steps.push(serde_json::json!({"command":command,"hash":game.state_hash()}));
                 }
                 Some((start, steps))

@@ -119,6 +119,7 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::RechargeCarriedDevices
         | ItemUseEffectDefinition::ListUniqueMonsters
         | ItemUseEffectDefinition::SelfKnowledge
+        | ItemUseEffectDefinition::Jewel
         | ItemUseEffectDefinition::TriggerTsuyoshiCrash
         | ItemUseEffectDefinition::MundanifyItem
         | ItemUseEffectDefinition::CreateArtifact
@@ -735,6 +736,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::RechargeCarriedDevices
                     | ItemUseEffectDefinition::ListUniqueMonsters
                     | ItemUseEffectDefinition::SelfKnowledge
+                    | ItemUseEffectDefinition::Jewel
                     | ItemUseEffectDefinition::Acquirement { .. }
                     | ItemUseEffectDefinition::CreateArrows
                     | ItemUseEffectDefinition::SummonMonsters

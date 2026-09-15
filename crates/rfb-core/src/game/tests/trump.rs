@@ -138,7 +138,7 @@ fn trump_all_formal_builds_learn_cast_and_resume() {
         let before = g.player.position;
         cast_saved(&mut g, id, TargetSelection::SelfTarget);
         assert_ne!(g.player.position, before, "{build}");
-        Game::from_save(g.to_save()).unwrap();
+        Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     }
 }
 
@@ -186,7 +186,9 @@ fn trump_four_books_generated_picked_up_studied_and_saved() {
             520 + rank as u32
         );
         assert_eq!(
-            Game::from_save(g.to_save()).unwrap().state_hash(),
+            Game::from_save(g.to_save(), g.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             g.state_hash()
         );
     }
@@ -238,7 +240,7 @@ fn trump_summons_are_pets_and_failures_are_hostile_with_two_exceptions() {
             "{slug}"
         );
         g.reveal_current_visibility();
-        Game::from_save(g.to_save()).unwrap();
+        Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
         let mut base = caster();
         learn(&mut base, slug);
         let failed = (0..1024)
@@ -283,7 +285,7 @@ fn trump_summons_are_pets_and_failures_are_hostile_with_two_exceptions() {
             );
         }
         g.reveal_current_visibility();
-        Game::from_save(g.to_save()).unwrap();
+        Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     }
 }
 
@@ -402,7 +404,7 @@ fn trump_utility_spells_change_real_targets_items_and_recall() {
             _ => unreachable!(),
         }
         g.reveal_current_visibility();
-        Game::from_save(g.to_save()).unwrap();
+        Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     }
     for slug in ["reset-recall", "word-of-recall", "teleport-level"] {
         let mut g = caster();
@@ -424,7 +426,7 @@ fn trump_utility_spells_change_real_targets_items_and_recall() {
             "word-of-recall" => assert!(g.recall.as_ref().unwrap().remaining_turns.is_some()),
             _ => assert_ne!(g.current_floor_id, floor),
         }
-        Game::from_save(g.to_save()).unwrap();
+        Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     }
 }
 
@@ -459,8 +461,8 @@ fn trump_shuffle_lovers_paid_direction_cancel_and_save_are_exact() {
         .as_mut()
         .unwrap()
         .branch_roll = 2;
-    assert!(Game::from_save(invalid).is_err());
-    let mut resumed = Game::from_save(paid.to_save()).unwrap();
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
+    let mut resumed = Game::from_save(paid.to_save(), paid.behavior_preferences()).unwrap();
     let rng = paid.rng.clone();
     let mana = paid.resources["demo.resource.mana"].current;
     let mut direct_cancel = paid.clone();
@@ -470,7 +472,7 @@ fn trump_shuffle_lovers_paid_direction_cancel_and_save_are_exact() {
     assert_eq!(direct_cancel.rng, rng);
     assert_eq!(direct_cancel.resources["demo.resource.mana"].current, mana);
     let mut resolved = paid.clone();
-    let mut resolved_saved = Game::from_save(paid.to_save()).unwrap();
+    let mut resolved_saved = Game::from_save(paid.to_save(), paid.behavior_preferences()).unwrap();
     for g in [&mut resolved, &mut resolved_saved] {
         dispatch_next(
             g,
@@ -526,7 +528,7 @@ fn trump_shuffle_every_card_boundary_and_wild_magic_executes_without_invalid_sta
             assert!(!g.glow[g.index(g.player.position).unwrap()]);
         }
         g.reveal_current_visibility();
-        Game::from_save(g.to_save()).unwrap();
+        Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     }
 }
 
@@ -553,7 +555,7 @@ fn trump_wheel_all_nested_outcomes_preserve_valid_saves() {
         .unwrap();
         g.reveal_current_visibility();
         if !g.player_is_dead() {
-            Game::from_save(g.to_save()).unwrap();
+            Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
         }
         if matches!(roll, 19 | 20) {
             assert!(g.terrain.iter().any(|t| t == "demo.terrain.created-trap"));
@@ -599,7 +601,7 @@ fn trump_no_space_still_pays_and_invalid_kamikaze_target_does_not() {
     .unwrap();
     assert!(g.entities.is_empty());
     assert!(g.resources["demo.resource.mana"].current < before);
-    Game::from_save(g.to_save()).unwrap();
+    Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     let mut g = caster();
     let kamikaze = learn(&mut g, "kamikaze");
     let before = g.state_hash();
@@ -660,7 +662,12 @@ fn cast_saved(game: &mut Game, id: &str, target: TargetSelection) -> Vec<DomainE
         if !summoned.is_empty() && summoned.iter().all(|s| s.entity_ids.is_empty()) {
             continue;
         }
-        let mut restored = Game::from_save_with_content(saved, trial.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            saved,
+            trial.content.clone(),
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         restored
             .resolve_player_ability(
                 id,
@@ -731,7 +738,7 @@ fn export_trump_desktop_saves() {
             .find_map(|seed| {
                 let mut game = base.clone();
                 game.rng = RfbRng::seeded(0x9e3779b97f4a7c15_u64.wrapping_mul(seed + 1));
-                let start = Game::from_save(game.to_save()).unwrap();
+                let start = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 let mut steps = Vec::new();
                 if name == "first-book" {
                     let book = game
@@ -787,7 +794,9 @@ fn export_trump_desktop_saves() {
                     return None;
                 }
                 assert_eq!(
-                    Game::from_save(game.to_save()).unwrap().state_hash(),
+                    Game::from_save(game.to_save(), game.behavior_preferences())
+                        .unwrap()
+                        .state_hash(),
                     game.state_hash()
                 );
                 steps.push(serde_json::json!({"command":command,"hash":game.state_hash()}));
@@ -807,7 +816,9 @@ fn export_trump_desktop_saves() {
                     serde_json::json!({"command":GameCommand::Wait,"hash":game.state_hash()}),
                 );
                 assert_eq!(
-                    Game::from_save(game.to_save()).unwrap().state_hash(),
+                    Game::from_save(game.to_save(), game.behavior_preferences())
+                        .unwrap()
+                        .state_hash(),
                     game.state_hash()
                 );
                 Some((start, steps))

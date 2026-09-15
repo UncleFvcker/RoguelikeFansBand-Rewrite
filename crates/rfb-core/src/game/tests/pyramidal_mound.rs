@@ -609,14 +609,14 @@ fn pyramidal_mound_ecology_keeps_rarity_divisor_and_egyptian_qualification() {
             );
         }
         if active {
-            assert!(candidates.iter().any(|id| id == GUARDIAN));
-            game.defeated_limited_actor_counts
-                .insert(GUARDIAN.into(), 1);
+            assert!(!candidates.iter().any(|id| id == GUARDIAN));
+            let unique = candidates.first().unwrap().clone();
+            game.defeated_limited_actor_counts.insert(unique.clone(), 1);
             assert!(
                 !game
                     .summon_category_candidate_kind_ids("egyptian", None, 100, true, false)
                     .iter()
-                    .any(|id| id == GUARDIAN)
+                    .any(|id| id == &unique)
             );
         }
     }

@@ -539,6 +539,7 @@ message-task-completed = You recovered the task objective.
 message-task-reward-available = The task is complete. Return to the quest giver for your reward.
 message-task-exit-revealed = A magical staircase appears...
 message-task-accepted = Task accepted: { $task }.
+message-task-skipped = Task { $task } was passed because its target is already dead.
 message-task-accept-unavailable = That task cannot be accepted here right now.
 message-task-failed = You left without recovering the task objective.
 message-task-abandoned = You deliberately abandoned the active task.

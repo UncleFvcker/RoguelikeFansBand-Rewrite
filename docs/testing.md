@@ -174,6 +174,25 @@ node e2e/asgard-standalone.e2e.mjs --random-dungeons
 持久发现档案通过 `web/e2e/discovery.e2e.mjs` 接入同一脚本：先保留正常新局的原生存档，再由显式 ignored 测试 `game::tests::discovery::export_discovery_desktop_save`（环境变量 `DISCOVERY_INPUT` 指向该存档）准备兽穴第 3 层、两只已认识唯一怪物、归属玩家的 Fang 死亡、调查资料及已鉴定神器／Ego。随后移除相关物品与局部怪物，保留原馆藏绑定，输出 `discovery-prepared.rfbsave` 和 `discovery-scenario.json`。普通 EXE 经正式载入入口验证七类档案、存活／死亡筛选、击杀数、最深层数、窄屏、只读哈希及保存恢复；最后恢复原正常角色。此准备验证记忆持久性，不代表自然取得神器或自然通关。核心 `game::tests::discovery::` 覆盖隐藏身份、鉴定门槛、死亡归属、唯一怪物占用与死亡区分、深度及非法存档；详细属性仍沿用调查知识，不宣称逐次战斗的全部原版 lore 抽样。
 
 配置／记录通过同一脚本调用 `web/e2e/config-records.e2e.mjs`：捕获 F2、自定义映射与反斜杠绕过、预设隔离、命令菜单真实行动、单命令寄存器、录制／编辑／回放多步宏、键位 JSON 导出导入及寄存器热键、笔记文本、当前可见地图 PNG／TXT／离线 HTML 导出。下载通过 WebView 正常链接生成真实文件，保存在本次 `test-results/map-intelligence/exports-*` 子目录；无测试专用导出 IPC。原生读档应保留本机键位和笔记、清除会话录制并关闭旧窗口，最后检查英文 390px 配置页。`command-recording.test.ts` 与输入／会话测试覆盖深拷贝、录制上限、取消与失败、过期参数和修饰键；截图迷雾边界沿用 Core 投影与渲染，PNG 需另做实际图像检查。
+## 安格班桌面专项
+
+在 `web` 执行：
+
+```powershell
+npm run e2e:build
+node e2e/tauri.e2e.mjs --angband
+node e2e/tauri.e2e.mjs --angband --angband-resume=completed-54
+npm run build:standalone:debug
+node e2e/asgard-standalone.e2e.mjs --angband
+```
+
+续跑参数取 `test-results/angband/` 内已有检查点名，不含扩展名。包括入口、每个随机任务前后、首次撤退／重入、`oberon-before`、`serpent-before`、`victory`、`depth-101`、`depth-127`、`returned`、`retired`；脚本核对内容身份、协议及完整保存哈希。普通产物脚本会拒绝 arrival／route／battle／stairs-up／stairs-down 五种准备，再用正常人类战士创角进入地图并关闭窗口，要求退出码 0。
+
+专项从正常 1 级人类战士开始，明确准备正式 (57,40) 入口位置、51 级所需经验（胜前仍封顶 50）、阔剑、归返卷轴、长效悬浮／识破隐形／无敌、额外 HP 与近战能力、状态免疫。后续只定位实际楼梯或相邻战斗格、补玩家 HP、照明及清理非任务目标。十个随机目标、奥伯龙和混沌之蛇保持源 HP、防御和 AI，通过生产命令击杀；不写任务完成、掉落或胜利状态。每场首击走原生键盘，其余攻击保留命令事件，每最多 16 击及死亡后用真实保存加载同步 UI。入口、任务层及 99／100／101／127 深度边界走原生楼梯输入；其余中间层执行生产楼梯命令并记录事件，到下一任务层恢复同步界面。任务层下行限制、首次撤退重入、胜后深层探索、召回和隐退均保留证据。隐退按钮的取消／确认由测试控制浏览器确认回调，原生系统确认框外观不在该自动检查范围内。
+
+召回首轮 Rest 走原生键盘，其余轮使用生产 Rest 命令并记录事件，结束后才重新加载界面；避免每个饥饿打断回合都往返传输约 10 MB 的深层存档。
+
+这是明确准备后的流程验收，不代表自然练级、装备获取或难度通关。报告、截图、原生存档与普通产物 SHA-256 位于上述目录；实际批次结果见[安格班计划](../design/angband-dungeon-plan-20260913.md)。
 
 ## Contract fixture
 

@@ -1935,7 +1935,7 @@ for (const [abilityId, message] of [
   });
 }
 
-test("saved Wonder prompts once, validates a symbol and can cancel", () => {
+test("saved Wonder prompts once per session, validates a symbol and can cancel", () => {
   for (const answer of ["q", null]) {
     const state = new AppState();
     state.status = { mapScale: "local", width: 96, height: 33, floorId: "floor",
@@ -1955,7 +1955,13 @@ test("saved Wonder prompts once, validates a symbol and can cancel", () => {
     controller.reconcileStatus(state.status);
     assert.equal(timers.length, 1);
     assert.equal(commands.length, 0);
+    controller.resetSession();
+    controller.reconcileStatus(state.status);
     timers[0]();
+    assert.equal(commands.length, 0, "the old session cannot open or dispatch a glyph prompt");
+    controller.reconcileStatus(state.status);
+    assert.equal(timers.length, 2, "the old callback cannot clear the new session's pending prompt");
+    timers[1]();
     assert.deepEqual(commands, [{ type: "resolve-ability-glyph", glyph: answer }]);
   }
 });

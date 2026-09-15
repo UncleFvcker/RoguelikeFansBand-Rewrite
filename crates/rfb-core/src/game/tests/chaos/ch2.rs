@@ -93,8 +93,12 @@ fn wonder_branch(base: &Game, wanted: u16) -> (Game, Vec<DomainEvent>) {
         }
         let mut before = base.clone();
         before.rng = RfbRng::seeded(seed);
-        let mut restored =
-            Game::from_save_with_content(before.to_save(), before.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            before.to_save(),
+            before.content.clone(),
+            before.behavior_preferences(),
+        )
+        .unwrap();
         let mut resumed = Vec::new();
         restored
             .resolve_player_ability(
@@ -209,7 +213,12 @@ fn destruction_changes_real_terrain_and_retains_resistance_on_restore() {
             .all(|pile| gold_ids.contains(&pile.id)),
         "destruction must not generate mining gold inside replacement rock"
     );
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert!(restored.entities[0].no_destruction);
     assert_eq!(game.state_hash(), restored.state_hash());
 }
@@ -235,7 +244,7 @@ fn wonder_executes_every_branch_with_saved_rng_and_monster_aid_is_real() {
                 assert_eq!(game.entities.len(), 2);
                 assert!(game.entities[1].cloned);
                 assert_ne!(game.entities[0].id, game.entities[1].id);
-                let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+                let restored = Game::from_save_with_content(game.to_save(), game.content.clone(), game.behavior_preferences()).unwrap();
                 assert!(restored.entities[1].cloned);
             }
             1 => assert!(game.entities[0].statuses.iter().any(|s| s.kind_id == crate::effect::STATUS_HASTE && s.remaining_ticks == 100)),
@@ -292,8 +301,12 @@ fn wonder_glyph_choice_cannot_reroll_or_refund_and_survives_save() {
     assert_eq!(invalid.state_hash(), before);
     for glyph in [None, Some("q".to_owned())] {
         let mut direct = pending.clone();
-        let mut restored =
-            Game::from_save_with_content(pending.to_save(), pending.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            pending.to_save(),
+            pending.content.clone(),
+            pending.behavior_preferences(),
+        )
+        .unwrap();
         for game in [&mut direct, &mut restored] {
             game.resolve_pending_ability_glyph(
                 glyph.clone(),
@@ -323,7 +336,14 @@ fn wonder_glyph_choice_cannot_reroll_or_refund_and_survives_save() {
         .unwrap()
         .cast_resolution
         .ability_id = "demo.ability.chaos-fireball".into();
-    assert!(Game::from_save_with_content(forged, pending.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            forged,
+            pending.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
 }
 
 #[test]
@@ -359,8 +379,12 @@ fn wonder_dispatch_waits_for_glyph_and_cancellation_spends_one_turn() {
         )),
         Err(CoreError::AbilityGlyphRequired)
     ));
-    let mut restored =
-        Game::from_save_with_content(pending.to_save(), pending.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        pending.to_save(),
+        pending.content.clone(),
+        pending.behavior_preferences(),
+    )
+    .unwrap();
     for game in [&mut pending, &mut restored] {
         dispatch_next(game, GameCommand::ResolveAbilityGlyph { glyph: None });
         assert_eq!(game.turn, before_turn + 1);

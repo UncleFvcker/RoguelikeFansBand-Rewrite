@@ -97,7 +97,7 @@ fn music_all_32_formal_songs_study_cast_and_resume() {
             crate::game::abilities::music::continuous(slot as u8)
         );
         g.reveal_current_visibility();
-        let mut restored = Game::from_save(g.to_save()).unwrap();
+        let mut restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
         g.advance_music(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
             .unwrap();
         restored
@@ -126,7 +126,7 @@ fn music_real_wait_charges_half_mana_and_exhaustion_removes_bonuses() {
     assert_eq!(g.player_derived_stats().armor_class.value, before + 5);
     g.ability_progress.get_mut(&id).unwrap().proficiency = 1600;
     g.resources.get_mut("demo.resource.mana").unwrap().current = 2;
-    let mut restored = Game::from_save(g.to_save()).unwrap();
+    let mut restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     for turn in 0..5 {
         dispatch_next(&mut g, GameCommand::Wait);
         dispatch_next(&mut restored, GameCommand::Wait);
@@ -157,7 +157,7 @@ fn music_switch_failure_disruption_and_stop_preserve_independent_buffs() {
     assert_eq!(g.player.energy_need, 100);
     // Prepare the ready boundary after interruption has charged its extra action.
     g.player.energy_need = 0;
-    let mut restored = Game::from_save(g.to_save()).unwrap();
+    let mut restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     restored
         .advance_music(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
         .unwrap();
@@ -213,10 +213,10 @@ fn music_detection_progress_and_save_validation_follow_active_song() {
     }
     assert_eq!(g.music.beats, 19);
     let saved = g.to_save();
-    assert!(Game::from_save(saved.clone()).is_ok());
+    assert!(Game::from_save(saved.clone(), Game::default_behavior_preferences()).is_ok());
     let mut bad = saved;
     bad.player.music.spell = Some(30);
-    assert!(Game::from_save(bad).is_err());
+    assert!(Game::from_save(bad, Game::default_behavior_preferences()).is_err());
 }
 
 #[test]
@@ -311,7 +311,9 @@ fn music_books_and_bard_harp_use_real_generation_pickup_and_save() {
         }
         assert_eq!(
             g.state_hash(),
-            Game::from_save(g.to_save()).unwrap().state_hash()
+            Game::from_save(g.to_save(), g.behavior_preferences())
+                .unwrap()
+                .state_hash()
         );
     }
 }
@@ -331,7 +333,7 @@ fn music_invulnerability_exhaustion_pays_extra_action_before_ready_save() {
     assert!(g.music.spell.is_none());
     assert!(g.player.energy_need <= 0);
     assert!(g.world_tick - before > ordinary.world_tick - before);
-    assert!(Game::from_save(g.to_save()).is_ok());
+    assert!(Game::from_save(g.to_save(), g.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -355,7 +357,7 @@ fn music_wall_song_destroys_entered_rock_and_ground_items() {
     g.items.last_mut().unwrap().location = ItemLocation::Ground(target);
     dispatch_next(&mut g, GameCommand::Wait);
     assert!(!g.items.iter().any(|i| i.id == "test.music-dagger"));
-    assert!(Game::from_save(g.to_save()).is_ok());
+    assert!(Game::from_save(g.to_save(), g.behavior_preferences()).is_ok());
 }
 
 #[test]

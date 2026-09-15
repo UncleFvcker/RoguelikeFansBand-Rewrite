@@ -233,6 +233,7 @@ impl Game {
                     .filter(|definition| {
                         definition.role == ActorRole::Monster
                             && definition.level <= u32::from(maximum_level)
+                            && !self.actor_kind_is_reserved_task_target(&definition.id)
                             && actor_answers_summons(definition)
                             && self.dungeon_allows_monster(&self.current_floor_id, definition, true)
                     })

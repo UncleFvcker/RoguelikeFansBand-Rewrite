@@ -138,7 +138,7 @@ fn hex_all_32_formal_spells_cast_and_resume() {
             _ => TargetSelection::SelfTarget,
         };
         cast(&mut g, &id, selection);
-        let mut loaded = Game::from_save(g.to_save()).unwrap();
+        let mut loaded = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
         pulse(&mut g);
         pulse(&mut loaded);
         assert_eq!(g.state_hash(), loaded.state_hash(), "slot {slot}");
@@ -164,7 +164,7 @@ fn hex_concurrent_upkeep_stop_dispel_and_mana_fraction_resume() {
     assert!(g.hex.mana_fraction > 0);
     g.interrupt_hex();
     assert!(!g.hexing(8));
-    let mut loaded = Game::from_save(g.to_save()).unwrap();
+    let mut loaded = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     pulse(&mut g);
     pulse(&mut loaded);
     assert!(g.hexing(8));
@@ -271,12 +271,12 @@ fn hex_patience_and_revenge_store_actual_damage_and_prompt_at_expiry() {
             assert!(g.pending_ability_direction.is_some());
             let mut invalid = g.to_save();
             invalid.player.hex = Default::default();
-            assert!(Game::from_save(invalid).is_err());
+            assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
             let turn = g.turn;
             dispatch_next(&mut g, GameCommand::CancelAbilityDirection);
             assert_eq!(g.turn, turn);
             assert!(g.pending_ability_direction.is_some());
-            let mut loaded = Game::from_save(g.to_save()).unwrap();
+            let mut loaded = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
             for x in [&mut g, &mut loaded] {
                 dispatch_next(
                     x,
@@ -314,11 +314,13 @@ fn hex_inhale_preserves_chants_and_invalid_state_is_rejected() {
     );
     let mut save = g.to_save();
     save.player.hex.active |= 1 << 5;
-    assert!(Game::from_save(save).is_err());
+    assert!(Game::from_save(save, Game::default_behavior_preferences()).is_err());
     dispatch_next(&mut g, GameCommand::Wait);
     assert_eq!(
         g.state_hash(),
-        Game::from_save(g.to_save()).unwrap().state_hash()
+        Game::from_save(g.to_save(), g.behavior_preferences())
+            .unwrap()
+            .state_hash()
     );
 }
 
@@ -469,7 +471,9 @@ fn hex_four_books_generate_in_the_full_pool_and_teach_after_pickup() {
         assert!(g.learned_abilities.contains(&spell));
         assert_eq!(
             g.state_hash(),
-            Game::from_save(g.to_save()).unwrap().state_hash()
+            Game::from_save(g.to_save(), g.behavior_preferences())
+                .unwrap()
+                .state_hash()
         );
     }
 }

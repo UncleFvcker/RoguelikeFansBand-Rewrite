@@ -8283,6 +8283,10 @@
     "CampaignStateDto": {
       "type": "object",
       "properties": {
+        "canRetire": {
+          "type": "boolean",
+          "default": false
+        },
         "completedTasks": {
           "type": "integer",
           "format": "uint32",
@@ -8308,6 +8312,12 @@
         },
         "status": {
           "$ref": "#/$defs/CampaignStatusDto"
+        },
+        "targetNameKey": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "victoryTurn": {
           "type": [
@@ -9574,6 +9584,31 @@
         "nameKey",
         "maxDepth",
         "conquered"
+      ]
+    },
+    "DungeonStatusDto": {
+      "type": "object",
+      "properties": {
+        "currentDepth": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "nameKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "nameKey",
+        "currentDepth",
+        "maximumDepth"
       ]
     },
     "EditableVisualDto": {
@@ -12093,6 +12128,26 @@
         {
           "type": "object",
           "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "recall": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "use-jewel"
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "recall"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "glyph": {
               "type": "string"
             },
@@ -12748,6 +12803,16 @@
             "$ref": "#/$defs/ContentVisualDto"
           }
         },
+        "dungeon": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DungeonStatusDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "dungeonInstanceId": {
           "type": [
             "string",
@@ -12965,6 +13030,16 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0
+        },
+        "dungeon": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DungeonStatusDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "dungeonInstanceId": {
           "type": [
@@ -13797,6 +13872,9 @@
         "profileId": {
           "type": "string"
         },
+        "recallChoice": {
+          "type": "boolean"
+        },
         "targetSpec": {
           "$ref": "#/$defs/TargetSpecDto"
         }
@@ -14246,6 +14324,7 @@
     "ItemOriginKindDto": {
       "type": "string",
       "enum": [
+        "angband-reward",
         "chest",
         "shop",
         "mixed",
@@ -15725,6 +15804,9 @@
             "$ref": "#/$defs/ResearchMonsterDto"
           }
         },
+        "music": {
+          "$ref": "#/$defs/MusicStateDto"
+        },
         "mutations": {
           "type": "array",
           "items": {
@@ -15837,6 +15919,9 @@
             "type": "string"
           }
         },
+        "rageManaSustained": {
+          "type": "boolean"
+        },
         "realityChangeTicks": {
           "type": "integer",
           "format": "uint8",
@@ -15885,6 +15970,9 @@
               "type": "null"
             }
           ]
+        },
+        "samurai": {
+          "$ref": "#/$defs/SamuraiStateDto"
         },
         "searching": {
           "type": "boolean"
@@ -15960,6 +16048,10 @@
         "maxHp",
         "fame",
         "fasting",
+        "music",
+        "hex",
+        "rageManaSustained",
+        "samurai",
         "searching",
         "virtues",
         "ridingWithoutReins"
@@ -16674,6 +16766,35 @@
         "position",
         "floorId",
         "remainingSteps"
+      ]
+    },
+    "SamuraiStateDto": {
+      "type": "object",
+      "properties": {
+        "counter": {
+          "type": "boolean"
+        },
+        "manaDecayFraction": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "posture": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "sutemi": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "manaDecayFraction",
+        "posture",
+        "counter",
+        "sutemi"
       ]
     },
     "ShopCategoryDto": {
@@ -17835,10 +17956,23 @@
     "TaskStatusDto": {
       "type": "object",
       "properties": {
+        "canAbandon": {
+          "type": "boolean",
+          "default": false
+        },
         "current": {
           "type": "integer",
           "format": "uint32",
           "default": 0,
+          "minimum": 0
+        },
+        "depth": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 65535,
           "minimum": 0
         },
         "descriptionKey": {
@@ -17900,6 +18034,12 @@
         "status": {
           "$ref": "#/$defs/TaskStatusKindDto"
         },
+        "targetNameKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "taskId": {
           "type": "string",
           "default": ""
@@ -17925,6 +18065,7 @@
         "available",
         "active",
         "completed",
+        "skipped",
         "failed",
         "locked",
         "paused",

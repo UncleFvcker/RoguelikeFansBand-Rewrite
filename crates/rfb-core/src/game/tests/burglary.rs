@@ -134,8 +134,8 @@ fn burglary_all_32_formal_techniques_cast_and_resume() {
             "slot {slot}: {:?}",
             update.events
         );
-        let mut restored =
-            Game::from_save(g.to_save()).unwrap_or_else(|e| panic!("slot {slot}: {e}"));
+        let mut restored = Game::from_save(g.to_save(), g.behavior_preferences())
+            .unwrap_or_else(|e| panic!("slot {slot}: {e}"));
         assert_eq!(g.state_hash(), restored.state_hash(), "slot {slot}");
         if g.pending_duelist.is_some() {
             let command = GameCommand::ResolveDuelistChoice {
@@ -175,7 +175,7 @@ fn burglary_theft_and_death_share_one_saved_drop_budget() {
         assert!(n < 29);
     }
     g.reveal_current_visibility();
-    let mut restored = Game::from_save(g.to_save()).unwrap();
+    let mut restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     let victim = g.entities[0].clone();
     let a = g.generate_death_loot(&victim).unwrap();
     let b = restored.generate_death_loot(&victim).unwrap();
@@ -218,8 +218,8 @@ fn burglary_theft_and_death_share_one_saved_drop_budget() {
         .as_mut()
         .unwrap()
         .burglary_drops_remaining = Some(u32::MAX);
-    assert!(Game::from_save(captured_save).is_err());
-    g = Game::from_save(g.to_save()).unwrap();
+    assert!(Game::from_save(captured_save, Game::default_behavior_preferences()).is_err());
+    g = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     let ball = g.items.iter().position(|i| i.id == "test.ball").unwrap();
     g.use_capture_ball(
         ball,
@@ -236,7 +236,7 @@ fn burglary_theft_and_death_share_one_saved_drop_budget() {
     assert!(drops.0.is_empty() && drops.1.is_empty());
     let mut bad = g.to_save();
     bad.entities[0].burglary_drops_remaining = Some(u32::MAX);
-    assert!(Game::from_save(bad).is_err());
+    assert!(Game::from_save(bad, Game::default_behavior_preferences()).is_err());
 }
 
 #[test]
@@ -289,7 +289,7 @@ fn burglary_traps_consume_on_real_monster_entry_and_resume() {
         let p = g.player.position;
         g.player.position = Position { x: 9, y: 10 };
         g.entities[0].position = p;
-        let mut restored = Game::from_save(g.to_save()).unwrap();
+        let mut restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
         g.trigger_actor_trap(0, p, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
             .unwrap();
         restored
@@ -343,7 +343,9 @@ fn burglary_four_books_generate_in_the_full_pool_and_teach_after_pickup() {
         assert!(g.learned_abilities.contains(&spell));
         assert_eq!(
             g.state_hash(),
-            Game::from_save(g.to_save()).unwrap().state_hash()
+            Game::from_save(g.to_save(), g.behavior_preferences())
+                .unwrap()
+                .state_hash()
         );
     }
 }
@@ -387,7 +389,9 @@ fn burglary_disarm_ray_unlocks_chests_and_reveals_closed_secret_door() {
     );
     assert_eq!(
         g.state_hash(),
-        Game::from_save(g.to_save()).unwrap().state_hash()
+        Game::from_save(g.to_save(), g.behavior_preferences())
+            .unwrap()
+            .state_hash()
     );
 }
 
@@ -420,7 +424,7 @@ fn burglary_negotiation_saves_confirmation_and_charges_once() {
         panic!("negotiation prompt")
     };
     let balance = g.gold;
-    let mut restored = Game::from_save(g.to_save()).unwrap();
+    let mut restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     let command = GameCommand::ResolveDuelistChoice {
         choice: rfb_protocol::DuelistChoiceDto::Confirm { accepted: true },
     };
@@ -524,6 +528,8 @@ fn burglary_birth_dexterity_capacity_and_thief_gloves_use_real_consumers() {
     g.refresh_player_ability_state();
     assert_eq!(
         g.state_hash(),
-        Game::from_save(g.to_save()).unwrap().state_hash()
+        Game::from_save(g.to_save(), g.behavior_preferences())
+            .unwrap()
+            .state_hash()
     );
 }

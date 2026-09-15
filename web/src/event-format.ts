@@ -563,8 +563,11 @@ export function createPresentationFormatter(
         return localization.format("message-task-completed");
       case "task-reward-available":
         return localization.format("message-task-reward-available");
+      case "task-exit-revealed":
+        return localization.format("message-task-exit-revealed");
       case "task-accepted":
-        return localization.format("message-task-accepted", {
+      case "task-skipped":
+        return localization.format(`message-${event.messageKey}`, {
           task: contentName(event.args.task),
         });
       case "task-accept-unavailable":

@@ -22,8 +22,9 @@ use rfb_protocol::{
     GameSnapshot, InventoryItemDto, ItemDto, ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto,
     MutationRatingDto, PROTOCOL_VERSION, PendingRaceMutationChoiceDto, PetDto, PlayerBuildDto,
     PlayerDto, PlayerMutationDto, PlayerProgressDto, Position, ResistanceDto, ResourcePoolDto,
-    SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto, TerrainInteractionDto,
-    TerrainInteractionKindDto, VisibilityState, WildernessLocationDto, WildernessLocationKindDto,
+    SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto, TaskStatusKindDto,
+    TerrainInteractionDto, TerrainInteractionKindDto, VisibilityState, WildernessLocationDto,
+    WildernessLocationKindDto,
 };
 
 use super::ability_projection::{ability_target_spec_dto, player_ability_effect_spec_dto};
@@ -891,6 +892,16 @@ impl Game {
     pub(super) fn campaign_state_dto(&self) -> CampaignStateDto {
         let (conquered_dungeons, completed_tasks) = self.campaign_counts();
         CampaignStateDto {
+            can_retire: self.campaign_retirement_available(),
+            target_name_key: self.campaign_definition().and_then(|campaign| {
+                self.task_statuses()
+                    .into_iter()
+                    .find(|task| {
+                        campaign.victory_task_ids.contains(&task.task_id)
+                            && task.status != rfb_protocol::TaskStatusKindDto::Completed
+                    })
+                    .and_then(|task| task.target_name_key)
+            }),
             status: self.campaign_state.status,
             score: self
                 .campaign_state
@@ -901,6 +912,26 @@ impl Game {
             victory_turn: self.campaign_state.victory_turn,
             retired_turn: self.campaign_state.retired_turn,
         }
+    }
+
+    pub(super) fn dungeon_status_dto(&self) -> Option<rfb_protocol::DungeonStatusDto> {
+        let world = self.content.world(&self.world_id)?;
+        let floor = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == self.current_floor_id)?;
+        let dungeon_id = floor.dungeon_id.as_ref()?;
+        Some(rfb_protocol::DungeonStatusDto {
+            name_key: floor.name_key.clone(),
+            current_depth: floor.depth,
+            maximum_depth: world
+                .procedural_floors
+                .iter()
+                .filter(|floor| floor.dungeon_id.as_ref() == Some(dungeon_id))
+                .map(|floor| floor.depth)
+                .max()
+                .expect("current dungeon has a floor"),
+        })
     }
 
     pub(super) fn entities_dto(&self) -> Vec<EntityDto> {
@@ -1424,6 +1455,7 @@ impl Game {
             world_id: self.world_id.clone(),
             floor_id: self.current_floor_id.clone(),
             dungeon_instance_id: self.current_dungeon_instance_id.clone(),
+            dungeon: self.dungeon_status_dto(),
             town: (!world_map).then(|| self.current_town_dto()).flatten(),
             shops: if world_map {
                 Vec::new()
@@ -1782,14 +1814,23 @@ impl Game {
             .filter_map(|task| {
                 let task_id = &task.id;
                 let state = projected_task_state(world, &self.task_states, task_id)?;
+                if state.random_assignment.is_some() && state.status == TaskStatusKindDto::Available
+                {
+                    return None;
+                }
                 let task =
                     task_definition(world, task_id).expect("task state must retain its definition");
-                let floor = task_floors(world, task_id)
+                let floor = task_floors(world, task_id, self.task_states.get(task_id))
                     .next()
                     .expect("task state must have a representative floor");
                 let stages = u32::try_from(task_objectives(world, task_id).len())
                     .expect("validated task stage count must fit u32");
                 Some(TaskStatusDto {
+                    depth: floor.dungeon_id.as_ref().map(|_| floor.depth),
+                    target_name_key: super::tasks::resolved_task_objective(task, &state)
+                        .and_then(|objective| objective.actor_kind_id)
+                        .and_then(|id| self.content.actor(&id).map(|actor| actor.name_key.clone())),
+                    can_abandon: self.task_abandon_available(task, &state),
                     task_id: task_id.clone(),
                     floor_id: floor.id.clone(),
                     name_key: task.name_key.clone(),
@@ -1839,9 +1880,19 @@ impl Game {
                         .filter_map(|task_id| {
                             let task = task_definition(world, task_id)?;
                             let state = projected_task_state(world, &self.task_states, task_id)?;
-                            let floor = task_floors(world, task_id).next()?;
+                            let floor = task_floors(world, task_id, self.task_states.get(task_id))
+                                .next()?;
                             let stages = u32::try_from(task.objectives.len()).ok()?;
                             Some(TaskStatusDto {
+                                depth: floor.dungeon_id.as_ref().map(|_| floor.depth),
+                                target_name_key: super::tasks::resolved_task_objective(
+                                    task, &state,
+                                )
+                                .and_then(|objective| objective.actor_kind_id)
+                                .and_then(|id| {
+                                    self.content.actor(&id).map(|actor| actor.name_key.clone())
+                                }),
+                                can_abandon: self.task_abandon_available(task, &state),
                                 task_id: task.id.clone(),
                                 floor_id: floor.id.clone(),
                                 name_key: task.name_key.clone(),

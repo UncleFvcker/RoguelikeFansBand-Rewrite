@@ -37,7 +37,8 @@
   "tags": [
     "equipment",
     "rfb-compatibility",
-    "weapon"
+    "weapon",
+    "instant-artifact-base"
   ],
   "weightTenthsPound": 200,
   "ridingWeaponKind": "compatible"

@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.293";
+pub const PROTOCOL_VERSION: &str = "1.294";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 41;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 42;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -658,6 +658,10 @@ pub enum GameCommand {
         item_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         target: Option<TargetSelection>,
+    },
+    UseJewel {
+        item_id: String,
+        recall: bool,
     },
     UseItemByGlyph {
         item_id: String,
@@ -2911,6 +2915,7 @@ pub enum TaskStatusKindDto {
     Available,
     Active,
     Completed,
+    Skipped,
     Failed,
     Locked,
     Paused,
@@ -2922,6 +2927,12 @@ pub enum TaskStatusKindDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TaskStatusDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub depth: Option<u16>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_name_key: Option<String>,
+    #[serde(default)]
+    pub can_abandon: bool,
     #[serde(default)]
     pub task_id: String,
     pub floor_id: String,
@@ -4689,6 +4700,8 @@ pub struct ItemFuelDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ItemActivationDto {
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub recall_choice: bool,
     pub profile_id: String,
     pub name_key: String,
     pub power: u16,
@@ -4711,6 +4724,7 @@ pub enum ItemQualityDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
 pub enum ItemOriginKindDto {
+    AngbandReward,
     Chest,
     Shop,
     Mixed,
@@ -5085,6 +5099,10 @@ pub enum CampaignStatusDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CampaignStateDto {
+    #[serde(default)]
+    pub can_retire: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_name_key: Option<String>,
     pub status: CampaignStatusDto,
     pub score: u64,
     pub conquered_dungeons: u32,
@@ -5093,6 +5111,15 @@ pub struct CampaignStateDto {
     pub victory_turn: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub retired_turn: Option<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct DungeonStatusDto {
+    pub name_key: String,
+    pub current_depth: u16,
+    pub maximum_depth: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -5678,6 +5705,8 @@ pub struct FacilityServiceDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct GameSnapshot {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dungeon: Option<DungeonStatusDto>,
     pub travel_options: TravelOptionsDto,
     pub operation_options: OperationOptionsDto,
     pub protocol_version: String,
@@ -5734,6 +5763,8 @@ pub struct GameSnapshot {
 #[serde(rename_all = "camelCase")]
 pub struct GameUpdate {
     pub command_repeatable: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dungeon: Option<DungeonStatusDto>,
     pub travel_options: TravelOptionsDto,
     pub operation_options: OperationOptionsDto,
     pub base_revision: u32,
@@ -6038,6 +6069,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(GameEventDto);
     push_declaration!(CampaignStatusDto);
     push_declaration!(CampaignStateDto);
+    push_declaration!(DungeonStatusDto);
     push_declaration!(TownDto);
     push_declaration!(ShopCategoryDto);
     push_declaration!(ShopOwnerDto);
@@ -6807,6 +6839,15 @@ pub struct TaskStateSaveDto {
     pub active_floor_id: Option<String>,
     #[serde(default)]
     pub retakes_used: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub random_assignment: Option<RandomTaskAssignmentDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RandomTaskAssignmentDto {
+    pub depth: u16,
+    pub actor_kind_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

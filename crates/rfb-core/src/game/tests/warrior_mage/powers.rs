@@ -456,7 +456,9 @@ fn melee_conversion_book_cast_and_healing_continue_identically_after_loading() {
             update
                 .events
                 .iter()
-                .any(|e| e.kind == "ability.cast-success")
+                .any(|e| e.kind == "ability.cast-success"),
+            "{id}: {:?}",
+            update.events
         );
         assert_eq!(game.state_hash(), restored.state_hash());
         assert_eq!(game.rng, restored.rng);

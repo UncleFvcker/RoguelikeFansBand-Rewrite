@@ -1349,6 +1349,7 @@ pub(super) fn materialize_rfb_activation(
         .expect("validated RFB effect level must fit u16");
     (
         ItemActivationDto {
+            recall_choice: matches!(profile.effect, rfb_content::ItemUseEffectDefinition::Jewel),
             profile_id: profile.id.clone(),
             name_key: profile.name_key.clone(),
             power,
@@ -3726,7 +3727,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 146);
+        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 147);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,

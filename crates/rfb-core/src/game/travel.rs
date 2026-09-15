@@ -140,10 +140,10 @@ impl Game {
         });
         Ok(!found_hostile
             && !self.visible_hostile_exists()
-            && !self
+            && self
                 .content
                 .terrain(self.known_terrain_at(next))
-                .is_some_and(|terrain| terrain.trap.is_some()))
+                .is_none_or(|terrain| terrain.trap.is_none()))
     }
 
     fn auto_travel_detection(

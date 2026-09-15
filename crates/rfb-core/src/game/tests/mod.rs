@@ -19,6 +19,7 @@ mod abilities;
 mod acquirement;
 mod alter;
 mod android;
+mod angband;
 mod archer;
 mod arena;
 mod artifact_identity;

@@ -3,8 +3,14 @@ use super::support::{clear_monsters, give_inventory_item};
 use super::*;
 
 fn caster(race: &str) -> Game {
-    let mut g =
-        Game::new_with_build_race_and_name(925, "demo.build.high-mage-law", race, "Law").unwrap();
+    let mut g = Game::new_with_build_race_and_name(
+        925,
+        "demo.build.high-mage-law",
+        race,
+        "Law",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     clear_monsters(&mut g);
     g.apply_player_experience(g.experience_required_for_level(50), &mut Vec::new());
     super::support::choose_human_talent_if_pending(&mut g);
@@ -51,7 +57,7 @@ fn cast(g: &mut Game, id: &str, target: TargetSelection) -> Vec<DomainEvent> {
     for seed in 0..512 {
         let mut trial = g.clone();
         trial.rng = RfbRng::seeded(0x9e3779b97f4a7c15_u64.wrapping_mul(seed + 1));
-        let mut restored = Game::from_save(trial.to_save()).unwrap();
+        let mut restored = Game::from_save(trial.to_save(), trial.behavior_preferences()).unwrap();
         let mut events = Vec::new();
         trial
             .resolve_player_ability(
@@ -84,7 +90,7 @@ fn cast(g: &mut Game, id: &str, target: TargetSelection) -> Vec<DomainEvent> {
             .any(|e| matches!(e, DomainEvent::AbilityCastSucceeded { .. }))
         {
             trial.reveal_current_visibility();
-            Game::from_save(trial.to_save()).unwrap();
+            Game::from_save(trial.to_save(), trial.behavior_preferences()).unwrap();
             *g = trial;
             return events;
         }
@@ -210,7 +216,7 @@ fn law_traps_are_single_use_and_resume_actual_monster_entry() {
             let actor = g.generated_actor("test.trap-target".into(), "demo.actor.war-bear", p);
             g.entities.push(actor);
             g.rng = RfbRng::seeded(seed);
-            let mut restored = Game::from_save(g.to_save()).unwrap();
+            let mut restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
             for current in [&mut g, &mut restored] {
                 current
                     .trigger_actor_trap(
@@ -226,7 +232,7 @@ fn law_traps_are_single_use_and_resume_actual_monster_entry() {
             assert_eq!(g.rng, restored.rng);
             assert_ne!(g.terrain[i], format!("demo.terrain.{terrain}"));
             g.reveal_current_visibility();
-            Game::from_save(g.to_save()).unwrap();
+            Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
         }
     }
 }
@@ -328,7 +334,9 @@ fn law_four_books_use_the_ordinary_pool_pickup_study_and_save() {
         );
         assert_eq!(
             g.state_hash(),
-            Game::from_save(g.to_save()).unwrap().state_hash()
+            Game::from_save(g.to_save(), g.behavior_preferences())
+                .unwrap()
+                .state_hash()
         );
     }
 }
@@ -365,7 +373,7 @@ fn law_getaway_confirmation_is_paid_saved_and_resumed_once() {
     );
     for accepted in [false, true] {
         let mut g = pending.clone();
-        let mut restored = Game::from_save(g.to_save()).unwrap();
+        let mut restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
         for current in [&mut g, &mut restored] {
             super::support::dispatch_next(
                 current,
@@ -378,7 +386,7 @@ fn law_getaway_confirmation_is_paid_saved_and_resumed_once() {
         assert_eq!(g.rng, restored.rng);
         assert!(g.duelist_prompt().is_none());
         assert_eq!(g.current_floor_id != pending.current_floor_id, accepted);
-        Game::from_save(g.to_save()).unwrap();
+        Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     }
 }
 

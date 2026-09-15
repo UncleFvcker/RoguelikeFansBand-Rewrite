@@ -8,7 +8,7 @@ fn export_quest_item_desktop_saves() {
     let directory = input.parent().unwrap();
     let (header, payload) = rfb_save::decode(&std::fs::read(&input).unwrap()).unwrap();
     assert!(header.museum_binding.is_some());
-    let mut base = Game::from_save(payload).unwrap();
+    let mut base = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
     choose_human_talent_if_pending(&mut base);
     base.apply_player_experience(base.experience_required_for_level(50), &mut Vec::new());
     choose_human_talent_if_pending(&mut base);
@@ -27,7 +27,6 @@ fn export_quest_item_desktop_saves() {
             dispatch_next(
                 &mut game,
                 GameCommand::EnterWorldMap {
-                    leave_pets: false,
                     cancel_recall: false,
                 },
             );
@@ -146,7 +145,9 @@ fn export_quest_item_desktop_saves() {
             dispatch_next(&mut game, command.clone());
             assert_eq!(
                 game.state_hash(),
-                Game::from_save(game.to_save()).unwrap().state_hash()
+                Game::from_save(game.to_save(), game.behavior_preferences())
+                    .unwrap()
+                    .state_hash()
             );
             steps.push(serde_json::json!({"command":command,"hash":game.state_hash(),"activationSlot":activation_slot}));
         }
@@ -155,7 +156,9 @@ fn export_quest_item_desktop_saves() {
         }
         assert_eq!(
             start.state_hash(),
-            Game::from_save(start.to_save()).unwrap().state_hash()
+            Game::from_save(start.to_save(), start.behavior_preferences())
+                .unwrap()
+                .state_hash()
         );
         std::fs::write(
             directory.join(format!("{name}.rfbsave")),

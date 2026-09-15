@@ -503,7 +503,7 @@ impl Game {
         });
     }
 
-    pub(super) fn resolve_player_create_stair_effect(
+    pub(in crate::game) fn resolve_player_create_stair_effect(
         &mut self,
         ability: &AbilityDefinition,
         events: &mut Vec<DomainEvent>,
@@ -522,7 +522,7 @@ impl Game {
             .and_then(|index| self.content.terrain(&self.terrain[index]))
             .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "permanent"));
         let blocked = self.is_wilderness_floor()
-            || self.current_floor_task_id().is_some()
+            || (self.current_floor_task_id().is_some() && self.active_dungeon_task_id().is_none())
             || terrain_is_permanent
             || self
                 .floor_connections
@@ -549,7 +549,10 @@ impl Game {
                         if random {
                             super::super::floor::random_dungeon_next_floor(world, floor).is_some()
                         } else {
-                            floor.next_floor_id.is_some()
+                            floor
+                                .next_floor_id
+                                .as_ref()
+                                .is_some_and(|id| self.dungeon_task_travel_allowed(&floor.id, id))
                         },
                     )
                 })

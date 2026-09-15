@@ -254,6 +254,9 @@ impl Game {
             return;
         };
         let kind_id = self.entities[index].kind_id.clone();
+        if self.actor_kind_is_reserved_task_target(&kind_id) {
+            return;
+        }
         let Some(evolution) = self
             .content
             .actor(&kind_id)

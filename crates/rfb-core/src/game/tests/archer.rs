@@ -58,7 +58,10 @@ fn equipped_quiver_carries_sixty_ammunition_outside_the_pack() {
         .expect("birth arrows should exist");
     game.items[arrow_index].quantity = 60;
     let arrow_id = game.items[arrow_index].id.clone();
-    assert_eq!(game.snapshot().player.quiver_item_ids, [arrow_id.clone()]);
+    assert_eq!(
+        game.snapshot().player.quiver_item_ids,
+        std::slice::from_ref(&arrow_id)
+    );
     let with_sixty = game.inventory_used_slots();
     game.items[arrow_index].quantity = 61;
     assert!(game.snapshot().player.quiver_item_ids.is_empty());

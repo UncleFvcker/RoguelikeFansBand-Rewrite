@@ -13,7 +13,7 @@ fn export_n3_desktop_saves() {
     let directory = input.parent().unwrap();
     let (header, payload) = rfb_save::decode(&std::fs::read(&input).unwrap()).unwrap();
     assert!(header.museum_binding.is_some());
-    let mut base = Game::from_save(payload).unwrap();
+    let mut base = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
     choose_human_talent_if_pending(&mut base);
     base.apply_player_experience(base.experience_required_for_level(50), &mut Vec::new());
     choose_human_talent_if_pending(&mut base);
@@ -180,7 +180,7 @@ fn target(game: &mut Game, slug: &str) {
 }
 
 fn resume(game: &Game) -> Game {
-    let loaded = Game::from_save(game.to_save()).unwrap();
+    let loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), loaded.state_hash());
     assert_eq!(game.rng, loaded.rng);
     loaded
@@ -933,7 +933,7 @@ fn n3_winblows_and_edge_use_one_in_ten_priest_blessing() {
             .intrinsic_weapon_traits
             .remove(&rfb_protocol::WeaponTraitDto::Blessed);
         assert!(
-            Game::from_save(game.to_save()).is_err(),
+            Game::from_save(game.to_save(), game.behavior_preferences()).is_err(),
             "discounted fixed weapon without blessing must be rejected"
         );
     }

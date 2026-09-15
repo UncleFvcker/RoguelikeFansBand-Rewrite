@@ -26,6 +26,7 @@ fn game_with_artifact(kind: &str) -> Game {
         .unwrap()
         .activations[0];
     let activation = ItemActivationDto {
+        recall_choice: false,
         profile_id: profile.id.clone(),
         name_key: profile.name_key.clone(),
         power: profile.device_check_difficulty as u16,

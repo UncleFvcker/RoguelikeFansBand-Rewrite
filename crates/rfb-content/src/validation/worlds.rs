@@ -859,17 +859,17 @@ pub(super) fn validate_world(
         _ => return Err(ContentError::InvalidTown(world.id.clone())),
     }
     if let Some(campaign) = &mut world.campaign {
-        campaign.victory_dungeon_ids.sort();
-        if campaign.victory_dungeon_ids.is_empty()
+        campaign.victory_task_ids.sort();
+        if campaign.victory_task_ids.is_empty()
             || campaign.turn_penalty_interval == 0
             || campaign
-                .victory_dungeon_ids
+                .victory_task_ids
                 .windows(2)
                 .any(|ids| ids[0] == ids[1])
             || campaign
-                .victory_dungeon_ids
+                .victory_task_ids
                 .iter()
-                .any(|id| !dungeon_definition_ids.contains(id))
+                .any(|id| !world.tasks.iter().any(|task| &task.id == id))
         {
             return Err(ContentError::InvalidProceduralFloor(world.id.clone()));
         }
@@ -2962,6 +2962,27 @@ pub(super) fn validate_world(
             }
         }
     }
+    let mut candidate_ids = BTreeSet::new();
+    let mut candidate_indices = BTreeSet::new();
+    for candidate in &world.random_task_candidates {
+        let actor = actors
+            .iter()
+            .find(|actor| actor.id == candidate.actor_kind_id)
+            .ok_or_else(|| ContentError::InvalidTask(world.id.clone()))?;
+        if actor.role != ActorRole::Monster
+            || !actor.tags.iter().any(|tag| tag == "unique")
+            || actor.friendly
+            || actor.movement.modes.contains(&ActorMovementMode::Aquatic)
+            || !(1..=100).contains(&candidate.rarity)
+            || candidate.max_depth == 0
+            || candidate.legacy_index == 0
+            || !candidate_ids.insert(&candidate.actor_kind_id)
+            || !candidate_indices.insert(candidate.legacy_index)
+            || (candidate.can_be_target && actor.tags.iter().any(|tag| tag == "no-quest"))
+        {
+            return Err(ContentError::InvalidTask(world.id.clone()));
+        }
+    }
     world.tasks.sort_by(|left, right| left.id.cmp(&right.id));
     let task_ids = world
         .tasks
@@ -3042,8 +3063,29 @@ pub(super) fn validate_world(
                 return Err(ContentError::InvalidTask(task.id.clone()));
             }
         }
-        let dungeon_depth_location =
-            matches!(&task.location, TaskLocationDefinition::DungeonDepth { .. });
+        let random_location = matches!(
+            &task.location,
+            TaskLocationDefinition::RandomDungeonDepth { .. }
+        );
+        let dungeon_depth_location = matches!(
+            &task.location,
+            TaskLocationDefinition::DungeonDepth { .. }
+                | TaskLocationDefinition::RandomDungeonDepth { .. }
+        );
+        if dungeon_depth_location
+            && !random_location
+            && task.source_facility_id.is_none()
+            && (task.objectives.len() != 1
+                || task.objectives[0].kind != TaskObjectiveKind::KillActorKind
+                || task.objectives[0].actor_kind_id.is_none()
+                || task.objectives[0].actor_instance_id.is_some()
+                || task.prerequisite_task_id.is_some()
+                || task.substitution.is_some()
+                || !task.target_placements.is_empty()
+                || task.reward.is_some())
+        {
+            return Err(ContentError::InvalidTask(task.id.clone()));
+        }
         let location_floor_ids = match &mut task.location {
             TaskLocationDefinition::DedicatedFloors { floor_ids } => {
                 floor_ids.sort();
@@ -3095,6 +3137,39 @@ pub(super) fn validate_world(
                     .map(|floor| floor.id.as_str())
                     .collect::<BTreeSet<_>>();
                 if *depth == 0 || members.is_empty() {
+                    return Err(ContentError::InvalidTask(task.id.clone()));
+                }
+                members
+            }
+            TaskLocationDefinition::RandomDungeonDepth {
+                dungeon_id,
+                base_depth,
+            } => {
+                validate_definition_id(dungeon_id, "dungeon")?;
+                let spread = (*base_depth / 10).clamp(3, 8);
+                if *base_depth <= spread
+                    || *base_depth > 110
+                    || world.random_task_candidates.is_empty()
+                    || task.source_facility_id.is_some()
+                    || task.prerequisite_task_id.is_some()
+                    || task.substitution.is_some()
+                    || !task.target_placements.is_empty()
+                    || task.objectives.len() != 1
+                    || task.reward.is_some()
+                {
+                    return Err(ContentError::InvalidTask(task.id.clone()));
+                }
+                let members = world
+                    .procedural_floors
+                    .iter()
+                    .filter(|floor| {
+                        floor.lifecycle == FloorLifecycle::Dungeon
+                            && floor.dungeon_id.as_deref() == Some(dungeon_id.as_str())
+                            && (*base_depth - spread..=*base_depth + spread).contains(&floor.depth)
+                    })
+                    .map(|floor| floor.id.as_str())
+                    .collect::<BTreeSet<_>>();
+                if members.len() != usize::from(spread * 2 + 1) {
                     return Err(ContentError::InvalidTask(task.id.clone()));
                 }
                 members
@@ -3170,14 +3245,27 @@ pub(super) fn validate_world(
         }
 
         for objective in &task.objectives {
-            validate_task_objective(
-                &task.id,
-                objective,
-                &floor_ids,
-                actor_roles,
-                item_limits,
-                &mut procedural_actor_ids,
-            )?;
+            if random_location {
+                if objective.kind != TaskObjectiveKind::KillActorKind
+                    || objective.required != 1
+                    || objective.floor_id.is_some()
+                    || objective.actor_kind_id.is_some()
+                    || objective.actor_instance_id.is_some()
+                    || objective.item_kind_id.is_some()
+                    || objective.item_instance_id.is_some()
+                {
+                    return Err(ContentError::InvalidTask(task.id.clone()));
+                }
+            } else {
+                validate_task_objective(
+                    &task.id,
+                    objective,
+                    &floor_ids,
+                    actor_roles,
+                    item_limits,
+                    &mut procedural_actor_ids,
+                )?;
+            }
             if objective
                 .floor_id
                 .as_deref()
@@ -3231,7 +3319,10 @@ pub(super) fn validate_world(
                         objective.kind,
                         TaskObjectiveKind::KillActor | TaskObjectiveKind::KillActorKind
                     ))
-                || (objective.floor_id.is_none() && location_floor_ids.len() > 1 && placements == 0)
+                || (!random_location
+                    && objective.floor_id.is_none()
+                    && location_floor_ids.len() > 1
+                    && placements == 0)
             {
                 return Err(ContentError::InvalidTask(task.id.clone()));
             }
@@ -3317,6 +3408,21 @@ pub(super) fn validate_world(
                 })
                 .map(|floor| floor.id.clone())
                 .collect(),
+            TaskLocationDefinition::RandomDungeonDepth {
+                dungeon_id,
+                base_depth,
+            } => {
+                let spread = (*base_depth / 10).clamp(3, 8);
+                world
+                    .procedural_floors
+                    .iter()
+                    .filter(|floor| {
+                        floor.dungeon_id.as_ref() == Some(dungeon_id)
+                            && (*base_depth - spread..=*base_depth + spread).contains(&floor.depth)
+                    })
+                    .map(|floor| floor.id.clone())
+                    .collect()
+            }
         }
     };
     let task_depends_on = |candidate: &TaskDefinition, ancestor_id: &str| {
@@ -3336,6 +3442,22 @@ pub(super) fn validate_world(
     for (left_index, left) in world.tasks.iter().enumerate() {
         let left_floors = task_floor_ids(left);
         for right in world.tasks.iter().skip(left_index + 1) {
+            if let (
+                TaskLocationDefinition::RandomDungeonDepth {
+                    dungeon_id: left_id,
+                    base_depth: left_base,
+                },
+                TaskLocationDefinition::RandomDungeonDepth {
+                    dungeon_id: right_id,
+                    base_depth: right_base,
+                },
+            ) = (&left.location, &right.location)
+                && left_id == right_id
+                && left_base != right_base
+            {
+                // Birth draws enforce strictly increasing depths inside overlapping ranges.
+                continue;
+            }
             if left_floors.is_disjoint(&task_floor_ids(right))
                 || task_depends_on(left, &right.id)
                 || task_depends_on(right, &left.id)
@@ -3480,10 +3602,6 @@ pub(super) fn validate_world(
                 || dungeon.guardian_actor_kind_id.is_some()
                 || dungeon.entrance_guardian.is_some()
                 || dungeon.substitution.is_some()
-                || world
-                    .campaign
-                    .as_ref()
-                    .is_some_and(|campaign| campaign.victory_dungeon_ids.contains(&dungeon.id))
                 || world
                     .wilderness
                     .iter()

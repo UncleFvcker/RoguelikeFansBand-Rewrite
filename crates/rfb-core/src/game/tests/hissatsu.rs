@@ -113,7 +113,7 @@ fn hissatsu_formal_books_batch_study_and_all_32_execute_without_books() {
         cast(&mut g, &id, t);
         if slot != 31 {
             clear_monsters(&mut g);
-            let restored = Game::from_save(g.to_save()).unwrap();
+            let restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
             assert_eq!(g.state_hash(), restored.state_hash(), "slot {slot}");
         } else {
             assert!(g.player_is_dead());
@@ -128,7 +128,7 @@ fn hissatsu_supercharge_survives_recovery_and_save_but_rejects_excess() {
     assert!(pool.current > pool.maximum);
     g.recover_player_resources(false, &mut Vec::new());
     assert_eq!(g.resources["demo.resource.mana"].current, pool.current);
-    let restored = Game::from_save(g.to_save()).unwrap();
+    let restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     assert_eq!(g.state_hash(), restored.state_hash());
     let mut save = g.to_save();
     save.player
@@ -137,7 +137,7 @@ fn hissatsu_supercharge_survives_recovery_and_save_but_rejects_excess() {
         .find(|p| p.id == "demo.resource.mana")
         .unwrap()
         .current = Game::samurai_mana_limit(pool.maximum, 50) + 1;
-    assert!(Game::from_save(save).is_err());
+    assert!(Game::from_save(save, Game::default_behavior_preferences()).is_err());
 }
 
 #[test]
@@ -269,7 +269,7 @@ fn hissatsu_hundred_slaughter_pause_save_and_cancel_finishes_the_action() {
         g.samurai_concentrate();
     }
     assert!(g.pending_ability_direction.is_some());
-    let mut restored = Game::from_save(g.to_save()).unwrap();
+    let mut restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     let before = g.resources["demo.resource.mana"].current;
     dispatch_next(&mut g, GameCommand::CancelAbilityDirection);
     dispatch_next(&mut restored, GameCommand::CancelAbilityDirection);
@@ -321,7 +321,9 @@ fn hissatsu_four_books_generate_in_the_full_pool_and_teach_after_pickup() {
         assert!(spells.iter().all(|id| g.learned_abilities.contains(id)));
         assert_eq!(
             g.state_hash(),
-            Game::from_save(g.to_save()).unwrap().state_hash()
+            Game::from_save(g.to_save(), g.behavior_preferences())
+                .unwrap()
+                .state_hash()
         );
     }
 }
@@ -350,7 +352,7 @@ fn hissatsu_dragon_flash_requires_clear_path_and_moves_after_actual_attacks() {
 fn hissatsu_overcharge_decay_and_posture_rules_resume_identically() {
     let mut g = samurai();
     let before = g.resources["demo.resource.mana"].current;
-    let mut restored = Game::from_save(g.to_save()).unwrap();
+    let mut restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     for _ in 0..3 {
         dispatch_next(&mut g, GameCommand::Wait);
         dispatch_next(&mut restored, GameCommand::Wait);
@@ -362,11 +364,11 @@ fn hissatsu_overcharge_decay_and_posture_rules_resume_identically() {
         "demo.ability.samurai-koukijin",
         TargetSelection::SelfTarget,
     );
-    assert!(Game::from_save(g.to_save()).is_ok());
+    assert!(Game::from_save(g.to_save(), g.behavior_preferences()).is_ok());
     let id = learn(&mut g, 4);
     cast(&mut g, &id, TargetSelection::SelfTarget);
     assert_eq!(g.samurai.posture, 0);
-    assert!(Game::from_save(g.to_save()).is_ok());
+    assert!(Game::from_save(g.to_save(), g.behavior_preferences()).is_ok());
 }
 
 #[test]

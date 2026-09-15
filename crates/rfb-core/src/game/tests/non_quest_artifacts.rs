@@ -19,7 +19,7 @@ fn export_n1_desktop_saves() {
     let directory = input.parent().unwrap();
     let (header, payload) = rfb_save::decode(&std::fs::read(&input).unwrap()).unwrap();
     assert!(header.museum_binding.is_some());
-    let mut base = Game::from_save(payload).unwrap();
+    let mut base = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
     choose_human_talent_if_pending(&mut base);
     base.apply_player_experience(base.experience_required_for_level(50), &mut Vec::new());
     choose_human_talent_if_pending(&mut base);
@@ -105,7 +105,9 @@ fn export_n1_desktop_saves() {
             dispatch_next(&mut game, command.clone());
             assert_eq!(
                 game.state_hash(),
-                Game::from_save(game.to_save()).unwrap().state_hash()
+                Game::from_save(game.to_save(), game.behavior_preferences())
+                    .unwrap()
+                    .state_hash()
             );
             steps.push(serde_json::json!({"command":command,"hash":game.state_hash()}));
         }
@@ -240,7 +242,7 @@ fn n1_remaining_ordinary_artifacts_generate_act_and_resume_after_save() {
                 .is_some_and(|k| k.appraised)
         );
         game.reveal_current_visibility();
-        let loaded = Game::from_save(game.to_save()).unwrap();
+        let loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(
             loaded.state_hash(),
             game.state_hash(),
@@ -295,7 +297,8 @@ fn n1_remaining_ordinary_artifacts_generate_act_and_resume_after_save() {
                 .expect("artifact digger must remove real terrain");
             game.rng = RfbRng::seeded(seed);
             game.reveal_current_visibility();
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             for digger in [&mut game, &mut restored] {
                 digger
                     .dig_terrain(Direction::North, &mut Vec::new(), &mut BTreeSet::new())
@@ -326,7 +329,8 @@ fn n1_remaining_ordinary_artifacts_generate_act_and_resume_after_save() {
                 .unwrap_or_else(|| panic!("{kind} must hit through its real attack consumer"));
             game.rng = RfbRng::seeded(seed);
             game.reveal_current_visibility();
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             assert_eq!(
                 attack(&mut restored),
                 attack(&mut game),
@@ -347,7 +351,7 @@ fn n1_remaining_ordinary_artifacts_generate_act_and_resume_after_save() {
             }
         }
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(
             restored.state_hash(),
             game.state_hash(),
@@ -434,7 +438,8 @@ fn n1_random_curses_roll_once_with_source_power_and_persist_until_removed() {
             game.equip_inventory_item(&id, None).unwrap();
             assert!(game.player_has_equipped_curse_effect(expected));
             game.reveal_current_visibility();
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             assert_eq!(restored.state_hash(), game.state_hash());
             assert_eq!(restored.rng, expected_rng);
             restored.remove_equipped_curses(RemoveEquippedCursesRequest::new(false));
@@ -478,7 +483,7 @@ fn n1_permanently_cursed_mage_equipment_changes_actual_learned_spell_damage() {
             Position { x: 12, y: 10 },
         );
         game.reveal_current_visibility();
-        let mut powered = Game::from_save(game.to_save()).unwrap();
+        let mut powered = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(powered.state_hash(), game.state_hash());
         let mut control = powered.clone();
         // Same penalties, equipment and learned spell; remove only spell power.

@@ -138,6 +138,7 @@ fn state(
 ) -> (ItemActivationDto, ItemChargesDto) {
     (
         ItemActivationDto {
+            recall_choice: matches!(profile.effect, rfb_content::ItemUseEffectDefinition::Jewel),
             profile_id: profile.id.clone(),
             name_key: profile.name_key.clone(),
             power,

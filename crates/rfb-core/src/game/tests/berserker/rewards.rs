@@ -44,6 +44,7 @@ fn all_eight_class_rewards_are_claimed_as_real_items_with_materialized_egos() {
                 required: 1,
                 active_floor_id: None,
                 retakes_used: 0,
+                random_assignment: None,
             },
         );
         let reward = task.reward.as_ref().unwrap();

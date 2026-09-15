@@ -15,7 +15,7 @@ fn export_n2_desktop_saves() {
     let directory = input.parent().unwrap();
     let (header, payload) = rfb_save::decode(&std::fs::read(&input).unwrap()).unwrap();
     assert!(header.museum_binding.is_some());
-    let mut base = Game::from_save(payload).unwrap();
+    let mut base = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
     choose_human_talent_if_pending(&mut base);
     base.apply_player_experience(base.experience_required_for_level(50), &mut Vec::new());
     choose_human_talent_if_pending(&mut base);
@@ -110,7 +110,9 @@ fn export_n2_desktop_saves() {
             dispatch_next(&mut game, command.clone());
             assert_eq!(
                 game.state_hash(),
-                Game::from_save(game.to_save()).unwrap().state_hash()
+                Game::from_save(game.to_save(), game.behavior_preferences())
+                    .unwrap()
+                    .state_hash()
             );
             steps.push(serde_json::json!({"command":command,"hash":game.state_hash(),"activationSlot":activation_slot}));
         }
@@ -216,7 +218,7 @@ fn n2_all_artifacts_generate_activate_and_resume_equipped_cooldowns() {
                 .is_some_and(|k| k.appraised)
         );
         game.reveal_current_visibility();
-        game = Game::from_save(game.to_save()).unwrap();
+        game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
         game.equip_inventory_item(&id, None).unwrap();
         game.refresh_player_resource_maxima();
@@ -295,7 +297,7 @@ fn n2_all_artifacts_generate_activate_and_resume_equipped_cooldowns() {
             );
         }
         game.rng = RfbRng::seeded(success_seed());
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let left = activate(&mut game, &id, target.as_ref(), glyph);
         assert_eq!(
             left,
@@ -338,7 +340,7 @@ fn n2_all_artifacts_generate_activate_and_resume_equipped_cooldowns() {
             _ => {}
         }
         game.reveal_current_visibility();
-        restored = Game::from_save(game.to_save()).unwrap();
+        restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         if let Some(recovery) = definition
             .device_generation
             .as_ref()
@@ -354,7 +356,8 @@ fn n2_all_artifacts_generate_activate_and_resume_equipped_cooldowns() {
                     g.process_inventory_device_recovery(&mut Vec::new());
                 }
                 if offset == interval / 2 {
-                    restored = Game::from_save(restored.to_save()).unwrap();
+                    restored = Game::from_save(restored.to_save(), restored.behavior_preferences())
+                        .unwrap();
                 }
                 if offset == interval - 1 {
                     assert_eq!(charges(&restored, &id), 0, "{kind}: early recovery");
@@ -607,7 +610,9 @@ fn n2_escape_exercises_all_four_branches_from_equipped_artifacts() {
             game.reveal_current_visibility();
             assert_eq!(
                 game.state_hash(),
-                Game::from_save(game.to_save()).unwrap().state_hash()
+                Game::from_save(game.to_save(), game.behavior_preferences())
+                    .unwrap()
+                    .state_hash()
             );
         }
     }
@@ -819,7 +824,7 @@ fn n2_julian_genocide_uses_selected_glyph_without_kill_rewards() {
         .unwrap();
     game.rng = RfbRng::seeded(seed);
     let hp = game.player.hp;
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         activate(&mut game, &id, None, Some("o")),
         activate(&mut restored, &id, None, Some("o"))

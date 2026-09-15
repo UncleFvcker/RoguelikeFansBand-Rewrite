@@ -936,7 +936,7 @@ impl Game {
         }
     }
 
-    fn advance_summon_lifetimes(
+    pub(super) fn advance_summon_lifetimes(
         &mut self,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,

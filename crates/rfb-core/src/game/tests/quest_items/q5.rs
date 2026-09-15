@@ -128,7 +128,7 @@ fn god_activations_apply_effects_and_restore_partial_cooldowns() {
             .unwrap();
         game.rng = RfbRng::seeded(seed);
         let hp = game.entities[0].hp;
-        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(
             activate(&mut game, &id, Some(&target)),
             activate(&mut loaded, &id, Some(&target)),
@@ -174,7 +174,7 @@ fn god_activations_apply_effects_and_restore_partial_cooldowns() {
             game.process_inventory_device_recovery(&mut Vec::new());
         }
         game.reveal_current_visibility();
-        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for tick in interval / 2 + 1..=interval {
             for game in [&mut game, &mut loaded] {
                 game.world_tick = u32::from(tick);
@@ -233,7 +233,6 @@ fn meru_real_entry_shafts_guardian_reward_and_saved_return() {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -280,7 +279,7 @@ fn meru_real_entry_shafts_guardian_reward_and_saved_return() {
     }
     clear_monsters(&mut game);
     place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
-    let mut loaded = Game::from_save(game.to_save()).unwrap();
+    let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     dispatch_next(&mut loaded, GameCommand::TraverseStairs);
     assert_eq!(game.state_hash(), loaded.state_hash());
@@ -381,7 +380,7 @@ fn meru_full_allocation_named_deaths_pickup_equipment_and_saved_continuation() {
         let kind = format!("demo.item.{slug}");
         prepare_combat(&mut game, &format!("demo.actor.{actor}"));
         game = successful_kill_start(&game, &kind);
-        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let action = GameCommand::Move {
             direction: Direction::East,
         };
@@ -411,7 +410,7 @@ fn meru_full_allocation_named_deaths_pickup_equipment_and_saved_continuation() {
             assert!(game.item_resists_enchantment(&item));
         }
         game.reveal_current_visibility();
-        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(game.state_hash(), loaded.state_hash(), "{slug}");
         assert_eq!(
             dispatch_next(&mut game, GameCommand::Wait).events,
@@ -490,7 +489,7 @@ fn rama_shot_uses_real_ammunition_triples_damage_and_cancels_without_spending() 
         .unwrap();
     base.rng = RfbRng::seeded(seed);
     base.reveal_current_visibility();
-    let mut loaded = Game::from_save(base.to_save()).unwrap();
+    let mut loaded = Game::from_save(base.to_save(), base.behavior_preferences()).unwrap();
     assert_eq!(
         activate(&mut base, &bow, Some(&target)),
         activate(&mut loaded, &bow, Some(&target))
@@ -531,7 +530,7 @@ fn brahmastra_return_roll_and_failed_return_preserve_single_artifact() {
             .find(|seed| (RfbRng::seeded(*seed).bounded(100) < 75) == returned)
             .unwrap();
         game.rng = RfbRng::seeded(seed);
-        let mut loaded = Game::from_save(game.to_save()).unwrap();
+        let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for game in [&mut game, &mut loaded] {
             game.resolve_player_projectile(
                 TargetSelection::Direction {
@@ -610,7 +609,7 @@ fn vayu_equipped_suit_restores_breathing_regeneration_and_minor_slow_recovery() 
         (game.minor_slow, game.minor_slow_energy),
         (before.0, before.1)
     );
-    let mut loaded = Game::from_save(game.to_save()).unwrap();
+    let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let hp = game.player.hp;
     dispatch_next(&mut game, GameCommand::Wait);
     dispatch_next(&mut loaded, GameCommand::Wait);

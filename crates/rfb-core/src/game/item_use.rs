@@ -16,6 +16,9 @@ const SNOTLING_RACE_ID: &str = "rfb-legacy.race.snotling";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
+    Jewel {
+        recall: bool,
+    },
     CancelledActivation,
     RechargeItems {
         source_item_id: String,
@@ -513,6 +516,71 @@ impl Game {
             self.mark_item_aware(source_kind_id);
         }
         healed || bleeding || regeneration
+    }
+
+    fn resolve_item_jewel(
+        &mut self,
+        source: &str,
+        profile_id: Option<&str>,
+        recall: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        self.add_virtue(rfb_protocol::VirtueKindDto::Knowledge, 1);
+        self.add_virtue(rfb_protocol::VirtueKindDto::Enlightenment, 1);
+        for (subject, category, radius, persistent) in [
+            (AbilityDetectSubjectDefinition::Terrain, "map", 255, true),
+            (AbilityDetectSubjectDefinition::Item, "item", 255, false),
+        ] {
+            self.resolve_item_detection(
+                source.into(),
+                profile_id.map(str::to_owned),
+                ItemUseEffectDefinition::Detect {
+                    subject,
+                    category: category.into(),
+                    radius,
+                    persistent,
+                    through_walls: true,
+                },
+                events,
+                changed,
+            );
+        }
+        self.resolve_item_floor_glow(source, true, 255, false, events, changed);
+        let damage = self.roll_damage(3, 8) as u32;
+        self.resolve_item_life_loss(source, damage, events);
+        for category in ["trap", "passage"] {
+            self.resolve_item_detection(
+                source.into(),
+                profile_id.map(str::to_owned),
+                ItemUseEffectDefinition::Detect {
+                    subject: AbilityDetectSubjectDefinition::Terrain,
+                    category: category.into(),
+                    radius: 30,
+                    persistent: true,
+                    through_walls: true,
+                },
+                events,
+                changed,
+            );
+        }
+        // Declining or being unable to recall does not undo the activation.
+        if recall
+            && !self.player_is_dead()
+            && let Some(action) = self.recall_use_plan()
+        {
+            self.resolve_item_recall(
+                source.into(),
+                ItemUseEffectDefinition::Recall {
+                    delay_dice: 1,
+                    delay_sides: 21,
+                    delay_bonus: 14,
+                },
+                ItemUsePlan::Recall(action),
+                events,
+            );
+        }
+        self.mark_item_aware(source);
     }
 
     pub(super) fn resolve_item_recall(
@@ -1368,7 +1436,8 @@ impl Game {
         };
         floor.dungeon_id.is_some()
             && !world.tasks.iter().any(|task| {
-                task_floors(world, &task.id).any(|floor| floor.id == self.current_floor_id)
+                task_floors(world, &task.id, self.task_states.get(&task.id))
+                    .any(|floor| floor.id == self.current_floor_id)
             })
     }
 
@@ -2903,6 +2972,7 @@ impl Game {
     }
 
     /// Returns an energy override for refunded uses or an actual shooting action.
+    #[cfg(test)]
     pub(super) fn use_inventory_item(
         &mut self,
         item_id: &str,
@@ -2912,6 +2982,37 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<i32>, CoreError> {
+        self.use_inventory_item_with_recall(
+            item_id,
+            target,
+            target_glyph,
+            None,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn use_inventory_item_with_recall(
+        &mut self,
+        item_id: &str,
+        target: Option<&TargetSelection>,
+        target_glyph: Option<&str>,
+        jewel_recall: Option<bool>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<Option<i32>, CoreError> {
+        if jewel_recall.is_some()
+            && !matches!(
+                self.inventory_item_use_effect(item_id),
+                Some((ItemUseEffectDefinition::Jewel, _))
+            )
+        {
+            events.push(DomainEvent::ItemUseUnavailable);
+            return Ok(Some(0));
+        }
         if self
             .items
             .iter()
@@ -2957,7 +3058,7 @@ impl Game {
             return Ok(None);
         }
         let activation = self.items[index].activation.clone();
-        let (profile_id, difficulty, cost, effect, plan) =
+        let (profile_id, difficulty, cost, effect, mut plan) =
             if let Some(activation) = activation.as_ref() {
                 let profile = item_device_generation(
                     &self.content,
@@ -3008,6 +3109,9 @@ impl Game {
                 events.push(DomainEvent::ItemUseUnavailable);
                 return Ok(None);
             };
+        if let Some(recall) = jewel_recall {
+            plan = ItemUsePlan::Jewel { recall };
+        }
         if cost.is_some_and(|cost| {
             self.items[index]
                 .charges
@@ -4072,6 +4176,10 @@ impl Game {
                 events,
                 changed,
             ),
+            (ItemUseEffectDefinition::Jewel, ItemUsePlan::Jewel { recall }) => {
+                self.resolve_item_jewel(&kind_id, profile_id.as_deref(), recall, events, changed);
+                noticed = true;
+            }
             (effect @ ItemUseEffectDefinition::Detect { .. }, ItemUsePlan::Detect) => {
                 noticed = self.resolve_item_detection(kind_id, profile_id, effect, events, changed);
             }
@@ -4675,6 +4783,9 @@ impl Game {
                         downward_targets,
                     },
                 )
+            }
+            ItemUseEffectDefinition::Jewel => {
+                self_target.then_some(ItemUsePlan::Jewel { recall: false })
             }
             ItemUseEffectDefinition::Recall { .. } => self_target
                 .then(|| self.recall_use_plan())
@@ -6833,7 +6944,8 @@ impl Game {
             ItemUseEffectDefinition::SelfKnowledge => {
                 self.resolve_item_self_knowledge(source_kind_id, events)
             }
-            ItemUseEffectDefinition::Hermes
+            ItemUseEffectDefinition::Jewel
+            | ItemUseEffectDefinition::Hermes
             | ItemUseEffectDefinition::Bladeturner
             | ItemUseEffectDefinition::AbilityEffect { .. }
             | ItemUseEffectDefinition::Damage { .. }

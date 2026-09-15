@@ -166,8 +166,8 @@ fn asgard_early_odin_death_keeps_conquest_scroll_artifact_and_avenger_independen
         .unwrap();
     clear_monsters(&mut game);
     game.items.clear();
-    // Prepare open summon space and search a bounded RNG branch through the
-    // real hostile Norse category consumer; do not inject the guardian itself.
+    // Configured guardians cannot appear through ordinary Norse summons.
+    // Prepare an early guardian death to isolate rewards from bottom-floor entry.
     game.player.position = Position { x: 10, y: 10 };
     for y in 6..=16 {
         for x in 6..=18 {
@@ -181,28 +181,14 @@ fn asgard_early_odin_death_keeps_conquest_scroll_artifact_and_avenger_independen
             replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
         }
     }
-    let base = game.clone();
-    let mut selected = None;
-    for seed in 0..128 {
-        let mut attempt = base.clone();
-        attempt.rng = RfbRng::seeded(seed);
-        attempt.summon_hostile_category_at(
-            HEIMDALL,
-            "norse",
-            100,
-            true,
-            Position { x: 12, y: 10 },
-            &mut Vec::new(),
-            &mut BTreeSet::new(),
-        );
-        if let Some(odin) = attempt.entities.iter().find(|actor| actor.kind_id == ODIN) {
-            selected = Some((odin.id.clone(), attempt));
-            break;
-        }
-    }
-    let (odin, summoned) = selected.expect("a Norse summon should select Odin");
-    game = summoned;
-    deaths::death(&mut game, &odin, true);
+    assert!(
+        !game
+            .summon_category_candidate_kind_ids("norse", None, 100, true, false)
+            .iter()
+            .any(|id| id == ODIN)
+    );
+    game.push_generated_actor("test.early-odin".into(), ODIN, Position { x: 12, y: 10 });
+    deaths::death(&mut game, "test.early-odin", true);
     assert!(game.dungeon_states[DUNGEON].guardian_defeated);
     assert_eq!(
         game.items

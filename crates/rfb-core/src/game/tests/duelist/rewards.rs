@@ -43,6 +43,7 @@ fn ready(seed: u64, slug: &str) -> (Game, String, String, String) {
             required: 1,
             active_floor_id: None,
             retakes_used: 0,
+            random_assignment: None,
         },
     );
     (game, id, facility, task.reward.unwrap().item_instance_id)

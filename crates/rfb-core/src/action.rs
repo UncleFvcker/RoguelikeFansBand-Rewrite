@@ -319,6 +319,7 @@ pub(crate) enum GameAction {
         item_id: String,
         target: Option<TargetSelection>,
         target_glyph: Option<String>,
+        jewel_recall: Option<bool>,
     },
     UseAbsorbedDevice {
         item_id: String,
@@ -727,11 +728,19 @@ impl From<GameCommand> for GameAction {
                 item_id,
                 target,
                 target_glyph: None,
+                jewel_recall: None,
+            },
+            GameCommand::UseJewel { item_id, recall } => Self::UseItem {
+                item_id,
+                target: None,
+                target_glyph: None,
+                jewel_recall: Some(recall),
             },
             GameCommand::UseItemByGlyph { item_id, glyph } => Self::UseItem {
                 item_id,
                 target: None,
                 target_glyph: Some(glyph),
+                jewel_recall: None,
             },
             GameCommand::UseAbsorbedDevice { item_id, targets } => {
                 Self::UseAbsorbedDevice { item_id, targets }
@@ -747,6 +756,7 @@ impl From<GameCommand> for GameAction {
                     target_item_id,
                 }),
                 target_glyph: None,
+                jewel_recall: None,
             },
             GameCommand::Unequip { slot_id } => Self::Unequip { slot_id },
             GameCommand::Drop { item_ids } => Self::Drop { item_ids },

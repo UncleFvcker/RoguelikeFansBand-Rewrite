@@ -1,0 +1,96 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.jewel-of-judgement",
+  "nameKey": "item-demo-jewel-of-judgement-name",
+  "descriptionKey": "item-demo-jewel-of-judgement-description",
+  "glyph": "*",
+  "generationLevel": 70,
+  "weightTenthsPound": 5,
+  "baseValue": 150000,
+  "maxStack": 1,
+  "equipmentSlot": "light",
+  "tags": [
+    "equipment",
+    "light-source",
+    "artifact"
+  ],
+  "rfbValue": {
+    "pval": 3,
+    "toArmor": 0,
+    "flags": [
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "INT",
+      "RES_CHAOS",
+      "RES_CONF",
+      "SEE_INVIS",
+      "SPEED",
+      "WIS"
+    ]
+  },
+  "artifactGeneration": {
+    "sourceIndex": 3,
+    "baseItemKindId": "demo.item.jewel",
+    "instant": true,
+    "rarityOneIn": 90
+  },
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "intelligence": 3,
+    "wisdom": 3,
+    "speed": 3
+  },
+  "passives": [
+    "see-invisible",
+    "hold-life"
+  ],
+  "resistances": {
+    "confusion": "resistant",
+    "chaos": "resistant"
+  },
+  "equipmentBonuses": {
+    "lightRadius": 3
+  },
+  "deviceGeneration": {
+    "recovery": {
+      "intervalTicks": 300,
+      "energyPerMille": 1000
+    },
+    "activations": [
+      {
+        "id": "demo.item-activation.jewel",
+        "nameKey": "item-activation-demo-jewel-name",
+        "effectProgramId": "demo.effect.jewel",
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 10000,
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        }
+      }
+    ]
+  }
+}

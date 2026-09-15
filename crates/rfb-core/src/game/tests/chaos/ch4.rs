@@ -41,7 +41,12 @@ fn ch4_existing_fourth_book_is_generated_picked_up_saved_and_studied() {
     let item_id = item.id.clone();
     game.items.push(item);
     game.pick_up_item_at_player(Some(&item_id)).unwrap();
-    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    game = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     let id = learn(&mut game, "gravity-beam");
     target(&mut game);
     cast_saved(&mut game, &id, east());
@@ -202,8 +207,12 @@ fn ch4_call_chaos_all_31_types_and_both_shapes_resume_without_repaying() {
         });
         let paid = game.resources["demo.resource.mana"].current;
         let count = game.ability_progress[&id].cast_count;
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         for g in [&mut game, &mut restored] {
             let mut events = Vec::new();
             g.resolve_pending_ability_direction(
@@ -317,10 +326,21 @@ fn ch4_call_chaos_paid_cancel_waits_one_action_and_rejects_forged_saves() {
             3 => p.cast_resolution.succeeded = false,
             _ => p.cast_resolution.ability_id = "demo.ability.chaos-gravity-beam".into(),
         }
-        assert!(Game::from_save_with_content(save, pending.content.clone()).is_err());
+        assert!(
+            Game::from_save_with_content(
+                save,
+                pending.content.clone(),
+                Game::default_behavior_preferences()
+            )
+            .is_err()
+        );
     }
-    let mut restored =
-        Game::from_save_with_content(pending.to_save(), pending.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        pending.to_save(),
+        pending.content.clone(),
+        pending.behavior_preferences(),
+    )
+    .unwrap();
     let mut direct = pending.clone();
     let mut rng = direct.rng.clone();
     // Finishing a paid book spell still performs its one Chance virtue roll.
@@ -396,7 +416,12 @@ fn ch4_polymorph_all_source_candidates_use_real_temporary_races_and_expire() {
                 .all(|s| s.granted_race_id.is_none())
         );
         assert_eq!(game.character_definitions().unwrap().1.id, birth);
-        let saved = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let saved = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(saved.state_hash(), game.state_hash());
     }
 }
@@ -464,7 +489,12 @@ fn ch4_polymorph_replaces_demon_form_and_reconciles_centaur_equipment() {
             .location,
         ItemLocation::Equipped { .. }
     ));
-    let saved = Game::from_save_with_content(centaur.to_save(), centaur.content.clone()).unwrap();
+    let saved = Game::from_save_with_content(
+        centaur.to_save(),
+        centaur.content.clone(),
+        centaur.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(saved.state_hash(), centaur.state_hash());
 }
 

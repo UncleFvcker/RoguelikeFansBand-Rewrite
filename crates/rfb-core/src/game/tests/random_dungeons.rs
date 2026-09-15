@@ -567,6 +567,15 @@ fn two_generated_forest_entrances_keep_returns_items_and_replayed_instances_sepa
 #[test]
 fn pending_random_item_and_spell_recall_replay_through_rest_and_next_entry() {
     let mut initial = prepared_entry();
+    // Recall/replay is the subject; ambient deep-floor combat is not.
+    initial.apply_player_melee_status(STATUS_INVULNERABILITY, 200_000, "test.random.recall");
+    initial
+        .player
+        .statuses
+        .iter_mut()
+        .find(|status| status.kind_id == STATUS_INVULNERABILITY)
+        .unwrap()
+        .incoming_damage_percent = 0;
     let departure = initial.player.position;
     enter_at_depth(&mut initial, 37);
     clear_monsters(&mut initial);
@@ -600,13 +609,24 @@ fn pending_random_item_and_spell_recall_replay_through_rest_and_next_entry() {
                 .is_none()
         );
         let mut restored = restore(&game);
-        let update = replay_command(&mut game, &mut restored, GameCommand::Rest { turns: 100 });
+        let mut update = replay_command(&mut game, &mut restored, GameCommand::Rest { turns: 100 });
         assert!(rest_resolution(&update).completed_turns > 0);
+        // Ambient spawning may interrupt rest before a long recall timer expires.
+        for _ in 0..4 {
+            if game.current_floor_id == wilderness::WILDERNESS_FLOOR_ID {
+                break;
+            }
+            clear_monsters(&mut game);
+            clear_monsters(&mut restored);
+            update = replay_command(&mut game, &mut restored, GameCommand::Rest { turns: 100 });
+        }
         assert!(
             update
                 .events
                 .iter()
-                .any(|event| event.kind == "item.recall-triggered")
+                .any(|event| event.kind == "item.recall-triggered"),
+            "{use_spell}: {:?}",
+            update.events
         );
         assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
         assert_eq!(game.player.position, departure);

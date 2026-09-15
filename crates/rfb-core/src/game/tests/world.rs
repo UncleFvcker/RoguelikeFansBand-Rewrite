@@ -1003,6 +1003,11 @@ fn rlyeh_full_chain_water_reward_and_surface_return_survive_save() {
     }
 
     let mut replacement = final_floor;
+    let prior_item_ids = replacement
+        .items
+        .iter()
+        .map(|item| item.id.clone())
+        .collect::<BTreeSet<_>>();
     replacement.player.hp = replacement.effective_player_max_hp();
     replacement
         .generated_artifact_ids
@@ -1025,7 +1030,7 @@ fn rlyeh_full_chain_water_reward_and_surface_return_survive_save() {
     let fallback = replacement
         .items
         .iter()
-        .find(|item| item.kind_id == "demo.item.galadriel")
+        .find(|item| !prior_item_ids.contains(&item.id) && item.is_artifact(&replacement.content))
         .expect("AM_GOOD replacement artifact must also survive an open-water death");
     assert!(
         replacement
@@ -1864,7 +1869,7 @@ fn p89_reach_shared_dungeon_guardian(seed: u64, dungeon_id: &str) -> Game {
             format!("demo.floor.{dungeon_id}-depth-{depth}")
         );
         if depth < 18 {
-            game.entities.clear();
+            clear_monsters(&mut game);
             place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
         }
     }
@@ -2692,9 +2697,12 @@ fn p93c_smaug_drops_arkenstone_with_clairvoyance_and_replacement() {
         .iter()
         .position(|item| item.kind_id == "demo.item.arkenstone-of-thrain")
         .expect("Smaug should drop the Arkenstone");
-    assert_eq!(
-        game.items[arkenstone_index].location,
-        ItemLocation::Ground(guardian_position)
+    let ItemLocation::Ground(drop_position) = game.items[arkenstone_index].location else {
+        panic!("Arkenstone must drop on the floor");
+    };
+    assert!(
+        (drop_position.x - guardian_position.x).abs() <= 3
+            && (drop_position.y - guardian_position.y).abs() <= 3
     );
     assert_eq!(
         game.items[arkenstone_index].quality,
@@ -2780,7 +2788,8 @@ fn p93c_smaug_drops_arkenstone_with_clairvoyance_and_replacement() {
             .all(|item| item.kind_id != "demo.item.arkenstone-of-thrain")
     );
     assert!(replacement.items.iter().any(|item| {
-        item.location == ItemLocation::Ground(guardian_position)
+        matches!(item.location, ItemLocation::Ground(position)
+            if (position.x - guardian_position.x).abs() <= 3 && (position.y - guardian_position.y).abs() <= 3)
             && item.kind_id == "demo.item.arkenstone"
             && item.quality == ItemQualityDto::Exceptional
     }));

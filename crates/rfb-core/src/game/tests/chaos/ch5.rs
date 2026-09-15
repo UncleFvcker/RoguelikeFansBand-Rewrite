@@ -32,7 +32,7 @@ fn ch5_all_formal_builds_generate_study_cast_and_resume() {
         let birth = Game::new_with_build(925, &build).unwrap();
         assert!(birth.items.iter().any(|i| i.kind_id == BOOK));
         assert!(birth.learned_abilities.is_empty());
-        Game::from_save(birth.to_save()).unwrap();
+        Game::from_save(birth.to_save(), birth.behavior_preferences()).unwrap();
         let mut game = prepared(&build);
         arena(&mut game);
         let context = LootContext {
@@ -56,7 +56,7 @@ fn ch5_all_formal_builds_generate_study_cast_and_resume() {
         game.items.push(item);
         game.pick_up_item_at_player(Some(&item_id)).unwrap();
         assert!(game.item_knowledge[BOOK].found_count > 0);
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(
             game.generate_one_loot_draft(&context, ItemGenerationMode::Ordinary)
                 .map(|d| d.kind_id),
@@ -111,7 +111,9 @@ fn ch5_all_formal_builds_generate_study_cast_and_resume() {
                 .is_none_or(|a| a.hp < hp)
         );
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash()
         );
     }
@@ -157,13 +159,15 @@ fn ch5_realm_change_updates_chaos_access_and_saved_learning() {
                 },
             );
             let pending = game.to_save();
-            let mut cancelled = Game::from_save(pending.clone()).unwrap();
+            let mut cancelled =
+                Game::from_save(pending.clone(), Game::default_behavior_preferences()).unwrap();
             dispatch_next(
                 &mut cancelled,
                 GameCommand::ResolveRealmChange { confirm: false },
             );
             assert_eq!(cancelled.current_second_realm_id(), Some(original.as_str()));
-            let mut restored = Game::from_save(pending).unwrap();
+            let mut restored =
+                Game::from_save(pending, Game::default_behavior_preferences()).unwrap();
             for g in [&mut game, &mut restored] {
                 dispatch_next(g, GameCommand::ResolveRealmChange { confirm: true });
             }
@@ -197,7 +201,7 @@ fn ch5_realm_change_updates_chaos_access_and_saved_learning() {
                     .as_deref()
                     .unwrap()
             }));
-            Game::from_save(game.to_save()).unwrap();
+            Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         }
     }
 }
@@ -215,7 +219,7 @@ fn ch5_existing_node_reward_is_claimed_once_and_can_be_studied_and_cast() {
         game.items.iter().find(|i| i.id == item).unwrap().kind_id,
         "demo.item.armageddon-tome"
     );
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     game.study_player_ability(&item, "demo.ability.chaos-gravity-beam")
         .unwrap();
     arena(&mut game);
@@ -239,7 +243,7 @@ fn ch5_existing_node_reward_is_claimed_once_and_can_be_studied_and_cast() {
             .find(|a| a.id == "test.ch5-reward-target")
             .is_none_or(|a| a.hp < hp)
     );
-    Game::from_save(game.to_save()).unwrap();
+    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
 }
 
 #[test]
@@ -371,7 +375,7 @@ fn export_chaos_desktop_saves() {
                 {
                     return None;
                 }
-                Game::from_save(game.to_save()).unwrap();
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 steps.push(serde_json::json!({"command":command,"hash":game.state_hash()}));
                 if game.pending_ability_direction.is_some() {
                     let command = GameCommand::ResolveAbilityDirection {
@@ -404,7 +408,7 @@ fn export_chaos_desktop_saves() {
                             .all(|s| s.granted_race_id.is_none())
                     );
                 }
-                Game::from_save(game.to_save()).unwrap();
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 Some((start, steps))
             })
             .expect("successful real Chaos command sequence");

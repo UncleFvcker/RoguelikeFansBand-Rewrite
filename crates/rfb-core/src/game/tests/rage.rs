@@ -98,8 +98,8 @@ fn rage_all_32_formal_techniques_cast_and_resume_without_books() {
             _ => TargetSelection::SelfTarget,
         };
         cast(&mut g, &id, selection);
-        let mut restored =
-            Game::from_save(g.to_save()).unwrap_or_else(|e| panic!("slot {slot}: {e:?}"));
+        let mut restored = Game::from_save(g.to_save(), g.behavior_preferences())
+            .unwrap_or_else(|e| panic!("slot {slot}: {e:?}"));
         g.rage_after_action(100);
         restored.rage_after_action(100);
         assert_eq!(g.state_hash(), restored.state_hash(), "slot {slot}");
@@ -239,7 +239,7 @@ fn rage_focus_failure_and_strike_pay_life_and_clear_mana_at_correct_boundaries()
         .unwrap()
         .to_save();
     bad.player.rage_mana_sustained = true;
-    assert!(Game::from_save(bad).is_err());
+    assert!(Game::from_save(bad, Game::default_behavior_preferences()).is_err());
 }
 
 #[test]
@@ -325,7 +325,9 @@ fn rage_restore_mana_is_ineffective_and_boldness_converts_mana_to_life() {
     dispatch_next(&mut g, GameCommand::Wait);
     assert_eq!(
         g.state_hash(),
-        Game::from_save(g.to_save()).unwrap().state_hash()
+        Game::from_save(g.to_save(), g.behavior_preferences())
+            .unwrap()
+            .state_hash()
     );
 }
 
@@ -541,7 +543,9 @@ fn rage_four_books_generate_in_the_full_pool_and_teach_after_pickup() {
         assert!(g.learned_abilities.contains(&spell));
         assert_eq!(
             g.state_hash(),
-            Game::from_save(g.to_save()).unwrap().state_hash()
+            Game::from_save(g.to_save(), g.behavior_preferences())
+                .unwrap()
+                .state_hash()
         );
     }
 }

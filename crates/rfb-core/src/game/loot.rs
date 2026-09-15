@@ -193,6 +193,7 @@ impl From<ItemInstance> for GeneratedItemDraft {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum LootSource {
+    DungeonTask { task_id: String },
     MonsterCarried { actor_id: String },
     MonsterDeath { actor_id: String },
     FloorRoom { room_id: String, spawn_id: String },
@@ -400,6 +401,86 @@ impl Game {
         Ok((generated, gold))
     }
 
+    pub(super) fn generate_angband_chosen_drops(
+        &mut self,
+        actor: &Actor,
+    ) -> Result<Vec<ItemInstance>, CoreError> {
+        // Fixed task targets are born no_pet. Player-owned summons retain their
+        // owner after control ends; dead-unique resurrections are not originals.
+        if actor.cloned
+            || actor.controller_id.as_deref() == Some(self.player.id.as_str())
+            || actor
+                .summon
+                .as_ref()
+                .is_some_and(|summon| summon.owner_id == self.player.id)
+            || self.actor_is_dead_unique_resurrection(actor)
+        {
+            return Ok(Vec::new());
+        }
+        let kinds: &[&str] = match actor.kind_id.as_str() {
+            "demo.actor.the-serpent-of-chaos" => &["demo.item.grond", "demo.item.crown-of-chaos"],
+            "demo.actor.oberon-king-of-amber" => {
+                let (kind, mut chance) = if self.rng.bounded(3) == 0 {
+                    ("demo.item.jewel-of-judgement", 33)
+                } else {
+                    ("demo.item.amber", 50)
+                };
+                if self
+                    .progress
+                    .active_mutation_ids
+                    .contains("rfb.mutation.bad-luck")
+                {
+                    chance -= chance / 4;
+                }
+                // Roll before checking uniqueness; an unavailable choice has no fallback.
+                if self.rng.bounded(100) >= chance {
+                    return Ok(Vec::new());
+                }
+                if kind == "demo.item.amber" {
+                    &["demo.item.amber"]
+                } else {
+                    &["demo.item.jewel-of-judgement"]
+                }
+            }
+            _ => return Ok(Vec::new()),
+        };
+        let needed_ids = kinds
+            .iter()
+            .filter(|kind| !self.generated_artifact_ids.contains(**kind))
+            .count() as u64;
+        self.next_item_instance_serial
+            .checked_add(needed_ids)
+            .ok_or(CoreError::ItemIdExhausted)?;
+        let context = LootContext {
+            table_id: "demo.loot-table.base-items".into(),
+            floor_id: self.current_floor_id.clone(),
+            depth: self.floor_depth(&self.current_floor_id),
+            source: LootSource::MonsterDeath {
+                actor_id: actor.id.clone(),
+            },
+        };
+        let mut generated = Vec::new();
+        for kind in kinds {
+            if self.generated_artifact_ids.contains(*kind) {
+                continue;
+            }
+            let draft = self.fixed_item_draft(&context, (*kind).into());
+            let preview = draft
+                .clone()
+                .into_item_instance(String::new(), ItemLocation::Ground(actor.position));
+            if let Some(position) = self.generated_item_drop_position(&preview, actor.position) {
+                let mut item =
+                    self.commit_generated_item_draft(draft, ItemLocation::Ground(position))?;
+                item.origin_actor_kind_id = Some(actor.kind_id.clone());
+                generated.push(item);
+            } else {
+                // create_named_art marks generated only after drop_near succeeds.
+                self.generated_artifact_ids.remove(*kind);
+            }
+        }
+        Ok(generated)
+    }
+
     pub(super) fn generate_death_loot(
         &mut self,
         actor: &Actor,
@@ -433,6 +514,7 @@ impl Game {
         let mut generated = Vec::new();
         let mut gold = Vec::new();
         generated.extend(self.generate_norse_death_extras(actor, !actor.cloned)?);
+        generated.extend(self.generate_angband_chosen_drops(actor)?);
         // xtra2.c: Osiris's chosen item precedes and supplements ordinary drops.
         if actor.kind_id == "demo.actor.osiris-the-reborn"
             && actor.controller_id.as_deref() != Some(self.player.id.as_str())
@@ -800,6 +882,7 @@ impl Game {
                     !item_id.is_empty()
                 }
                 LootSource::Shop { shop_id } => !shop_id.is_empty(),
+                LootSource::DungeonTask { task_id } => context.depth > 0 && !task_id.is_empty(),
                 LootSource::Rubble { position } => {
                     context.depth > 0 && self.index(*position).is_some()
                 }
@@ -981,7 +1064,13 @@ impl Game {
             .item(&entry.item_kind_id)
             .and_then(|definition| definition.equipment_slot.as_deref())
             .is_some_and(|slot| matches!(slot, "ring" | "amulet"));
-        let generation_depth = self.luck_adjusted_item_generation_depth(context.depth, staff);
+        // AM_QUEST boosts apply_magic, not the base-kind allocation level.
+        let magic_depth = if matches!(context.source, LootSource::DungeonTask { .. }) {
+            context.depth.saturating_add(10).min(127)
+        } else {
+            context.depth
+        };
+        let generation_depth = self.luck_adjusted_item_generation_depth(magic_depth, staff);
         let device = self
             .content
             .item(&entry.item_kind_id)

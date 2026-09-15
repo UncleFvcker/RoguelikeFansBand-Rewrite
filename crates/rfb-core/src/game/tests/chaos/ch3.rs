@@ -29,8 +29,12 @@ pub(super) fn cast_where(
         if !accepts(&trial, &events) {
             continue;
         }
-        let mut restored =
-            Game::from_save_with_content(before.to_save(), before.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            before.to_save(),
+            before.content.clone(),
+            before.behavior_preferences(),
+        )
+        .unwrap();
         let mut resumed = Vec::new();
         restored
             .resolve_player_ability(
@@ -44,8 +48,12 @@ pub(super) fn cast_where(
         assert!(accepts(&restored, &resumed));
         assert_eq!(trial.rng, restored.rng);
         assert_eq!(trial.state_hash(), restored.state_hash());
-        let saved =
-            Game::from_save_with_content(restored.to_save(), restored.content.clone()).unwrap();
+        let saved = Game::from_save_with_content(
+            restored.to_save(),
+            restored.content.clone(),
+            restored.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(saved.state_hash(), restored.state_hash());
         return (restored, resumed);
     }
@@ -75,7 +83,12 @@ fn ch3_ordinary_third_book_is_acquired_saved_and_cast() {
     let item_id = item.id.clone();
     game.items.push(item);
     game.pick_up_item_at_player(Some(&item_id)).unwrap();
-    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    game = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     let id = learn(&mut game, "chain-lightning");
     target(&mut game);
     cast_saved(&mut game, &id, TargetSelection::SelfTarget);
@@ -349,7 +362,12 @@ fn ch3_alter_reality_countdown_resumes_and_rebuilds_the_same_floor() {
     assert_eq!(cancelled.reality_change_ticks, 0);
     let floor_id = base.current_floor_id.clone();
     let terrain = base.terrain.clone();
-    let mut resumed = Game::from_save_with_content(base.to_save(), base.content.clone()).unwrap();
+    let mut resumed = Game::from_save_with_content(
+        base.to_save(),
+        base.content.clone(),
+        base.behavior_preferences(),
+    )
+    .unwrap();
     for _ in 0..base.reality_change_ticks {
         for game in [&mut base, &mut resumed] {
             game.advance_reality_change(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
@@ -419,8 +437,12 @@ fn ch3_branding_uses_a_real_chaos_ego_and_cancel_still_pays() {
     for seed in 0..256 {
         let mut game = base.clone();
         game.rng = RfbRng::seeded(seed);
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         for trial in [&mut game, &mut restored] {
             trial
                 .resolve_player_melee(

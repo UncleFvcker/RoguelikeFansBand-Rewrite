@@ -1450,6 +1450,7 @@ fn zul_eddies_reward_choice_is_durable_and_generated_artifacts_are_replaced() {
                 required: 1,
                 active_floor_id: None,
                 retakes_used: 0,
+                random_assignment: None,
             },
         );
         game.reveal_current_visibility();

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 5,
-  "id": "campaign.warrens-victory-return-retirement",
+  "id": "campaign.angband-victory-return-retirement",
   "category": "campaign",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
@@ -8,8 +8,19 @@
   "preconditions": {
     "world": "demo.world.middle-earth",
     "playerBuildId": "demo.build.warrior",
-    "campaignConqueredDungeons": [
-      "demo.dungeon.warrens"
+    "campaignState": {
+      "status": "victorious",
+      "victoryTurn": 0
+    },
+    "taskStates": [
+      {
+        "taskId": "demo.task.angband-serpent-of-chaos",
+        "status": "completed",
+        "stageIndex": 0,
+        "current": 1,
+        "required": 1,
+        "retakesUsed": 0
+      }
     ]
   },
   "commands": [
@@ -28,15 +39,16 @@
   "assertions": {
     "finalState": {
       "campaign": {
-        "conqueredDungeons": 1,
+        "completedTasks": 1,
+        "conqueredDungeons": 0,
         "retiredTurn": 1,
-        "score": 60000,
+        "score": 51000,
         "status": "retired",
         "victoryTurn": 0
       },
       "lastCommandSeq": 1,
       "revision": 1,
-      "stateHash": "e270d3c317623802cd8f180a2e8d55a6d7dcc2d93762b30782e58d78167096a3",
+      "stateHash": "fa9e4f3bc11dc2ee97b14e2b4ef11851e0bff8649e3d919634745708ea97216e",
       "turn": 1
     },
     "events": [
@@ -44,7 +56,7 @@
         "kind": "campaign.retired",
         "messageKey": "campaign-retired",
         "args": {
-          "score": "60000"
+          "score": "51000"
         }
       }
     ],
@@ -52,9 +64,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "e270d3c317623802cd8f180a2e8d55a6d7dcc2d93762b30782e58d78167096a3"
+        "stateHash": "fa9e4f3bc11dc2ee97b14e2b4ef11851e0bff8649e3d919634745708ea97216e"
       }
     ],
-    "saveRoundTripStateHash": "e270d3c317623802cd8f180a2e8d55a6d7dcc2d93762b30782e58d78167096a3"
+    "saveRoundTripStateHash": "fa9e4f3bc11dc2ee97b14e2b4ef11851e0bff8649e3d919634745708ea97216e"
   }
 }

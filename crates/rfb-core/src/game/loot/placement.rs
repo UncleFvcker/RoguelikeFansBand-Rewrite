@@ -37,7 +37,7 @@ impl Game {
     }
 
     // RFB master a0d92b6378, object2.c::drop_near with chance=-1.
-    fn generated_item_drop_position(
+    pub(super) fn generated_item_drop_position(
         &mut self,
         item: &ItemInstance,
         origin: Position,

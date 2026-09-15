@@ -335,7 +335,9 @@ impl Game {
                 let AbilityTargetPlan::Item { item_id } = plan else {
                     unreachable!()
                 };
-                self.use_inventory_item(&item_id, None, None, events, changed, removed)?;
+                self.use_inventory_item_with_recall(
+                    &item_id, None, None, None, events, changed, removed,
+                )?;
             }
             18 => {
                 let mut a = ability.clone();

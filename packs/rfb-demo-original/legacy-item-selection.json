@@ -1,6 +1,9 @@
 {
   "schemaVersion": 1,
   "items": [
+    {"sourceIndex": 138, "id": "mighty-hammer"},
+    {"sourceIndex": 223, "id": "massive-iron-crown"},
+    {"sourceIndex": 607, "id": "jewel"},
     { "sourceIndex": 219, "id": "kabuto" },
     { "sourceIndex": 241, "id": "mithril-shield" },
     { "sourceIndex": 259, "id": "stone-and-hide-armour" },

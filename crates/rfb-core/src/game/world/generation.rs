@@ -1382,7 +1382,7 @@ impl Game {
                         .tasks
                         .iter()
                         .filter(|task| {
-                            task_applies_to_floor(task, definition)
+                            task_applies_to_floor(task, definition, self.task_states.get(&task.id))
                                 && self.task_states.get(&task.id).is_some_and(|state| {
                                     matches!(
                                         state.status,
@@ -2382,6 +2382,10 @@ impl Game {
                 "remote"
             };
             if let Some(policy) = table.global_allocation.as_ref() {
+                let task_id = self
+                    .dungeon_task_id_for_floor(definition)
+                    .map(str::to_owned)
+                    .or_else(|| definition.task_id.clone());
                 let mut target_floor_kind_ids = guardian
                     .iter()
                     .map(|guardian| guardian.actor_kind_id.clone())
@@ -2425,7 +2429,7 @@ impl Game {
                         policy,
                         definition.depth,
                         definition.depth,
-                        definition.task_id.as_deref(),
+                        task_id.as_deref(),
                         &target_floor_kind_ids,
                         None,
                         Some(&required_terrain),
@@ -2442,7 +2446,7 @@ impl Game {
                             &kind_id,
                             position,
                             definition.depth,
-                            definition.task_id.as_deref(),
+                            task_id.as_deref(),
                             &terrain,
                             width,
                             height,

@@ -19,6 +19,7 @@ import {
   renderCharacterOverview,
   renderCharacterMutations,
   renderHudExperience,
+  renderTaskLog,
   hudLocationText,
   attributeSourceCell,
   StatusPanel,
@@ -89,7 +90,7 @@ test("HUD location distinguishes the world map, towns, wilderness and content du
   const localization = { format: (key, args) => args ? `${args.name} · ${args.depth}` : key };
   const contentName = (id) => `content:${id}`;
   const state = { mapScale: 'local', floorId: 'demo.floor.hideout-depth-8', town: null };
-  assert.equal(hudLocationText(state, localization, contentName), 'content:demo.floor.hideout-depth · 8');
+  assert.equal(hudLocationText({ ...state, dungeon: { nameKey: 'floor-demo-hideout-depth-name', currentDepth: 8, maximumDepth: 8 } }, localization, contentName), 'floor-demo-hideout-depth-name · 8');
   assert.equal(hudLocationText({ ...state, floorId: 'demo.floor.surface' }, localization, contentName), 'content:demo.floor.surface');
   assert.equal(hudLocationText({ ...state, town: { nameKey: 'town-existing-name' } }, localization, contentName), 'town-existing-name');
   assert.equal(hudLocationText({ ...state, floorId: 'core.floor.wilderness' }, localization, contentName), 'hud-location-wilderness');
@@ -228,6 +229,40 @@ test("character overview projects exact experience, actual resources and current
   assert.equal(dom.characterNextExperienceValue.textContent, "progression-unavailable");
   assert.equal(rows().length, 3);
   assert.match(dom.characterWorldTimeValue.textContent, /"day":2,"hour":"00","minute":"00"/);
+});
+
+test("task log renders projected depth, target, skipped history and abandon eligibility", () => {
+  class Element {
+    children = []; dataset = {}; handlers = {}; textContent = "";
+    parentElement = { scrollTop: 0 };
+    get ownerDocument() { return document; }
+    append(...children) { this.children.push(...children); }
+    replaceChildren(...children) { this.children = children; }
+    querySelectorAll() { return []; }
+    addEventListener(type, listener) { this.handlers[type] = listener; }
+  }
+  const document = { activeElement: null, createElement: (tag) => Object.assign(new Element(), { tagName: tag.toUpperCase() }) };
+  const list = new Element();
+  const localization = { format: (key, args) => args ? `${key} ${JSON.stringify(args)}` : key };
+  const base = { floorId: "floor", nameKey: "quest", current: 0, required: 1, stage: 1, stages: 1, retakesUsed: 0 };
+  const tasks = [
+    { ...base, taskId: "random", status: "active", canAbandon: true, depth: 44, targetNameKey: "target-random" },
+    { ...base, taskId: "serpent", status: "active", canAbandon: false, depth: 100, targetNameKey: "target-serpent" },
+    { ...base, taskId: "skipped", status: "skipped", canAbandon: false },
+  ];
+  const commands = [];
+  const flatten = (node) => [node, ...node.children.flatMap(flatten)];
+  renderTaskLog(list, tasks, localization, false, task => commands.push(task.taskId));
+  const nodes = flatten(list);
+  assert.ok(nodes.some(node => node.textContent === 'task-log-depth {"depth":100}'));
+  assert.ok(nodes.some(node => node.textContent === 'task-log-target {"target":"target-serpent"}'));
+  assert.ok(nodes.some(node => node.textContent === "task-status-skipped"));
+  const buttons = nodes.filter(node => node.tagName === "BUTTON");
+  assert.equal(buttons.length, 1);
+  buttons[0].handlers.click();
+  assert.deepEqual(commands, ["random"]);
+  renderTaskLog(list, tasks, localization, true, () => {});
+  assert.ok(flatten(list).filter(node => node.tagName === "BUTTON").every(node => node.disabled));
 });
 
 test("self-harming abilities require their dedicated confirmation", () => {

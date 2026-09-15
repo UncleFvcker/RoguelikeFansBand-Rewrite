@@ -98,6 +98,16 @@ test("equipment activation logs resolve the projected item without exposing unkn
   }
 });
 
+test("Angband exit and skipped task messages render in both languages", () => {
+  for (const [locale, stairs] of [["en-US", "A magical staircase appears..."], ["zh-CN", "一道魔法楼梯出现了……"]]) {
+    localization.setLocale(locale);
+    assert.equal(formatter.formatEvent({kind:"task.exit-revealed",messageKey:"task-exit-revealed",args:{}}),stairs);
+    const skipped = formatter.formatEvent({kind:"task.skipped",messageKey:"task-skipped",args:{task:"demo.task.angband-oberon"}});
+    assert.ok(!skipped.includes("demo.task") && !skipped.includes("[task-skipped]"));
+    assert.ok(skipped.includes(localization.format("task-demo-angband-oberon-name")));
+  }
+});
+
 test("resource conversion messages show actual life and mana changes in both languages", () => {
   for (const [locale, failed] of [["en-US", "conversion failed"], ["zh-CN", "你转换失败了"]]) {
     localization.setLocale(locale);

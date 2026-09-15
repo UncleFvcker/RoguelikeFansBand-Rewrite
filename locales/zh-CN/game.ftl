@@ -535,6 +535,7 @@ message-task-completed = 你取回了任务目标。
 message-task-reward-available = 任务已完成。返回任务发布者处领取奖励。
 message-task-exit-revealed = 一道魔法楼梯出现了……
 message-task-accepted = 已接取任务：{ $task }。
+message-task-skipped = 任务 { $task } 的目标已死亡，准许通过。
 message-task-accept-unavailable = 当前无法在这里接取该任务。
 message-task-failed = 你没有取回任务目标就离开了。
 message-task-abandoned = 你主动放弃了当前任务。

@@ -485,6 +485,28 @@ impl AppState {
         }
     }
 
+    fn prepare_angband_e2e(
+        &self,
+        phase: &str,
+        target_id: Option<&str>,
+    ) -> Result<GameSnapshot, String> {
+        #[cfg(feature = "webdriver")]
+        {
+            let mut session = self.lock_session()?;
+            let session = session.as_mut().ok_or("game session is not initialized")?;
+            let mut game = session.recorder.game().clone();
+            game.debug_prepare_angband_e2e(phase, target_id)
+                .map_err(|error| error.to_string())?;
+            session.recorder = ReplayRecorder::new(game);
+            Ok(session.recorder.game().snapshot())
+        }
+        #[cfg(not(feature = "webdriver"))]
+        {
+            let _ = (phase, target_id);
+            Err("Angband E2E fixture is unavailable".to_owned())
+        }
+    }
+
     fn prepare_random_dungeon_e2e(&self, kind: &str, phase: &str) -> Result<GameSnapshot, String> {
         #[cfg(feature = "webdriver")]
         {
@@ -694,10 +716,9 @@ fn dispatch_game_command(
     if let GameCommand::ConfigurePreferences {
         preferences: candidate,
     } = &command
+        && *candidate != preferences::current_behavior(&app).map_err(|e| e.detail)?
     {
-        if *candidate != preferences::current_behavior(&app).map_err(|e| e.detail)? {
-            return Err("preferences-stale: reload saved global preferences".into());
-        }
+        return Err("preferences-stale: reload saved global preferences".into());
     }
     state.dispatch(command_seq, expected_revision, command)
 }
@@ -961,6 +982,15 @@ fn inspect_game_e2e(state: tauri::State<'_, AppState>) -> Result<E2eInspection, 
         let _ = state;
         Err("E2E inspection is unavailable".to_owned())
     }
+}
+
+#[tauri::command]
+fn prepare_angband_e2e(
+    state: tauri::State<'_, AppState>,
+    phase: String,
+    target_id: Option<String>,
+) -> Result<GameSnapshot, String> {
+    state.prepare_angband_e2e(&phase, target_id.as_deref())
 }
 
 #[tauri::command]
@@ -1275,6 +1305,7 @@ pub fn run() {
             prepare_zul_e2e,
             prepare_asgard_e2e,
             prepare_random_dungeon_e2e,
+            prepare_angband_e2e,
             inspect_game_e2e,
             save_game,
             load_game,
@@ -1300,6 +1331,17 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    #[cfg(not(feature = "webdriver"))]
+    fn ordinary_native_app_rejects_angband_preparation_before_session_access() {
+        let state = super::AppState::default();
+        for phase in ["arrival", "route", "battle", "stairs-up", "stairs-down"] {
+            assert_eq!(
+                state.prepare_angband_e2e(phase, None).unwrap_err(),
+                "Angband E2E fixture is unavailable"
+            );
+        }
+    }
     #[test]
     #[cfg(not(feature = "webdriver"))]
     fn ordinary_native_app_rejects_random_dungeon_preparation_before_session_access() {
