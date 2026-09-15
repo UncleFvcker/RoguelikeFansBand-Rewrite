@@ -554,6 +554,7 @@ impl Game {
         power: u16,
         changed: &mut BTreeSet<Position>,
     ) -> AbilityEffectResolutionDto {
+        let barrier = self.hex_barrier(index, 15);
         let target_entity_id = self.entities[index].id.clone();
         let from = self.entities[index].position;
         let definition = self
@@ -562,8 +563,9 @@ impl Game {
         let has_tag = |tag: &str| definition.tags.iter().any(|candidate| candidate == tag);
         let target_level = definition.level;
         let resistant = has_tag("resist-teleport");
-        let always_resisted =
-            has_tag("guardian") || (resistant && (has_tag("unique") || has_tag("resist-all")));
+        let always_resisted = barrier
+            || has_tag("guardian")
+            || (resistant && (has_tag("unique") || has_tag("resist-all")));
         let resistance_roll = if resistant && !always_resisted {
             Some(
                 u8::try_from(self.rng.bounded(100) + 1)

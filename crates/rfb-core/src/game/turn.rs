@@ -291,6 +291,7 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        self.advance_hex(events, changed, removed_entities)?;
         self.advance_samurai();
         self.advance_music(events, changed, removed_entities)?;
         if local_floor_active {
@@ -991,6 +992,12 @@ impl Game {
     ) -> Result<(), CoreError> {
         if self.music.spell.is_some() && self.player_has_status_kind(STATUS_CONFUSION) {
             self.stop_music();
+        }
+        if self.hex.active != 0
+            && (self.player_has_status_kind(STATUS_CONFUSION)
+                || self.player_has_status_kind(STATUS_PARALYSIS))
+        {
+            self.stop_hex(None);
         }
         let nonliving = self.player_is_nonliving();
         let berserker = self.player_is_berserker();

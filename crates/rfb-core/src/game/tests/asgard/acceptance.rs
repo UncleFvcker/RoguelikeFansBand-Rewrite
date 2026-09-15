@@ -248,13 +248,15 @@ fn asgard_prepared_full_source_guardians_route_rewards_return_and_recall_resume(
     );
     battle(&mut game, VIDARR, 87);
     assert_eq!(game.defeated_limited_actor_counts[VIDARR], 1);
-    assert_eq!(
-        game.items
-            .iter()
-            .filter(|item| item.kind_id == "demo.item.acquirement-scroll")
-            .count(),
-        1
-    );
+    // Ordinary guardian drops may also roll acquirement. Track existing IDs so
+    // return/recall still proves that conquest rewards are not granted again.
+    let scroll_ids: BTreeSet<_> = game
+        .items
+        .iter()
+        .filter(|item| item.kind_id == "demo.item.acquirement-scroll")
+        .map(|item| item.id.clone())
+        .collect();
+    assert!(!scroll_ids.is_empty());
     let rune = pickup(&mut game, "demo.item.runespear");
     let scroll = pickup(&mut game, "demo.item.acquirement-scroll");
     dispatch_next(
@@ -317,7 +319,8 @@ fn asgard_prepared_full_source_guardians_route_rewards_return_and_recall_resume(
                 !current
                     .items
                     .iter()
-                    .any(|item| item.kind_id == "demo.item.acquirement-scroll")
+                    .any(|item| item.kind_id == "demo.item.acquirement-scroll"
+                        && (!scroll_ids.contains(&item.id) || item.id == scroll))
             );
             assert_eq!(
                 current.items.iter().filter(|item| item.id == rune).count(),

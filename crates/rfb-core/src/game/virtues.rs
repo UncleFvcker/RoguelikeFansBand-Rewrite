@@ -301,6 +301,7 @@ impl Game {
             ],
             "death" => &[(Unlife, 1), (Justice, -1), (Faith, -1), (Vitality, -1)],
             "daemon" => &[(Justice, -1), (Faith, -1), (Honour, -1), (Temperance, -1)],
+            "hex" => &[(Justice, -1), (Faith, -1), (Honour, -1), (Compassion, -1)],
             "crusade" => &[(Faith, 1), (Justice, 1), (Sacrifice, 1), (Honour, 1)],
             "nature" => &[(Nature, 1), (Harmony, 1)],
             _ => &[],
@@ -331,6 +332,7 @@ impl Game {
             "death" => (Unlife, -1),
             "nature" => (Nature, -1),
             "daemon" => (Justice, 1),
+            "hex" => (Compassion, -1),
             "crusade" => (Justice, -1),
             _ => (Knowledge, -1),
         };

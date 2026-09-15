@@ -592,7 +592,9 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::Necromancy { spell }
                 | AbilityEffectDefinition::Law { spell }
                 | AbilityEffectDefinition::Music { spell }
-                | AbilityEffectDefinition::Hissatsu { spell } => *spell < 32,
+                | AbilityEffectDefinition::Hissatsu { spell }
+                | AbilityEffectDefinition::Hex { spell } => *spell < 32,
+                AbilityEffectDefinition::StopHex { spell } => spell.is_none_or(|s| s < 32),
                 AbilityEffectDefinition::SamuraiPosture { posture } => *posture <= 4,
                 AbilityEffectDefinition::TrumpSummoning { category } => matches!(
                     category.as_str(),
@@ -1424,6 +1426,7 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::MeleeAdjacent
             | AbilityEffectDefinition::ProbeMonsters
             | AbilityEffectDefinition::Concentrate
+            | AbilityEffectDefinition::StopHex { .. }
             | AbilityEffectDefinition::StopSinging
             | AbilityEffectDefinition::SamuraiConcentration
             | AbilityEffectDefinition::SamuraiPosture { .. } => self_target_rule,
@@ -1447,6 +1450,16 @@ pub(super) fn validate_abilities(
                         })
                 } else {
                     ability.target.modes == [AbilityTargetModeDefinition::SelfTarget]
+                }
+            }
+            AbilityEffectDefinition::Hex { spell } => {
+                if matches!(spell, 5 | 10 | 18 | 20 | 26) {
+                    item_target_rule
+                } else if *spell == 29 {
+                    ability.target.modes == [AbilityTargetModeDefinition::Position]
+                        && ability.target.range == 52
+                } else {
+                    self_target_rule
                 }
             }
             AbilityEffectDefinition::Hissatsu { spell } => {

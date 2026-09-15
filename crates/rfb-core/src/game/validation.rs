@@ -1796,12 +1796,15 @@ impl Game {
                     "demo.ability.chaos-call-chaos"
                         | "demo.ability.trump-shuffle"
                         | "demo.ability.hissatsu-hundred-slaughter"
+                        | "demo.ability.hex-revenge"
                 )
             {
                 let cast = &pending.cast_resolution;
                 if !(if matches!(
                     pending.ability_id.as_str(),
-                    "demo.ability.trump-shuffle" | "demo.ability.hissatsu-hundred-slaughter"
+                    "demo.ability.trump-shuffle"
+                        | "demo.ability.hissatsu-hundred-slaughter"
+                        | "demo.ability.hex-revenge"
                 ) {
                     pending.branch_roll == 1
                 } else {
@@ -1843,6 +1846,7 @@ impl Game {
                         "demo.ability.chaos-call-chaos"
                             | "demo.ability.trump-shuffle"
                             | "demo.ability.hissatsu-hundred-slaughter"
+                            | "demo.ability.hex-revenge"
                     )
                 })
                 && self

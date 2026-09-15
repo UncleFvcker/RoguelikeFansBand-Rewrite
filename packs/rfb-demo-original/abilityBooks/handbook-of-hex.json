@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.handbook-of-hex",
+  "nameKey": "item-demo-handbook-of-hex-name",
+  "descriptionKey": "ability-book-demo-conjurings-and-tricks-description",
+  "realmId": "hex",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.hex-evil-blessing",
+    "demo.ability.hex-cure-light-wounds",
+    "demo.ability.hex-demon-aura",
+    "demo.ability.hex-stinking-mist",
+    "demo.ability.hex-extra-might",
+    "demo.ability.hex-curse-weapon",
+    "demo.ability.hex-detect-evil",
+    "demo.ability.hex-patience"
+  ],
+  "tags": [
+    "hex",
+    "spellbook"
+  ]
+}

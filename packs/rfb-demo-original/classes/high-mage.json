@@ -938,6 +938,15 @@
           "demo.ability-book.acquiris-quodcumque-rapis"
         ],
         "learningCapacityBonus": 0
+      },
+      {
+        "realmId": "hex",
+        "abilityBookIds": [
+          "demo.ability-book.handbook-of-hex",
+          "demo.ability-book.high-curse",
+          "demo.ability-book.curse-and-spelling",
+          "demo.ability-book.forbidden-cursebook"
+        ]
       }
     ]
   },
@@ -950,7 +959,32 @@
       "resourceCost": 1,
       "baseFailurePercent": 90,
       "minimumFailurePercent": 11
-    }
+    },
+    {"abilityId": "demo.ability.hex-stop", "minimumLevel": 1, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-evil-blessing", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-cure-light-wounds", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-demon-aura", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-stinking-mist", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-extra-might", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-detect-evil", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-ice-armor", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-cure-serious-wounds", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-vampiric-mist", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-runesword", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-confusing-touch", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-building-up", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-anti-teleport", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-shock-cloak", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-cure-critical-wounds", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-animate-dead", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-shadow-cloak", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-pain-to-mana", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-eye-for-eye", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-anti-multiply", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-restore-life", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-vampiric-blade", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-word-of-stun", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0},
+    {"abilityId": "demo.ability.hex-stop-anti-magic", "minimumLevel": 35, "resourceCost": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0}
   ],
   "startingItems": [
     { "itemKindId": "demo.item.dagger", "quantity": 1, "equipped": true },

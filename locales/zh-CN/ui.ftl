@@ -421,11 +421,11 @@ maia-path-title = 迈雅的道路
 maia-path-prompt = 你的本质终于显现。你必须选择迈雅的道路。
 maia-path-enlightened = 启明
 maia-path-corrupted = 堕落
-maia-path-enlightened-description = 获得免食、光照、护甲成长、时间与光抗性、看破隐形和拾取诅咒感知；50级获得漂浮、毒电冷抗性、电冷光环与武器屠邪。禁止学习和施放死亡、恶魔、咒术、死灵领域。选择后不能更改。
+maia-path-enlightened-description = 获得免食、光照、护甲成长、时间与光抗性、看破隐形和拾取诅咒感知；50级获得漂浮、毒电冷抗性、电冷光环与武器屠邪。禁止学习和施放死亡、恶魔、诅咒、死灵领域。选择后不能更改。
 maia-path-corrupted-description = 获得免食、生命成长、时间火暗抗性和轻诅咒脱装；50级获得毒抗、火免疫和火焰光环。禁止学习和施放生命、十字军领域。选择后不能更改。
 trait-maia-rule-birth = 未启蒙出生，感知恶魔与邪恶，拥有10格红外视觉和缓慢消化。
 trait-maia-rule-choice = 20级必须选择启明或堕落；两条道路均免食，降级保留选择。
-trait-maia-rule-realms = 启明禁学禁用死亡、恶魔、咒术和死灵领域；堕落禁用生命与十字军。保留已学法术和书本浏览。
+trait-maia-rule-realms = 启明禁学禁用死亡、恶魔、诅咒和死灵领域；堕落禁用生命与十字军。保留已学法术和书本浏览。
 character-virtues-empty = 当前没有德行记录。
 character-materials-empty = 当前没有材料。
 mutation-choice-select = 选择
@@ -1531,3 +1531,9 @@ hissatsu-harakiri-confirm = 切腹会结束本次生命。确定执行吗？
 hissatsu-harakiri-type = 输入 @ 确认切腹。
 
 status-samurai-posture = 架势：{ $posture }
+
+realm-hex-name = 诅咒
+status-hex-active = 诅咒：{ $spells }
+status-hex-cursed-armor = 诅咒：诅咒护甲加成
+status-hex-interrupted = 诅咒中断：{ $spells }
+item-hex-curse-confirm = 确定要诅咒这件装备吗？

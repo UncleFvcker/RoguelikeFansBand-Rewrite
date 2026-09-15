@@ -875,11 +875,13 @@ impl Game {
             modifiers: self.equipment_modifiers(),
         });
         let samurai = self.samurai_status();
+        let hex = self.hex_status();
         steps.extend(
             self.player
                 .statuses
                 .iter()
                 .chain(samurai.iter())
+                .chain(hex.iter())
                 .map(|status| {
                     let mut modifiers = status.granted_modifiers;
                     if status.kind_id == STATUS_UNWELL {

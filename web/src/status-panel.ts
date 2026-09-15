@@ -1090,6 +1090,10 @@ export class StatusPanel {
     );
     this.#renderNearby(state);
     const activeEffects = state.player.statuses.map((status) => {
+      if (status.kindId === "rfb.status.hex") {
+        const spells = state.player.abilities?.filter(ability => ability.effects.some(effect => effect.type === "hex" && (state.player.hex.active & (1 << effect.spell)) !== 0)).map(ability => this.#localization.format(ability.nameKey as MessageKey)).join("、") ?? "";
+        return this.#localization.format(state.player.hex.interrupted ? "status-hex-interrupted" : spells ? "status-hex-active" : "status-hex-cursed-armor", { spells });
+      }
       if (status.kindId === "rfb.status.samurai-posture") {
         const posture = state.player.abilities?.find(ability => ability.effects.some(effect => effect.type === "samurai-posture" && effect.posture === state.player.samurai.posture));
         return this.#localization.format("status-samurai-posture", { posture: this.#localization.format((posture?.nameKey ?? "class-demo-samurai-name") as MessageKey) });

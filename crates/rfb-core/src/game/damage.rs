@@ -100,13 +100,20 @@ impl Game {
             .statuses
             .iter()
             .any(|status| status.kind_id == crate::effect::STATUS_TRANSCENDENCE);
-        commit_final_player_damage(
+        let application = commit_final_player_damage(
             &mut self.player,
             self.resources.get_mut("demo.resource.mana"),
             transcendence,
             damage,
             fatality_policy,
-        )
+        );
+        if self.hex.revenge_ticks > 0 {
+            self.hex.revenge_damage = self
+                .hex
+                .revenge_damage
+                .saturating_add(application.damage.applied.max(0) as u32);
+        }
+        application
     }
 }
 

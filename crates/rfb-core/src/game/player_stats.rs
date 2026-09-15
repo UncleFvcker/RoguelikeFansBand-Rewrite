@@ -566,6 +566,7 @@ impl Game {
             .iter()
             .chain(self.music_status().iter())
             .chain(self.samurai_status().iter())
+            .chain(self.hex_status().iter())
         {
             for (damage_type, level) in &status.granted_resistances {
                 if *level == ResistanceLevel::Resistant
@@ -896,6 +897,7 @@ impl Game {
             .iter()
             .chain(self.music_status().iter())
             .chain(self.samurai_status().iter())
+            .chain(self.hex_status().iter())
         {
             immunities.extend(status.granted_status_immunities.iter().cloned());
         }
@@ -1216,6 +1218,7 @@ impl Game {
             ]);
         }
         passives.extend(self.samurai_passives());
+        passives.extend(self.hex_passives());
         passives
     }
 
@@ -2308,6 +2311,11 @@ impl Game {
         let dexterity = attributes
             .index(AttributeKind::Dexterity)
             .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP);
+        let (minimum_weight, multiplier) = if self.hexing(4) || self.hexing(14) {
+            (minimum_weight / 2, multiplier + 20)
+        } else {
+            (minimum_weight, multiplier)
+        };
         let weight = self.item_instance_weight(weapon);
         let two_hands = self.weapon_uses_two_hands(weapon);
         let hold = crate::stats::strength_hold_pounds(attributes.value(AttributeKind::Strength))
@@ -2474,6 +2482,24 @@ impl Game {
             );
         }
         let mut to_damage = stats.melee_damage_bonus.value;
+        if let Some(weapon) = self
+            .items
+            .iter()
+            .find(|i| Some(i.id.as_str()) == selected_item_id)
+        {
+            let hit = self.hex_curse_bonus(weapon, true);
+            if hit != 0 {
+                melee_skill = melee_skill.with_modifier(
+                    StatLayer::Class,
+                    "demo.realm.hex",
+                    hit * 3,
+                    StatBounds::NON_NEGATIVE,
+                );
+            }
+            if self.hexing(12) {
+                to_damage += self.hex_curse_bonus(weapon, false);
+            }
+        }
         let weapons = self.equipped_melee_weapons();
         let hand = weapons
             .iter()
@@ -2617,6 +2643,7 @@ impl Game {
             || self.player_is_necromancer()
             || self.player_is_bard()
             || self.player_is_samurai()
+            || self.player_uses_hex()
             || self.player_is_ranger()
             || self.player_is_priest()
             || self.player_is_warrior_mage()
@@ -2648,6 +2675,12 @@ impl Game {
                 (
                     "demo.class.samurai",
                     self.class_base_blows(weapon, 550, 70, 45),
+                    0,
+                )
+            } else if self.player_uses_hex() {
+                (
+                    "demo.class.high-mage",
+                    self.class_base_blows(weapon, 400, 100, 20),
                     0,
                 )
             } else if self.player_is_bard() {
@@ -3138,6 +3171,9 @@ impl Game {
             return 10;
         }
         let mut multiplier = 10;
+        if self.hexing(12) && slay_target_matches(SlayTarget::Good, definition) {
+            multiplier = slay_multiplier(SlayTarget::Good, SlayLevel::Slay);
+        }
         if self.player_is_maia()
             && self.player_is_enlightened_maia()
             && self.progress.level >= 50
@@ -3174,6 +3210,7 @@ impl Game {
             .iter()
             .chain(self.music_status().iter())
             .chain(self.samurai_status().iter())
+            .chain(self.hex_status().iter())
         {
             for brand in &status.granted_brands {
                 if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
@@ -3910,11 +3947,13 @@ impl Game {
 
         let music = include_equipment.then(|| self.music_status()).flatten();
         let samurai = include_equipment.then(|| self.samurai_status()).flatten();
+        let hex = include_equipment.then(|| self.hex_status()).flatten();
         for status in actor
             .statuses
             .iter()
             .chain(music.iter())
             .chain(samurai.iter())
+            .chain(hex.iter())
         {
             if include_equipment && self.player_is_berserker() && status.kind_id == STATUS_BERSERK {
                 continue;

@@ -4816,6 +4816,46 @@
             },
             "type": {
               "type": "string",
+              "const": "hex"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "stop-hex"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
               "const": "hissatsu"
             }
           },
@@ -12427,6 +12467,60 @@
         "applied"
       ]
     },
+    "HexStateDto": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "interrupted": {
+          "type": "boolean"
+        },
+        "manaFraction": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "revengeCast": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AbilityCastResolutionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revengeDamage": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "revengeKind": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "revengeTicks": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "active",
+        "interrupted",
+        "manaFraction",
+        "revengeKind",
+        "revengeTicks",
+        "revengeDamage"
+      ]
+    },
     "HomeDto": {
       "type": "object",
       "properties": {
@@ -14569,6 +14663,9 @@
           "default": 0,
           "minimum": 0
         },
+        "hex": {
+          "$ref": "#/$defs/HexStateDto"
+        },
         "hp": {
           "type": "integer",
           "format": "int32"
@@ -14850,6 +14947,7 @@
         "fame",
         "fasting",
         "music",
+        "hex",
         "samurai",
         "virtues"
       ]

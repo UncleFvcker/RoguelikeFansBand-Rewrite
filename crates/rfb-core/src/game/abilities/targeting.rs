@@ -126,6 +126,11 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
+            AbilityEffectDefinition::Hex { spell } => self.hex_target_plan(ability, spell, target),
+            AbilityEffectDefinition::StopHex { .. } => {
+                matches!(target, TargetSelection::SelfTarget)
+                    .then_some(AbilityTargetPlan::SelfTarget)
+            }
             AbilityEffectDefinition::Hissatsu { spell } => {
                 self.hissatsu_target_plan(ability, spell, target)
             }

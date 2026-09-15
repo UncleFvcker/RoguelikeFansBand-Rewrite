@@ -32,6 +32,7 @@ test("new character creation exposes all formal class slices", () => {
   assert.deepEqual([...PLAYTEST_BUILD_IDS].sort(), [
     "demo.build.warrior",
     ...MAGE_REALMS.map(realm => `demo.build.high-mage-${realm}`),
+    "demo.build.high-mage-hex",
     "demo.build.archer",
     ...PALADIN_REALMS.map(realm => `demo.build.paladin-${realm}`),
     "demo.build.cavalry",
@@ -125,7 +126,7 @@ test("random session seeds combine two entropy words without truncation", () => 
 
 test("career leaves retain the existing class and realm mapping", () => {
   assert.equal(CAREER_GROUPS.length, 8);
-  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 213);
+  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 214);
   assert.equal(CAREER_GROUPS.find(group => group.id === "device").options[0].id, "demo.build.magic-eater");
   assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.samurai", "demo.build.berserker", "demo.build.duelist"]);
   assert.equal(CAREER_GROUPS.find(group => group.id === "mind").options[0].id, "demo.build.mindcrafter");
@@ -141,7 +142,7 @@ test("career leaves retain the existing class and realm mapping", () => {
       assert.equal(entry.nameKey, cls.nameKey);
       assert.equal(entry.descriptionKey, cls.descriptionKey);
       if ("children" in entry) {
-        assert.equal(leaves.length, entry.id === "mage" ? 132 : entry.id === "priest" ? 36 : entry.id === "warrior-mage" ? 11 : entry.id === "ranger" ? 6 : entry.id === "high-mage" ? 12 : entry.id === "paladin" ? 5 : 1);
+        assert.equal(leaves.length, entry.id === "mage" ? 132 : entry.id === "priest" ? 36 : entry.id === "warrior-mage" ? 11 : entry.id === "ranger" ? 6 : entry.id === "high-mage" ? 13 : entry.id === "paladin" ? 5 : 1);
         if (entry.id === "mage") {
           assert.ok(MAGE_REALMS.includes(build.firstRealmId));
           assert.ok(MAGE_REALMS.includes(build.secondRealmId));

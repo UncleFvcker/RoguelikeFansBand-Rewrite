@@ -210,6 +210,8 @@ fn hissatsu_stunning_hit_does_not_damage_and_sutemi_doubles_incoming_damage() {
             .any(|s| s.kind_id == STATUS_STUN)
     );
     let sutemi = learn(&mut g, 16);
+    // Keep the actual hit independent of birth stock generation.
+    g.rng = RfbRng::seeded(1);
     for _ in 0..32 {
         g.samurai_concentrate();
     }
@@ -231,6 +233,7 @@ fn hissatsu_counter_and_iai_use_actual_melee() {
     let mut g = samurai();
     target(&mut g, 5000);
     g.samurai.counter = true;
+    g.rng = RfbRng::seeded(1);
     let before = g.resources["demo.resource.mana"].current;
     g.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
         .unwrap();

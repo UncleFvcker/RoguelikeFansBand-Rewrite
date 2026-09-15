@@ -2420,7 +2420,7 @@ impl Game {
             if profile.attack_name.as_deref() == Some("马蹄") {
                 self.train_centaur_hooves(definition.level, events);
             }
-            let vampiric_weapon = hissatsu == Some(24) ||
+            let vampiric_weapon = (profile.source_item_id.is_some() && self.hexing(27)) || hissatsu == Some(24) ||
                 matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
                     || (profile.source_item_id.is_some() && self.items.iter().any(|item| {
                         matches!(&item.location, ItemLocation::Equipped { slot_id }
@@ -2532,7 +2532,7 @@ impl Game {
                     None
                 } else if has_trait(WeaponTraitDto::Vorpal2) {
                     Some(2_u64)
-                } else if has_trait(WeaponTraitDto::Vorpal) {
+                } else if has_trait(WeaponTraitDto::Vorpal) || self.hexing(12) {
                     Some(4_u64)
                 } else {
                     None
@@ -3313,7 +3313,7 @@ impl Game {
         definition: &rfb_content::ActorDefinition,
         events: &mut Vec<DomainEvent>,
     ) {
-        if !self.confusing_strike_ready {
+        if !self.confusing_strike_ready && !self.hexing(13) {
             return;
         }
         self.confusing_strike_ready = false;

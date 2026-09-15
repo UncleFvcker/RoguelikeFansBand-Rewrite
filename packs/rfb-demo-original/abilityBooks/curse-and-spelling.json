@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.curse-and-spelling",
+  "nameKey": "item-demo-curse-and-spelling-name",
+  "descriptionKey": "ability-book-demo-trumps-of-doom-description",
+  "realmId": "hex",
+  "rank": 3,
+  "abilityIds": [
+    "demo.ability.hex-shock-cloak",
+    "demo.ability.hex-cure-critical-wounds",
+    "demo.ability.hex-recharge",
+    "demo.ability.hex-animate-dead",
+    "demo.ability.hex-curse-armor",
+    "demo.ability.hex-shadow-cloak",
+    "demo.ability.hex-pain-to-mana",
+    "demo.ability.hex-eye-for-eye"
+  ],
+  "tags": [
+    "hex",
+    "spellbook"
+  ]
+}

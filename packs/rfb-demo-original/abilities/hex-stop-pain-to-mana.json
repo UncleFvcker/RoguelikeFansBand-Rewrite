@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.hex-stop-pain-to-mana",
+  "nameKey": "ability-demo-hex-stop-pain-to-mana-name",
+  "descriptionKey": "ability-demo-hex-stop-pain-to-mana-description",
+  "abilityProgramId": "demo.ability-program.hex-stop-pain-to-mana",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "hex",
+    "class",
+    "usable-while-confused",
+    "usable-while-afraid"
+  ]
+}

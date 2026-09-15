@@ -1,0 +1,315 @@
+{
+  "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+  "sourceFiles": [
+    "src/hex.c",
+    "src/do-spell.c",
+    "src/tables.c",
+    "src/xtra1.c",
+    "src/xtra2.c",
+    "src/combat.c",
+    "src/cmd1.c",
+    "src/melee1.c",
+    "src/dungeon.c",
+    "lib/edit/k_info.txt",
+    "src/kind_name_zh.inc",
+    "src/cmd5.c",
+    "src/cmd6.c",
+    "src/virtue.c",
+    "src/object2.c",
+    "src/ego.c",
+    "src/artifact.c"
+  ],
+  "spells": [
+    {
+      "slot": 0,
+      "name": "邪恶祝福",
+      "abilityId": "demo.ability.hex-evil-blessing",
+      "minimumLevel": 1,
+      "resourceCost": 2,
+      "baseFailurePercent": 20,
+      "experienceMultiplier": 2
+    },
+    {
+      "slot": 1,
+      "name": "治疗轻伤",
+      "abilityId": "demo.ability.hex-cure-light-wounds",
+      "minimumLevel": 1,
+      "resourceCost": 2,
+      "baseFailurePercent": 20,
+      "experienceMultiplier": 2
+    },
+    {
+      "slot": 2,
+      "name": "恶魔光环",
+      "abilityId": "demo.ability.hex-demon-aura",
+      "minimumLevel": 3,
+      "resourceCost": 2,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 3
+    },
+    {
+      "slot": 3,
+      "name": "恶臭迷雾",
+      "abilityId": "demo.ability.hex-stinking-mist",
+      "minimumLevel": 5,
+      "resourceCost": 3,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 4
+    },
+    {
+      "slot": 4,
+      "name": "额外力量",
+      "abilityId": "demo.ability.hex-extra-might",
+      "minimumLevel": 7,
+      "resourceCost": 3,
+      "baseFailurePercent": 40,
+      "experienceMultiplier": 6
+    },
+    {
+      "slot": 5,
+      "name": "诅咒武器",
+      "abilityId": "demo.ability.hex-curse-weapon",
+      "minimumLevel": 8,
+      "resourceCost": 10,
+      "baseFailurePercent": 60,
+      "experienceMultiplier": 8
+    },
+    {
+      "slot": 6,
+      "name": "邪恶探测",
+      "abilityId": "demo.ability.hex-detect-evil",
+      "minimumLevel": 9,
+      "resourceCost": 3,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 10
+    },
+    {
+      "slot": 7,
+      "name": "忍耐",
+      "abilityId": "demo.ability.hex-patience",
+      "minimumLevel": 10,
+      "resourceCost": 5,
+      "baseFailurePercent": 40,
+      "experienceMultiplier": 12
+    },
+    {
+      "slot": 8,
+      "name": "寒冰装甲",
+      "abilityId": "demo.ability.hex-ice-armor",
+      "minimumLevel": 12,
+      "resourceCost": 8,
+      "baseFailurePercent": 40,
+      "experienceMultiplier": 15
+    },
+    {
+      "slot": 9,
+      "name": "治疗重伤",
+      "abilityId": "demo.ability.hex-cure-serious-wounds",
+      "minimumLevel": 12,
+      "resourceCost": 9,
+      "baseFailurePercent": 35,
+      "experienceMultiplier": 15
+    },
+    {
+      "slot": 10,
+      "name": "吸入药水",
+      "abilityId": "demo.ability.hex-inhale-potion",
+      "minimumLevel": 15,
+      "resourceCost": 10,
+      "baseFailurePercent": 50,
+      "experienceMultiplier": 20
+    },
+    {
+      "slot": 11,
+      "name": "吸血迷雾",
+      "abilityId": "demo.ability.hex-vampiric-mist",
+      "minimumLevel": 20,
+      "resourceCost": 12,
+      "baseFailurePercent": 45,
+      "experienceMultiplier": 35
+    },
+    {
+      "slot": 12,
+      "name": "武器化为符文剑",
+      "abilityId": "demo.ability.hex-runesword",
+      "minimumLevel": 25,
+      "resourceCost": 15,
+      "baseFailurePercent": 50,
+      "experienceMultiplier": 50
+    },
+    {
+      "slot": 13,
+      "name": "混乱之触",
+      "abilityId": "demo.ability.hex-confusing-touch",
+      "minimumLevel": 30,
+      "resourceCost": 12,
+      "baseFailurePercent": 60,
+      "experienceMultiplier": 70
+    },
+    {
+      "slot": 14,
+      "name": "强化体格",
+      "abilityId": "demo.ability.hex-building-up",
+      "minimumLevel": 35,
+      "resourceCost": 10,
+      "baseFailurePercent": 60,
+      "experienceMultiplier": 80
+    },
+    {
+      "slot": 15,
+      "name": "反传送结界",
+      "abilityId": "demo.ability.hex-anti-teleport",
+      "minimumLevel": 40,
+      "resourceCost": 16,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 100
+    },
+    {
+      "slot": 16,
+      "name": "冲击斗篷",
+      "abilityId": "demo.ability.hex-shock-cloak",
+      "minimumLevel": 15,
+      "resourceCost": 8,
+      "baseFailurePercent": 20,
+      "experienceMultiplier": 20
+    },
+    {
+      "slot": 17,
+      "name": "治疗致命伤",
+      "abilityId": "demo.ability.hex-cure-critical-wounds",
+      "minimumLevel": 18,
+      "resourceCost": 15,
+      "baseFailurePercent": 50,
+      "experienceMultiplier": 20
+    },
+    {
+      "slot": 18,
+      "name": "充能",
+      "abilityId": "demo.ability.hex-recharge",
+      "minimumLevel": 22,
+      "resourceCost": 10,
+      "baseFailurePercent": 65,
+      "experienceMultiplier": 35
+    },
+    {
+      "slot": 19,
+      "name": "操纵死尸",
+      "abilityId": "demo.ability.hex-animate-dead",
+      "minimumLevel": 25,
+      "resourceCost": 28,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 50
+    },
+    {
+      "slot": 20,
+      "name": "诅咒防具",
+      "abilityId": "demo.ability.hex-curse-armor",
+      "minimumLevel": 28,
+      "resourceCost": 10,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 60
+    },
+    {
+      "slot": 21,
+      "name": "阴影斗篷",
+      "abilityId": "demo.ability.hex-shadow-cloak",
+      "minimumLevel": 30,
+      "resourceCost": 20,
+      "baseFailurePercent": 60,
+      "experienceMultiplier": 60
+    },
+    {
+      "slot": 22,
+      "name": "痛苦化法",
+      "abilityId": "demo.ability.hex-pain-to-mana",
+      "minimumLevel": 36,
+      "resourceCost": 22,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 80
+    },
+    {
+      "slot": 23,
+      "name": "以眼还眼",
+      "abilityId": "demo.ability.hex-eye-for-eye",
+      "minimumLevel": 40,
+      "resourceCost": 28,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 100
+    },
+    {
+      "slot": 24,
+      "name": "反繁殖结界",
+      "abilityId": "demo.ability.hex-anti-multiply",
+      "minimumLevel": 5,
+      "resourceCost": 6,
+      "baseFailurePercent": 35,
+      "experienceMultiplier": 5
+    },
+    {
+      "slot": 25,
+      "name": "恢复生命",
+      "abilityId": "demo.ability.hex-restore-life",
+      "minimumLevel": 22,
+      "resourceCost": 24,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 40
+    },
+    {
+      "slot": 26,
+      "name": "吸取诅咒力量",
+      "abilityId": "demo.ability.hex-drain-curse",
+      "minimumLevel": 25,
+      "resourceCost": 2,
+      "baseFailurePercent": 65,
+      "experienceMultiplier": 50
+    },
+    {
+      "slot": 27,
+      "name": "武器化为吸血剑",
+      "abilityId": "demo.ability.hex-vampiric-blade",
+      "minimumLevel": 32,
+      "resourceCost": 20,
+      "baseFailurePercent": 50,
+      "experienceMultiplier": 70
+    },
+    {
+      "slot": 28,
+      "name": "震慑之语",
+      "abilityId": "demo.ability.hex-word-of-stun",
+      "minimumLevel": 35,
+      "resourceCost": 35,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 80
+    },
+    {
+      "slot": 29,
+      "name": "潜入暗影",
+      "abilityId": "demo.ability.hex-shadow-move",
+      "minimumLevel": 38,
+      "resourceCost": 32,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 90
+    },
+    {
+      "slot": 30,
+      "name": "反魔法结界",
+      "abilityId": "demo.ability.hex-anti-magic",
+      "minimumLevel": 42,
+      "resourceCost": 24,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 120
+    },
+    {
+      "slot": 31,
+      "name": "复仇宣言",
+      "abilityId": "demo.ability.hex-revenge",
+      "minimumLevel": 46,
+      "resourceCost": 45,
+      "baseFailurePercent": 80,
+      "experienceMultiplier": 200
+    }
+  ],
+  "buildIds": [
+    "demo.build.high-mage-hex"
+  ]
+}

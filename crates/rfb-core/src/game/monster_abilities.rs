@@ -1824,6 +1824,25 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> MonsterAbilityPlanResolution {
+        if (!self.monster_ability_is_innate(&plan.ability.id) && self.hex_barrier(source_index, 30))
+            || (matches!(
+                plan.ability.effect,
+                AbilityEffectDefinition::TeleportSelf { .. }
+            ) && self.hex_barrier(source_index, 15))
+        {
+            return MonsterAbilityPlanResolution {
+                target_entity_id: self.entities[source_index].id.clone(),
+                target_kind_id: source_kind_id.into(),
+                affected_positions: Vec::new(),
+                summon: None,
+                effects: vec![AbilityEffectResolutionDto::Skipped {
+                    effect_index: 0,
+                    reason: AbilityEffectSkipReasonDto::Saved,
+                }],
+                targets: Vec::new(),
+                trace: None,
+            };
+        }
         let source_entity_id = self.entities[source_index].id.clone();
         let player_hp_before = self.player.hp;
         let mounted_hp_before = self.riding_actor_id.as_deref().and_then(|mount_id| {
@@ -3218,6 +3237,7 @@ impl Game {
                         }
                     } else {
                         self.interrupt_music();
+                        self.interrupt_hex();
                         remove_ability_status_effect(&mut self.player, effect_index, status_kind_id)
                     }
                 }

@@ -6341,6 +6341,8 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             ("demo.item.minstrels-music", 1_350),
             ("demo.item.bugei-shofu", 135),
             ("demo.item.yagyuu-bugeichou", 1_350),
+            ("demo.item.handbook-of-hex", 135),
+            ("demo.item.high-curse", 1_350),
             ("demo.item.black-mass", 1_350),
             ("demo.item.cantrips-for-beginners", 135),
             ("demo.item.minor-arcana", 338),

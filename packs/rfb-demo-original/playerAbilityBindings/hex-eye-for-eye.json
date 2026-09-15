@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.hex-eye-for-eye",
+  "minimumLevel": 40,
+  "resourceCost": 28,
+  "baseFailurePercent": 70,
+  "firstSuccessExperience": 4000,
+  "resourceId": "demo.resource.mana"
+}

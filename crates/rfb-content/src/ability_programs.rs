@@ -220,6 +220,16 @@ fn ability_program_input_accepts_step(
             _ => false,
         };
     }
+    if let AbilityEffectDefinition::Hex { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::Item => matches!(spell, 5 | 10 | 18 | 20 | 26),
+            AbilityProgramInputDefinition::CastTarget => *spell == 29,
+            AbilityProgramInputDefinition::SelfTarget => {
+                *spell < 32 && !matches!(spell, 5 | 10 | 18 | 20 | 26 | 29)
+            }
+            _ => false,
+        };
+    }
     if let AbilityEffectDefinition::Music { spell } = effect {
         return match input {
             AbilityProgramInputDefinition::CastTarget => matches!(spell, 2 | 22 | 30),
@@ -294,6 +304,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::ReduceStatus { .. }
                     | AbilityEffectDefinition::PrepareConfusingStrike
                     | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
+                    | AbilityEffectDefinition::StopHex { .. }
                     | AbilityEffectDefinition::StopSinging
                     | AbilityEffectDefinition::SamuraiConcentration
                     | AbilityEffectDefinition::SamuraiPosture { .. }
@@ -548,6 +559,7 @@ fn ability_program_input_matches_target(
                             | AbilityEffectDefinition::SmashTrap
                             | AbilityEffectDefinition::FetchItem { .. }
                             | AbilityEffectDefinition::DimensionDoor { .. }
+                            | AbilityEffectDefinition::Hex { spell: 29 }
                     ))
         }
         AbilityProgramInputDefinition::Item => {

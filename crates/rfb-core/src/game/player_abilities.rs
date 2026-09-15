@@ -248,6 +248,9 @@ impl Game {
     }
 
     pub(super) fn class_power_matches_realm(&self, ability_id: &str) -> bool {
+        if ability_id.starts_with("demo.ability.hex-stop") {
+            return self.player_uses_hex() && self.content.ability(ability_id).is_some_and(|a| matches!(a.effect, AbilityEffectDefinition::StopHex { spell } if spell.is_none_or(|s| self.hex.active & (1 << s) != 0)));
+        }
         match ability_id {
             "demo.ability.paladin-holy-lance" | "demo.ability.paladin-hell-lance" => self
                 .character_definitions()
@@ -1385,6 +1388,7 @@ impl Game {
         if self.player_uses_dual_realm_learning()
             || self.player_is_bard()
             || self.player_is_samurai()
+            || self.player_uses_hex()
         {
             return Err("manual-forgetting-unavailable");
         }
@@ -1914,6 +1918,7 @@ impl Game {
     ) -> AbilityProgress {
         let player = Self::player_ability_parameters(ability).clone();
         let book_practice = self.player_uses_dual_realm_learning()
+            || matches!(ability.effect, AbilityEffectDefinition::Hex { spell } if super::abilities::hex::continuous(spell))
             || matches!(ability.effect, AbilityEffectDefinition::Music { spell } if super::abilities::music::continuous(spell));
         let progress = self
             .ability_progress

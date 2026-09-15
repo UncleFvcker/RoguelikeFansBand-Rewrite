@@ -9,6 +9,7 @@ mod control;
 mod damage;
 mod duelist;
 mod duelist_choices;
+pub(in crate::game) mod hex;
 pub(in crate::game) mod hissatsu;
 mod items;
 mod law;
@@ -43,6 +44,14 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<Position>, CoreError> {
         match (ability.effect.clone(), target_plan) {
+            (AbilityEffectDefinition::Hex { spell }, plan) => {
+                return self.resolve_hex(&ability, spell, plan, events, changed, removed_entities);
+            }
+            (AbilityEffectDefinition::StopHex { spell }, _) => {
+                self.stop_hex(spell);
+                return Ok(None);
+            }
+
             (AbilityEffectDefinition::Hissatsu { spell }, plan) => {
                 return self.resolve_hissatsu(
                     &ability,

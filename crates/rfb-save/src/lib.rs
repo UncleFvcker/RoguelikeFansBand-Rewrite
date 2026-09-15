@@ -241,6 +241,7 @@ mod tests {
                 resources: Vec::new(),
                 bonus_spell_learning_capacity: 0,
                 music: Default::default(),
+                hex: Default::default(),
                 samurai: Default::default(),
                 spent_spell_learning: 0,
                 mage_realms: None,

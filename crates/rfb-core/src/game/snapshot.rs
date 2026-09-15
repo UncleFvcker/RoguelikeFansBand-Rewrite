@@ -120,6 +120,7 @@ impl Game {
             minor_slow: self.minor_slow,
             reality_change_ticks: self.reality_change_ticks,
             music: self.music.clone(),
+            hex: self.hex.clone(),
             samurai: self.samurai,
             pending_mutation_direction: self.pending_mutation_direction.clone(),
             pending_ability_direction: self.pending_ability_direction.clone(),
@@ -155,6 +156,7 @@ impl Game {
                 .iter()
                 .chain(self.music_status().iter())
                 .chain(self.samurai_status().iter())
+                .chain(self.hex_status().iter())
                 .map(crate::effect::StatusInstance::to_dto)
                 .collect(),
             confusing_strike_ready: self.confusing_strike_ready,
@@ -760,6 +762,7 @@ impl Game {
                     can_forget: source == AbilitySourceDto::Learned
                         && learned
                         && !self.player_is_bard()
+                        && !self.player_uses_hex()
                         && !self.player_is_samurai()
                         && !self.player_uses_dual_realm_learning(),
                     can_cast: unavailable_reason.is_none(),

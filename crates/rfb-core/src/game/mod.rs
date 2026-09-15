@@ -237,7 +237,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 136;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 137;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -895,6 +895,7 @@ pub struct Game {
     chaos_patron_id: Option<String>,
     reality_change_ticks: u8,
     music: rfb_protocol::MusicStateDto,
+    hex: rfb_protocol::HexStateDto,
     samurai: rfb_protocol::SamuraiStateDto,
     pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pending_ability_direction: Option<PendingAbilityDirectionDto>,
@@ -1290,6 +1291,10 @@ impl Game {
         );
         let mut action_cost = if map_scale_before_command == MapScaleDto::World && advances_world {
             STANDARD_ACTION_COST.saturating_mul(wilderness::WORLD_MAP_ACTION_MULTIPLIER)
+        } else if matches!(&action, GameAction::CastAbility { ability_id, .. }
+            if self.content.ability(ability_id).is_some_and(|a| matches!(a.effect, AbilityEffectDefinition::StopHex { .. })))
+        {
+            10
         } else if projectile_action {
             self.player_projectile_profile()
                 .map_or_else(|| action.energy_cost(), |profile| profile.energy_cost)
@@ -1399,6 +1404,7 @@ impl Game {
             self.fishing_direction = None;
         }
         self.samurai_before_action(&action, advances_world);
+        self.hex_before_action(&action);
         match action {
             GameAction::SelectMagicAbsorptionSlot { slot } => {
                 self.select_magic_absorption_slot(slot, &mut events);
@@ -1945,6 +1951,7 @@ impl Game {
                         "demo.ability.chaos-call-chaos"
                             | "demo.ability.trump-shuffle"
                             | "demo.ability.hissatsu-hundred-slaughter"
+                            | "demo.ability.hex-revenge"
                     )
                 }) {
                     self.resolve_pending_call_chaos(
@@ -1956,6 +1963,11 @@ impl Game {
                     advances_world = true;
                     action_cost = STANDARD_ACTION_COST;
                     turn_advance = 1;
+                    if self.pending_ability_direction.is_some() {
+                        advances_world = false;
+                        action_cost = 0;
+                        turn_advance = 0;
+                    }
                 } else {
                     self.pending_ability_direction = None;
                 }
@@ -2191,6 +2203,7 @@ impl Game {
             }
             GameAction::Rest { turns } => {
                 if turns > 0 {
+                    self.stop_hex(None);
                     self.stop_music();
                 }
                 let resolution = self.resolve_player_rest(
@@ -4007,7 +4020,8 @@ impl Game {
     }
 
     fn player_has_status_kind(&self, kind_id: &str) -> bool {
-        self.samurai_grants_status(kind_id)
+        self.hex_grants_status(kind_id)
+            || self.samurai_grants_status(kind_id)
             || self.music_grants_status(kind_id)
             || (kind_id == STATUS_BERSERK && self.player_is_berserker())
             || self

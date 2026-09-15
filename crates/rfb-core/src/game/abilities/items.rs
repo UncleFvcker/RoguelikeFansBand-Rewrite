@@ -96,7 +96,12 @@ impl Game {
         use AbilityEffectDefinition as E;
         if matches!(
             ability.effect,
-            E::BrandWeapon { .. } | E::RechargeFromPlayer { .. } | E::Hissatsu { spell: 11 }
+            E::BrandWeapon { .. }
+                | E::RechargeFromPlayer { .. }
+                | E::Hissatsu { spell: 11 }
+                | E::Hex {
+                    spell: 5 | 10 | 18 | 20 | 26
+                }
         ) {
             return Some(
                 self.items
@@ -109,7 +114,11 @@ impl Game {
                             rfb_protocol::AbilityItemTargetDto {
                                 item_id: item.id.clone(),
                                 target,
-                                confirmation_key: None,
+                                confirmation_key: matches!(
+                                    ability.effect,
+                                    E::Hex { spell: 5 | 20 }
+                                )
+                                .then(|| "item-hex-curse-confirm".to_owned()),
                             }
                         })
                     })

@@ -202,6 +202,7 @@
       "demo.build.high-mage-crusade",
       "demo.build.high-mage-armageddon",
       "demo.build.high-mage-law",
+      "demo.build.high-mage-hex",
       "demo.build.necromancer",
       "demo.build.bard",
       "demo.build.magic-eater",
@@ -1267,6 +1268,12 @@
         "buildId": "demo.build.high-mage-law",
         "classId": "demo.class.high-mage",
         "firstRealmId": "law",
+        "secondRealmId": null
+      },
+      {
+        "buildId": "demo.build.high-mage-hex",
+        "classId": "demo.class.high-mage",
+        "firstRealmId": "hex",
         "secondRealmId": null
       },
       {
@@ -8269,6 +8276,57 @@
             "tests": [
               "crates/rfb-core/src/game/tests/law.rs#law_all_29_builds_learn_cast_and_resume",
               "crates/rfb-core/src/game/tests/law.rs#law_four_books_use_the_ordinary_pool_pickup_study_and_save"
+            ]
+          }
+        ],
+        "gapIds": [],
+        "complete": true
+      },
+      {
+        "buildId": "demo.build.high-mage-hex",
+        "areas": [
+          {
+            "review": "base-allocation-tailored",
+            "status": "implemented",
+            "reason": "Hex books source kinds 560-563 use the ordinary pool and the existing high-mage learned-book predicate.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/hex.rs#hex_four_books_generate_in_the_full_pool_and_teach_after_pickup"
+            ]
+          },
+          {
+            "review": "ego-negative",
+            "status": "no-special-difference",
+            "reason": "demo.build.high-mage-hex: Hex uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 107. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/hex-realm.md. Area: ego-negative.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/hex.rs#hex_all_32_formal_spells_cast_and_resume",
+              "crates/rfb-core/src/game/tests/hex.rs#hex_four_books_generate_in_the_full_pool_and_teach_after_pickup"
+            ]
+          },
+          {
+            "review": "random-artifact",
+            "status": "no-special-difference",
+            "reason": "demo.build.high-mage-hex: Hex uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 107. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/hex-realm.md. Area: random-artifact.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/hex.rs#hex_all_32_formal_spells_cast_and_resume",
+              "crates/rfb-core/src/game/tests/hex.rs#hex_four_books_generate_in_the_full_pool_and_teach_after_pickup"
+            ]
+          },
+          {
+            "review": "fixed-artifact-reward",
+            "status": "implemented",
+            "reason": "demo.build.high-mage-hex: Hex uses the existing class body, Ego weighting, artifact bias and fixed rewards; realm membership and book discovery now include source tval 107. Source master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c object2.c, ego.c, artifact.c and tables.c. See docs/hex-realm.md. Area: fixed-artifact-reward.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/hex.rs#hex_all_32_formal_spells_cast_and_resume",
+              "crates/rfb-core/src/game/tests/hex.rs#hex_four_books_generate_in_the_full_pool_and_teach_after_pickup"
+            ]
+          },
+          {
+            "review": "use-save",
+            "status": "implemented",
+            "reason": "Concurrent upkeep, curse equipment, barriers and delayed revenge use real consumers and saved state.",
+            "tests": [
+              "crates/rfb-core/src/game/tests/hex.rs#hex_all_32_formal_spells_cast_and_resume",
+              "crates/rfb-core/src/game/tests/hex.rs#hex_patience_and_revenge_store_actual_damage_and_prompt_at_expiry"
             ]
           }
         ],

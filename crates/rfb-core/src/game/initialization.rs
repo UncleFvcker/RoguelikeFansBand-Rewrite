@@ -669,6 +669,7 @@ impl Game {
             chaos_patron_id,
             reality_change_ticks: 0,
             music: rfb_protocol::MusicStateDto::default(),
+            hex: Default::default(),
             samurai: Default::default(),
             pending_mutation_direction: None,
             pending_ability_direction: None,

@@ -663,6 +663,12 @@ pub enum AbilityEffectDefinition {
         spell: u8,
     },
     StopSinging,
+    Hex {
+        spell: u8,
+    },
+    StopHex {
+        spell: Option<u8>,
+    },
     Hissatsu {
         spell: u8,
     },

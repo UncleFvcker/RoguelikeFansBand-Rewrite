@@ -1535,3 +1535,9 @@ hissatsu-harakiri-confirm = Harakiri will end this life. Proceed?
 hissatsu-harakiri-type = Type @ to confirm Harakiri.
 
 status-samurai-posture = Posture: { $posture }
+
+realm-hex-name = Hex
+status-hex-active = Hex: { $spells }
+status-hex-cursed-armor = Hex: cursed armor bonus
+status-hex-interrupted = Hex interrupted: { $spells }
+item-hex-curse-confirm = Curse this equipment?

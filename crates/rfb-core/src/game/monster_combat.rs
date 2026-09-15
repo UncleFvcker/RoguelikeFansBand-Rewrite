@@ -757,7 +757,7 @@ impl Game {
         damage
     }
 
-    fn monster_ability_is_innate(&self, ability_id: &str) -> bool {
+    pub(in crate::game) fn monster_ability_is_innate(&self, ability_id: &str) -> bool {
         self.content.ability(ability_id).is_some_and(|ability| {
             ability.tags.iter().any(|tag| tag == "monster-arrow")
                 || ability
@@ -2395,6 +2395,11 @@ impl Game {
                     actor_matches_category(definition, "evil")
                         && !definition.tags.iter().any(|tag| tag == "resist-all")
                 });
+        if self.hexing(21)
+            && self.hex_shadow_aura(target_index, events, changed, removed_entities)?
+        {
+            return Ok(true);
+        }
         if holy_target {
             let player_level = self.progress.level / 10;
             let raw = 2_i32.saturating_add(self.roll_damage(
@@ -2415,7 +2420,7 @@ impl Game {
         Ok(false)
     }
 
-    fn resolve_player_contact_aura_damage(
+    pub(in crate::game) fn resolve_player_contact_aura_damage(
         &mut self,
         target_index: usize,
         damage_type: DamageType,
@@ -2635,6 +2640,9 @@ impl Game {
             });
         }
 
+        if self.hexing(23) {
+            return Ok(());
+        }
         let status_index = self
             .player
             .statuses

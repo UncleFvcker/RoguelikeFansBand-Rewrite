@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.272";
+pub const PROTOCOL_VERSION: &str = "1.273";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 29;
 
@@ -1187,6 +1187,19 @@ pub struct MusicStateDto {
     pub half_mana: bool,
 }
 
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct HexStateDto {
+    pub active: u32,
+    pub interrupted: bool,
+    pub mana_fraction: u32,
+    pub revenge_kind: u8,
+    pub revenge_ticks: u8,
+    pub revenge_damage: u32,
+    pub revenge_cast: Option<AbilityCastResolutionDto>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -1639,6 +1652,12 @@ pub enum AbilityEffectSpecDto {
         spell: u8,
     },
     StopSinging,
+    Hex {
+        spell: u8,
+    },
+    StopHex {
+        spell: Option<u8>,
+    },
     Hissatsu {
         spell: u8,
     },
@@ -4027,6 +4046,7 @@ pub struct PlayerDto {
     #[serde(default)]
     pub reality_change_ticks: u8,
     pub music: MusicStateDto,
+    pub hex: HexStateDto,
     pub samurai: SamuraiStateDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
@@ -5433,6 +5453,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(TargetSpecDto);
     push_declaration!(ResourcePoolDto);
     push_declaration!(MusicStateDto);
+    push_declaration!(HexStateDto);
     push_declaration!(SamuraiStateDto);
     push_declaration!(AbilityLearningDto);
     push_declaration!(SpellRealmsDto);
@@ -5655,6 +5676,7 @@ pub struct PlayerSaveDto {
     #[serde(default)]
     pub reality_change_ticks: u8,
     pub music: MusicStateDto,
+    pub hex: HexStateDto,
     pub samurai: SamuraiStateDto,
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
@@ -6872,6 +6894,7 @@ mod tests {
                 minor_slow: 0,
                 reality_change_ticks: 0,
                 music: MusicStateDto::default(),
+                hex: HexStateDto::default(),
                 samurai: SamuraiStateDto::default(),
                 pending_mutation_direction: None,
                 pending_ability_direction: None,
@@ -7198,6 +7221,7 @@ mod tests {
             chaos_patron_id: None,
             reality_change_ticks: 0,
             music: MusicStateDto::default(),
+            hex: HexStateDto::default(),
             samurai: SamuraiStateDto::default(),
             pending_mutation_direction: None,
             pending_ability_direction: None,

@@ -56,6 +56,9 @@ impl Game {
         &self,
         ability_id: &str,
     ) -> Option<&'static str> {
+        if let Some(reason) = self.hex_ability_unavailable_reason(ability_id) {
+            return Some(reason);
+        }
         if let Some(reason) = self.samurai_ability_unavailable_reason(ability_id) {
             return Some(reason);
         }
@@ -473,6 +476,7 @@ impl Game {
         let percentile_roll = if matches!(
             ability.effect,
             AbilityEffectDefinition::StopSinging
+                | AbilityEffectDefinition::StopHex { .. }
                 | AbilityEffectDefinition::Hissatsu { .. }
                 | AbilityEffectDefinition::SamuraiConcentration
                 | AbilityEffectDefinition::SamuraiPosture { .. }
@@ -923,6 +927,13 @@ impl Game {
         {
             return self.continue_hissatsu_slaughter(direction, events, changed, removed_entities);
         }
+        if self
+            .pending_ability_direction
+            .as_ref()
+            .is_some_and(|p| p.ability_id == "demo.ability.hex-revenge")
+        {
+            return self.continue_hex_revenge(direction, events, changed, removed_entities);
+        }
         let pending = self
             .pending_ability_direction
             .clone()
@@ -997,6 +1008,7 @@ impl Game {
                 "demo.ability.chaos-call-chaos"
                     | "demo.ability.trump-shuffle"
                     | "demo.ability.hissatsu-hundred-slaughter"
+                    | "demo.ability.hex-revenge"
             )
         }) {
             return self.resolve_pending_call_chaos(

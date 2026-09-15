@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.hex-stop-shock-cloak",
+  "nameKey": "ability-demo-hex-stop-shock-cloak-name",
+  "descriptionKey": "ability-demo-hex-stop-shock-cloak-description",
+  "abilityProgramId": "demo.ability-program.hex-stop-shock-cloak",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "hex",
+    "class",
+    "usable-while-confused",
+    "usable-while-afraid"
+  ]
+}

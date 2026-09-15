@@ -111,7 +111,7 @@ const MAGE = {
 export const CAREER_GROUPS = [
   { id: "melee", options: [career("warrior"), career("samurai"), career("berserker"), { ...career("duelist"), notes: ["duelist-auto-challenge-help", "session-duelist-tonberry-unavailable"] }] },
   { id: "archery", options: [career("archer"), career("sniper"), RANGER] },
-  { id: "magic", options: [MAGE, singleRealmCaster("high-mage", MAGE_REALMS), career("necromancer"), career("bard")] },
+  { id: "magic", options: [MAGE, singleRealmCaster("high-mage", [...MAGE_REALMS, "hex"] as const), career("necromancer"), career("bard")] },
   { id: "device", options: [career("magic-eater")] },
   { id: "prayer", options: [PRIEST] },
   { id: "hybrid", options: [singleRealmCaster("paladin", PALADIN_REALMS), WARRIOR_MAGE] },

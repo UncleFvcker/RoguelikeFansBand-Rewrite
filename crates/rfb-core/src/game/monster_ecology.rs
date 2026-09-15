@@ -2124,6 +2124,9 @@ impl Game {
         {
             return false;
         }
+        if self.hex_barrier(index, 24) {
+            return false;
+        }
         // Original neutral Harmony always passes this check, but randint1(375)
         // still advances the RNG before crowding and placement are considered.
         let _harmony_roll = self.rng.bounded(375).saturating_add(1);

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.forbidden-cursebook",
+  "nameKey": "item-demo-forbidden-cursebook-name",
+  "descriptionKey": "item-demo-forbidden-cursebook-description",
+  "abilityBookId": "demo.ability-book.forbidden-cursebook",
+  "rfbBaseKind": {
+    "sourceIndex": 563,
+    "tval": 107,
+    "sval": 3
+  },
+  "baseValue": 100000,
+  "generationLevel": 80,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "hex",
+    "book",
+    "spellbook"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

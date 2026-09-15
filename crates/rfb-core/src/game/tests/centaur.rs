@@ -211,6 +211,8 @@ fn centaur_melee_trains_hooves_once_even_when_all_attacks_miss() {
             true,
         ));
         let index = game.entities.len() - 1;
+        // Isolate combat RNG from town stock; low skill still permits a 5% automatic hit.
+        game.rng = RfbRng::seeded(1);
         let mut events = Vec::new();
         game.resolve_player_melee(
             index,

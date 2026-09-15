@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.forbidden-cursebook",
+  "nameKey": "item-demo-forbidden-cursebook-name",
+  "descriptionKey": "ability-book-demo-five-aces-description",
+  "realmId": "hex",
+  "rank": 4,
+  "abilityIds": [
+    "demo.ability.hex-anti-multiply",
+    "demo.ability.hex-restore-life",
+    "demo.ability.hex-drain-curse",
+    "demo.ability.hex-vampiric-blade",
+    "demo.ability.hex-word-of-stun",
+    "demo.ability.hex-shadow-move",
+    "demo.ability.hex-anti-magic",
+    "demo.ability.hex-revenge"
+  ],
+  "tags": [
+    "hex",
+    "spellbook"
+  ]
+}
