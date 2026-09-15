@@ -188,7 +188,8 @@ fn sleep_power_resolves_then_skips_energy_and_damage_wakes_the_target() {
     });
     let position = game.entities[0].position;
     let snapshot = game.snapshot();
-    let restored = Game::from_save(game.to_save()).expect("sleep should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("sleep should round-trip");
     assert_eq!(restored.snapshot(), snapshot);
 
     game.entities[0].energy_need = 0;
@@ -274,7 +275,8 @@ fn temporary_status_resistances_apply_expire_and_round_trip() {
     );
 
     let snapshot = game.snapshot();
-    let restored = Game::from_save(game.to_save()).expect("temporary resistance should reload");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("temporary resistance should reload");
     assert_eq!(restored.snapshot(), snapshot);
 
     game.process_status_tick(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new(), true)
@@ -486,8 +488,12 @@ fn formal_sprite_sleeping_dust_switches_from_adjacent_to_visible_at_twenty_five(
         );
     }
     assert_eq!(visible.state_hash(), replay.state_hash());
-    let restored = Game::from_save_with_content(visible.to_save(), visible.content.clone())
-        .expect("Sleeping Dust result should restore");
+    let restored = Game::from_save_with_content(
+        visible.to_save(),
+        visible.content.clone(),
+        visible.behavior_preferences(),
+    )
+    .expect("Sleeping Dust result should restore");
     assert_eq!(restored.state_hash(), visible.state_hash());
 }
 
@@ -513,6 +519,7 @@ fn yeek_scare_monster_and_level_acid_immunity_follow_the_effective_race() {
         "demo.build.high-mage-death",
         "rfb-legacy.race.yeek",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Yeek High-Mage should create");
     clear_monsters(&mut game);
@@ -658,8 +665,12 @@ fn yeek_scare_monster_and_level_acid_immunity_follow_the_effective_race() {
         })
         .expect("Yeek scare should have a successful fear seed");
     game.rng = RfbRng::seeded(success_seed);
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Yeek scare setup should reload");
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Yeek scare setup should reload");
     game.debug_set_ability_casts_succeed(true);
     restored.debug_set_ability_casts_succeed(true);
     let mana_before = game.resources["demo.resource.mana"].current;
@@ -713,6 +724,7 @@ fn yeek_scare_monster_and_level_acid_immunity_follow_the_effective_race() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human Warrior should create");
     human.progress.level = 20;

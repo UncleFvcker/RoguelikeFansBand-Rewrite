@@ -606,6 +606,7 @@ mod tests {
                 &format!("demo.build.{build}"),
                 "rfb-legacy.race.tomte",
                 "Tomte",
+                Game::default_behavior_preferences(),
             )
             .unwrap();
             assert!(tailored_candidate(
@@ -661,7 +662,7 @@ mod tests {
         for (id, count) in found {
             assert_eq!(game.item_knowledge[&id].found_count, count);
         }
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let rows = ["grimoire-of-power", "natures-wrath"].map(|id| LootEntryDefinition {
             item_kind_id: format!("demo.item.{id}"),
             weight: 100,
@@ -832,7 +833,8 @@ mod tests {
                 max_depth: u16::MAX,
                 quantity: 1,
             });
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             for game in [&mut game, &mut restored] {
                 assert_eq!(
                     select_entry(
@@ -1424,8 +1426,12 @@ mod tests {
             1
         );
         game.reveal_current_visibility();
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(
             game.generate_one_loot_draft(&context, ItemGenerationMode::Great),
@@ -1564,6 +1570,7 @@ mod tests {
             "demo.build.warrior",
             "rfb-legacy.race.tomte",
             "Tomte",
+            Game::default_behavior_preferences(),
         )
         .unwrap();
         let rows = ["demo.item.knit-cap", "demo.item.pointy-hat"].map(|id| LootEntryDefinition {

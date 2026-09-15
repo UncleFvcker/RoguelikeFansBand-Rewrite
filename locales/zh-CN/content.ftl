@@ -10190,3 +10190,10 @@ terrain-demo-random-mountain-entrance-description = 一条通向未知山脉的�
 floor-demo-random-sea-depth-name = 随机海洋
 terrain-demo-random-sea-entrance-name = 随机海洋
 terrain-demo-random-sea-entrance-description = 一条通往未知失落之地的水下道路
+
+item-demo-iron-spike-name = 铁蒺藜
+item-demo-iron-spike-description = 用于卡住关着的门；每次消耗一根。
+terrain-demo-glass-door-jammed-name = 卡住的玻璃门
+terrain-demo-glass-door-jammed-description = 用铁蒺藜加固的玻璃门，仍可透视。
+terrain-demo-glass-door-broken-name = 破损的玻璃门
+terrain-demo-glass-door-broken-description = 已被撞坏的玻璃门。

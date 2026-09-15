@@ -80,6 +80,8 @@ export class MessagePanel {
   }
 
   addEvent(event: GameEventDto): void {
+    if (event.outcome?.type === "rest" && event.outcome.resolution.requestedTurns === 1 &&
+        event.outcome.resolution.stopReason === "turn-limit") return;
     this.#append({
       source: "event",
       turn: this.#currentTurn(),

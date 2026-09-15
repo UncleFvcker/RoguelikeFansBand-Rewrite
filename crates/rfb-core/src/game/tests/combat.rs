@@ -212,8 +212,12 @@ fn p62_polymorph_preserves_legacy_branches_rejection_rng_and_temporary_state() {
     assert_eq!(rejected.build, permanent_build);
     assert_eq!(rejected.progress.skills, permanent_skills);
 
-    let restored = Game::from_save_with_content(rejected.to_save(), rejected.content.clone())
-        .expect("temporary polymorph state should restore");
+    let restored = Game::from_save_with_content(
+        rejected.to_save(),
+        rejected.content.clone(),
+        rejected.behavior_preferences(),
+    )
+    .expect("temporary polymorph state should restore");
     assert_eq!(restored.build, permanent_build);
     assert_eq!(restored.state_hash(), rejected.state_hash());
     assert_eq!(p62_polymorph_legacy_index(&restored), Some(15));
@@ -316,8 +320,12 @@ fn p62_polymorph_reconciles_body_slots_and_expiry_reequips_previously_worn_items
         ItemLocation::Equipped { .. }
     ));
 
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("custom body form should restore");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("custom body form should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
     game.player
         .statuses
@@ -554,10 +562,12 @@ fn effectless_beg_always_succeeds_without_damage_contact_or_rng() {
     let monster_hp = game.entities[0].hp;
     let draws = game.rng.draw_counter;
     let mut events = Vec::new();
+    game.searching = true;
 
     game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
         .expect("BEG should resolve");
 
+    assert!(!game.searching, "a harmless hit still disturbs searching");
     assert_eq!(game.player.hp, player_hp);
     assert_eq!(game.entities[0].hp, monster_hp);
     assert_eq!(game.rng.draw_counter, draws);
@@ -1581,8 +1591,12 @@ fn unlife_melee_drains_life_force_and_persistently_empowers_the_monster() {
             if resolution.final_damage == 11
     ));
 
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("empowered monster should round trip");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("empowered monster should round trip");
     assert_eq!(restored.entities[0].power_per_mille, 1_100);
     assert_eq!(restored.state_hash(), game.state_hash());
 
@@ -1762,7 +1776,8 @@ fn haste_and_slow_modify_scheduler_speed_without_changing_base_speed() {
         grants_wall_passage: false,
         incoming_damage_percent: 100,
     }];
-    let mut haste = Game::from_save(haste_payload).expect("haste setup should load");
+    let mut haste = Game::from_save(haste_payload, Game::default_behavior_preferences())
+        .expect("haste setup should load");
     assert_eq!(haste.snapshot().player.speed, 120);
     let haste_update = haste
         .dispatch(command(1, 0, GameCommand::Wait))
@@ -1787,7 +1802,8 @@ fn haste_and_slow_modify_scheduler_speed_without_changing_base_speed() {
         grants_wall_passage: false,
         incoming_damage_percent: 100,
     }];
-    let mut slow = Game::from_save(slow_payload).expect("slow setup should load");
+    let mut slow = Game::from_save(slow_payload, Game::default_behavior_preferences())
+        .expect("slow setup should load");
     let slow_update = slow
         .dispatch(command(1, 0, GameCommand::Wait))
         .expect("slowed wait should execute");
@@ -1830,7 +1846,8 @@ fn bleeding_ticks_as_physical_damage_in_stable_status_order() {
             incoming_damage_percent: 100,
         },
     ];
-    let mut game = Game::from_save(payload).expect("bleeding setup should load");
+    let mut game = Game::from_save(payload, Game::default_behavior_preferences())
+        .expect("bleeding setup should load");
     let update = game
         .dispatch(command(1, 0, GameCommand::Wait))
         .expect("bleeding wait should execute");
@@ -2099,7 +2116,8 @@ fn leader_death_dissolves_pack_before_remaining_members_act() {
     });
     payload.entities.push(member);
 
-    let mut game = Game::from_save(payload).expect("pack death setup should load");
+    let mut game = Game::from_save(payload, Game::default_behavior_preferences())
+        .expect("pack death setup should load");
     game.dispatch(command(1, 0, GameCommand::Wait))
         .expect("leader death should resolve");
 
@@ -2110,7 +2128,8 @@ fn leader_death_dissolves_pack_before_remaining_members_act() {
         .find(|entity| entity.id == "test.pack.member")
         .expect("pack member should remain");
     assert!(member.pack.is_none());
-    Game::from_save(game.to_save()).expect("dissolved pack should remain saveable");
+    Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("dissolved pack should remain saveable");
 }
 
 #[test]
@@ -2215,8 +2234,12 @@ fn unlife_endpoint_real_wait_commands_reach_all_five_targets_and_continue_after_
         assert_eq!(event.args["lifeForceFinal"], "1000");
         assert_eq!(event.args["amount"], "2");
         assert_eq!(game.entities[0].power_per_mille, 1_002);
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(
             dispatch_next(&mut restored, GameCommand::Wait),
@@ -2686,8 +2709,14 @@ fn life_force_acceptance_six_classes_survive_original_attack_save_and_continue()
         ("demo.build.cavalry", "demo.race.rfb-human"),
         ("demo.build.sniper", "rfb-legacy.race.imp"),
     ] {
-        let mut game =
-            Game::new_with_build_race_and_name(83, build, race, "Life Force Acceptance").unwrap();
+        let mut game = Game::new_with_build_race_and_name(
+            83,
+            build,
+            race,
+            "Life Force Acceptance",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         game.debug_prepare_life_force_e2e(0);
         let initial_growth = game.progress.hp_progression.clone();
         let identity = game.build.clone().unwrap();
@@ -2763,7 +2792,7 @@ fn life_force_acceptance_six_classes_survive_original_attack_save_and_continue()
                 .power_per_mille,
             1_000 + amount
         );
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         assert_eq!(

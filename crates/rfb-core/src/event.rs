@@ -278,6 +278,15 @@ pub(crate) enum DomainEvent {
     SummonCommandChanged {
         resolution: SummonCommandResolutionDto,
     },
+    PetCommandUnavailable,
+    PetOptionChanged,
+    PetNameInvalid,
+    PetNameChanged {
+        name: String,
+    },
+    NamedPetDismissed {
+        name: String,
+    },
     PetsDismissed {
         count: u16,
         upkeep_percent: u16,
@@ -470,6 +479,12 @@ pub(crate) enum DomainEvent {
         replaced_kind_id: Option<String>,
     },
     ItemEquipUnavailable,
+    RingsSwapped {
+        first_slot_id: String,
+        second_slot_id: String,
+    },
+    RingSwapUnavailable,
+    RingSwapCursed,
     ItemPropertyDiscovered {
         target_kind_id: String,
         property_name_key: String,
@@ -550,6 +565,9 @@ pub(crate) enum DomainEvent {
     CampaignVictorious {
         score: u64,
     },
+    CampaignAbandoned {
+        score: u64,
+    },
     CampaignRetired {
         score: u64,
     },
@@ -622,6 +640,13 @@ pub(crate) enum DomainEvent {
         position: Position,
     },
     SearchFoundNothing,
+    AlterNothing,
+    DoorSpiked {
+        position: Position,
+    },
+    DoorSpikeUnavailable,
+    DoorSpikeMissing,
+    DoorSpikeMonsterBlocked,
     TrapTriggered {
         position: Position,
         damage: DamageOutcome,
@@ -850,8 +875,21 @@ pub(crate) enum DomainEvent {
         slot_id: String,
         severity: ItemCurseSeverityDto,
     },
+    RunStopped {
+        reason: &'static str,
+    },
+    AutoExploreStopped {
+        reason: &'static str,
+    },
+    UnknownItemTravelTarget {
+        target: rfb_protocol::AutoGetTargetDto,
+    },
+    UnknownItemTravelUnavailable {
+        reason: &'static str,
+    },
     MoveBlocked,
     LocalTravelLeftDetectionArea,
+    LocalTravelItemFound,
     PlayerMeleeBlocked,
     WildernessAmbushed,
     WildernessInterestingDiscovery,
@@ -916,6 +954,7 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
     },
     PetEvolved {
+        custom_name: Option<String>,
         previous_kind_id: String,
         target_kind_id: String,
     },
@@ -924,6 +963,9 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
     },
     RidingUnavailable,
+    RidingControlUnavailable,
+    RidingDirectionChanged,
+    RidingMoved,
     SheepRidingRefused {
         response: u8,
     },
@@ -2084,6 +2126,32 @@ impl DomainEvent {
                 "summon-expired",
                 [("target", entity_id), ("actor", target_kind_id)],
             ),
+            Self::PetOptionChanged => dto_without_args("pet.option-changed", "pet-option-changed"),
+            Self::RidingControlUnavailable => {
+                dto_without_args("riding.control-unavailable", "riding-control-unavailable")
+            }
+            Self::RidingDirectionChanged => {
+                dto_without_args("riding.direction-changed", "riding-direction-changed")
+            }
+            Self::RidingMoved => dto_without_args("riding.moved", "riding-moved"),
+            Self::PetNameInvalid => dto_without_args("pet.name-invalid", "pet-name-invalid"),
+            Self::NamedPetDismissed { name } => dto(
+                "pet.named-dismissed",
+                "pet-named-dismissed",
+                [("name", name)],
+            ),
+            Self::PetNameChanged { name } => dto(
+                "pet.name-changed",
+                if name.is_empty() {
+                    "pet-name-cleared"
+                } else {
+                    "pet-name-changed"
+                },
+                [("name", name)],
+            ),
+            Self::PetCommandUnavailable => {
+                dto_without_args("pet.command-unavailable", "pet-command-unavailable")
+            }
             Self::SummonCommandChanged { resolution } => dto_with_outcome(
                 "summon.command-changed",
                 "summon-command-changed",
@@ -2668,6 +2736,20 @@ impl DomainEvent {
             Self::ItemEquipUnavailable => {
                 dto_without_args("item.equip.none", "item-equip-unavailable")
             }
+            Self::RingsSwapped {
+                first_slot_id,
+                second_slot_id,
+            } => dto(
+                "item.rings-swapped",
+                "item-rings-swapped",
+                [("firstSlot", first_slot_id), ("secondSlot", second_slot_id)],
+            ),
+            Self::RingSwapUnavailable => {
+                dto_without_args("item.ring-swap.unavailable", "item-ring-swap-unavailable")
+            }
+            Self::RingSwapCursed => {
+                dto_without_args("item.ring-swap.cursed", "item-ring-swap-cursed")
+            }
             Self::ItemPropertyDiscovered {
                 target_kind_id,
                 property_name_key,
@@ -2861,6 +2943,11 @@ impl DomainEvent {
                 "campaign-victorious",
                 [("score", score.to_string())],
             ),
+            Self::CampaignAbandoned { score } => dto(
+                "campaign.abandoned",
+                "campaign-abandoned",
+                [("score", score.to_string())],
+            ),
             Self::CampaignRetired { score } => dto(
                 "campaign.retired",
                 "campaign-retired",
@@ -2983,6 +3070,22 @@ impl DomainEvent {
                 "terrain-secret-discovered",
                 [("x", position.x.to_string()), ("y", position.y.to_string())],
             ),
+            Self::DoorSpiked { position } => dto(
+                "terrain.door-spiked",
+                "door-spiked",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
+            ),
+            Self::DoorSpikeUnavailable => {
+                dto_without_args("terrain.door-spike-unavailable", "door-spike-unavailable")
+            }
+            Self::DoorSpikeMissing => {
+                dto_without_args("terrain.door-spike-missing", "door-spike-missing")
+            }
+            Self::DoorSpikeMonsterBlocked => dto_without_args(
+                "terrain.door-spike-monster-blocked",
+                "door-spike-monster-blocked",
+            ),
+            Self::AlterNothing => dto_without_args("terrain.alter-empty", "terrain-alter-empty"),
             Self::SearchFoundNothing => {
                 dto_without_args("terrain.search-empty", "terrain-search-empty")
             }
@@ -3803,11 +3906,25 @@ impl DomainEvent {
                     ("severity", curse_severity_arg(severity).to_owned()),
                 ],
             ),
+            Self::RunStopped { reason } => dto_without_args("run.stopped", reason),
+            Self::AutoExploreStopped { reason } => dto_without_args("auto-explore.stopped", reason),
+            Self::UnknownItemTravelTarget { target } => dto_with_outcome(
+                "unknown-item-travel.target",
+                "game-unknown-item-target",
+                [],
+                GameEventOutcomeDto::UnknownItemTravelTarget { target },
+            ),
+            Self::UnknownItemTravelUnavailable { reason } => {
+                dto_without_args("unknown-item-travel.unavailable", reason)
+            }
             Self::MoveBlocked => dto_without_args("move.blocked", "game-move-blocked"),
             Self::LocalTravelLeftDetectionArea => dto_without_args(
                 "travel.left-detection-area",
                 "game-travel-left-detection-area",
             ),
+            Self::LocalTravelItemFound => {
+                dto_without_args("travel.item-found", "game-travel-item-found")
+            }
             Self::PlayerMeleeBlocked => {
                 dto_without_args("player.melee-blocked", "player-melee-blocked")
             }
@@ -3968,12 +4085,17 @@ impl DomainEvent {
                 [("target", target_kind_id)],
             ),
             Self::PetEvolved {
+                custom_name,
                 previous_kind_id,
                 target_kind_id,
             } => dto(
                 "pet.evolved",
                 "pet-evolved",
-                [("source", previous_kind_id), ("target", target_kind_id)],
+                [
+                    ("source", previous_kind_id),
+                    ("target", target_kind_id),
+                    ("name", custom_name.unwrap_or_default()),
+                ],
             ),
             Self::MountPotionUsed {
                 item_kind_id,
@@ -6283,6 +6405,7 @@ fn rest_stop_reason(reason: &RestStopReasonDto) -> String {
     match reason {
         RestStopReasonDto::MaiaPathChoiceRequired => "maia-path-choice-required",
         RestStopReasonDto::Damaged => "damaged",
+        RestStopReasonDto::Displaced => "displaced",
         RestStopReasonDto::EnemyVisible => "enemy-visible",
         RestStopReasonDto::FullResources => "full-resources",
         RestStopReasonDto::InvalidTurns => "invalid-turns",
@@ -6301,6 +6424,8 @@ fn summon_command_mode_id(mode: SummonCommandModeDto) -> &'static str {
         SummonCommandModeDto::Attack => "attack",
         SummonCommandModeDto::KeepDistance => "keep-distance",
         SummonCommandModeDto::Guard => "guard",
+        SummonCommandModeDto::StayClose => "stay-close",
+        SummonCommandModeDto::GiveSpace => "give-space",
     }
 }
 

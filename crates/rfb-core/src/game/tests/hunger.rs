@@ -14,6 +14,7 @@ pub(super) fn ent_birth(seed: u64, build: &str) -> Game {
         build,
         "rfb-legacy.race.ent",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .unwrap()
 }
@@ -106,8 +107,12 @@ fn ent_birth_water_and_lighting_merge_with_all_six_class_kits_and_round_trip() {
                     expected.equipped
                 );
             }
-            let restored =
-                Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+            let restored = Game::from_save_with_content(
+                game.to_save(),
+                game.content.clone(),
+                game.behavior_preferences(),
+            )
+            .unwrap();
             assert_eq!(restored.state_hash(), game.state_hash());
             assert_eq!(restored.snapshot(), game.snapshot());
         }
@@ -197,7 +202,12 @@ fn ent_potions_apply_original_signed_nutrition_after_effects_with_native_form_gu
     assert_eq!(game.nutrition, 2099);
     assert!(!game.player_has_status_kind(STATUS_POISON));
     assert!(game.player_has_status_kind(STATUS_PARALYSIS));
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -380,7 +390,8 @@ fn undead_birth_starts_at_night_without_rations_and_round_trips() {
         );
 
         let saved = game.to_save();
-        let restored = Game::from_save(saved.clone()).expect("night-start undead should restore");
+        let restored = Game::from_save(saved.clone(), Game::default_behavior_preferences())
+            .expect("night-start undead should restore");
         assert_eq!(restored.to_save(), saved);
         assert_eq!(restored.state_hash(), game.state_hash());
 
@@ -598,6 +609,7 @@ fn formal_skeleton_temporary_form_controls_food_fallthrough() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human warrior should create");
     clear_monsters(&mut human);
@@ -1082,7 +1094,8 @@ fn fast_recovery_mushroom_heals_eases_bleeding_and_grants_timed_regeneration() {
             .any(|event| event.kind == "item.use-status-applied")
     );
 
-    let restored = Game::from_save(game.to_save()).expect("regeneration should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("regeneration should round-trip");
     assert_eq!(restored.snapshot(), game.snapshot());
     assert_eq!(restored.player_regeneration_rate_percent(), 200);
 }
@@ -1341,7 +1354,8 @@ fn golem_device_absorption_round_trips_and_replays_deterministically() {
     assert_eq!(replay.state_hash(), game.state_hash());
 
     let saved = game.to_save();
-    let restored = Game::from_save(saved.clone()).expect("absorbed Golem device should restore");
+    let restored = Game::from_save(saved.clone(), Game::default_behavior_preferences())
+        .expect("absorbed Golem device should restore");
     assert_eq!(restored.to_save(), saved);
     assert_eq!(restored.state_hash(), game.state_hash());
 }
@@ -1516,7 +1530,8 @@ fn warrens_ration_attempts_are_deterministic_walkable_and_persistent() {
                 saw_other_tail = true;
             }
         }
-        let restored = Game::from_save(left.to_save()).expect("generated rations should reload");
+        let restored = Game::from_save(left.to_save(), left.behavior_preferences())
+            .expect("generated rations should reload");
         assert_eq!(restored.state_hash(), left.state_hash());
     }
     assert!(saw_guaranteed_tail && saw_other_tail);

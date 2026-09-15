@@ -9,6 +9,7 @@ fn tonberry_sabre_cap_trains_and_round_trips_by_birth_race() {
         "demo.build.high-mage-death",
         "rfb-legacy.race.tonberry",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     let projected = game.player_weapon_proficiencies();
@@ -42,7 +43,12 @@ fn tonberry_sabre_cap_trains_and_round_trips_by_birth_race() {
     let before = game.rng.clone();
     assert_eq!(game.train_weapon_proficiency("test.sabre", 80), None);
     assert_eq!(game.rng, before);
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         restored.player_weapon_proficiencies(),
@@ -56,7 +62,14 @@ fn tonberry_sabre_cap_trains_and_round_trips_by_birth_race() {
         .unwrap()
         .weapon_proficiencies[0]
         .current = 8_001;
-    assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            invalid,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
 
     let form = StatusInstance {
         kind_id: STATUS_PLAYER_POLYMORPH.to_owned(),
@@ -82,7 +95,12 @@ fn tonberry_sabre_cap_trains_and_round_trips_by_birth_race() {
             .maximum,
         8_000
     );
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     game.build.as_mut().unwrap().race_id = "demo.race.rfb-human".to_owned();
     game.player.statuses[0].granted_race_id = Some("rfb-legacy.race.tonberry".to_owned());
@@ -105,7 +123,14 @@ fn tonberry_sabre_cap_trains_and_round_trips_by_birth_race() {
     );
     game.refresh_character_skills();
     game.refresh_player_ability_state();
-    assert!(Game::from_save_with_content(game.to_save(), game.content.clone()).is_ok());
+    assert!(
+        Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences()
+        )
+        .is_ok()
+    );
 }
 
 #[test]
@@ -131,6 +156,7 @@ fn tonberry_birth_keeps_standard_supplies_and_individualism_for_each_current_cla
             build_id,
             "rfb-legacy.race.tonberry",
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .unwrap();
         let inventory: Vec<_> = game
@@ -538,7 +564,8 @@ fn sparse_weapon_progress_round_trips_and_rejects_noncanonical_or_out_of_range_e
         .weapon_proficiencies;
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0].item_kind_id, "demo.item.broad-sword");
-    let restored = Game::from_save(saved.clone()).expect("valid proficiency should round-trip");
+    let restored = Game::from_save(saved.clone(), Game::default_behavior_preferences())
+        .expect("valid proficiency should round-trip");
     assert_eq!(
         restored.progress.weapon_proficiencies,
         game.progress.weapon_proficiencies
@@ -562,7 +589,7 @@ fn sparse_weapon_progress_round_trips_and_rejects_noncanonical_or_out_of_range_e
             current,
         }];
         assert!(matches!(
-            Game::from_save(invalid),
+            Game::from_save(invalid, Game::default_behavior_preferences()),
             Err(CoreError::InvalidSave(
                 "player weapon proficiency state is invalid"
             ))
@@ -586,7 +613,7 @@ fn sparse_weapon_progress_round_trips_and_rejects_noncanonical_or_out_of_range_e
         },
     ];
     assert!(matches!(
-        Game::from_save(duplicate),
+        Game::from_save(duplicate, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave(
             "player weapon proficiency state is invalid"
         ))
@@ -610,6 +637,7 @@ fn permanent_race_change_caps_effective_weapon_skill_without_erasing_practice() 
         "demo.build.high-mage-death",
         "rfb-legacy.race.tonberry",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     game.progress
@@ -627,7 +655,7 @@ fn permanent_race_change_caps_effective_weapon_skill_without_erasing_practice() 
         .find(|entry| entry.item_kind_id == "demo.item.sabre")
         .unwrap();
     assert_eq!((sabre.current, sabre.maximum), (4_000, 4_000));
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert!(restored.change_player_race(
         "rfb-legacy.race.tonberry",
         restored.effective_player_max_hp(),

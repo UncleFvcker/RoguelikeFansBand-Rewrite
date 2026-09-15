@@ -156,7 +156,7 @@ fn local_travel_uses_slot_interleaving_and_stops_before_a_newly_revealed_trap() 
         before_options
     );
     let original = game.clone();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let rng = game.rng.clone();
     let before = (game.turn, game.world_tick);
     let rod_sp = item(&game, "test.rod").charges.unwrap().current;
@@ -177,6 +177,59 @@ fn local_travel_uses_slot_interleaving_and_stops_before_a_newly_revealed_trap() 
     assert_eq!(game.rng, rng);
     assert_eq!((game.turn, game.world_tick), before);
     assert_eq!(game.to_save(), restored.to_save());
+
+    // Exploration must pass through the same detection preflight before moving.
+    let mut exploring = original.clone();
+    for dy in [-1, 1] {
+        replace_terrain(
+            &mut exploring,
+            Position {
+                x: next.x,
+                y: next.y + dy,
+            },
+            "demo.terrain.wall",
+        );
+    }
+    let frontier_hole = Position {
+        x: next.x + 1,
+        y: next.y,
+    };
+    let index = exploring.index(frontier_hole).unwrap();
+    exploring.explored[index] = false;
+    let mut detecting_enemy = exploring.clone();
+    profile(
+        &mut detecting_enemy,
+        "test.rod",
+        "rfb.device-activation.rod.detect-all",
+    );
+    replace_terrain(&mut detecting_enemy, next, "demo.terrain.floor");
+    let hidden = Position {
+        x: start.x + 4,
+        y: start.y,
+    };
+    detecting_enemy.push_generated_actor(
+        "test.explore.hidden".into(),
+        "demo.actor.clear-icky-thing",
+        hidden,
+    );
+    assert!(!detecting_enemy.entity_is_visible_to_player(detecting_enemy.entities.last().unwrap()));
+    dispatch_next(&mut detecting_enemy, GameCommand::AutoExplore);
+    assert!(detecting_enemy.auto_explore.is_none());
+    assert_eq!(detecting_enemy.player.position, start);
+    let update = dispatch_next(&mut exploring, GameCommand::AutoExplore);
+    assert_eq!(exploring.player.position, start);
+    assert!(exploring.auto_explore.is_none());
+    assert!(exploring.revealed_terrain.contains(&next));
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind.contains("detected"))
+    );
+    assert_eq!(
+        item(&exploring, "test.rod").charges.unwrap().current,
+        rod_sp - rod_cost
+    );
 
     // At the same slot source visits staff before rod.
     let mut same_slot = original;
@@ -258,6 +311,8 @@ fn local_travel_switches_exact_cost_fallback_and_mapping_are_independent() {
             .any(|event| event.kind == "travel.left-detection-area")
     );
     give_inventory_item(&mut game, "test.pack", "demo.item.resonance-rod");
+    // Detection remains enabled even when crossing the boundary itself may not stop travel.
+    game.travel_options.disturb_trap_detect = false;
     game.identify_item_instance("test.pack", ItemIdentificationRequest::new(true));
     sp(&mut game, "test.pack", cost);
     replace_terrain(&mut game, next, "demo.terrain.created-trap");
@@ -276,6 +331,7 @@ fn local_travel_switches_exact_cost_fallback_and_mapping_are_independent() {
         "rfb.device-activation.rod.enlightenment",
     );
     mapping.travel_options = TravelOptionsDto {
+        always_pickup: false,
         auto_detect_traps: false,
         auto_map_area: true,
         disturb_trap_detect: false,
@@ -327,7 +383,7 @@ fn inn_fills_body_sp_and_fraction_only_after_successful_payment() {
     assert_eq!(game.to_save(), before);
     game.player.statuses.clear();
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.stay_at_inn(facility), restored.stay_at_inn(facility));
     let staff = item(&game, "test.staff");
     assert_eq!(
@@ -398,7 +454,7 @@ fn saved_detection_coverage_rejects_duplicates_and_out_of_bounds_cells() {
         let mut saved = game.to_save();
         saved.detection_coverage.traps = positions;
         assert!(matches!(
-            Game::from_save(saved),
+            Game::from_save(saved, Game::default_behavior_preferences()),
             Err(CoreError::InvalidSave("detection coverage is invalid"))
         ));
     }
@@ -412,7 +468,7 @@ fn saved_detection_coverage_rejects_duplicates_and_out_of_bounds_cells() {
         .mapping
         .push(Position { x: -1, y: 0 });
     assert!(matches!(
-        Game::from_save(saved),
+        Game::from_save(saved, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("detection coverage is invalid"))
     ));
 }
@@ -436,7 +492,7 @@ fn impotence_penalty_reaches_body_use_and_failure_projection_after_loading() {
     assert!(impaired > normal);
     game.rng = check_seed(&game, "test.staff", false).0;
     let before = item(&game, "test.staff").charges;
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let actual = use_body(&mut game, "test.staff", &[]);
     assert_eq!(actual, use_body(&mut restored, "test.staff", &[]));
     assert_eq!(actual.0, 100);

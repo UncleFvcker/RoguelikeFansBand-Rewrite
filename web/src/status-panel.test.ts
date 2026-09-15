@@ -10,6 +10,7 @@ import {
   abilityPresentation,
   abilityStatusMessageKey,
   formatAttributeValue,
+  warningActive,
   mutationRatingMessageKey,
   nutritionPercentage,
   weaponProficienciesByGroup,
@@ -23,6 +24,19 @@ import {
   StatusPanel,
 } from "./status-panel.ts";
 import { AppState } from "./app-state.ts";
+
+test("decimal attributes match RFB formatting and zero disables resource warnings", () => {
+  assert.equal(formatAttributeValue(18, true), "18.0");
+  assert.equal(formatAttributeValue(28, true), "19.0");
+  assert.equal(formatAttributeValue(118, true), "28.0");
+  assert.equal(formatAttributeValue(118, false), "18/100");
+  assert.equal(formatAttributeValue(238, true), "****");
+  assert.equal(warningActive(30, 100, 30), true);
+  assert.equal(warningActive(31, 100, 30), false);
+  assert.equal(warningActive(0, 100, 0), false);
+  assert.equal(warningActive(0, 0, 50), false);
+});
+
 
 test("Maia choice requires a click and survives closing and rerendering", async () => {
   class Element {
@@ -80,6 +94,59 @@ test("HUD location distinguishes the world map, towns, wilderness and content du
   assert.equal(hudLocationText({ ...state, town: { nameKey: 'town-existing-name' } }, localization, contentName), 'town-existing-name');
   assert.equal(hudLocationText({ ...state, floorId: 'core.floor.wilderness' }, localization, contentName), 'hud-location-wilderness');
   assert.equal(hudLocationText({ ...state, mapScale: 'world' }, localization, contentName), 'hud-location-world');
+});
+
+test("ability shortcuts focus casting rather than learning and powers use their projected source", () => {
+  let focused;
+  const control = name => ({ focus() { focused = name; }, scrollIntoView() {} });
+  const learnedCast = control("learned-cast"), powerCast = control("power-cast"), study = control("study");
+  const row = (id, cast) => ({ dataset: { abilityId: id }, ...control(id), querySelector: selector => selector === ".ability-cast-action:not(:disabled)" ? cast : study });
+  const rows = [row("spell", learnedCast), row("power", powerCast)];
+  const state = new AppState();
+  state.status = { player: { abilities: [{ id: "spell", source: "learned" }, { id: "power", source: "race" }] } };
+  const panel = new StatusPanel({ state, dom: { abilityList: { querySelectorAll: () => rows, querySelector: () => study } } });
+  panel.focusCommand("cast"); assert.equal(focused, "learned-cast");
+  panel.focusCommand("power"); assert.equal(focused, "power-cast");
+  panel.focusCommand("study"); assert.equal(focused, "study");
+  panel.focusCommand("browse"); assert.equal(focused, "spell");
+});
+
+test("book shortcuts pass canonical item commands then focus only the chosen book's abilities", async () => {
+  const state = new AppState(), choices = [];
+  let focused;
+  const control = id => ({ focus() { focused = id; }, scrollIntoView() {} });
+  const rows = ["a", "b"].map(id => ({ dataset: { abilityId: id }, ...control(id), querySelector: () => control(`${id}-action`) }));
+  state.status = { player: { abilities: [
+    { id: "a", source: "learned", bookItemId: "book-a", canStudy: true },
+    { id: "b", source: "learned", bookItemId: "book-b", canStudy: true },
+  ] } };
+  const panel = new StatusPanel({ state, dom: { abilityList: { querySelectorAll: selector => selector === "[data-ability-id]" ? rows : [] } },
+    selectItemTarget: (_excluded, choose, ids, command) => choices.push({ choose, ids, command }), confirmItemChoice: () => true,
+  });
+  for (const command of ["study", "browse", "cast"]) {
+    panel.focusCommand(command);
+    const choice = choices.at(-1);
+    assert.equal(choice.command, command);
+    assert.deepEqual(choice.ids, ["book-a", "book-b"]);
+    await choice.choose("book-b");
+    assert.equal(focused, command === "browse" ? "b" : "b-action");
+  }
+});
+
+test("rest button uses the shared cancellable entry", () => {
+  const button = () => ({ addEventListener(type, handler) { this[type] = handler; }, removeEventListener() {} });
+  const resourceRest = button();
+  let rests = 0;
+  const state = { busy: false, playerDead: false, worldMap: true, status: { campaign: { status: "victorious" } } };
+  const panel = new StatusPanel({
+    state,
+    dom: { resourceRest },
+    restUntilRecovered: async () => { rests++; },
+    dispatch: () => assert.fail("buttons must use the shared input/confirmation flow"),
+  });
+  panel.install(); resourceRest.click();
+  assert.equal(rests, 1);
+  panel.dispose();
 });
 
 test("snapshot slots are available before any status render callback, including new and loaded games", () => {
@@ -274,8 +341,8 @@ test("Paladin Hell Lance stays visible as a level-gated class power", () => {
 
 test("status panel preserves exceptional attribute display values", () => {
   assert.equal(formatAttributeValue(18), "18");
-  assert.equal(formatAttributeValue(19), "18/1");
-  assert.equal(formatAttributeValue(27), "18/9");
+  assert.equal(formatAttributeValue(19), "18/01");
+  assert.equal(formatAttributeValue(27), "18/09");
 });
 
 test("status panel displays nutrition relative to the 10000 baseline", () => {

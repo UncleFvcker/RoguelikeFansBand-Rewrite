@@ -25,6 +25,12 @@ git diff --check
 
 以上命令是用法示例，不是每批必跑流水线。Clippy/check 的 crate 和 targets 按真实改动选择；不为纯文档跑 Clippy。前端在 `web` 选择对应测试，如 `node --test src/character-traits-panel.test.ts`，再按需要运行 `npm run typecheck`。全量 `npm test` 留给实际跨界面改动或明确验收。
 
+## 宠物 standalone 验收
+
+在 `web` 执行 `npm run build:standalone:debug`，随后执行 `node e2e/pets-standalone.e2e.mjs`。脚本启动本次普通 Tauri EXE，以独立 WebView 配置正常创建人类战士；调用 ignored 的 `export_pet_desktop_save` 测试准备局部照明地形、受控马／大巫妖、敌方魔像及宠物携物，保留真实馆藏绑定。准备选择使第一次等待发生正式 AI 召唤的 RNG，未使用 WebDriver 专用准备 IPC。
+
+通过正式菜单与原生键盘执行命名、权限切换、双手控骑、指定目标和召唤，再进入世界地图、移动、返回局部地图和解散坐骑；确认取消、窄窗口菜单以及每步原生保存／载入后的完整状态哈希。世界地图转换另断言原宠物、召唤来源与坐骑保留。报告、准备说明、存档和截图在 `test-results/pets/`；核心命令预测来自同一正式规则，不能仅以哈希相等代替操作语义断言。繁殖负担、施法安全、失控／死亡及无空间切换沿核心专项覆盖。准备场景不代表自然取得宠物、自然练级或 Android 验收。
+
 ## 桌面 E2E 快速到地牢
 
 职业实战不需要验收城镇步行时，在 `web` 执行下列命令。先运行一次 `npm run e2e:build`；修改 Rust 后需重新构建。
@@ -129,6 +135,22 @@ node e2e/asgard-standalone.e2e.mjs --random-dungeons
 
 证据保存在 `test-results/random-dungeons/`。失败后可用 `--random-resume=forest:entered` 之类的参数恢复该目录的原生存档检查点；类型为 forest／volcano／mountain／sea，阶段为 arrival／entered／ascended／reentered／recall-pending／returned。脚本核对内容身份和保存哈希，恢复后只继续未完成阶段；改变内容后应重新生成相应检查点。普通 standalone 分支实际检查三阶段准备 IPC 均被拒绝，并要求窗口正常关闭后进程退出码为 0。
 
+## 物品选择普通 standalone
+
+在 `web` 执行 `npm run build:standalone:debug`，再执行 `node e2e/item-selection-standalone.e2e.mjs`。脚本启动普通 EXE，通过 WebView 原生键盘、界面按钮与生产存读档入口验证选择流程，不使用 WebDriver 专用 IPC。
+
+正常创角后，脚本显式运行 `game::tests::item_selection_desktop::export_item_selection_desktop_save` 准备分页、四来源与铭刻所需物品，并按 Core 命令导出预期哈希。准备内容、报告、截图与原生存档写入 `test-results/item-selection/`；这不是自然取得全部物品的验收。场景检查两套预设、鼠标、分页／标签／来源、确认和取消、次数与重复、连续行动中断、旧窗口读档失效及中英文窄窗口。其他能力调用者继续由对应单元测试覆盖。
+
+## 地图情报、帮助知识与配置记录普通 standalone
+
+地图与情报的普通桌面专项：在 `web` 构建 `npm run build:standalone:debug` 后运行 `node e2e/map-intelligence-standalone.e2e.mjs`。使用正常新建的人类战士，选择已有出生天赋，不准备怪物、不揭图；键盘／按钮查询与原生载入前后比较状态哈希。证据在 `test-results/map-intelligence/`。地下城评分、友方／物品资格和已调查资料的保存往返由 `cargo test -p rfb-core --lib map_intelligence` 覆盖；桌面出生城镇场景不冒称已验收所有深度或怪物图鉴。
+
+同一脚本覆盖帮助／知识入口：正常键盘打开 `?` 和 `~`，搜索命中与无结果、全部 22 项大小写菜单选择、Enter 打开已有资料页、Esc 逐层返回、同名工具栏按钮、读档关闭旧菜单及英文 390px 布局。全程查询与返回必须保持状态哈希一致。前端 `input-controller.test.ts` 覆盖五套预设、世界地图、编辑／IME／修饰键／弹窗保护和先停止连续行动；`help-knowledge.test.ts` 检查动态本地化键与档案分类、击杀排序。
+
+持久发现档案通过 `web/e2e/discovery.e2e.mjs` 接入同一脚本：先保留正常新局的原生存档，再由显式 ignored 测试 `game::tests::discovery::export_discovery_desktop_save`（环境变量 `DISCOVERY_INPUT` 指向该存档）准备兽穴第 3 层、两只已认识唯一怪物、归属玩家的 Fang 死亡、调查资料及已鉴定神器／Ego。随后移除相关物品与局部怪物，保留原馆藏绑定，输出 `discovery-prepared.rfbsave` 和 `discovery-scenario.json`。普通 EXE 经正式载入入口验证七类档案、存活／死亡筛选、击杀数、最深层数、窄屏、只读哈希及保存恢复；最后恢复原正常角色。此准备验证记忆持久性，不代表自然取得神器或自然通关。核心 `game::tests::discovery::` 覆盖隐藏身份、鉴定门槛、死亡归属、唯一怪物占用与死亡区分、深度及非法存档；详细属性仍沿用调查知识，不宣称逐次战斗的全部原版 lore 抽样。
+
+配置／记录通过同一脚本调用 `web/e2e/config-records.e2e.mjs`：捕获 F2、自定义映射与反斜杠绕过、预设隔离、命令菜单真实行动、单命令寄存器、录制／编辑／回放多步宏、键位 JSON 导出导入及寄存器热键、笔记文本、当前可见地图 PNG／TXT／离线 HTML 导出。下载通过 WebView 正常链接生成真实文件，保存在本次 `test-results/map-intelligence/exports-*` 子目录；无测试专用导出 IPC。原生读档应保留本机键位和笔记、清除会话录制并关闭旧窗口，最后检查英文 390px 配置页。`command-recording.test.ts` 与输入／会话测试覆盖深拷贝、录制上限、取消与失败、过期参数和修饰键；截图迷雾边界沿用 Core 投影与渲染，PNG 需另做实际图像检查。
+
 ## Contract fixture
 
 当前集位于 [tests/fixtures/active/scenarios](../tests/fixtures/active/scenarios/)，分类和最低数量等政策来自 [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)。`rfb-contract` 的 [CLI](../crates/rfb-contract/src/main.rs)和[断言实现](../crates/rfb-contract/src/lib.rs)是精确语义依据。
@@ -183,6 +205,25 @@ cargo test -p rfb-contract --test contract_fixtures committed_contract_fixtures_
 
 CI 在 [.github/workflows/ci.yml](../.github/workflows/ci.yml) 和 [windows.yml](../.github/workflows/windows.yml) 配置自己的触发范围；本指南没有修改 CI，也不要求每次本地编辑重复它的整套工作。
 
+## 角色结束与高分榜验收
+
+在 `web` 执行 `npm run build:standalone:debug`，随后执行 `node e2e/character-ending-standalone.e2e.mjs`。脚本使用普通 EXE、独立 WebView 配置，沿正式创角流程创建同名同种子人类战士；角色和成绩仍写入该应用的本机档案，保留原有记录。无需调试准备 IPC 或修改角色存档。原生键盘验证 Q 的取消、提示框取消、错误口令与 `@` 确认；核对结束页、权威分数、390px 横向表格、旧活动存档恢复最终检查点、禁止继续行动、前端重载后保留成绩、另一个角色独立入榜，以及标题／结束页和 `~ H` 入口。
+
+报告及桌面／窄窗口截图位于 `test-results/character-ending/`。原生测试 `score_storage_tests` 补足实际死亡、写入失败后重试、同一角色陈旧会话、进程状态重建及结束命令回放；既有馆藏跨进程锁与中断恢复测试随原生层回归。核心 `game::tests::ending` 验证局部／世界地图结束的零时间及终态保存，`warrens_dungeon_conquest_returns_retires_and_round_trips` 同时覆盖原有地表退休与胜利后地牢内立即退休。桌面角色未自然通关，不将其称为死亡／胜利全过程的桌面验收；本批未验收 Android。
+
 ## 记录结果
 
 记录提交、检查命令/范围、通过或失败和相关限制即可。代码审查、自动测试、桌面操作与人工试玩分别记录。历史通过结果只证明当时的代码和范围，不自动成为当前提交的新证据。
+
+## 全局偏好 O8 验收
+
+先构建普通 Tauri standalone，再从 `web/` 执行：
+
+```powershell
+npm run build:standalone:debug
+node e2e/global-preferences-standalone.e2e.mjs
+```
+
+仅在没有其他游戏实例写入偏好时运行。脚本备份应用数据目录中的原始 `preferences.json`，使用全新默认偏好和独立 WebView 调试目录，最后恢复原始字节（原文件不存在则移除测试创建的文件）。不会删除角色存档、成绩或馆藏。场景正常创建两个人类战士，测试两套 RFB 键位选择、与物品栏相同的设置／宠物窗口、分类导航、地牢信息常显、标题设置、跨进程／角色继承、字形与配色、JSON／PRF 导入导出、草案取消、`$` 与编辑器重载和英文 390px；没有专用角色准备 IPC。报告、下载文件和截图在 `test-results/global-preferences/`。
+
+规则侧运行 Core 与原生库、协议／保存／回放测试；行为上下文和保存边界有变化时显式验证 26 条 active 契约。完整命令结果、解释过的 fixture 差异和桌面范围见 [O8 验证记录](global-preferences-plan.md#o8-统一验证记录2026-09-15)。

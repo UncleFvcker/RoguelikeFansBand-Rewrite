@@ -103,7 +103,12 @@ fn project_hack_targets_dark_invisible_actors_but_obeys_walls_and_range_and_save
     assert_eq!(game.projected_monster_status_targets(), ["test.a-range18"]);
     game.entities[0].hp = game.entities[0].max_hp;
     game.reveal_current_visibility();
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(
         project(&mut game, Sleep, 60),
         project(&mut restored, Sleep, 60)

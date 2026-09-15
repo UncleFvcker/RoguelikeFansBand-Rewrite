@@ -33,7 +33,7 @@ fn desktop_preparation_preserves_natural_birth_and_round_trips_a_real_dungeon() 
             .iter()
             .any(|ability| { ability.id == EAT_MAGIC && ability.can_cast })
     );
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
     let before = game.state_hash();
@@ -176,10 +176,19 @@ fn birth_proficiencies_virtues_and_race_combinations_follow_mage_source() {
         "rfb-legacy.race.spectre",
         "rfb-legacy.race.draconian-red",
     ] {
-        let game = Game::new_with_build_race_and_name(925, BUILD, race, "Mage").unwrap();
+        let game = Game::new_with_build_race_and_name(
+            925,
+            BUILD,
+            race,
+            "Mage",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(game.active_casting_realm_profiles().len(), 2);
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash(),
             "{race}"
         );
@@ -187,11 +196,25 @@ fn birth_proficiencies_virtues_and_race_combinations_follow_mage_source() {
             assert_eq!(game.draconian_metamorphosis_attack_level(), 1);
         }
     }
-    assert!(Game::new_with_build_race_and_name(925, BUILD, "missing-race", "Mage").is_err());
+    assert!(
+        Game::new_with_build_race_and_name(
+            925,
+            BUILD,
+            "missing-race",
+            "Mage",
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
     assert!(Game::new_with_build(925, "demo.build.mage-life-life").is_err());
-    let mut dragon =
-        Game::new_with_build_race_and_name(925, BUILD, "rfb-legacy.race.draconian-red", "Mage")
-            .unwrap();
+    let mut dragon = Game::new_with_build_race_and_name(
+        925,
+        BUILD,
+        "rfb-legacy.race.draconian-red",
+        "Mage",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     dragon.apply_player_experience(dragon.experience_required_for_level(50), &mut Vec::new());
     assert_eq!(dragon.draconian_metamorphosis_attack_level(), 84);
 }
@@ -404,7 +427,7 @@ fn both_realms_learn_and_cast_with_mage_first_success_experience() {
         );
     }
     game.debug_ability_casts_succeed = false;
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for game in [&mut game, &mut restored] {
         dispatch_next(
             game,

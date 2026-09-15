@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 
 import assert from "node:assert/strict";
 import { readFile, writeFile } from "node:fs/promises";
@@ -40,7 +41,15 @@ export async function connectKeyboard(profile) {
     keys[letter.toUpperCase()] = keys[letter];
   }
   keys.B = ["KeyB", 66, 8];
+  keys["["] = ["BracketLeft", 219];
+  Object.assign(keys, { PageDown: ["PageDown", 34], PageUp: ["PageUp", 33], "/": ["Slash", 191], "\\": ["Backslash", 220], "-": ["Minus", 189], "@": ["Digit2", 50, 8], "0": ["Digit0", 48] });
   keys[">"] = ["Period", 190, 8];
+  keys["?"] = ["Slash", 191, 8];
+  keys["~"] = ["Backquote", 192, 8];
+  keys["'"] = ["Quote", 222]; keys['"'] = ["Quote", 222, 8];
+  keys[":"] = ["Semicolon", 186, 8]; keys[")"] = ["Digit0", 48, 8];
+  Object.assign(keys, { "=": ["Equal", 187], "!": ["Digit1", 49, 8], "$": ["Digit4", 52, 8], "%": ["Digit5", 53, 8], "&": ["Digit7", 55, 8], "_": ["Minus", 189, 8] });
+  keys["#"] = ["Digit3", 51, 8]; keys.F2 = ["F2", 113];
   const errors = [];
   socket.addEventListener("message", event => {
     const message = JSON.parse(event.data);
@@ -49,6 +58,7 @@ export async function connectKeyboard(profile) {
   await send("Runtime.enable", {});
   return {
     errors,
+    downloadsTo: directory => send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: directory }),
     async key(key, modifiers = 0) {
       const [code, windowsVirtualKeyCode, implicitModifiers = 0] = keys[key];
       const params = { key, code, windowsVirtualKeyCode, modifiers: modifiers | implicitModifiers };
@@ -56,6 +66,27 @@ export async function connectKeyboard(profile) {
       await send("Input.dispatchKeyEvent", { type: "keyUp", ...params });
     },
     async text(text) { await send("Input.insertText", { text }); },
+    async viewport(width, height) {
+      await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: false });
+    },
+    async withDialog(accept, action) {
+      await send("Page.enable", {});
+      const answers = Array.isArray(accept) ? [...accept] : [{ accept }];
+      let receive, timer;
+      const dialog = new Promise((resolve, reject) => {
+        timer = setTimeout(() => reject(new Error("Expected native confirmation dialog")), 10000);
+        receive = event => {
+          if (JSON.parse(event.data).method === "Page.javascriptDialogOpening") {
+            const answer = answers.shift();
+            if (!answer) { reject(new Error("Unexpected extra native dialog")); return; }
+            send("Page.handleJavaScriptDialog", answer).then(() => { if (!answers.length) resolve(); }, reject);
+          }
+        };
+        socket.addEventListener("message", receive);
+      });
+      try { await Promise.all([dialog, action()]); }
+      finally { clearTimeout(timer); socket.removeEventListener("message", receive); }
+    },
     async screenshot() { return (await send("Page.captureScreenshot", { format: "png" })).data; },
     async evaluate(expression) {
       const result = await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
@@ -131,7 +162,8 @@ export async function runCreationLayoutScenario(driver, artifactDirectory, debug
     layouts.push({ label, ...result });
   }
   async function reload(locale = "zh-CN") {
-    await driver.execute('window.__creationReloadPending = true; localStorage.setItem("rfb.locale", arguments[0]); localStorage.setItem("rfb.input-preset", "numpad"); setTimeout(() => location.reload(), 50); return true;', [locale]);
+    await setPreferences(driver, { locale, inputPreset: "numpad" });
+    await driver.execute('window.__creationReloadPending = true;   setTimeout(() => location.reload(), 50); return true;', [locale]);
     await driver.waitFor('return !window.__creationReloadPending && document.documentElement.dataset.appMode === "title" && !document.querySelector("#session-new-game").disabled', "title after reload", 60_000);
     await driver.execute('window.__creationUiErrors = []; window.addEventListener("error", event => window.__creationUiErrors.push(event.message)); window.addEventListener("unhandledrejection", event => window.__creationUiErrors.push(String(event.reason))); return true;');
   }

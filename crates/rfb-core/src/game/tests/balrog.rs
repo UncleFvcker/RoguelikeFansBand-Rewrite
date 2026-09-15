@@ -9,8 +9,14 @@ const START: Position = Position { x: 99, y: 33 };
 const EAST: Position = Position { x: 100, y: 33 };
 
 fn prepared(level: u16) -> Game {
-    let mut game =
-        Game::new_with_build_race_and_name(83, "demo.build.warrior", BALROG, "test").unwrap();
+    let mut game = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        BALROG,
+        "test",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     clear_monsters(&mut game);
     game.player.position = START;
     for y in 29..=37 {
@@ -52,9 +58,14 @@ fn balrog_birth_uses_human_allocation_and_preserves_class_kits_and_save_identity
         "warrior-mage-arcane-life",
         "mindcrafter",
     ] {
-        let game =
-            Game::new_with_build_race_and_name(83, &format!("demo.build.{build}"), BALROG, "test")
-                .unwrap();
+        let game = Game::new_with_build_race_and_name(
+            83,
+            &format!("demo.build.{build}"),
+            BALROG,
+            "test",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         let corpses: Vec<_> = game
             .items
             .iter()
@@ -107,7 +118,12 @@ fn balrog_birth_uses_human_allocation_and_preserves_class_kits_and_save_identity
                     && matches!(item.location, ItemLocation::Equipped { .. }) == expected.equipped
             }));
         }
-        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.snapshot(), game.snapshot());
         assert_eq!(restored.state_hash(), game.state_hash());
     }
@@ -246,7 +262,12 @@ fn balrog_sacrifices_one_pack_or_floor_corpse_without_healing_and_rejects_invali
         assert!(game.items.iter().any(|item| item.id == id));
     }
     *game.items.iter_mut().find(|item| item.id == id).unwrap() = valid;
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     let command = GameCommand::UseItem {
         item_id: id,
@@ -323,7 +344,12 @@ fn ordinary_allocated_humans_drop_sacrificable_remains_after_real_melee() {
     game.player.position = EAST;
     game.nutrition = 1000;
     game.reveal_current_visibility();
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     let command = GameCommand::UseItem {
         item_id: id.clone(),
         target: None,
@@ -445,8 +471,12 @@ fn balrog_breath_unlocks_scales_branches_and_pays_on_failure() {
         clear_monsters(&mut game);
         game.push_generated_actor("test.saved-target".to_owned(), "demo.actor.sheep", EAST);
         game.reveal_current_visibility();
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(
             dispatch_next(&mut game, GameCommand::Wait),
             dispatch_next(&mut restored, GameCommand::Wait)

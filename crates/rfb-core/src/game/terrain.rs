@@ -5,10 +5,12 @@ use std::collections::BTreeSet;
 use rfb_content::{
     ContentCatalog, TerrainDefinition, TerrainDiggingDefinition, TerrainDiggingResolution,
 };
-use rfb_protocol::{Direction, Position, TerrainInteractionUnavailableReasonDto};
+use rfb_protocol::{Direction, MapScaleDto, Position, TerrainInteractionUnavailableReasonDto};
 
 use crate::{
+    action::GameAction,
     check::{CheckContext, CheckKind, resolve_check},
+    effect::STATUS_CONFUSION,
     state::{Actor, ItemInstance, ItemLocation},
     stats::{DerivedStat, DerivedStatsPipeline, StatBounds, StatKind, StatLayer},
 };
@@ -263,6 +265,151 @@ fn action_difficulty(source_id: &str, difficulty: i32) -> DerivedStat {
 }
 
 impl Game {
+    // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, cmd1.c move_player.
+    // Convenience applies only to walking; explicit alter/open/disarm stay independent.
+    pub(super) fn convenient_walk_action(&self, action: GameAction) -> GameAction {
+        let GameAction::Move {
+            direction,
+            flip_pickup,
+        } = &action
+        else {
+            return action;
+        };
+        if self.map_scale != MapScaleDto::Local || self.player_has_status_kind(STATUS_CONFUSION) {
+            return action;
+        }
+        let position = self.position_in_direction(*direction);
+        if self.index(position).is_none()
+            || self
+                .entities
+                .iter()
+                .any(|e| e.hp > 0 && e.position == position)
+        {
+            return action;
+        }
+        let terrain = self
+            .content
+            .terrain(self.known_terrain_at(position))
+            .unwrap();
+        if self.operation_options.easy_open
+            && terrain.open_to_terrain_id.is_some()
+            && !self.player_can_enter_position(position)
+        {
+            return GameAction::OpenDoor {
+                direction: *direction,
+            };
+        }
+        if (self.operation_options.easy_disarm ^ *flip_pickup)
+            && !self.player_is_berserker()
+            && self
+                .index(position)
+                .is_some_and(|index| self.explored[index])
+            && terrain.trap.is_some()
+        {
+            return GameAction::DisarmTrap {
+                direction: *direction,
+            };
+        }
+        action
+    }
+
+    // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, cmd2.c do_cmd_alter.
+    // Use mimic terrain; neither a hidden trap nor a secret door grants free knowledge.
+    pub(super) fn alter_action(
+        &mut self,
+        direction: Direction,
+        events: &mut Vec<DomainEvent>,
+    ) -> crate::action::GameAction {
+        use crate::action::GameAction;
+        let direction = self.confused_direction(direction, events);
+        let context = self.terrain_interaction_context();
+        let position = context.position_in_direction(direction);
+        if self.entities.iter().any(|actor| actor.position == position) {
+            return GameAction::AttackAdjacent { direction };
+        }
+        if let Some((_, terrain)) = context.known_terrain_at(position) {
+            if terrain.open_to_terrain_id.is_some() {
+                return GameAction::OpenDoor { direction };
+            }
+            if terrain.bash_to_terrain_id.is_some() {
+                return GameAction::BashDoor { direction };
+            }
+            if terrain.digging.is_some() {
+                return GameAction::DigTerrain { direction };
+            }
+            if terrain.close_to_terrain_id.is_some() {
+                return GameAction::CloseDoor { direction };
+            }
+            if terrain.trap.is_some() {
+                return GameAction::DisarmTrap { direction };
+            }
+        }
+        GameAction::Alter { direction }
+    }
+
+    // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, cmd2.c do_cmd_spike.
+    pub(super) fn prepare_spike_action(
+        &mut self,
+        direction: Direction,
+        events: &mut Vec<DomainEvent>,
+    ) -> Option<crate::action::GameAction> {
+        use crate::action::GameAction;
+        let direction = self.confused_direction(direction, events);
+        let position = self.position_in_direction(direction);
+        if self
+            .terrain_interaction_context()
+            .known_terrain_at(position)
+            .is_none_or(|(_, terrain)| terrain.jam_to_terrain_id.is_none())
+        {
+            events.push(DomainEvent::DoorSpikeUnavailable);
+            return None;
+        }
+        if self.entities.iter().any(|actor| actor.position == position) {
+            events.push(DomainEvent::DoorSpikeMonsterBlocked);
+            return Some(GameAction::AttackAdjacent { direction });
+        }
+        if self.inventory_spike_index().is_none() {
+            events.push(DomainEvent::DoorSpikeMissing);
+            return None;
+        }
+        Some(GameAction::SpikeDoor { direction })
+    }
+
+    fn inventory_spike_index(&self) -> Option<usize> {
+        self.items.iter().position(|item| {
+            item.location == ItemLocation::Inventory
+                && self
+                    .content
+                    .item(&item.kind_id)
+                    .and_then(|kind| kind.rfb_base_kind.as_ref())
+                    .is_some_and(|kind| kind.tval == 5)
+        })
+    }
+
+    pub(super) fn spike_door(&mut self, direction: Direction) -> Position {
+        let position = self.position_in_direction(direction);
+        let context = self.terrain_interaction_context();
+        let (index, terrain) = context
+            .known_terrain_at(position)
+            .expect("prepared spike terrain");
+        let target = terrain
+            .jam_to_terrain_id
+            .clone()
+            .expect("prepared spike transition");
+        self.terrain[index] = target;
+        self.revealed_terrain.remove(&position);
+        let item_index = self
+            .inventory_spike_index()
+            .expect("prepared inventory spike");
+        if self.items[item_index].quantity == 1 {
+            let removed = self.items.remove(item_index);
+            self.item_property_knowledge.remove(&removed.id);
+        } else {
+            self.items[item_index].quantity -= 1;
+        }
+        position
+    }
+
     pub(super) fn in_forest_dungeon(&self) -> bool {
         let world = self.content.world(&self.world_id).expect("active world");
         world
@@ -359,6 +506,9 @@ impl Game {
         let terrain_index = self.index(position)?;
         let terrain = self.content.terrain(&self.terrain[terrain_index])?.clone();
         let power = terrain.monster_door_power?;
+        if !self.pet_door_interaction_allowed(actor_index) {
+            return None;
+        }
         let interaction = self
             .actor_runtime_definition(&self.entities[actor_index])?
             .door_interaction;
@@ -638,6 +788,27 @@ impl Game {
             position: plan.position,
             proficiency_improved,
         })
+    }
+
+    // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: cmd1.c search,
+    // move_player_effect(MPE_ENERGY_USE); discoveries disturb(0), keeping SEARCH.
+    pub(super) fn search_surroundings(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> bool {
+        let discovered = self.search_hidden_terrain();
+        let found_chest = self.search_chest_traps(events, changed);
+        let found = !discovered.is_empty() || found_chest;
+        for position in discovered {
+            changed.insert(position);
+            events.push(DomainEvent::SecretTerrainDiscovered { position });
+        }
+        if found {
+            self.running = None;
+            self.auto_explore = None;
+        }
+        found
     }
 
     pub(super) fn search_hidden_terrain(&mut self) -> Vec<Position> {

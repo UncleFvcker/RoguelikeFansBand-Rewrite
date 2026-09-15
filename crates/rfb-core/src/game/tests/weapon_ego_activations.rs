@@ -78,8 +78,12 @@ fn mattock_forced_base_disruption_activation_round_trips() {
     game.equip_inventory_item(&item_id, None).unwrap();
 
     let save = game.to_save();
-    let mut game = Game::from_save_with_content(save.clone(), game.content.clone())
-        .expect("natural ego rolls and activation should survive a save round-trip");
+    let mut game = Game::from_save_with_content(
+        save.clone(),
+        game.content.clone(),
+        Game::default_behavior_preferences(),
+    )
+    .expect("natural ego rolls and activation should survive a save round-trip");
     assert_eq!(game.to_save(), save);
     game.use_inventory_item(
         &item_id,
@@ -849,8 +853,12 @@ fn fetch_vault_protection_is_hashed_and_survives_save_restore() {
     let index = game.index(target).unwrap();
     game.vault_cells[index] = true;
     assert_ne!(game.state_hash(), unprotected);
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("vault cells round trip");
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("vault cells round trip");
     assert_eq!(restored.state_hash(), game.state_hash());
     use_fetch(
         &mut restored,
@@ -867,7 +875,14 @@ fn fetch_vault_protection_is_hashed_and_survives_save_restore() {
     );
     let mut invalid = game.to_save();
     invalid.terrain.vault_cells.pop();
-    assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            invalid,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
 }
 
 #[test]

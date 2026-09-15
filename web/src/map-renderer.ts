@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
+import { defaultVisuals, type VisualPreferences } from "./visual-preferences.ts";
+import type { EditableVisualDto } from "./protocol";
 
 import {
   computeCameraOffset,
@@ -20,6 +22,14 @@ export { type CameraMode } from "./camera";
 export { type ZoomLevel } from "./camera";
 
 export class MapRenderer {
+  #visuals = defaultVisuals();
+  #visualCatalog: readonly EditableVisualDto[] = [];
+  visualBase(id: string) { return this.#backend.visualBase(id); }
+  setVisualPreferences(preferences: VisualPreferences): void {
+    this.#visuals = preferences;
+    if (this.#world && this.#backend.setVisuals(preferences, this.#visualCatalog)) this.#backend.applyCells(this.#world.allCells());
+  }
+  capturePng(): string { return this.#backend.capturePng(); }
   readonly #backend: RendererBackend;
   #world: RenderWorld | undefined;
   #host: HTMLElement | undefined;
@@ -103,6 +113,18 @@ export class MapRenderer {
     this.#updateCamera();
   }
 
+  recenter(): void {
+    this.#cameraFocus = undefined;
+    this.#updateCamera();
+    if (this.#host && this.#world && this.#cameraMode === "full-map") {
+      const size = MAP_CELL_SIZE * this.#zoom;
+      this.#host.scrollTo({ left: (this.#world.playerPosition.x + 0.5) * size - this.#host.clientWidth / 2,
+        top: (this.#world.playerPosition.y + 0.5) * size - this.#host.clientHeight / 2, behavior: "auto" });
+      this.#host.dataset.scrollX = String(this.#host.scrollLeft);
+      this.#host.dataset.scrollY = String(this.#host.scrollTop);
+    }
+  }
+
   async setTileset(tilesetManifestUrl: string): Promise<TilesetChangeResult> {
     const result = await this.#backend.setTileset(tilesetManifestUrl);
     const appliedCells = this.#backend.applyCells(this.#requireWorld().allCells());
@@ -113,6 +135,8 @@ export class MapRenderer {
 
   applySnapshot(snapshot: GameSnapshot): void {
     this.#resizeWorld(snapshot.width, snapshot.height);
+    this.#visualCatalog = snapshot.player.visualCatalog;
+    this.#backend.setVisuals(this.#visuals, this.#visualCatalog);
     const cells = this.#requireWorld().applySnapshot(snapshot);
     const appliedCells = this.#backend.applyCells(cells);
     this.#recordRender("snapshot", appliedCells);
@@ -122,7 +146,10 @@ export class MapRenderer {
 
   applyUpdate(update: GameUpdate): boolean {
     const resized = this.#resizeWorld(update.width, update.height);
-    const cells = this.#requireWorld().applyUpdate(update);
+    this.#visualCatalog = update.player.visualCatalog;
+    const visualsChanged = this.#backend.setVisuals(this.#visuals, this.#visualCatalog);
+    const updated = this.#requireWorld().applyUpdate(update);
+    const cells = visualsChanged ? this.#requireWorld().allCells() : updated;
     const appliedCells = this.#backend.applyCells(cells);
     this.#recordRender("update", appliedCells);
     this.#recordVisualState();
@@ -207,6 +234,7 @@ export class MapRenderer {
     }
     host.dataset.scrollX = String(host.scrollLeft);
     host.dataset.scrollY = String(host.scrollTop);
+    host.dispatchEvent(new Event("map-camera-change"));
     this.#recordBackendDiagnostics();
   }
 

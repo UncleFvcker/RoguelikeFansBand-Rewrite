@@ -27,7 +27,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 5;
-pub const ACTIVE_BASELINE: &str = "contract-v332";
+pub const ACTIVE_BASELINE: &str = "contract-v340";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -890,7 +890,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         payload.entities.clear();
         payload.carried_items.clear();
     }
-    let mut game = Game::from_save(payload)?;
+    let mut game = Game::from_save(payload, Game::default_behavior_preferences())?;
     if fixture.preconditions.enter_task_floor {
         let envelope = GameCommandEnvelope {
             command_seq: game.last_command_seq().saturating_add(1),
@@ -911,7 +911,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
                     .retain(|state| state.task_id != task_state.task_id);
                 payload.task_states.push(task_state.clone());
             }
-            game = Game::from_save(payload)?;
+            game = Game::from_save(payload, Game::default_behavior_preferences())?;
         }
         if fixture
             .preconditions
@@ -920,7 +920,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             let mut payload = game.to_save();
             payload.entities.clear();
             payload.carried_items.clear();
-            game = Game::from_save(payload)?;
+            game = Game::from_save(payload, Game::default_behavior_preferences())?;
         }
     }
     for (item, depth) in fixture
@@ -1346,8 +1346,10 @@ fn save_round_trip(game: &Game) -> Result<String, ContractError> {
     };
     let bytes = rfb_save::encode(&header, &game.to_save())?;
     let (_, payload) = rfb_save::decode(&bytes)?;
-    let restored = Game::from_save(payload)?;
-    if restored.snapshot() != snapshot {
+    let restored = Game::from_save(payload, game.behavior_preferences())?;
+    let mut expected = game.clone();
+    expected.apply_behavior_preferences(game.behavior_preferences())?;
+    if restored.snapshot() != expected.snapshot() || restored.to_save() != game.to_save() {
         return Err(ContractError::SaveRoundTripMismatch);
     }
     Ok(restored.state_hash())

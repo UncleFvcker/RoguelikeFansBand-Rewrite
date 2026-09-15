@@ -455,7 +455,7 @@ fn tonberry_weapon_profiles_preserve_fractional_blows_and_known_damage() {
         );
         assert_eq!(
             profile.to_damage,
-            stats.melee_damage_bonus.value + 2 * i32::from(level)
+            stats.melee_damage_bonus.value + 2 * i32::from(level) + 2
         );
         let innate = game.player_mutation_innate_attack_profiles(&stats);
         let mut human = game.clone();
@@ -524,6 +524,13 @@ fn tonberry_weapon_profiles_preserve_fractional_blows_and_known_damage() {
 fn tonberry_fractional_weapon_attacks_roll_once_and_allow_zero_attacks() {
     let mut base = tonberry_game("demo.build.warrior");
     force_melee_misses(&mut base);
+    give_inventory_item(
+        &mut base,
+        "test.fractional-shield",
+        "demo.item.small-metal-shield",
+    );
+    base.equip_inventory_item("test.fractional-shield", Some("left-hand"))
+        .unwrap();
     let weapon = weapon_index(&base);
     let base_attacks = base.player_derived_stats().melee_attacks.value;
     base.items[weapon]
@@ -649,6 +656,7 @@ fn tonberry_damage_is_added_after_weapon_criticals_and_does_not_change_shooting(
     assert!(critical_seen);
 
     let mut archer = tonberry_game("demo.build.archer");
+    archer.rng = RfbRng::seeded(1);
     for position in [archer.player.position, archer.entities[0].position] {
         super::support::replace_terrain(&mut archer, position, "demo.terrain.floor");
     }

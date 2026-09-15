@@ -50,7 +50,7 @@ const fn technique_attribute_dto(attribute: TechniqueAttribute) -> AttributeKind
     }
 }
 
-const WILDERNESS_VISUALS: [(&str, &str); 18] = [
+pub(super) const WILDERNESS_VISUALS: [(&str, &str); 18] = [
     ("core.wilderness.edge", "#"),
     (WILDERNESS_TOWN_ID, "#"),
     (WILDERNESS_ROAD_ID, "."),
@@ -101,7 +101,23 @@ impl Game {
             .content
             .actor(&self.player.kind_id)
             .expect("player actor definition must remain available");
+        let monster_recall = self.monster_recall_dtos();
         PlayerDto {
+            visual_catalog: self.visual_catalog(&monster_recall),
+            speed_energy_per_tick: crate::scheduler::energy_gain(derived_speed(&stats.speed)),
+            trap_detected_grids: if self.map_scale == MapScaleDto::World {
+                Vec::new()
+            } else {
+                self.detection_coverage
+                    .traps
+                    .iter()
+                    .copied()
+                    .filter(|pos| self.index(*pos).is_some_and(|i| self.explored[i]))
+                    .collect()
+            },
+            discovery: self.discovery_dto(),
+            floor_feeling_message_key: self.floor_feeling_message_key(),
+            monster_recall,
             magic_eater: self.magic_eater_dto(),
             trait_details: self.character_trait_details(&stats),
             id: self.player.id.clone(),
@@ -132,6 +148,13 @@ impl Game {
                 .unwrap_or(u16::MAX),
             inventory_used_slots: self.inventory_used_slots(),
             inventory_slot_capacity: self.inventory_slot_capacity(),
+            quiver_item_ids: super::inventory::quivered_ammunition_item_ids(
+                &self.content,
+                &self.items,
+            )
+            .into_iter()
+            .map(str::to_owned)
+            .collect(),
             base_max_hp: self.player.max_hp,
             attack: stats.attack.value,
             base_attack: definition.attack,
@@ -154,6 +177,9 @@ impl Game {
                 .collect(),
             confusing_strike_ready: self.confusing_strike_ready,
             fishing_direction: self.fishing_direction,
+            running: self.running.clone(),
+            auto_explore: self.auto_explore.clone(),
+            searching: self.searching,
             sniper_concentration: self.sniper_max_concentration().map(|maximum| {
                 rfb_protocol::SniperConcentrationDto {
                     current: self.sniper_concentration,
@@ -176,6 +202,7 @@ impl Game {
             recall: self.recall.clone(),
             riding_actor_id: self.riding_actor_id.clone(),
             pets: self.pet_dtos(),
+            riding_without_reins: self.riding_without_reins(),
         }
     }
 
@@ -184,6 +211,9 @@ impl Game {
             .entities
             .iter()
             .filter(|actor| actor.hp > 0 && self.actor_is_player_aligned(actor))
+            .filter(|actor| {
+                self.entity_is_visible_to_player(actor) && !self.entity_is_fuzzy_to_player(actor)
+            })
             .filter_map(|actor| {
                 let definition = self.actor_runtime_definition(actor)?;
                 let bond_percent = self.riding_bond.as_ref().and_then(|bond| {
@@ -192,6 +222,9 @@ impl Game {
                 });
                 Some(PetDto {
                     actor_id: actor.id.clone(),
+                    custom_name: actor.custom_name.clone(),
+                    can_name: self.pet_can_be_named(actor),
+                    highlight: self.summon_command.highlight_lists,
                     actor_kind_id: actor.kind_id.clone(),
                     name_key: definition.name_key.clone(),
                     level: definition.level,
@@ -862,6 +895,18 @@ impl Game {
                     .clone();
                 EntityDto {
                     id: entity.id.clone(),
+                    in_line_of_effect: super::projectile_geometry::has_line_of_effect(
+                        self,
+                        self.player.position,
+                        entity.position,
+                    ),
+                    custom_name: (!fuzzy).then(|| entity.custom_name.clone()).flatten(),
+                    highlight_map: !fuzzy
+                        && self.actor_is_player_aligned(entity)
+                        && self.summon_command.highlight_map,
+                    highlight_list: !fuzzy
+                        && self.actor_is_player_aligned(entity)
+                        && self.summon_command.highlight_lists,
                     kind_id: if fuzzy {
                         "core.actor.fuzzy-monster".to_owned()
                     } else {
@@ -941,6 +986,7 @@ impl Game {
                     summon: (!fuzzy)
                         .then(|| {
                             entity.summon.as_ref().map(|summon| SummonDto {
+                                owner_dependent: summon.owner_dependent,
                                 owner_id: summon.owner_id.clone(),
                                 source_ability_id: summon.source_ability_id.clone(),
                                 remaining_turns: summon.remaining_turns,
@@ -966,6 +1012,7 @@ impl Game {
                     return None;
                 }
                 Some(ItemDto {
+                    visual: self.item_visual(item),
                     usable: self.item_is_edible_at_feet(item),
                     can_supply_recharge: self.item_can_supply_recharge(item),
                     can_receive_recharge: self.item_can_receive_recharge(item),
@@ -1035,6 +1082,28 @@ impl Game {
 
     pub(super) fn inventory_item_dto(&self, item: &ItemInstance) -> InventoryItemDto {
         InventoryItemDto {
+            visual: self.item_visual(item),
+            origin_kind: item.origin_kind,
+            discount_percent: item.discount_percent,
+            use_category: self.content.item(&item.kind_id).and_then(|definition| {
+                use rfb_protocol::ItemUseCategoryDto::*;
+                [
+                    ("food", Food),
+                    ("potion", Potion),
+                    ("scroll", Scroll),
+                    ("wand", Wand),
+                    ("staff", Staff),
+                    ("rod", Rod),
+                ]
+                .into_iter()
+                .find_map(|(tag, category)| {
+                    definition
+                        .tags
+                        .iter()
+                        .any(|value| value == tag)
+                        .then_some(category)
+                })
+            }),
             bag_capacity: self.visible_item_bag_capacity(item),
             id: item.id.clone(),
             kind_id: item.kind_id.clone(),
@@ -1180,6 +1249,9 @@ impl Game {
                     return None;
                 };
                 Some(EquipmentItemDto {
+                    visual: self.item_visual(item),
+                    origin_kind: item.origin_kind,
+                    discount_percent: item.discount_percent,
                     requires_recharge_targets: self
                         .inventory_item_use_effect(&item.id)
                         .is_some_and(|(effect, _)| {
@@ -1255,6 +1327,7 @@ impl Game {
             .actor(&captured.kind_id)
             .expect("captured actor definition must remain available");
         Some(CapturedActorDto {
+            custom_name: captured.custom_name.clone(),
             kind_id: captured.kind_id.clone(),
             name_key: definition.name_key.clone(),
             speed: captured.speed,
@@ -1272,6 +1345,7 @@ impl Game {
         let world_map = self.map_scale == MapScaleDto::World;
         GameSnapshot {
             travel_options: self.travel_options,
+            operation_options: self.operation_options,
             protocol_version: PROTOCOL_VERSION.to_owned(),
             revision: self.revision,
             turn: self.turn,
@@ -1428,6 +1502,11 @@ impl Game {
         CellDto {
             position,
             terrain_id: self.known_terrain_at(position).to_owned(),
+            known_projectile_passage: self.index(position).is_some_and(|i| self.explored[i])
+                && self
+                    .content
+                    .terrain(self.known_terrain_at(position))
+                    .is_some_and(|terrain| terrain.walkable || terrain.allows_projectile_passage),
             item_id: self
                 .gold_piles
                 .iter()
@@ -1510,6 +1589,7 @@ impl Game {
         CellDto {
             position,
             terrain_id: terrain_id.to_owned(),
+            known_projectile_passage: false,
             item_id: None,
             actor_id: (self.wilderness_position == Some(position)).then(|| self.player.id.clone()),
             danger_level: Some(legend.level),

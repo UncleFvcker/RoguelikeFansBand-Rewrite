@@ -117,6 +117,65 @@ pub(super) fn riding_proficiency_progress_is_valid(
 }
 
 impl Game {
+    // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c:
+    // equip.c reserves the last empty hand unless PF_RYOUTE is set.
+    // No empty hand means no reins even when the option is off.
+    pub(super) fn riding_without_reins(&self) -> bool {
+        self.riding_actor_id.is_some()
+            && (self.summon_command.riding_two_hands
+                || !self.body_slots.iter().any(|slot| {
+                    matches!(slot.slot_type.as_str(), "weapon" | "shield")
+                        && !self.items.iter().any(|item| {
+                            matches!(&item.location,
+                            ItemLocation::Equipped { slot_id } if slot_id == &slot.id)
+                        })
+                }))
+    }
+
+    pub(super) fn clear_riding_state(&mut self) {
+        self.riding_actor_id = None;
+        self.summon_command.riding_two_hands = false;
+    }
+
+    pub(super) fn riding_direction(
+        &mut self,
+        intended: Direction,
+        events: &mut Vec<DomainEvent>,
+    ) -> Direction {
+        let Some(mount) = self
+            .entities
+            .iter()
+            .find(|actor| self.riding_actor_id.as_deref() == Some(actor.id.as_str()))
+        else {
+            return intended;
+        };
+        let confused = mount
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_CONFUSION);
+        let random = self
+            .actor_runtime_definition(mount)
+            .and_then(|definition| definition.allocation.as_ref())
+            .map_or(0, |allocation| allocation.random_movement_percent);
+        // xtra2.c get_rep_dir: RAND_75 has two sequential opportunities.
+        let change = if confused {
+            self.rng.bounded(100) < 75
+        } else if self.riding_without_reins() {
+            (random == 75 && self.rng.bounded(100) < 50)
+                || (random >= 50 && self.rng.bounded(100) < 25)
+        } else {
+            false
+        };
+        if !change {
+            return intended;
+        }
+        let actual = TERRAIN_INTERACTION_DIRECTIONS[self.rng.bounded(8) as usize];
+        if actual != intended {
+            events.push(DomainEvent::RidingDirectionChanged);
+        }
+        actual
+    }
+
     fn riding_proficiency_bounds(&self) -> Option<(u16, u16)> {
         let class = self
             .build
@@ -276,7 +335,7 @@ impl Game {
                 target_kind_id: target_kind_id.clone(),
             });
             self.resolve_riding_fall(1, true, events, changed);
-            self.riding_actor_id = None;
+            self.clear_riding_state();
         }
     }
 
@@ -365,7 +424,7 @@ impl Game {
             .iter()
             .position(|actor| actor.id == mount_id && actor.hp > 0)
         else {
-            self.riding_actor_id = None;
+            self.clear_riding_state();
             return false;
         };
         let target_kind_id = self.entities[mount_index].kind_id.clone();
@@ -375,6 +434,7 @@ impl Game {
 
         if !force {
             let current = self.progress.riding_proficiency;
+            let without_reins = self.riding_without_reins();
             let maximum = self
                 .riding_proficiency_bounds()
                 .map_or(0, |(_, maximum)| maximum);
@@ -382,16 +442,18 @@ impl Game {
                 events.push(event);
             }
             let range = i64::from(damage.max(0) / 2)
-                .saturating_add(i64::from(mount_level).saturating_mul(2))
+                .saturating_add(
+                    (i64::from(mount_level) + if without_reins { 20 } else { 0 }).saturating_mul(2),
+                )
                 .max(1);
             let held = self.rng.bounded(u64::try_from(range).unwrap_or(u64::MAX))
                 < u64::from(current / 33 + 25);
             if held {
-                if maximum == RIDING_EXP_MASTER {
+                if maximum == RIDING_EXP_MASTER && !without_reins {
                     return false;
                 }
                 let second_range = u64::from(self.progress.level)
-                    .saturating_mul(3)
+                    .saturating_mul(if without_reins { 2 } else { 3 })
                     .saturating_add(30);
                 if self.rng.bounded(second_range) != 0 {
                     return false;
@@ -450,7 +512,7 @@ impl Game {
             return false;
         };
 
-        self.riding_actor_id = None;
+        self.clear_riding_state();
         if !application.fatal {
             events.extend(self.relocate_player(destination, changed));
         }

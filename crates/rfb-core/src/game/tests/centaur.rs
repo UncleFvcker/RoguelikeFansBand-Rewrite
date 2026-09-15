@@ -10,8 +10,14 @@ const EAST: Position = Position { x: 100, y: 33 };
 const LANDING: Position = Position { x: 101, y: 33 };
 
 fn prepared(level: u16) -> Game {
-    let mut game =
-        Game::new_with_build_race_and_name(83, "demo.build.warrior", CENTAUR, "test").unwrap();
+    let mut game = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        CENTAUR,
+        "test",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     clear_monsters(&mut game);
     game.player.position = START;
     for y in 30..=36 {
@@ -52,9 +58,14 @@ fn centaur_native_birth_preserves_class_kit_body_supplies_and_saved_training() {
         "warrior-mage-arcane-life",
         "mindcrafter",
     ] {
-        let game =
-            Game::new_with_build_race_and_name(83, &format!("demo.build.{build}"), CENTAUR, "test")
-                .unwrap();
+        let game = Game::new_with_build_race_and_name(
+            83,
+            &format!("demo.build.{build}"),
+            CENTAUR,
+            "test",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(game.progress.centaur_hoof_proficiency, 4_000);
         assert!(!game.body_slots.iter().any(|slot| slot.slot_type == "boots"));
         assert!(
@@ -88,12 +99,17 @@ fn centaur_native_birth_preserves_class_kit_body_supplies_and_saved_training() {
                     && matches!(item.location, ItemLocation::Equipped { .. }) == expected.equipped
             }));
         }
-        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.snapshot(), game.snapshot());
     }
     assert!(
-        matches!(Game::new_with_build_race_and_name(83, "demo.build.cavalry", CENTAUR, "test"), Err(CoreError::CharacterRaceUnavailable(race)) if race == CENTAUR)
+        matches!(Game::new_with_build_race_and_name(83, "demo.build.cavalry", CENTAUR, "test", Game::default_behavior_preferences()), Err(CoreError::CharacterRaceUnavailable(race)) if race == CENTAUR)
     );
 }
 
@@ -239,7 +255,12 @@ fn centaur_hoof_training_caps_hashes_and_survives_other_forms_and_save_continuat
     assert_eq!(game.progress.centaur_hoof_proficiency, 4_008);
     assert_ne!(game.state_hash(), hash);
     human_form(&mut game);
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     for current in [&mut game, &mut restored] {
         current.player.statuses.clear();
@@ -272,7 +293,14 @@ fn centaur_hoof_training_caps_hashes_and_survives_other_forms_and_save_continuat
         .as_mut()
         .unwrap()
         .centaur_hoof_proficiency = 8_001;
-    assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            invalid,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
 
     let mut visitor = Game::new_with_build(83, "demo.build.warrior").unwrap();
     let mut form =
@@ -376,7 +404,12 @@ fn centaur_jump_spends_hp_on_failure_and_antiteleport_and_continues_after_save()
         assert_eq!(game.player.hp, hp - 10);
         assert_eq!(game.player.position, if succeeds { LANDING } else { START });
     }
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         dispatch_next(&mut restored, GameCommand::Wait),

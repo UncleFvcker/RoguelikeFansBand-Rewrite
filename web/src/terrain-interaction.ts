@@ -3,12 +3,13 @@
 import type {
   Direction,
   GameCommand,
-  GameEventDto,
   TerrainInteractionDto,
   TerrainInteractionKindDto,
 } from "./protocol";
 
 export type TerrainInteractionMode =
+  | "spike-door"
+  | "alter"
   | "open-door"
   | "close-door"
   | "bash-door"
@@ -18,6 +19,7 @@ export type TerrainInteractionMode =
 export function terrainInteractionModeForKey(
   key: string,
 ): TerrainInteractionMode | undefined {
+  if (key === "+") return "alter";
   if (key === "B") return "bash-door";
   if (key === "D") return "disarm-trap";
   if (key === "T") return "dig-terrain";
@@ -37,6 +39,7 @@ export function terrainInteractionCommand(
   mode: TerrainInteractionMode,
   direction: Direction,
 ): GameCommand {
+  if (mode === "alter" || mode === "spike-door") return { type: mode, direction };
   if (mode === "open-door") return { type: "open-door", direction };
   if (mode === "close-door") return { type: "close-door", direction };
   if (mode === "bash-door") return { type: "bash-door", direction };
@@ -46,7 +49,8 @@ export function terrainInteractionCommand(
 
 export function terrainInteractionKindForMode(
   mode: TerrainInteractionMode,
-): TerrainInteractionKindDto {
+): TerrainInteractionKindDto | undefined {
+  if (mode === "alter" || mode === "spike-door") return undefined;
   if (mode === "open-door") return "open-door";
   if (mode === "close-door") return "close-door";
   if (mode === "bash-door") return "bash-door";
@@ -72,8 +76,9 @@ export function terrainInteractionForDirection(
   );
 }
 
-export function terrainDigShouldRepeat(events: readonly GameEventDto[]): boolean {
-  return events.some(
-    (event) => event.kind === "terrain.dig-failed" && event.args.retryable === "true",
-  );
+export function isAutomaticallyRepeatedCommand(command: GameCommand): boolean {
+  // RFB master a0d92b6 util.c::request_command, always_repeat: TBDoc+.
+  // Chest actions are the selected-object branches of open/disarm.
+  return ["dig-terrain", "bash-door", "disarm-trap", "open-door", "close-door", "alter",
+    "open-chest", "disarm-chest"].includes(command.type);
 }

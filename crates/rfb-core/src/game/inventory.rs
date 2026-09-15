@@ -1657,6 +1657,7 @@ impl Game {
         }
         let changed = awareness_before != self.item_knowledge_dto(&item_kind_id)
             || property_before.as_ref() != self.item_property_knowledge.get(item_id);
+        self.discover_item(item_id);
         ItemIdentificationOutcome {
             item_id: item_id.to_owned(),
             item_kind_id,
@@ -2356,6 +2357,51 @@ impl Game {
         true
     }
 
+    // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c,
+    // equip.c::_ring_finger_swap_aux: atomic, free, and never breaks curses.
+    pub(super) fn swap_rings(
+        &mut self,
+        first_slot_id: &str,
+        second_slot_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        if first_slot_id == second_slot_id
+            || self.body_slot_type(first_slot_id) != Some("ring")
+            || self.body_slot_type(second_slot_id) != Some("ring")
+            || !self.items.iter().any(|item| {
+                matches!(&item.location,
+                ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("ring"))
+            })
+        {
+            events.push(DomainEvent::RingSwapUnavailable);
+            return;
+        }
+        for slot in [first_slot_id, second_slot_id] {
+            if let Some(item) = self.items.iter().find(|item| item.curse.is_some()
+                && matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == slot))
+            {
+                self.item_property_knowledge.entry(item.id.clone()).or_default().known_curse = true;
+                events.push(DomainEvent::RingSwapCursed);
+                return;
+            }
+        }
+        for item in &mut self.items {
+            if let ItemLocation::Equipped { slot_id } = &mut item.location {
+                if slot_id == first_slot_id {
+                    *slot_id = second_slot_id.to_owned();
+                } else if slot_id == second_slot_id {
+                    *slot_id = first_slot_id.to_owned();
+                }
+            }
+        }
+        self.refresh_player_resource_maxima();
+        self.refresh_duelist_challenge();
+        events.push(DomainEvent::RingsSwapped {
+            first_slot_id: first_slot_id.to_owned(),
+            second_slot_id: second_slot_id.to_owned(),
+        });
+    }
+
     pub(super) fn equip_inventory_item(
         &mut self,
         item_id: &str,
@@ -2470,6 +2516,40 @@ impl Game {
     ) -> Option<(String, ItemCurseSeverityDto)> {
         let plan = plan_unequip(&self.items, slot_id)?;
         Some((plan.kind_id, plan.curse?))
+    }
+
+    // RFB cmd1.c move_player_effect: default pickup still runs Mogaminator first.
+    // Reuse the existing g command's single-stack pickup and query/capacity handling.
+    pub(super) fn pick_up_floor(
+        &mut self,
+        pickup_by_default: bool,
+        report_empty: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Result<(), CoreError> {
+        let gold_pickup = self.pick_up_gold_at_player(None);
+        if let Some(gold) = gold_pickup {
+            changed.insert(self.player.position);
+            events.push(DomainEvent::GoldPickedUp {
+                amount: gold.gained,
+                balance: gold.balance,
+            });
+        }
+        let mut picked_item = false;
+        let resolutions = self.apply_mogaminator_at_player()?;
+        picked_item |= self.record_mogaminator_resolutions(resolutions, events, changed);
+        let nothing_to_pick_up = if pickup_by_default && self.mogaminator.pending_query.is_none() {
+            let outcome = self.pick_up_at_player()?;
+            let nothing = matches!(&outcome, PickUpOutcome::Nothing);
+            picked_item |= self.record_pick_up_outcome(outcome, events, changed);
+            nothing
+        } else {
+            false
+        };
+        if report_empty && nothing_to_pick_up && gold_pickup.is_none() && !picked_item {
+            events.push(DomainEvent::NothingToPickUp);
+        }
+        Ok(())
     }
 
     pub(super) fn pick_up_at_player(&mut self) -> Result<PickUpOutcome, CoreError> {
@@ -2617,6 +2697,10 @@ impl Game {
     }
 
     pub(super) fn mark_item_aware(&mut self, kind_id: &str) {
+        // Some effect callers use a source label rather than an item kind.
+        if self.content.item(kind_id).is_some() {
+            self.discover_object_kind(kind_id);
+        }
         if self
             .content
             .item(kind_id)

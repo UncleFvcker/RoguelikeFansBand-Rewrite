@@ -31,10 +31,7 @@ test("navigation switches original panels without closing or reopening the dialo
   const parking = element("player-page-parking");
   const support = element("support-panel-host");
   assert.equal(element("task-log-panel").parentNode, parking);
-  assert.equal(element("task-log-entry").parentNode, support);
-  for (const id of ["campaign-panel", "dungeon-info-panel", "summon-command-panel", "native-save-panel"]) {
-    assert.equal(element(id).parentNode, support);
-  }
+  assert.deepEqual(support.children.map(node => node.id), ["dungeon-info-panel"]);
 
   element("player-ui-inventory-open").dispatchEvent(new Event("click"));
   const detail = element("inventory-detail-dialog");
@@ -76,7 +73,7 @@ test("navigation switches original panels without closing or reopening the dialo
   element("player-page-close").dispatchEvent(new Event("click"));
   assert.equal(dialog.open, false);
   assert.equal(element("task-log-panel").parentNode, parking);
-  element("player-ui-tasks-open").dispatchEvent(new Event("click"));
+  layout.open("tasks");
   // Native close notifications are asynchronous; a stale one must not clear a reopened page.
   dialog.dispatchEvent(new Event("close"));
   assert.deepEqual(host.children, [element("task-log-panel")]);
@@ -101,6 +98,12 @@ test("I and M keep their shortcuts while other dialogs and editing retain keyboa
   assert.equal(press(window, "m").defaultPrevented, false);
   assert.equal(dialog.dataset.page, "inventory");
   childDialog.open = false;
+  for (const extra of [{ isComposing: true }, { ctrlKey: true }, { altKey: true }, { metaKey: true }, { repeat: true }]) {
+    const event = Object.assign(new Event("keydown", { cancelable: true }), { key: "m", ...extra });
+    window.dispatchEvent(event);
+    assert.equal(event.defaultPrevented, false);
+    assert.equal(dialog.dataset.page, "inventory");
+  }
   const editingEvent = new Event("keydown", { cancelable: true });
   Object.defineProperty(editingEvent, "target", { value: new HTMLInputElement() });
   Object.assign(editingEvent, { key: "m" });

@@ -2,7 +2,7 @@
 // @ts-nocheck -- Executed directly by Node's built-in TypeScript test runner.
 
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
 
 import { parseTilesetManifest, resolveTilesetVisual } from "./tileset-manifest.ts";
@@ -18,6 +18,40 @@ const glyphs = {
 function readManifest(path: string): unknown {
   return JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 }
+
+test("shipped tilesets color every projected world and local terrain without the missing-mapping pink", () => {
+  const directory = new URL("../../packs/rfb-demo-original/terrain/", import.meta.url);
+  const terrains = readdirSync(directory).filter(name => name.endsWith(".json"))
+    .map(name => JSON.parse(readFileSync(new URL(name, directory), "utf8")));
+  const projection = readFileSync(new URL("../../crates/rfb-core/src/game/snapshot.rs", import.meta.url), "utf8");
+  const worldIds = [...new Set([...projection.matchAll(/"(core\.wilderness\.[a-z-]+)"/g)].map(match => match[1]))];
+  assert.equal(worldIds.length, 18);
+  const ids = [...terrains.map(terrain => terrain.id), ...worldIds];
+  const glyphs = Object.fromEntries(terrains.map(terrain => [terrain.id, terrain.glyph]));
+  for (const preset of ["ascii-default", "image-demo", "rfb-pixel-28"]) {
+    const manifest = parseTilesetManifest(readManifest(`../public/tilesets/${preset}/tileset.json`));
+    for (const id of ids) {
+      assert.ok(manifest.mappings[id], `${preset}: ${id}`);
+      const visual = resolveTilesetVisual(manifest, id, glyphs, false);
+      assert.notEqual(visual.foreground, Number.parseInt(manifest.fallback.foreground.slice(1), 16), id);
+      assert.notEqual(visual.background, Number.parseInt(manifest.fallback.background.slice(1), 16), id);
+    }
+    for (const names of [
+      ["deep-water", "shallow-water", "swamp"], ["grass", "trees", "road", "dirt", "desert"],
+      ["mountain", "glacier", "snow", "pack-ice"], ["shallow-lava", "deep-lava"],
+      ["town", "dungeon", "edge"],
+    ]) {
+      const colors = names.map(name => manifest.mappings[`core.wilderness.${name}`]);
+      assert.equal(new Set(colors.map(c => c.foreground)).size, names.length, `${preset}: ${names}`);
+      assert.equal(new Set(colors.map(c => c.background)).size, names.length, `${preset}: ${names}`);
+    }
+    for (const material of ["magma", "quartz"]) {
+      const hidden = resolveTilesetVisual(manifest, `demo.terrain.${material}-hidden-treasure`, glyphs, false);
+      const vein = resolveTilesetVisual(manifest, `demo.terrain.${material}-vein`, glyphs, false);
+      for (const field of ["glyph", "foreground", "background"]) assert.equal(hidden[field], vein[field]);
+    }
+  }
+});
 
 test("committed ASCII and image manifests pass strict parsing", () => {
   const ascii = parseTilesetManifest(

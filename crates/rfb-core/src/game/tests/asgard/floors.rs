@@ -97,7 +97,8 @@ fn asgard_normal_nine_depth_route_returns_and_resumes_saved_connections() {
         |terrain| terrain != "demo.terrain.shaft-down" && terrain != "demo.terrain.stairs-down"
     ));
     let saved = game.to_save();
-    let mut restored = Game::from_save(saved.clone()).unwrap();
+    let mut restored =
+        Game::from_save(saved.clone(), Game::default_behavior_preferences()).unwrap();
     assert_eq!(restored.to_save(), saved);
     for depth in [86, 84, 82, 80, 76, 72, 68, 64] {
         traverse(&mut game, "demo.terrain.shaft-up", depth);
@@ -107,7 +108,7 @@ fn asgard_normal_nine_depth_route_returns_and_resumes_saved_connections() {
     place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert!(game.current_dungeon_instance_id.is_none());
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -129,7 +130,7 @@ fn asgard_threshold_and_off_route_shafts_record_actual_return_even_on_stored_flo
             return_link.target_floor_id.as_deref(),
             Some(floor_id(from).as_str())
         );
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         traverse(&mut game, "demo.terrain.shaft-up", from);
         traverse(&mut restored, "demo.terrain.shaft-up", from);
         assert_eq!(game.state_hash(), restored.state_hash());
@@ -152,12 +153,12 @@ fn asgard_shallow_off_route_exits_and_bottom_one_level_stairs_keep_boundaries() 
         place_player_on_terrain(&mut game, "demo.terrain.shaft-up");
         dispatch_next(&mut game, GameCommand::TraverseStairs);
         assert!(game.current_dungeon_instance_id.is_none(), "depth {depth}");
-        assert!(Game::from_save(game.to_save()).is_ok());
+        assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
     }
     let mut game = base;
     enter_depth(&mut game, 87);
     traverse(&mut game, "demo.terrain.stairs-down", 88);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     traverse(&mut restored, "demo.terrain.stairs-up", 87);
 }
 
@@ -185,11 +186,14 @@ fn asgard_saved_connections_reject_missing_direction_span_and_foreign_targets() 
             .unwrap();
         link.target_floor_id = Some(target);
         link.target_connection_id = Some(connection.into());
-        assert!(Game::from_save(invalid).is_err(), "{connection}");
+        assert!(
+            Game::from_save(invalid, Game::default_behavior_preferences()).is_err(),
+            "{connection}"
+        );
     }
     let mut invalid = save.clone();
     invalid.floor_connections.clear();
-    assert!(Game::from_save(invalid).is_err());
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
     let mut invalid = save;
     invalid
         .stored_floors
@@ -198,7 +202,7 @@ fn asgard_saved_connections_reject_missing_direction_span_and_foreign_targets() 
         .unwrap()
         .connections
         .clear();
-    assert!(Game::from_save(invalid).is_err());
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
 }
 
 #[test]

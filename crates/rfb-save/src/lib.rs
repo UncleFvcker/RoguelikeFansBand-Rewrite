@@ -169,7 +169,8 @@ mod tests {
             museum_binding: None,
         };
         let payload = SavePayloadV1 {
-            travel_options: rfb_protocol::TravelOptionsDto::default(),
+            discovery: rfb_protocol::DiscoverySaveDto::default(),
+            wanted_actor_kind_ids: Vec::new(),
             detection_coverage: rfb_protocol::DetectionCoverageSaveDto::default(),
             absorbed_devices: Vec::new(),
             pending_magic_absorption: None,
@@ -185,17 +186,6 @@ mod tests {
             wilderness_seed: 0,
             wilderness_chunks: Vec::new(),
             world_travel_destination: None,
-            interface_locale: rfb_protocol::LocaleDto::ZhCn,
-            mogaminator: rfb_protocol::MogaminatorSaveDto {
-                enabled: false,
-                leave_destroyed_items: false,
-                auto_get_mode: rfb_protocol::AutoGetModeDto::Off,
-                zh_cn_source: "# 墨家名器规则\n".to_owned(),
-                en_us_source: "# Mogaminator rules\n".to_owned(),
-                pending_query: None,
-                dismissed_query_item_ids: Vec::new(),
-                wanted_actor_kind_ids: Vec::new(),
-            },
             terrain: TerrainSaveDto {
                 width: 1,
                 height: 1,
@@ -230,6 +220,9 @@ mod tests {
                 confusing_strike_ready: false,
                 sniper_concentration: 0,
                 fishing_direction: None,
+                running: None,
+                auto_explore: None,
+                searching: false,
                 probed_actor_kind_ids: Vec::new(),
                 resistances: Vec::new(),
                 progress: None,

@@ -1947,7 +1947,7 @@ mod tests {
         game.refresh_player_resource_maxima();
         game.identify_carried_items();
         let saved = game.to_save();
-        let restored = Game::from_save(saved).unwrap();
+        let restored = Game::from_save(saved, Game::default_behavior_preferences()).unwrap();
         assert_eq!(restored.progress.dual_wielding_proficiency, 4004);
         assert_eq!(restored.equipped_melee_weapons().len(), 2);
     }

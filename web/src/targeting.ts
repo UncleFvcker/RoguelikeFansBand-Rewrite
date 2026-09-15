@@ -5,17 +5,40 @@ import type {
   Position,
   TargetSelection,
   TargetSpecDto,
+  DefaultTargetModeDto,
 } from "./protocol";
 
 export interface TargetingState {
   origin: Position;
   cursor: Position;
   spec: TargetSpecDto;
+  list?: boolean;
+  targetPets?: boolean;
 }
 
 export interface TargetableEntity {
   id: string;
   position: Position;
+  faction?: string;
+  inLineOfEffect?: boolean;
+}
+
+function isCandidate(state: TargetingState, entity: TargetableEntity): boolean {
+  return (state.targetPets || entity.faction !== "player")
+    && (!state.spec.requiresLineOfEffect || entity.inLineOfEffect !== false)
+    && chebyshevDistance(state.origin, entity.position) <= state.spec.range;
+}
+
+export function defaultTargetState(state: TargetingState, mode: DefaultTargetModeDto, remembered: TargetSelection | undefined, entities: readonly TargetableEntity[]): TargetingState {
+  if ((mode === "old-target" || mode === "old-then-nearest") && remembered) {
+    const old = rememberedTargetState(state, remembered, entities);
+    if (old) return old;
+  }
+  if (mode === "nearest-enemy" || mode === "old-then-nearest") {
+    const enemies = entities.filter(entity => entity.faction === "hostile" && isCandidate(state, entity));
+    if (enemies.length) return cycleTarget(state, enemies, 0);
+  }
+  return state;
 }
 
 const DIRECTION_DELTAS: Record<Direction, readonly [number, number]> = {
@@ -28,6 +51,42 @@ const DIRECTION_DELTAS: Record<Direction, readonly [number, number]> = {
   west: [-1, 0],
   "north-west": [-1, -1],
 };
+
+// Navigation consumes projected entities; Core validates the actual action.
+export function cycleTarget(state: TargetingState, entities: readonly TargetableEntity[], step: number): TargetingState {
+  const candidates = entities.filter(entity => isCandidate(state, entity))
+    .sort((a, b) => targetDistance(state.origin, a.position) - targetDistance(state.origin, b.position) || a.id.localeCompare(b.id));
+  if (!candidates.length) return { ...state, list: false };
+  const current = candidates.findIndex(entity => samePosition(entity.position, state.cursor));
+  const index = state.list && current >= 0
+    ? (current + step + candidates.length) % candidates.length
+    : candidates.reduce((best, entity, i) => targetDistance(state.cursor, entity.position) < targetDistance(state.cursor, candidates[best]!.position) ? i : best, 0);
+  return { ...state, cursor: { ...candidates[index]!.position }, list: true };
+}
+
+export function moveTarget(state: TargetingState, direction: Direction, entities: readonly TargetableEntity[], width: number, height: number): TargetingState {
+  if (state.list) {
+    const [dx, dy] = DIRECTION_DELTAS[direction];
+    const candidates = entities.filter(entity => {
+      const x = entity.position.x - state.cursor.x, y = entity.position.y - state.cursor.y;
+      return isCandidate(state, entity) && (dx === 0 ? Math.abs(x) <= Math.abs(y) : Math.sign(x) === dx)
+        && (dy === 0 ? Math.abs(y) <= Math.abs(x) : Math.sign(y) === dy)
+        && !samePosition(entity.position, state.cursor)
+        && chebyshevDistance(state.origin, entity.position) <= state.spec.range;
+    }).sort((a, b) => targetDistance(state.cursor, a.position) - targetDistance(state.cursor, b.position) || a.id.localeCompare(b.id));
+    if (candidates[0]) return { ...state, cursor: { ...candidates[0].position } };
+  }
+  return moveTargetCursor({ ...state, list: false }, direction, width, height);
+}
+
+export function rememberedTargetState(state: TargetingState, target: TargetSelection, entities: readonly TargetableEntity[]): TargetingState | undefined {
+  if (target.type === "entity" && !entities.some(entity => entity.id === target.entityId && isCandidate(state, entity))) return undefined;
+  if (target.type === "position" && !state.spec.modes.includes("position") && !state.spec.modes.includes("direction")) return undefined;
+  const position = target.type === "entity" ? entities.find(entity => entity.id === target.entityId)?.position
+    : target.type === "position" ? target.position : undefined;
+  if (!position || chebyshevDistance(state.origin, position) > state.spec.range) return undefined;
+  return { ...state, cursor: { ...position }, list: target.type === "entity" };
+}
 
 export function beginTargeting(
   origin: Position,
@@ -102,7 +161,7 @@ export function targetSelectionAtCursor(
   state: TargetingState,
   entities: readonly TargetableEntity[],
 ): TargetSelection | undefined {
-  if (state.spec.modes.includes("entity")) {
+  if ((state.list !== false || !state.spec.modes.includes("position")) && state.spec.modes.includes("entity")) {
     const entity = [...entities]
       .filter((candidate) => samePosition(candidate.position, state.cursor))
       .sort((left, right) => left.id.localeCompare(right.id))[0];
@@ -130,6 +189,11 @@ function directionFromDelta(dx: number, dy: number): Direction {
 
 export function chebyshevDistance(left: Position, right: Position): number {
   return Math.max(Math.abs(left.x - right.x), Math.abs(left.y - right.y));
+}
+
+function targetDistance(left: Position, right: Position): number {
+  const dx = Math.abs(left.x - right.x), dy = Math.abs(left.y - right.y);
+  return 2 * Math.max(dx, dy) + Math.min(dx, dy);
 }
 
 function samePosition(left: Position, right: Position): boolean {

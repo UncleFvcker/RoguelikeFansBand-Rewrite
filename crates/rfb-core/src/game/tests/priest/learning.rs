@@ -130,7 +130,7 @@ fn all_primary_realms_randomly_learn_and_cast_with_shared_spending_and_source_or
             assert_eq!(game.ability_progress[spell].cast_count, 1);
         }
         assert_eq!(game.spent_spell_learning, 2);
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
     }
@@ -201,7 +201,7 @@ fn practice_caps_and_failed_mana_payment_continue_identically_after_save() {
         .map(RfbRng::seeded)
         .find(|rng| rng.clone().bounded(100) < u64::from(fail))
         .unwrap();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let before = game.ability_progress[SORCERY];
     let mana = game.resources[MANA].current;
     for game in [&mut game, &mut restored] {
@@ -249,7 +249,7 @@ fn lost_wisdom_and_levels_forget_without_refund_and_resume_after_save() {
         );
         game.apply_player_experience_drain(game.progress.experience, "test.drain", &mut Vec::new());
         assert_eq!(game.progress.level, 1);
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for game in [&mut game, &mut restored] {
             game.progress.attributes.wisdom = wisdom;
             game.apply_player_experience(game.experience_required_for_level(10), &mut Vec::new());
@@ -278,7 +278,7 @@ fn saves_reject_repeat_study_spending_and_inconsistent_spell_progress() {
     // Practising past Beginner does not authorize another paid study.
     game.ability_progress.get_mut(&primary).unwrap().proficiency = 900;
     let baseline = game.to_save();
-    assert!(Game::from_save(baseline.clone()).is_ok());
+    assert!(Game::from_save(baseline.clone(), Game::default_behavior_preferences()).is_ok());
     for corruption in 0..7 {
         let mut save = baseline.clone();
         match corruption {
@@ -306,6 +306,9 @@ fn saves_reject_repeat_study_spending_and_inconsistent_spell_progress() {
             5 => save.player.ability_learning_order.push(primary.clone()),
             _ => save.player.mage_realms = None,
         }
-        assert!(Game::from_save(save).is_err(), "corruption {corruption}");
+        assert!(
+            Game::from_save(save, Game::default_behavior_preferences()).is_err(),
+            "corruption {corruption}"
+        );
     }
 }

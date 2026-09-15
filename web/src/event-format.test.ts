@@ -24,6 +24,26 @@ const helpers = {
 };
 const formatter = createPresentationFormatter(localization, () => state, helpers);
 
+test("abandonment formats the final score in both locales", () => {
+  for (const [locale, expected] of [["en-US", "You abandon"], ["zh-CN", "你放弃了冒险"]]) {
+    localization.setLocale(locale);
+    const message = formatter.formatEvent({ kind: "campaign.abandoned", messageKey: "campaign-abandoned", args: { score: "12345" } });
+    assert.match(message, /12345/);
+    assert.ok(message.includes(expected));
+    assert.ok(!message.includes("[campaign-abandoned]"));
+  }
+});
+
+test("pet event names are event-time text, including after evolution or dismissal", () => {
+  for (const locale of ["en-US", "zh-CN"]) {
+    localization.setLocale(locale);
+    for (const messageKey of ["pet-name-changed", "pet-named-dismissed", "pet-evolved"]) {
+      assert.match(formatter.formatEvent({ kind: "pet", messageKey,
+        args: { name: "追风🐎", source: "demo.actor.horse", target: "demo.actor.unruly-horse" } }), /追风🐎/);
+    }
+  }
+});
+
 test("resource conversion messages show actual life and mana changes in both languages", () => {
   for (const [locale, failed] of [["en-US", "conversion failed"], ["zh-CN", "你转换失败了"]]) {
     localization.setLocale(locale);

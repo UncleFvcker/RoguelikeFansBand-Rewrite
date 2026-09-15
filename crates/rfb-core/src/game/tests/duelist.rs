@@ -24,9 +24,9 @@ fn ui_fixture_uses_real_levels_and_round_trips_visible_targets_and_hp_costs() {
     let item_position = Position { x: 40, y: 20 };
     super::support::replace_terrain(&mut game, item_position, "demo.terrain.floor");
     game.items.last_mut().unwrap().location = ItemLocation::Ground(item_position);
-    Game::from_save(game.to_save()).unwrap();
+    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     game.debug_prepare_duelist_e2e(35, 7, false).unwrap();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     let snapshot = restored.snapshot();
     assert_eq!(snapshot.player.progress.level, 35);
@@ -40,7 +40,7 @@ fn ui_fixture_uses_real_levels_and_round_trips_visible_targets_and_hp_costs() {
                 && ability.hit_point_cost == 10)
     );
     game.debug_prepare_duelist_e2e(35, 7, true).unwrap();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.snapshot().player.hp, 1);
     assert!(
         restored
@@ -161,20 +161,34 @@ fn birth_merges_equipment_has_no_mana_and_uses_source_proficiencies() {
     game.unequip_slot("body").unwrap();
     assert!(game.player_derived_stats().armor_class.value < 0);
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
-    let tomte =
-        Game::new_with_build_race_and_name(923, BUILD, "rfb-legacy.race.tomte", "test").unwrap();
+    let tomte = Game::new_with_build_race_and_name(
+        923,
+        BUILD,
+        "rfb-legacy.race.tomte",
+        "test",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     assert!(
         tomte
             .items
             .iter()
             .any(|item| item.kind_id == "demo.item.rapier")
     );
-    assert!(Game::from_save(tomte.to_save()).is_ok());
+    assert!(Game::from_save(tomte.to_save(), tomte.behavior_preferences()).is_ok());
     assert!(matches!(
-        Game::new_with_build_race_and_name(923, BUILD, "rfb-legacy.race.tonberry", "test"),
+        Game::new_with_build_race_and_name(
+            923,
+            BUILD,
+            "rfb-legacy.race.tonberry",
+            "test",
+            Game::default_behavior_preferences()
+        ),
         Err(CoreError::CharacterRaceUnavailable(_))
     ));
 }
@@ -204,7 +218,9 @@ fn strong_sensing_and_actual_experience_growth_keep_the_class_parameters() {
     assert!(game.progress.skills["demo.skill.melee"].current > old_melee);
     assert!(game.resources.is_empty());
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
 }
@@ -294,9 +310,9 @@ fn leaving_the_floor_clears_and_off_floor_references_cannot_be_loaded() {
         .unwrap()
         .unwrap();
     assert_eq!(game.duelist_target_id, None);
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
     game.duelist_target_id = Some("test.a".to_owned());
-    assert!(Game::from_save(game.to_save()).is_err());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_err());
 }
 
 #[test]
@@ -393,7 +409,7 @@ fn manual_challenge_replaces_wakes_turns_hostile_and_round_trips() {
     game.entities[0]
         .statuses
         .push(monster_combat::melee_status(STATUS_SLEEP, 100, "test.sleep").status);
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
     let tick = game.world_tick;
     let update = dispatch_next(&mut game, mark("test.a"));
     assert_eq!(game.duelist_target_id.as_deref(), Some("test.a"));
@@ -422,7 +438,7 @@ fn manual_challenge_replaces_wakes_turns_hostile_and_round_trips() {
         Err(CoreError::DuelistChallengeUnavailable)
     ));
     assert_eq!(game.to_save(), before);
-    let mut restored = Game::from_save(before).unwrap();
+    let mut restored = Game::from_save(before, Game::default_behavior_preferences()).unwrap();
     assert_eq!(
         dispatch_next(&mut restored, mark("test.b")),
         dispatch_next(&mut game, mark("test.b"))
@@ -485,7 +501,7 @@ fn current_mount_requires_dismount_before_becoming_a_hostile_challenge() {
     mount.controller_id = Some(game.player.id.clone());
     game.entities.push(mount);
     game.riding_actor_id = Some("test.mount".to_owned());
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
     let rng = game.rng.clone();
     let tick = game.world_tick;
     dispatch_next(&mut game, mark("test.mount"));
@@ -503,7 +519,7 @@ fn current_mount_requires_dismount_before_becoming_a_hostile_challenge() {
     assert_eq!(game.duelist_target_id.as_deref(), Some("test.mount"));
     assert_eq!(game.riding_actor_id, None);
     assert_eq!(game.entities[0].controller_id, None);
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -542,7 +558,9 @@ fn teleport_keeps_identity_hidden_projection_omits_position_and_death_clears_it(
     assert_eq!(snapshot.player.duelist_target_id.as_deref(), Some("test.a"));
     assert!(!snapshot.entities.iter().any(|entity| entity.id == "test.a"));
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
     game.resolve_actor_death_without_credit(
@@ -563,14 +581,14 @@ fn loading_rejects_missing_dead_other_class_and_invalid_equipment_targets() {
     game.duelist_target_id = Some("test.a".to_owned());
     let mut missing = game.clone();
     missing.duelist_target_id = Some("test.missing".to_owned());
-    assert!(Game::from_save(missing.to_save()).is_err());
+    assert!(Game::from_save(missing.to_save(), missing.behavior_preferences()).is_err());
     let mut dead = game.clone();
     dead.entities[0].hp = 0;
-    assert!(Game::from_save(dead.to_save()).is_err());
+    assert!(Game::from_save(dead.to_save(), dead.behavior_preferences()).is_err());
     let mut other_class = Game::new_with_build(923, "demo.build.warrior").unwrap();
     target(&mut other_class, "test.a", 2);
     other_class.duelist_target_id = Some("test.a".to_owned());
-    assert!(Game::from_save(other_class.to_save()).is_err());
+    assert!(Game::from_save(other_class.to_save(), other_class.behavior_preferences()).is_err());
     let weapon = game
         .items
         .iter_mut()
@@ -580,5 +598,5 @@ fn loading_rejects_missing_dead_other_class_and_invalid_equipment_targets() {
         .intrinsic_properties
         .passives
         .insert(EquipmentPassive::AntiMagic);
-    assert!(Game::from_save(game.to_save()).is_err());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_err());
 }

@@ -315,7 +315,7 @@ fn ordinary_room_and_anywhere_allocations_reach_pickup_and_save() {
         );
     }
     game.reveal_current_visibility();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
 }

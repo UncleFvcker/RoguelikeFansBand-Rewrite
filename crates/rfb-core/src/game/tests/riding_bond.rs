@@ -25,6 +25,7 @@ fn bonded_horse(seed: u64, bond: u16) -> Game {
 #[test]
 fn pet_experience_evolves_in_place_and_resets_the_bond() {
     let mut game = bonded_horse(0x4556_4f4c_5645, 7_500);
+    game.entities[0].custom_name = Some("追风".into());
     game.entities[0].experience = 69;
     game.entities[0].hp = game.entities[0].max_hp / 2;
     let previous_max_hp = game.entities[0].max_hp;
@@ -34,6 +35,7 @@ fn pet_experience_evolves_in_place_and_resets_the_bond() {
 
     let horse = &game.entities[0];
     assert_eq!(horse.id, "test.mount");
+    assert_eq!(horse.custom_name.as_deref(), Some("追风"));
     assert_eq!(horse.kind_id, "demo.actor.unruly-horse");
     assert_eq!(horse.experience, 0);
     assert_eq!(
@@ -56,8 +58,12 @@ fn pet_experience_evolves_in_place_and_resets_the_bond() {
         [DomainEvent::PetEvolved { .. }]
     ));
 
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("evolved mount should round-trip");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("evolved mount should round-trip");
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 

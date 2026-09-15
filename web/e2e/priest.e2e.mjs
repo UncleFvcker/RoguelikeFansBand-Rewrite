@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -176,7 +177,7 @@ export async function runPriestUiScenario(driver, directory, profile, playthroug
     for (const locale of playthrough ? ["zh-CN"] : ["zh-CN", "en-US"]) {
       localization.setLocale(locale);
       for (const primary of ["life", "death"]) {
-        await driver.execute('localStorage.setItem("rfb.locale",arguments[0]);localStorage.setItem("rfb.input-preset","numpad");return true;', [locale]);
+        await setPreferences(driver, { locale, inputPreset: "numpad" });
         await keyboard.reload();
         await driver.waitFor('return document.documentElement.dataset.appMode==="title"&&!document.querySelector("#session-new-game").disabled', "localized title", 60_000);
         await driver.execute(`const original=window.fetch,endpoint=window.__TAURI_INTERNALS__.convertFileSrc("dispatch_game_command","ipc");window.fetch=(url,options)=>url!==endpoint?original(url,options):original(url,options).then(async response=>{window.__priestUpdate=await response.clone().json();return response;});return true;`);

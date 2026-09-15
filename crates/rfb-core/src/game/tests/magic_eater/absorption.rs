@@ -79,7 +79,8 @@ fn selection_is_free_cancellable_and_saved_without_identifying_or_spending_rng()
         before
     );
     let saved = game.to_save();
-    let mut restored = Game::from_save(saved.clone()).unwrap();
+    let mut restored =
+        Game::from_save(saved.clone(), Game::default_behavior_preferences()).unwrap();
     for invalid in [
         GameCommand::Wait,
         GameCommand::SelectMagicAbsorptionSlot { slot: 10 },
@@ -204,7 +205,7 @@ fn absorbs_pack_and_floor_instances_with_zero_sp_and_retains_all_instance_fields
                 .iter()
                 .all(|item| item.id != expected.id)
         );
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(item(&restored, "test.absorb"), expected);
     }
@@ -235,11 +236,12 @@ fn occupied_slot_needs_identity_bound_confirmation_and_optional_inscription_inhe
         let pending = game.pending_magic_absorption.as_ref().unwrap();
         assert_eq!(pending.replacement.as_ref().unwrap().item_id, "test.old");
         let saved = game.to_save();
-        let mut cancelled = Game::from_save(saved.clone()).unwrap();
+        let mut cancelled =
+            Game::from_save(saved.clone(), Game::default_behavior_preferences()).unwrap();
         dispatch_next(&mut cancelled, resolve(false, false));
         assert_eq!(item(&cancelled, "test.old"), item(&game, "test.old"));
         assert_eq!(item(&cancelled, "test.new"), item(&game, "test.new"));
-        let mut restored = Game::from_save(saved).unwrap();
+        let mut restored = Game::from_save(saved, Game::default_behavior_preferences()).unwrap();
         assert_eq!(
             dispatch_next(&mut game, resolve(true, inherit)),
             dispatch_next(&mut restored, resolve(true, inherit))
@@ -355,7 +357,7 @@ fn all_thirty_slots_swap_inscribe_and_round_trip_without_pack_capacity_or_weight
         10
     );
     assert_eq!((game.turn, game.world_tick, game.rng.clone()), before);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.snapshot().player.magic_eater, Some(projection));
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
@@ -389,7 +391,7 @@ fn all_thirty_slots_swap_inscribe_and_round_trip_without_pack_capacity_or_weight
             .iter()
             .all(|item| !matches!(item.location, ItemLocation::Absorbed { .. }))
     }));
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), restored.state_hash());
 }
 
@@ -456,7 +458,7 @@ fn empty_slots_and_mundane_devices_are_valid_but_other_equipment_is_not_absorbab
         game.absorbed_device(Category::Staff, 9).unwrap().id,
         "test.mundane"
     );
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), restored.state_hash());
     let sword = game
         .items
@@ -523,7 +525,10 @@ fn corrupt_body_containers_and_stale_pending_targets_are_rejected() {
             }
             _ => unreachable!(),
         }
-        assert!(Game::from_save(invalid).is_err(), "corruption {corrupt}");
+        assert!(
+            Game::from_save(invalid, Game::default_behavior_preferences()).is_err(),
+            "corruption {corrupt}"
+        );
     }
     let mut other_class = Game::new_with_build(925, "demo.build.warrior")
         .unwrap()
@@ -537,7 +542,7 @@ fn corrupt_body_containers_and_stale_pending_targets_are_rejected() {
             .cloned(),
     );
     assert!(matches!(
-        Game::from_save(other_class),
+        Game::from_save(other_class, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("magic eater state is invalid"))
     ));
     give_inventory_item(&mut game, "test.next", "demo.item.magic-missile-wand");
@@ -550,7 +555,7 @@ fn corrupt_body_containers_and_stale_pending_targets_are_rejected() {
         .unwrap()
         .item_id = "test.wrong".to_owned();
     let stale = game.to_save();
-    assert!(Game::from_save(stale.clone()).is_err());
+    assert!(Game::from_save(stale.clone(), Game::default_behavior_preferences()).is_err());
     assert!(matches!(
         game.dispatch(command(
             game.last_command_seq + 1,

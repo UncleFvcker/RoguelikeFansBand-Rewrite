@@ -212,6 +212,7 @@ fn draconian_reward_game_for_build(build_id: &str) -> Game {
         build_id,
         "rfb-legacy.race.draconian-red",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal red Draconian should create")
 }
@@ -405,6 +406,7 @@ fn tomte_form_grants_intrinsics_and_free_probing() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human warrior");
     clear_monsters(&mut game);
@@ -495,8 +497,12 @@ fn tomte_form_grants_intrinsics_and_free_probing() {
     assert!(game.probed_actor_kind_ids.contains("demo.actor.sheep"));
     assert_eq!(game.player.hp, hp);
     assert_eq!(game.resources, resources);
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("temporary Tomte save");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("temporary Tomte save");
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.player_infravision_range(), 4);
     game.player
@@ -522,8 +528,12 @@ fn tomte_form_grants_intrinsics_and_free_probing() {
         );
     }
     game.progress.level = 1;
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("knowledge persists after losing Tomte form");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("knowledge persists after losing Tomte form");
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(restored.probed_actor_kind_ids.contains("demo.actor.sheep"));
 }
@@ -581,6 +591,7 @@ fn tonberry_passives_and_level_slowing_follow_the_effective_race() {
             "demo.build.warrior",
             HUMAN,
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .expect("Human warrior");
         game.items.clear();
@@ -776,7 +787,7 @@ fn ent_level_events_use_each_levels_constitution_and_form_round_trips() {
         });
         assert_eq!(reported, Some(expected), "HP reported at level {level}");
     }
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.snapshot(), game.snapshot());
     assert_eq!(
@@ -972,6 +983,7 @@ fn race_level_stat_scaling_preserves_klackon_and_enables_formal_golem_intrinsics
             "demo.build.warrior",
             "rfb-legacy.race.klackon",
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .expect("formal Klackon should create");
         klackon.apply_player_experience(
@@ -1006,6 +1018,7 @@ fn formal_golem_creation_and_temporary_form_apply_and_remove_intrinsics_and_ston
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human warrior should create");
     human.progress.level = 20;
@@ -1077,6 +1090,7 @@ fn undead_race_intrinsics_share_cold_unlock_and_temporary_form_lifecycle() {
             "demo.build.warrior",
             race_id,
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .expect("formal undead warrior");
         assert_eq!(
@@ -1115,6 +1129,7 @@ fn undead_race_intrinsics_share_cold_unlock_and_temporary_form_lifecycle() {
             "demo.build.warrior",
             "demo.race.rfb-human",
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .expect("Human warrior");
         human.progress.level = 30;
@@ -1200,6 +1215,7 @@ fn formal_wood_elf_and_temporary_form_cross_trees_without_delay() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human warrior should create");
     clear_monsters(&mut human);
@@ -1282,6 +1298,7 @@ fn flying_races_share_passive_application_removal_and_preserve_unique_traits() {
             "demo.build.warrior",
             race_id,
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .expect("formal flying race");
         if race_id == "rfb-legacy.race.sprite" {
@@ -1333,14 +1350,19 @@ fn flying_races_share_passive_application_removal_and_preserve_unique_traits() {
             }
         };
         check(&formal, true);
-        let restored = Game::from_save_with_content(formal.to_save(), formal.content.clone())
-            .expect("flying race save");
+        let restored = Game::from_save_with_content(
+            formal.to_save(),
+            formal.content.clone(),
+            formal.behavior_preferences(),
+        )
+        .expect("flying race save");
         assert_eq!(restored.state_hash(), formal.state_hash(), "{race_id}");
         let mut human = Game::new_with_build_race_and_name(
             seed,
             "demo.build.warrior",
             "demo.race.rfb-human",
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .expect("Human warrior");
         human.progress.level = level;
@@ -1393,6 +1415,7 @@ fn draconian_subraces_are_available_to_formal_character_creation() {
             "demo.build.warrior",
             &race_id,
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .unwrap_or_else(|error| panic!("{race_id} should create: {error}"));
         assert_eq!(
@@ -1604,8 +1627,12 @@ fn draconian_level_35_reward_revalidates_all_nine_completed_powers() {
                 && resolution.resource_paid + resolution.hp_paid == 30
     )));
 
-    let restored = Game::from_save_with_content(kin.to_save(), kin.content.clone())
-        .expect("chosen Draconian power should survive save and restore");
+    let restored = Game::from_save_with_content(
+        kin.to_save(),
+        kin.content.clone(),
+        kin.behavior_preferences(),
+    )
+    .expect("chosen Draconian power should survive save and restore");
     assert!(
         restored
             .progress
@@ -1723,8 +1750,12 @@ fn draconian_metamorphosis_replaces_body_and_derives_combat_save_and_hash_state(
             .iter()
             .any(|id| id == DRACONIAN_METAMORPHOSIS_MUTATION_ID)
     );
-    let restored = Game::from_save_with_content(saved, game.content.clone())
-        .expect("Draconian metamorphosis save should restore");
+    let restored = Game::from_save_with_content(
+        saved,
+        game.content.clone(),
+        Game::default_behavior_preferences(),
+    )
+    .expect("Draconian metamorphosis save should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.body_slots, game.body_slots);
     assert_eq!(
@@ -1785,7 +1816,14 @@ fn draconian_metamorphosis_uses_class_multipliers_and_original_exclusions() {
             .locked_mutation_ids
             .insert(DRACONIAN_METAMORPHOSIS_MUTATION_ID.to_owned());
         invalid.reconcile_player_body_slots_for_current_form();
-        assert!(Game::from_save_with_content(invalid.to_save(), invalid.content.clone()).is_err());
+        assert!(
+            Game::from_save_with_content(
+                invalid.to_save(),
+                invalid.content.clone(),
+                invalid.behavior_preferences()
+            )
+            .is_err()
+        );
         assert!(
             !pending
                 .candidates
@@ -1830,8 +1868,12 @@ fn race_level_mutation_rewards_are_derived_locked_and_zero_time() {
     );
     assert!(pending.candidates.iter().all(|candidate| !candidate.locked));
 
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("pending race choice should be derived after loading");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("pending race choice should be derived after loading");
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         restored
@@ -1958,7 +2000,8 @@ fn formal_human_weakness_uses_each_current_build_casting_attribute_once() {
                 .locked_mutation_ids
                 .contains(expected_mutation_id)
         );
-        let restored = Game::from_save(game.to_save()).expect("Human weakness should reload");
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+            .expect("Human weakness should reload");
         assert_eq!(restored.state_hash(), game.state_hash());
     }
 
@@ -1996,7 +2039,7 @@ fn attribute_potentials_project_save_hash_and_reject_invalid_values() {
         game.progress.attribute_potentials.strength
     );
     assert_eq!(
-        Game::from_save(saved.clone())
+        Game::from_save(saved.clone(), Game::default_behavior_preferences())
             .expect("attribute potentials should round trip")
             .state_hash(),
         game.state_hash()
@@ -2011,7 +2054,7 @@ fn attribute_potentials_project_save_hash_and_reject_invalid_values() {
         .attribute_potentials
         .strength = 87;
     assert!(matches!(
-        Game::from_save(invalid),
+        Game::from_save(invalid, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("character progress is invalid"))
     ));
 }
@@ -2044,7 +2087,8 @@ fn mutation_state_projects_saves_hashes_and_rejects_invalid_references() {
     let saved = game.to_save();
     assert_eq!(saved.player.active_mutation_ids, ["rfb.mutation.spit-acid"]);
     assert_eq!(saved.player.locked_mutation_ids, ["rfb.mutation.spit-acid"]);
-    let restored = Game::from_save(saved.clone()).expect("mutation state should restore");
+    let restored = Game::from_save(saved.clone(), Game::default_behavior_preferences())
+        .expect("mutation state should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.snapshot().player.mutations, [mutation]);
 
@@ -2054,7 +2098,7 @@ fn mutation_state_projects_saves_hashes_and_rejects_invalid_references() {
         .active_mutation_ids
         .push("rfb.mutation.spit-acid".to_owned());
     assert!(matches!(
-        Game::from_save(duplicate),
+        Game::from_save(duplicate, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("player mutation state is invalid"))
     ));
 
@@ -2062,14 +2106,14 @@ fn mutation_state_projects_saves_hashes_and_rejects_invalid_references() {
     unknown.player.active_mutation_ids = vec!["rfb.mutation.unknown".to_owned()];
     unknown.player.locked_mutation_ids.clear();
     assert!(matches!(
-        Game::from_save(unknown),
+        Game::from_save(unknown, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("player mutation state is invalid"))
     ));
 
     let mut unlocked = saved;
     unlocked.player.active_mutation_ids.clear();
     assert!(matches!(
-        Game::from_save(unlocked),
+        Game::from_save(unlocked, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("player mutation state is invalid"))
     ));
 }
@@ -2173,7 +2217,8 @@ fn mutation_transactions_preserve_locks_remove_conflicts_and_emit_source_order()
         all.progress.active_mutation_ids,
         BTreeSet::from(["rfb.mutation.puny".to_owned()])
     );
-    Game::from_save(all.to_save()).expect("transaction result should satisfy save invariants");
+    Game::from_save(all.to_save(), all.behavior_preferences())
+        .expect("transaction result should satisfy save invariants");
 }
 
 #[test]
@@ -2452,8 +2497,12 @@ fn esp_respects_mind_flags_and_conceals_nonvisual_identity() {
     assert!(!weird.entity_is_visible_by_telepathy(&weird.entities[0]));
     weird.entities[0].visible_weird_mind = true;
     assert!(weird.entity_is_visible_by_telepathy(&weird.entities[0]));
-    let restored = Game::from_save_with_content(weird.to_save(), weird.content.clone())
-        .expect("weird-mind detection should reload");
+    let restored = Game::from_save_with_content(
+        weird.to_save(),
+        weird.content.clone(),
+        weird.behavior_preferences(),
+    )
+    .expect("weird-mind detection should reload");
     assert!(restored.entities[0].visible_weird_mind);
 }
 
@@ -2600,6 +2649,7 @@ fn m4e_cross_system_mutations_reuse_stats_energy_experience_and_item_knowledge()
     assert_eq!(
         game.player_mutation_action_energy_cost(
             &GameAction::Move {
+                flip_pickup: false,
                 direction: Direction::North,
             },
             STANDARD_ACTION_COST,
@@ -2749,8 +2799,12 @@ fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
         rfb_protocol::ItemKnowledgeDto::Aware
     );
     assert!(!game.items.iter().any(|item| item.id == ITEM_ID));
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("New Life result should round trip");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("New Life result should round trip");
     assert_eq!(restored.state_hash(), game.state_hash());
 
     assert!(!previous_resources.is_empty());
@@ -2860,7 +2914,8 @@ fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic(
         Some(100)
     );
 
-    let restored = Game::from_save(warrior.to_save()).expect("build save should reload");
+    let restored = Game::from_save(warrior.to_save(), warrior.behavior_preferences())
+        .expect("build save should reload");
     assert_eq!(restored.snapshot(), warrior.snapshot());
     assert!(matches!(
         Game::new_with_build(17, "demo.build.missing"),
@@ -2875,6 +2930,7 @@ fn formal_tonberry_action_chain_equips_levels_attacks_swaps_and_restores() {
         "demo.build.warrior",
         "rfb-legacy.race.tonberry",
         "冬贝利验收",
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     clear_monsters(&mut game);
@@ -2982,7 +3038,7 @@ fn formal_tonberry_action_chain_equips_levels_attacks_swaps_and_restores() {
         game.snapshot().player.trait_details.active_weapon_id,
         Some(starting_weapon)
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.snapshot(), game.snapshot());
     assert_eq!(restored.state_hash(), game.state_hash());
     let turn = game.turn;
@@ -3000,6 +3056,7 @@ fn formal_tomte_action_chain_probes_changes_headgear_levels_senses_and_restores(
         "demo.build.warrior",
         "rfb-legacy.race.tomte",
         "托姆特验收",
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     clear_monsters(&mut game);
@@ -3081,7 +3138,7 @@ fn formal_tomte_action_chain_probes_changes_headgear_levels_senses_and_restores(
     assert!(game.items.iter().any(
         |item| item.id == "test.tomte-chain.arrows" && item.location == ItemLocation::Inventory
     ));
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.snapshot(), game.snapshot());
     let experience = restored.experience_required_for_level(40) - restored.progress.experience;
@@ -3111,7 +3168,8 @@ fn formal_tomte_action_chain_probes_changes_headgear_levels_senses_and_restores(
         Some(rfb_protocol::ItemFeelingDto::Excellent)
     );
     dispatch_next(&mut restored, GameCommand::PickUp);
-    let mut continued = Game::from_save(restored.to_save()).unwrap();
+    let mut continued =
+        Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
     assert_eq!(continued.snapshot(), restored.snapshot());
     let turn = continued.turn;
     dispatch_next(&mut continued, GameCommand::Wait);
@@ -3134,9 +3192,14 @@ fn tomte_birth_merges_one_cap_with_each_class_kit_and_unique_knowledge_virtue() 
         "demo.build.mindcrafter",
         "demo.build.berserker",
     ] {
-        let mut game =
-            Game::new_with_build_race_and_name(83, build_id, RACE, Game::DEFAULT_PLAYER_NAME)
-                .expect(build_id);
+        let mut game = Game::new_with_build_race_and_name(
+            83,
+            build_id,
+            RACE,
+            Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
+        )
+        .expect(build_id);
         let inventory = game
             .items
             .iter()
@@ -3370,6 +3433,7 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Human should create");
     let human_attributes = human.effective_player_attributes();
@@ -3435,6 +3499,7 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
             "demo.build.warrior",
             &format!("rfb-legacy.race.{race}"),
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .expect(race);
         assert_eq!(game.player.kind_id, human.player.kind_id, "{race}");
@@ -3504,6 +3569,7 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
             "demo.build.warrior",
             "demo.race.missing",
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences()
         ),
         Err(CoreError::UnknownCharacterRace(_))
     ));
@@ -3516,6 +3582,7 @@ fn high_elf_intrinsics_and_identity_round_trip() {
         "demo.build.warrior",
         "rfb-legacy.race.high-elf",
         "Finrod",
+        Game::default_behavior_preferences(),
     )
     .expect("formal High-Elf should create");
     assert_eq!(game.player_infravision_range(), 4);
@@ -3531,7 +3598,8 @@ fn high_elf_intrinsics_and_identity_round_trip() {
             .is_none()
     );
 
-    let restored = Game::from_save(game.to_save()).expect("High-Elf save should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("High-Elf save should restore");
     assert_eq!(restored.snapshot(), game.snapshot());
 }
 
@@ -3542,6 +3610,7 @@ fn dunadan_sustain_talent_and_identity_are_authoritative() {
         "demo.build.warrior",
         "rfb-legacy.race.dunadan",
         "Aragorn",
+        Game::default_behavior_preferences(),
     )
     .expect("formal Dunadan should create");
     assert!(game.player_sustains_attribute(AttributeKind::Constitution));
@@ -3580,7 +3649,8 @@ fn dunadan_sustain_talent_and_identity_are_authoritative() {
             .locked_mutation_ids
             .contains("rfb.mutation.sacred-vitality")
     );
-    let restored = Game::from_save(game.to_save()).expect("Dunadan save should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Dunadan save should restore");
     assert_eq!(restored.build, game.build);
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(
@@ -3596,6 +3666,7 @@ fn dunadan_sustain_talent_and_identity_are_authoritative() {
         "demo.build.warrior",
         "rfb-legacy.race.high-elf",
         "Finrod",
+        Game::default_behavior_preferences(),
     )
     .expect("formal High-Elf should create");
     temporary.apply_player_experience(temporary.experience_required_for_level(30), &mut Vec::new());
@@ -3624,6 +3695,7 @@ fn half_orc_infravision_and_level_thirty_talent_are_authoritative() {
         "demo.build.warrior",
         "rfb-legacy.race.half-orc",
         "Adventurer",
+        Game::default_behavior_preferences(),
     )
     .expect("formal Half-Orc should create");
     assert_eq!(game.player_infravision_range(), 3);
@@ -3672,7 +3744,8 @@ fn half_orc_infravision_and_level_thirty_talent_are_authoritative() {
             .locked_mutation_ids
             .contains("rfb.mutation.sacred-vitality")
     );
-    let restored = Game::from_save(game.to_save()).expect("Half-Orc save should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Half-Orc save should restore");
     assert_eq!(restored.build, game.build);
     assert_eq!(restored.player_infravision_range(), 3);
     assert!(
@@ -3697,6 +3770,7 @@ fn barbarian_fear_power_and_level_thirty_talent_are_authoritative() {
         "demo.build.warrior",
         "rfb-legacy.race.barbarian",
         "Conan",
+        Game::default_behavior_preferences(),
     )
     .expect("formal Barbarian should create");
     assert_eq!(
@@ -3734,6 +3808,7 @@ fn barbarian_fear_power_and_level_thirty_talent_are_authoritative() {
         "demo.build.warrior",
         "rfb-legacy.race.barbarian",
         "Conan",
+        Game::default_behavior_preferences(),
     )
     .expect("formal Barbarian reward game should create");
     let level_29_experience = reward_game.experience_required_for_level(29);
@@ -3763,7 +3838,8 @@ fn barbarian_fear_power_and_level_thirty_talent_are_authoritative() {
             mutation_id: "rfb.mutation.sacred-vitality".to_owned(),
         },
     );
-    let restored = Game::from_save(reward_game.to_save()).expect("Barbarian save should restore");
+    let restored = Game::from_save(reward_game.to_save(), reward_game.behavior_preferences())
+        .expect("Barbarian save should restore");
     assert!(
         restored
             .progress
@@ -3783,6 +3859,7 @@ fn barbarian_fear_power_and_level_thirty_talent_are_authoritative() {
         "demo.build.warrior",
         "rfb-legacy.race.high-elf",
         "Finrod",
+        Game::default_behavior_preferences(),
     )
     .expect("formal High-Elf should create");
     temporary.progress.level = 30;
@@ -3855,8 +3932,12 @@ fn formal_einheri_chooses_the_shared_demigod_talent_at_level_thirty() {
         "Sacred Vitality applies before Einheri's halving",
     );
 
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Einheri talent should restore");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Einheri talent should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -3876,8 +3957,12 @@ fn selected_formal_race_overrides_the_build_default_and_round_trips() {
     assert_eq!(identity.build_id, TEST_RACE_REWARD_BUILD_ID);
     assert_eq!(identity.race_id, "demo.race.rfb-human");
 
-    let restored = Game::from_save_with_content(game.to_save(), content)
-        .expect("selected race should reload independently of the build default");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        content,
+        Game::default_behavior_preferences(),
+    )
+    .expect("selected race should reload independently of the build default");
     assert_eq!(restored.snapshot(), game.snapshot());
 }
 
@@ -4012,8 +4097,11 @@ fn attribute_and_experience_history_round_trip_and_reject_invalid_values() {
     game.progress.attributes.strength -= 1;
     let payload = game.to_save();
     let encoded = serde_json::to_value(&payload).expect("save should serialize");
-    let restored = Game::from_save(serde_json::from_value(encoded).unwrap())
-        .expect("current attribute and experience history should round-trip");
+    let restored = Game::from_save(
+        serde_json::from_value(encoded).unwrap(),
+        Game::default_behavior_preferences(),
+    )
+    .expect("current attribute and experience history should round-trip");
     assert_eq!(restored.state_hash(), game.state_hash());
 
     let mut invalid = payload.clone();
@@ -4026,14 +4114,14 @@ fn attribute_and_experience_history_round_trip_and_reject_invalid_values() {
     maximum.strength = progress.attributes.strength.saturating_sub(1);
     progress.maximum_attributes = maximum;
     assert!(matches!(
-        Game::from_save(invalid),
+        Game::from_save(invalid, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("player attribute state is invalid"))
     ));
 
     let mut invalid = payload;
     invalid.player.progress.as_mut().unwrap().maximum_experience = 0;
     assert!(matches!(
-        Game::from_save(invalid),
+        Game::from_save(invalid, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("character progress is invalid"))
     ));
 }
@@ -4125,8 +4213,12 @@ fn formal_beastman_birth_level_mutations_and_regeneration_match_rfb() {
         );
     }
     assert_eq!(leveled.state_hash(), replay.state_hash());
-    let restored = Game::from_save_with_content(leveled.to_save(), leveled.content.clone())
-        .expect("Beastman mutation state should restore");
+    let restored = Game::from_save_with_content(
+        leveled.to_save(),
+        leveled.content.clone(),
+        leveled.behavior_preferences(),
+    )
+    .expect("Beastman mutation state should restore");
     assert_eq!(restored.state_hash(), leveled.state_hash());
 
     let mut missed = game.clone();
@@ -4180,6 +4272,7 @@ fn permanent_race_game(race_id: &str) -> Game {
         "demo.build.high-mage-death",
         race_id,
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .unwrap()
 }
@@ -4271,7 +4364,7 @@ fn permanent_race_change_rerates_only_hp_and_preserves_identity_progress_and_ite
         );
     }
     assert!(events.iter().any(|event| matches!(event, DomainEvent::PlayerRaceChanged { race_id, .. } if race_id == "rfb-legacy.race.vampire")));
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.build.unwrap().race_id, "rfb-legacy.race.vampire");
 }
@@ -4304,7 +4397,7 @@ fn permanent_race_change_preserves_temporary_body_until_expiry() {
         "rfb-legacy.race.vampire"
     );
     assert_ne!(game.body_slots, slots);
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -4370,7 +4463,7 @@ fn permanent_race_change_revokes_draconian_talent_and_restores_worn_gear() {
         items
     );
     assert_eq!(events.iter().filter(|event| matches!(event, DomainEvent::MutationLost { mutation_id, .. } if mutation_id == DRACONIAN_METAMORPHOSIS_MUTATION_ID)).count(), 1);
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -4403,7 +4496,7 @@ fn permanent_race_change_rechecks_experience_below_the_historical_maximum() {
         &mut Vec::new()
     ));
     assert_eq!(game.progress.level, maximum_level);
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -4431,7 +4524,7 @@ fn spell_memory_forgets_by_level_and_remembers_after_save_and_recovery() {
         game.learned_abilities
             .contains("demo.ability.death-detect-unlife")
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.ability_learning_order, game.ability_learning_order);
     restored.apply_player_experience(restored.experience_required_for_level(40), &mut Vec::new());
     assert_eq!(restored.learned_abilities.len(), 2);
@@ -4469,7 +4562,7 @@ fn spell_memory_capacity_keeps_the_earliest_eligible_studies_and_preserves_profi
     );
     assert_eq!(game.ability_learning_order, history);
     assert_eq!(game.ability_progress, proficiency);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     restored.bonus_spell_learning_capacity = 32;
     restored.refresh_player_ability_state();
     assert_eq!(restored.learned_abilities.len(), history.len());
@@ -4511,8 +4604,12 @@ fn permanent_race_change_reconciles_feet_and_honors_automatic_rewear_inscription
             .unwrap();
         assert_eq!(boots.location, ItemLocation::Inventory);
         assert_eq!(boots.previously_worn, inscription.is_none());
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert!(game.change_player_race(
             "demo.race.rfb-human",
             game.effective_player_max_hp(),
@@ -4591,7 +4688,12 @@ fn permanent_race_change_releases_quiver_and_container_capacity_without_losing_i
         assert_eq!(item.location, ItemLocation::Ground(game.player.position));
         assert!(item.previously_worn);
     }
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -4695,5 +4797,5 @@ fn permanent_race_change_revokes_old_human_rewards_and_reopens_choices_below_max
     ));
     assert_eq!(game.progress.max_level, historical_level);
     assert!(game.pending_race_mutation_choice().is_some());
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -70,7 +71,7 @@ try {
     await readyHash(expected);
   }
   await driver.waitFor('return document.documentElement.dataset.appMode==="title"', "ordinary title", 30000);
-  await driver.execute('localStorage.setItem("rfb.locale","zh-CN");return true;');
+  await setPreferences(driver, { locale: "zh-CN" });
   await keyboard.reload();
   await driver.waitFor('return document.documentElement.lang==="zh-CN" && document.documentElement.dataset.appMode==="title" && !document.querySelector("#session-new-game").disabled', "Chinese title ready");
   await click("#session-new-game");

@@ -57,7 +57,7 @@ fn pending_change_saves_and_cancels_without_rng_or_spending() {
         rejected(&mut game, GameCommand::Wait),
         CoreError::RealmChangeRequired
     ));
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for game in [&mut game, &mut restored] {
         confirm(game, false);
         assert_eq!(game.current_second_realm_id(), Some("sorcery"));
@@ -87,7 +87,7 @@ fn confirmation_learns_immediately_and_keeps_primary_progress_and_paid_history()
     let primary_progress = game.ability_progress[&primary];
     let book_id = book(&mut game, "death", 1);
     begin(&mut game, &book_id);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let tick = game.world_tick;
     for game in [&mut game, &mut restored] {
         confirm(game, true);
@@ -107,7 +107,7 @@ fn confirmation_learns_immediately_and_keeps_primary_progress_and_paid_history()
     }
     assert_eq!(game.state_hash(), restored.state_hash());
     assert_eq!(game.rng, restored.rng);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for game in [&mut game, &mut restored] {
         dispatch_next(
             game,
@@ -150,7 +150,7 @@ fn no_candidate_confirmation_commits_the_realm_without_a_learning_turn() {
         (game.world_tick, game.player.energy_need, game.rng.clone()),
         before
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for game in [&mut game, &mut restored] {
         game.apply_player_experience(
             game.experience_required_for_level(5) - game.progress.experience,
@@ -158,7 +158,7 @@ fn no_candidate_confirmation_commits_the_realm_without_a_learning_turn() {
         );
         assert_eq!(
             game.study_random_player_ability(&book_id).unwrap(),
-            "demo.ability.death-detect-unlife"
+            "demo.ability.death-malediction"
         );
     }
     assert_eq!(game.state_hash(), restored.state_hash());
@@ -214,7 +214,7 @@ fn repeated_realm_changes_exhaust_shared_budget_despite_one_current_spell() {
         ),
         CoreError::RealmChangeUnavailable("learning-capacity-full")
     ));
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -240,7 +240,7 @@ fn returning_to_old_realm_starts_new_progress_and_first_cast_experience() {
     let before = game.progress.experience;
     cast(&mut game, SORCERY, TargetSelection::SelfTarget);
     assert_eq!(game.progress.experience - before, 6);
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -322,7 +322,7 @@ fn saves_reject_invalid_current_history_pending_and_old_spell_state() {
         .as_mut()
         .unwrap()
         .pending_change_book_item_id = Some("missing".to_owned());
-    assert!(Game::from_save(invalid).is_err());
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
     confirm(&mut game, true);
     let baseline = game.to_save();
     for corruption in 0..10 {
@@ -340,7 +340,10 @@ fn saves_reject_invalid_current_history_pending_and_old_spell_state() {
             8 => save.player.spent_spell_learning = 1000,
             _ => realms.pending_change_book_item_id = Some(death.clone()),
         }
-        assert!(Game::from_save(save).is_err(), "corruption {corruption}");
+        assert!(
+            Game::from_save(save, Game::default_behavior_preferences()).is_err(),
+            "corruption {corruption}"
+        );
     }
-    assert!(Game::from_save(baseline).is_ok());
+    assert!(Game::from_save(baseline, Game::default_behavior_preferences()).is_ok());
 }

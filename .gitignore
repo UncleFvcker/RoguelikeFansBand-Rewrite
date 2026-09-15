@@ -20,6 +20,7 @@ Thumbs.db
 *.swp
 
 # Environment and local state
+userdata/
 .claude/settings.local.json
 .env
 .env.*

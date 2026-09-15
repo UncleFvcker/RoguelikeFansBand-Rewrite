@@ -347,9 +347,14 @@ fn formal_races_receive_their_original_race_virtues() {
             [Valour, Honour, Nature],
         ),
     ] {
-        let game =
-            Game::new_with_build_race_and_name(seed, build_id, race_id, Game::DEFAULT_PLAYER_NAME)
-                .unwrap_or_else(|error| panic!("{race_id}: {error}"));
+        let game = Game::new_with_build_race_and_name(
+            seed,
+            build_id,
+            race_id,
+            Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
+        )
+        .unwrap_or_else(|error| panic!("{race_id}: {error}"));
         assert_eq!(&virtue_kinds(&game)[..3], expected, "{race_id}");
     }
 }
@@ -399,15 +404,16 @@ fn virtue_state_round_trips_and_rejects_invalid_slots() {
     game.add_virtue(VirtueKindDto::Unlife, 1);
     assert_ne!(game.state_hash(), initial_hash);
     let save = game.to_save();
-    let restored = Game::from_save(save.clone()).expect("valid virtues should round-trip");
+    let restored = Game::from_save(save.clone(), Game::default_behavior_preferences())
+        .expect("valid virtues should round-trip");
     assert_eq!(restored.virtues, game.virtues);
     assert_eq!(restored.snapshot().player.virtues, save.player.virtues);
 
     let mut duplicate = save.clone();
     duplicate.player.virtues[1].kind = duplicate.player.virtues[0].kind;
-    assert!(Game::from_save(duplicate).is_err());
+    assert!(Game::from_save(duplicate, Game::default_behavior_preferences()).is_err());
 
     let mut out_of_range = save;
     out_of_range.player.virtues[0].value = 126;
-    assert!(Game::from_save(out_of_range).is_err());
+    assert!(Game::from_save(out_of_range, Game::default_behavior_preferences()).is_err());
 }

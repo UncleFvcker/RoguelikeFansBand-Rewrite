@@ -20,7 +20,14 @@ mod museum_storage;
 #[cfg(test)]
 mod museum_storage_tests;
 mod native_storage;
+#[cfg(test)]
+mod portable_save_tests;
+mod preferences;
+mod score_storage;
+#[cfg(test)]
+mod score_storage_tests;
 use museum_storage::MuseumStore;
+use score_storage::{ScoreOutcome, list_high_scores};
 
 use crash_diagnostics::{
     CrashDiagnosticState, CrashDiagnosticStatus, CrashDiagnostics, DiagnosticMetadata,
@@ -37,6 +44,7 @@ struct GameSession {
     created_at: String,
     binding: MuseumBindingSaveDto,
     museum_loaded: bool,
+    native_slot: Option<(String, String)>,
 }
 
 struct AppState {
@@ -61,11 +69,12 @@ impl AppState {
         race_id: &str,
         player_name: &str,
         created_at: String,
+        preferences: rfb_protocol::BehaviorPreferencesDto,
     ) -> Result<GameSnapshot, String> {
         let seed = seed
             .parse::<u64>()
             .map_err(|error| format!("invalid seed: {error}"))?;
-        let game = initial_game(seed, build_id, race_id, player_name)?;
+        let game = initial_game(seed, build_id, race_id, player_name, preferences)?;
         let mut session = self.lock_session()?;
         let mut store = MuseumStore::open(&self.profile_root)?;
         let binding = store.new_character()?;
@@ -74,6 +83,7 @@ impl AppState {
             created_at,
             binding,
             museum_loaded: false,
+            native_slot: None,
         };
         next.sync_museum(&store)?;
         let snapshot = next.recorder.game().snapshot();
@@ -111,7 +121,13 @@ impl AppState {
                 command,
             })
             .map_err(|error| error.to_string())?;
-        if let Some(store) = &mut store {
+        if let Some(outcome) = ScoreOutcome::from_update(&update) {
+            let mut store = match store.take() {
+                Some(store) => store,
+                None => MuseumStore::open(&self.profile_root)?,
+            };
+            next.record_score(&mut store, &update, outcome)?;
+        } else if let Some(store) = &mut store {
             if update
                 .events
                 .iter()
@@ -123,7 +139,11 @@ impl AppState {
                     .shared_museum()
                     .ok_or("museum-unavailable")?;
                 // Validate the post-transfer character before making either owner durable.
-                Game::from_save(next.recorder.game().to_save()).map_err(|e| e.to_string())?;
+                Game::from_save(
+                    next.recorder.game().to_save(),
+                    next.recorder.game().behavior_preferences(),
+                )
+                .map_err(|e| e.to_string())?;
                 next.binding.epoch = next
                     .binding
                     .epoch
@@ -178,10 +198,15 @@ impl AppState {
 
     #[cfg(test)]
     fn load(&self, data: &[u8]) -> Result<GameSnapshot, String> {
-        self.load_with_recovery(data).map(|(snapshot, _)| snapshot)
+        self.load_with_recovery(data, Game::default_behavior_preferences())
+            .map(|(snapshot, _)| snapshot)
     }
 
-    fn load_with_recovery(&self, data: &[u8]) -> Result<(GameSnapshot, bool), String> {
+    fn load_with_recovery(
+        &self,
+        data: &[u8],
+        preferences: rfb_protocol::BehaviorPreferencesDto,
+    ) -> Result<(GameSnapshot, bool), String> {
         let mut session = self.lock_session()?;
         let store = MuseumStore::open(&self.profile_root)?;
         let (mut header, mut payload) =
@@ -202,13 +227,14 @@ impl AppState {
             return Err("museum-checkpoint-mismatch".to_owned());
         }
         store.ensure_current(&binding)?;
-        let game = Game::from_save(payload).map_err(|error| error.to_string())?;
+        let game = Game::from_save(payload, preferences).map_err(|error| error.to_string())?;
         let museum_loaded = game.has_shared_museum();
         let mut next = GameSession {
             recorder: ReplayRecorder::new(game),
             created_at: header.created_at,
             binding,
             museum_loaded,
+            native_slot: None,
         };
         next.sync_museum(&store)?;
         let snapshot = next.recorder.game().snapshot();
@@ -499,6 +525,9 @@ impl Default for AppState {
 
 impl GameSession {
     fn sync_museum(&mut self, store: &MuseumStore) -> Result<(), String> {
+        if store.character(&self.binding)?.score.is_some() {
+            return Ok(());
+        }
         if (!self.museum_loaded || self.binding.collection_revision != store.profile.revision)
             && let Some(game) = self
                 .recorder
@@ -545,8 +574,9 @@ fn initial_game(
     build_id: &str,
     race_id: &str,
     player_name: &str,
+    preferences: rfb_protocol::BehaviorPreferencesDto,
 ) -> Result<Game, String> {
-    Game::new_with_build_race_and_name(seed, build_id, race_id, player_name)
+    Game::new_with_build_race_and_name(seed, build_id, race_id, player_name, preferences)
         .map_err(|error| error.to_string())
 }
 
@@ -559,12 +589,31 @@ struct NativeLoadResult {
 }
 
 fn native_store(app: &tauri::AppHandle) -> DesktopResult<NativeSaveStore> {
-    let root = app
+    let root = user_data_root(app)?.join("saves");
+    Ok(NativeSaveStore::new(root))
+}
+
+fn user_data_root(app: &tauri::AppHandle) -> DesktopResult<PathBuf> {
+    #[cfg(target_os = "android")]
+    return app
         .path()
         .app_local_data_dir()
-        .map_err(|error| DesktopCommandError::new("native-save-directory", error.to_string()))?
-        .join("saves");
-    Ok(NativeSaveStore::new(root))
+        .map_err(|e| DesktopCommandError::new("native-save-directory", e.to_string()));
+    #[cfg(not(target_os = "android"))]
+    {
+        let _ = app;
+        let executable = std::env::current_exe()
+            .map_err(|e| DesktopCommandError::new("native-save-directory", e.to_string()))?;
+        Ok(executable
+            .parent()
+            .ok_or_else(|| {
+                DesktopCommandError::new(
+                    "native-save-directory",
+                    "executable has no parent directory",
+                )
+            })?
+            .join("userdata"))
+    }
 }
 
 fn session_error(default_code: &str, error: String) -> DesktopCommandError {
@@ -607,6 +656,7 @@ fn log_event(app: &tauri::AppHandle, event: &str, detail: &str) {
 
 #[tauri::command(rename_all = "camelCase")]
 fn initialize_game(
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     seed: String,
     build_id: String,
@@ -614,16 +664,41 @@ fn initialize_game(
     player_name: String,
     created_at: String,
 ) -> Result<GameSnapshot, String> {
-    state.initialize(&seed, &build_id, &race_id, &player_name, created_at)
+    let preferences = preferences::current_behavior(&app).map_err(|e| e.detail)?;
+    state.initialize(
+        &seed,
+        &build_id,
+        &race_id,
+        &player_name,
+        created_at,
+        preferences,
+    )
 }
 
 #[tauri::command(rename_all = "camelCase")]
 fn dispatch_game_command(
+    app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     command_seq: u32,
     expected_revision: u32,
     command: GameCommand,
 ) -> Result<GameUpdate, String> {
+    if matches!(
+        &command,
+        GameCommand::ConfigureTravel { .. }
+            | GameCommand::ConfigureMogaminator { .. }
+            | GameCommand::SetInterfaceLocale { .. }
+    ) {
+        return Err("Save global preferences before applying behavior settings".into());
+    }
+    if let GameCommand::ConfigurePreferences {
+        preferences: candidate,
+    } = &command
+    {
+        if *candidate != preferences::current_behavior(&app).map_err(|e| e.detail)? {
+            return Err("preferences-stale: reload saved global preferences".into());
+        }
+    }
     state.dispatch(command_seq, expected_revision, command)
 }
 
@@ -694,8 +769,13 @@ fn prepare_craft_e2e(state: tauri::State<'_, AppState>) -> Result<GameSnapshot, 
 }
 
 #[tauri::command]
-fn load_game(state: tauri::State<'_, AppState>, data: Vec<u8>) -> Result<NativeLoadResult, String> {
-    let (snapshot, museum_recovered) = state.load_with_recovery(&data)?;
+fn load_game(
+    app: tauri::AppHandle,
+    state: tauri::State<'_, AppState>,
+    data: Vec<u8>,
+) -> Result<NativeLoadResult, String> {
+    let preferences = preferences::current_behavior(&app).map_err(|e| e.detail)?;
+    let (snapshot, museum_recovered) = state.load_with_recovery(&data, preferences)?;
     Ok(NativeLoadResult {
         snapshot,
         museum_recovered,
@@ -934,6 +1014,12 @@ fn list_native_saves(
                 summaries.push(native_storage::museum_checkpoint_summary(*id, bytes)?);
             }
         }
+        summaries.sort_by(|a, b| {
+            a.museum_checkpoint
+                .cmp(&b.museum_checkpoint)
+                .then_with(|| b.saved_at.cmp(&a.saved_at))
+                .then_with(|| a.slot_id.cmp(&b.slot_id))
+        });
         Ok(summaries)
     })();
     if let Err(error) = &result {
@@ -947,14 +1033,61 @@ fn save_native_game(
     app: tauri::AppHandle,
     state: tauri::State<'_, AppState>,
     slot_id: Option<String>,
-    slot_name: String,
+    slot_name: Option<String>,
     saved_at: String,
+    new_slot: Option<bool>,
+) -> DesktopResult<NativeSaveSummary> {
+    let store = native_store(&app)?;
+    let result = save_native_to_store(
+        &state,
+        &store,
+        slot_id,
+        slot_name,
+        saved_at,
+        new_slot.unwrap_or(false),
+    );
+    match &result {
+        Ok(summary) => log_event(&app, "native-save-written", &summary.slot_id),
+        Err(error) => log_event(&app, "native-save-write-error", &error.code),
+    }
+    result
+}
+
+fn save_native_to_store(
+    state: &AppState,
+    store: &NativeSaveStore,
+    slot_id: Option<String>,
+    slot_name: Option<String>,
+    saved_at: String,
+    new_slot: bool,
 ) -> DesktopResult<NativeSaveSummary> {
     let result: DesktopResult<NativeSaveSummary> = (|| {
-        let slot_name = validate_slot_name(&slot_name)?;
         let _storage = state.lock_storage()?;
-        let store = native_store(&app)?;
-        let slot_id = slot_id.map_or_else(|| store.create_slot_id(), Ok)?;
+        let (current_slot, player_name) = {
+            let session = state
+                .lock_session()
+                .map_err(|e| session_error("native-save-encode", e))?;
+            let session = session
+                .as_ref()
+                .ok_or_else(|| session_error("native-save-encode", "no active character".into()))?;
+            (
+                session.native_slot.clone(),
+                session.recorder.game().snapshot().player.name,
+            )
+        };
+        let slot_name = validate_slot_name(
+            &slot_name
+                .unwrap_or_else(|| current_slot.as_ref().map_or(player_name, |s| s.1.clone())),
+        )?;
+        let slot_id = slot_id
+            .or_else(|| {
+                if new_slot {
+                    None
+                } else {
+                    current_slot.map(|s| s.0)
+                }
+            })
+            .map_or_else(|| store.create_slot_id(), Ok)?;
         if museum_storage::checkpoint_id(&slot_id).is_some() {
             return Err(DesktopCommandError::new(
                 "museum-checkpoint-read-only",
@@ -962,15 +1095,17 @@ fn save_native_game(
             ));
         }
         let bytes = state
-            .save_named(saved_at, slot_name)
+            .save_named(saved_at, slot_name.clone())
             .map_err(|error| session_error("native-save-encode", error))?;
         let summary = store.write(&slot_id, &bytes)?;
-        log_event(&app, "native-save-written", &slot_id);
+        state
+            .lock_session()
+            .map_err(|e| session_error("native-save-encode", e))?
+            .as_mut()
+            .unwrap()
+            .native_slot = Some((slot_id.clone(), slot_name));
         Ok(summary)
     })();
-    if let Err(error) = &result {
-        log_event(&app, "native-save-write-error", &error.code);
-    }
     result
 }
 
@@ -995,8 +1130,18 @@ fn load_native_game(
             native_store(&app)?.load(&slot_id)?
         };
         let (snapshot, museum_recovered) = state
-            .load_with_recovery(&loaded.bytes)
+            .load_with_recovery(&loaded.bytes, preferences::current_behavior(&app)?)
             .map_err(|error| session_error("native-save-load", error))?;
+        if museum_storage::checkpoint_id(&slot_id).is_none() {
+            let (header, _) = rfb_save::decode(&loaded.bytes)
+                .map_err(|e| session_error("native-save-load", e.to_string()))?;
+            state
+                .lock_session()
+                .map_err(|e| session_error("native-save-load", e))?
+                .as_mut()
+                .unwrap()
+                .native_slot = Some((slot_id.clone(), header.slot_name));
+        }
         log_event(
             &app,
             if loaded.recovery_backup.is_some() {
@@ -1055,9 +1200,28 @@ pub fn run() {
 
     builder
         .setup(|app| {
-            app.manage(AppState::new(
-                app.path().app_local_data_dir()?.join("profile"),
-            ));
+            let root = user_data_root(app.handle()).map_err(|e| std::io::Error::other(e.detail))?;
+            std::fs::create_dir_all(&root)?;
+            let lock = std::fs::OpenOptions::new()
+                .create(true)
+                .truncate(false)
+                .read(true)
+                .write(true)
+                .open(root.join("game.lock"))
+                .map_err(|e| {
+                    std::io::Error::other(format!(
+                        "Cannot write game data directory {}: {e}",
+                        root.display()
+                    ))
+                })?;
+            lock.try_lock().map_err(|e| {
+                std::io::Error::other(format!(
+                    "Game data directory is already in use ({}): {e}",
+                    root.display()
+                ))
+            })?;
+            app.manage(lock);
+            app.manage(AppState::new(root.join("profile")));
             let store = native_store(app.handle()).map_err(|error| {
                 std::io::Error::other(format!("{}: {}", error.code, error.detail))
             })?;
@@ -1091,9 +1255,13 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            preferences::load_preferences,
+            preferences::save_preferences,
+            preferences::default_preferences,
             initialize_game,
             refresh_museum,
             dispatch_game_command,
+            list_high_scores,
             prepare_supply_e2e,
             prepare_life_force_e2e,
             prepare_mindcrafter_e2e,
@@ -1175,6 +1343,7 @@ mod tests {
                 "demo.race.rfb-human",
                 "Adventurer",
                 "2026-07-15T00:00:00Z".to_owned(),
+                Game::default_behavior_preferences(),
             )
             .expect("session should initialize");
         let update = state
@@ -1199,6 +1368,7 @@ mod tests {
                 "demo.build.warrior",
                 "demo.race.rfb-human",
                 "Adventurer",
+                Game::default_behavior_preferences(),
             )
             .expect("initial game should create"),
         )
@@ -1226,6 +1396,7 @@ mod tests {
                 "demo.race.rfb-human",
                 "Adventurer",
                 "2026-07-15T00:00:00Z".to_owned(),
+                Game::default_behavior_preferences(),
             )
             .expect("session should initialize");
 
@@ -1249,6 +1420,7 @@ mod tests {
                 "demo.race.rfb-human",
                 "Adventurer",
                 "2026-07-15T00:00:00Z".to_owned(),
+                Game::default_behavior_preferences(),
             )
             .expect("session should initialize");
         state
@@ -1264,7 +1436,8 @@ mod tests {
             .save("2026-07-15T00:01:00Z".to_owned())
             .expect("save should encode");
         let (_, payload) = rfb_save::decode(&bytes).expect("save should decode");
-        let replay_start = Game::from_save(payload).expect("save payload should restore");
+        let replay_start = Game::from_save(payload, Game::default_behavior_preferences())
+            .expect("save payload should restore");
 
         let loaded = state.load(&bytes).expect("save should load");
         let update = state
@@ -1295,6 +1468,7 @@ mod tests {
                 "demo.race.rfb-human",
                 "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
+                Game::default_behavior_preferences(),
             )
             .expect("Warrior session should initialize");
 
@@ -1326,6 +1500,7 @@ mod tests {
                 "demo.race.rfb-human",
                 "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
+                Game::default_behavior_preferences(),
             )
             .expect("Warrior session should initialize");
         state
@@ -1339,6 +1514,7 @@ mod tests {
                 "demo.race.rfb-human",
                 "Adventurer",
                 "2026-08-01T00:05:00Z".to_owned(),
+                Game::default_behavior_preferences(),
             )
             .expect("same setup should replace the native session");
         let replay = decode_replay(&state.export_replay().expect("replay should encode"))
@@ -1362,6 +1538,7 @@ mod tests {
                 "demo.race.rfb-human",
                 "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
+                Game::default_behavior_preferences(),
             )
             .expect_err("invalid seed should be rejected");
         let unknown_build = state
@@ -1371,6 +1548,7 @@ mod tests {
                 "demo.race.rfb-human",
                 "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
+                Game::default_behavior_preferences(),
             )
             .expect_err("unknown build should be rejected");
 

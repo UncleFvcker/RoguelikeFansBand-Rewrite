@@ -3,6 +3,24 @@ use std::collections::BTreeMap;
 use super::*;
 
 #[test]
+fn jammed_glass_doors_validate_without_allowing_walkable_or_opaque_jam_targets() {
+    let valid = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for target in ["demo.terrain.glass-door-open", "demo.terrain.door-jammed-1"] {
+        let mut invalid = valid.clone();
+        invalid
+            .terrain
+            .iter_mut()
+            .find(|terrain| terrain.id == "demo.terrain.glass-door-closed")
+            .unwrap()
+            .jam_to_terrain_id = Some(target.into());
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidTerrainTransition(_))
+        ));
+    }
+}
+
+#[test]
 fn item_random_activation_rejects_uncovered_rolls_invalid_targets_and_bad_effects() {
     let valid = compile_pack_dir(&original_pack_path()).unwrap().content;
     for fault in 0..6 {

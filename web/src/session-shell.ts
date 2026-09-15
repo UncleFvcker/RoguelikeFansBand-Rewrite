@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 import type { NewSessionRequest } from "./core-transport.ts";
-import type { InputPreset } from "./input-controller.ts";
-import type { Localization, SupportedLocale } from "./localization.ts";
-import { isSupportedLocale } from "./localization.ts";
+import type { Localization } from "./localization.ts";
 import {
   desktopErrorCode,
   type NativeLoadResult,
@@ -15,7 +13,7 @@ import type { GameSnapshot } from "./protocol.ts";
 import { CreationMenu, type PlaytestRaceId, type PlaytestBuildId } from "./character-creation.ts";
 export { PLAYTEST_RACE_IDS, type PlaytestRaceId, PLAYTEST_BUILD_IDS, type PlaytestBuildId } from "./character-creation.ts";
 
-export type SessionView = "title" | "new-game" | "load" | "settings";
+export type SessionView = "title" | "new-game" | "load";
 type CreationPage = "overview" | "race" | "career";
 
 export function createNewSessionRequest(
@@ -42,7 +40,6 @@ interface SessionShellDom {
   readonly overviewRace: HTMLElement;
   readonly overviewCareer: HTMLElement;
   readonly loadView: HTMLElement;
-  readonly settingsView: HTMLElement;
   readonly newGameButton: HTMLButtonElement;
   readonly continueButton: HTMLButtonElement;
   readonly loadGameButton: HTMLButtonElement;
@@ -58,9 +55,6 @@ interface SessionShellDom {
   readonly loadRefreshButton: HTMLButtonElement;
   readonly loadList: HTMLUListElement;
   readonly loadBackButton: HTMLButtonElement;
-  readonly settingsLanguage: HTMLSelectElement;
-  readonly settingsInput: HTMLSelectElement;
-  readonly settingsBackButton: HTMLButtonElement;
   readonly status: HTMLElement;
   readonly error: HTMLElement;
   readonly runBuildValue: HTMLElement;
@@ -79,9 +73,7 @@ export class SessionShell {
     summary: NativeSaveSummary,
   ) => Promise<void>;
   readonly #onExit: () => Promise<void>;
-  readonly #onLocaleChange: (locale: SupportedLocale) => void;
-  readonly #onInputPresetChange: (preset: InputPreset) => void;
-  readonly #getInputPreset: () => InputPreset;
+  readonly #onOpenSettings: () => void;
   readonly #randomSeed: () => string;
   readonly #confirm: (message: string) => boolean;
   readonly #logError: (error: unknown) => void;
@@ -92,6 +84,9 @@ export class SessionShell {
   #saves: NativeSaveSummary[] = [];
   #activeSnapshot: GameSnapshot | undefined;
   #activeRequest: NewSessionRequest | undefined;
+  #resumeGame = false;
+  readonly #beforeLoad: () => Promise<boolean>;
+  readonly #onResume: () => void;
 
   constructor(options: {
     dom: SessionShellDom;
@@ -100,12 +95,12 @@ export class SessionShell {
     onStart: (request: NewSessionRequest) => Promise<GameSnapshot>;
     onLoad: (result: NativeLoadResult, summary: NativeSaveSummary) => Promise<void>;
     onExit: () => Promise<void>;
-    onLocaleChange: (locale: SupportedLocale) => void;
-    onInputPresetChange: (preset: InputPreset) => void;
-    getInputPreset: () => InputPreset;
+    onOpenSettings: () => void;
     randomSeed?: () => string;
     confirm?: (message: string) => boolean;
     logError?: (error: unknown) => void;
+    beforeLoad?: () => Promise<boolean>;
+    onResume?: () => void;
   }) {
     this.#dom = options.dom;
     this.#storage = options.storage;
@@ -113,12 +108,12 @@ export class SessionShell {
     this.#onStart = options.onStart;
     this.#onLoad = options.onLoad;
     this.#onExit = options.onExit;
-    this.#onLocaleChange = options.onLocaleChange;
-    this.#onInputPresetChange = options.onInputPresetChange;
-    this.#getInputPreset = options.getInputPreset;
+    this.#onOpenSettings = options.onOpenSettings;
     this.#randomSeed = options.randomSeed ?? randomSessionSeed;
     this.#confirm = options.confirm ?? ((message) => window.confirm(message));
     this.#logError = options.logError ?? console.error;
+    this.#beforeLoad = options.beforeLoad ?? (async () => true);
+    this.#onResume = options.onResume ?? (() => {});
     this.#raceMenu = new CreationMenu("race", this.#dom.racePanel, this.#localization, () => {
       this.#renderCreationSummary();
       this.#updateControls();
@@ -148,9 +143,6 @@ export class SessionShell {
     this.#dom.newGameBackButton.addEventListener("click", this.#backToTitle);
     this.#dom.loadRefreshButton.addEventListener("click", this.#refreshSaves);
     this.#dom.loadBackButton.addEventListener("click", this.#backToTitle);
-    this.#dom.settingsLanguage.addEventListener("change", this.#changeLocale);
-    this.#dom.settingsInput.addEventListener("change", this.#changeInputPreset);
-    this.#dom.settingsBackButton.addEventListener("click", this.#backToTitle);
   }
 
   dispose(): void {
@@ -172,15 +164,10 @@ export class SessionShell {
     this.#dom.newGameBackButton.removeEventListener("click", this.#backToTitle);
     this.#dom.loadRefreshButton.removeEventListener("click", this.#refreshSaves);
     this.#dom.loadBackButton.removeEventListener("click", this.#backToTitle);
-    this.#dom.settingsLanguage.removeEventListener("change", this.#changeLocale);
-    this.#dom.settingsInput.removeEventListener("change", this.#changeInputPreset);
-    this.#dom.settingsBackButton.removeEventListener("click", this.#backToTitle);
   }
 
   async initialize(): Promise<void> {
     this.#dom.seedInput.value = this.#randomSeed();
-    this.#dom.settingsLanguage.value = this.#localization.locale;
-    this.#dom.settingsInput.value = this.#getInputPreset();
     this.#showView("title");
     this.localize();
     await this.#refresh();
@@ -189,8 +176,6 @@ export class SessionShell {
   localize(): void {
     this.#localization.localizeDocument(this.#dom.root);
     this.#dom.seedInput.placeholder = this.#localization.format("session-seed-placeholder");
-    this.#dom.settingsLanguage.value = this.#localization.locale;
-    this.#dom.settingsInput.value = this.#getInputPreset();
     this.#renderSaves();
     this.#renderReadyStatus();
     this.#renderRunMetadata();
@@ -294,7 +279,9 @@ export class SessionShell {
     return undefined;
   }
 
-  showLoad(): void {
+  showLoad(resumeGame = false): void {
+    this.#resumeGame = resumeGame;
+    this.#dom.loadBackButton.textContent = this.#localization.format(resumeGame ? "save-return-game" : "session-back-to-title");
     this.#showShell("load");
     void this.#refresh();
   }
@@ -305,7 +292,7 @@ export class SessionShell {
   };
 
   readonly #continueLatest = (): void => {
-    const latest = this.#saves.find((summary) => summary.status !== "corrupt");
+    const latest = this.#saves.find((summary) => summary.status !== "corrupt" && !summary.museumCheckpoint);
     if (latest) void this.#load(latest);
   };
 
@@ -317,14 +304,18 @@ export class SessionShell {
   readonly #openSettings = (): void => {
     if (this.#busy) return;
     this.#clearError();
-    this.#dom.settingsLanguage.value = this.#localization.locale;
-    this.#dom.settingsInput.value = this.#getInputPreset();
-    this.#showView("settings");
+    this.#onOpenSettings();
   };
 
   readonly #backToTitle = (): void => {
     if (this.#busy) return;
     this.#clearError();
+    if (this.#view === "load" && this.#resumeGame && this.#activeSnapshot) {
+      this.#resumeGame = false;
+      this.showGame(this.#activeSnapshot, this.#activeRequest);
+      this.#onResume();
+      return;
+    }
     this.#showView("title");
   };
 
@@ -361,15 +352,6 @@ export class SessionShell {
     void this.#refresh();
   };
 
-  readonly #changeLocale = (): void => {
-    const locale = this.#dom.settingsLanguage.value;
-    if (isSupportedLocale(locale)) this.#onLocaleChange(locale);
-  };
-
-  readonly #changeInputPreset = (): void => {
-    const preset = this.#dom.settingsInput.value;
-    if (isInputPreset(preset)) this.#onInputPresetChange(preset);
-  };
 
   readonly #exit = (): void => {
     if (!this.#busy) void this.#onExit().catch((error) => this.#showError(error));
@@ -394,9 +376,11 @@ export class SessionShell {
     const previousRequest = this.#activeRequest;
     this.#activeRequest = undefined;
     try {
+      if (!(await this.#beforeLoad())) { this.#activeRequest = previousRequest; return; }
       const result = await this.#storage.load(summary.slotId);
       await this.#onLoad(result, summary);
       this.showGame(result.snapshot);
+      this.#resumeGame = false;
     } catch (error) {
       this.#activeRequest = previousRequest;
       this.#showError(error);
@@ -457,7 +441,6 @@ export class SessionShell {
     this.#dom.titleView.hidden = view !== "title";
     this.#dom.newGameView.hidden = view !== "new-game";
     this.#dom.loadView.hidden = view !== "load";
-    this.#dom.settingsView.hidden = view !== "settings";
     this.#dom.root.ownerDocument.documentElement.dataset.appMode = view;
     this.#updateControls();
     this.#renderReadyStatus();
@@ -482,7 +465,7 @@ export class SessionShell {
     this.#dom.error.parentElement!.tabIndex = !this.#busy && this.#dom.error.textContent ? 0 : -1;
     this.#raceMenu.setBusy(this.#busy);
     this.#careerMenu.setBusy(this.#busy);
-    const validSave = this.#saves.some((summary) => summary.status !== "corrupt");
+    const validSave = this.#saves.some((summary) => summary.status !== "corrupt" && !summary.museumCheckpoint);
     this.#dom.continueButton.disabled = this.#busy || !validSave;
     for (const control of this.#dom.root.querySelectorAll<
       HTMLButtonElement | HTMLInputElement | HTMLSelectElement
@@ -511,7 +494,15 @@ export class SessionShell {
       return;
     }
 
+    let section: boolean | undefined;
     for (const summary of this.#saves) {
+      if (section !== summary.museumCheckpoint) {
+        section = summary.museumCheckpoint;
+        const heading = this.#dom.loadList.ownerDocument.createElement("li");
+        heading.className = "save-list-heading";
+        heading.textContent = this.#localization.format(section ? "save-recovery-heading" : "save-slots-heading");
+        this.#dom.loadList.append(heading);
+      }
       const row = this.#dom.loadList.ownerDocument.createElement("li");
       row.className = "native-save-item";
       row.dataset.slotId = summary.slotId;
@@ -567,7 +558,7 @@ export class SessionShell {
     if (summary.turn === null || summary.savedAt === null) {
       return this.#localization.format("native-save-meta-unavailable");
     }
-    const metadata = this.#localization.format("native-save-meta", {
+    const metadata = (summary.characterName ? this.#localization.format("save-character-meta", { name: summary.characterName, level: summary.characterLevel ?? "?" }) + " · " : "") + this.#localization.format("native-save-meta", {
       location:
         summary.locationKey &&
         this.#localization.hasMessage(this.#localization.locale, summary.locationKey)
@@ -636,7 +627,6 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     overviewRace: element<HTMLElement>(document, "session-overview-race"),
     overviewCareer: element<HTMLElement>(document, "session-overview-career"),
     loadView: element<HTMLElement>(document, "session-load-view"),
-    settingsView: element<HTMLElement>(document, "session-settings-view"),
     newGameButton: element<HTMLButtonElement>(document, "session-new-game"),
     continueButton: element<HTMLButtonElement>(document, "session-continue"),
     loadGameButton: element<HTMLButtonElement>(document, "session-load-game"),
@@ -652,9 +642,6 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     loadRefreshButton: element<HTMLButtonElement>(document, "session-load-refresh"),
     loadList: element<HTMLUListElement>(document, "session-load-list"),
     loadBackButton: element<HTMLButtonElement>(document, "session-load-back"),
-    settingsLanguage: element<HTMLSelectElement>(document, "session-settings-language"),
-    settingsInput: element<HTMLSelectElement>(document, "session-settings-input"),
-    settingsBackButton: element<HTMLButtonElement>(document, "session-settings-back"),
     status: element<HTMLElement>(document, "session-status"),
     error: element<HTMLElement>(document, "session-error"),
     runBuildValue: element<HTMLElement>(document, "run-build-value"),
@@ -692,10 +679,6 @@ export function randomSessionSeed(
 
 function sessionSaveStatusKey(status: NativeSaveSummary["status"]): string {
   return `native-save-status-${status}`;
-}
-
-function isInputPreset(value: string): value is InputPreset {
-  return value === "numpad" || value === "vi" || value === "wasd";
 }
 
 function errorMessage(error: unknown): string {

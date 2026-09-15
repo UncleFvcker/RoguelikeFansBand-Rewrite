@@ -97,7 +97,8 @@ fn natural_failure_pays_no_internal_resources_and_success_survives_save_and_next
             game.resources.get_mut(MANA).unwrap().current = 10;
             seed_cast(&mut game, id, succeeds);
             let before = (game.player.hp, game.resources[MANA].current);
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             let mut expected_rng = game.rng.clone();
             expected_rng.bounded(100);
             let events = cast(&mut game, id);
@@ -137,7 +138,9 @@ fn natural_failure_pays_no_internal_resources_and_success_survives_save_and_next
                 delta
             );
             assert_eq!(
-                Game::from_save(game.to_save()).unwrap().state_hash(),
+                Game::from_save(game.to_save(), game.behavior_preferences())
+                    .unwrap()
+                    .state_hash(),
                 game.state_hash()
             );
             assert_eq!(
@@ -164,6 +167,7 @@ fn life_payment_ignores_full_mana_caps_gain_and_can_kill_below_zero() {
         let maximum = game.resources[MANA].maximum;
         let before = if near_cap { maximum - 2 } else { maximum };
         game.resources.get_mut(MANA).unwrap().current = before;
+        game.searching = true;
         let events = cast(&mut game, HP_TO_MP);
         let r = conversion(&events);
         assert_eq!(
@@ -174,7 +178,14 @@ fn life_payment_ignores_full_mana_caps_gain_and_can_kill_below_zero() {
         assert_eq!(r.fatal, hp < 25);
         assert_eq!(game.player_is_dead(), hp < 25);
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            game.searching,
+            hp >= 25,
+            "DAMAGE_USELIFE preserves searching while alive"
+        );
+        assert_eq!(
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash()
         );
     }
@@ -336,9 +347,14 @@ fn powers_ignore_book_anti_magic_and_berserk_but_keep_confusion_and_stun_rules()
 
 #[test]
 fn einheri_conversion_uses_reduced_healing_without_reducing_mana_payment() {
-    let mut game =
-        Game::new_with_build_race_and_name(925, BUILD, "rfb-legacy.race.einheri", "Conversion")
-            .unwrap();
+    let mut game = Game::new_with_build_race_and_name(
+        925,
+        BUILD,
+        "rfb-legacy.race.einheri",
+        "Conversion",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     clear_monsters(&mut game);
     game.apply_player_experience(game.experience_required_for_level(25), &mut Vec::new());
     game.debug_set_ability_casts_succeed(true);
@@ -403,7 +419,30 @@ fn melee_conversion_book_cast_and_healing_continue_identically_after_loading() {
     );
     assert!(conversion.events.iter().any(|e| matches!(&e.outcome, Some(GameEventOutcomeDto::ResourceConversion { resolution }) if resolution.hp_before - resolution.hp_after == 25 && resolution.resource_after == 5)));
     game.debug_set_ability_casts_succeed(false);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    // Select a successful natural continuation; keep the actual RNG and save
+    // comparison below, including the intervening world ticks.
+    game.rng = (0..128)
+        .find_map(|seed| {
+            let mut trial = game.clone();
+            trial.rng = RfbRng::seeded(seed);
+            [spell, HP_TO_MP, MP_TO_HP]
+                .into_iter()
+                .all(|id| {
+                    dispatch_next(
+                        &mut trial,
+                        GameCommand::CastAbility {
+                            ability_id: id.into(),
+                            target: TargetSelection::SelfTarget,
+                        },
+                    )
+                    .events
+                    .iter()
+                    .any(|event| event.kind == "ability.cast-success")
+                })
+                .then(|| RfbRng::seeded(seed))
+        })
+        .unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for id in [spell, HP_TO_MP, MP_TO_HP] {
         let command = GameCommand::CastAbility {
             ability_id: id.to_owned(),

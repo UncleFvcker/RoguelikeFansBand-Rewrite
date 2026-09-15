@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 import assert from "node:assert/strict";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -191,7 +192,8 @@ export async function runTownMapScenario(driver, directory, profile, scenario = 
   }
   try {
     await driver.waitFor('return document.documentElement.dataset.appMode==="title"',"town title",60_000);
-    await driver.execute('window.__townReload=true;localStorage.setItem("rfb.locale","zh-CN");localStorage.setItem("rfb.input-preset","numpad");setTimeout(()=>location.reload(),50);return true;');
+    await setPreferences(driver, { locale: "zh-CN", inputPreset: "numpad" });
+    await driver.execute('window.__townReload=true;setTimeout(()=>location.reload(),50);return true;');
     await driver.waitFor('return !window.__townReload && document.documentElement.dataset.appMode==="title"',"Chinese town title",60_000);
     await click("#session-new-game");
     await selectCreationRace(driver,zulOnly ? "rfb-legacy.race.beastman" : "demo.race.rfb-human");

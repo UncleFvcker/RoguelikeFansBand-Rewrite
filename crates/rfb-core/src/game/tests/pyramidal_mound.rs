@@ -39,7 +39,6 @@ fn enter_pyramidal_mound_site(game: &mut Game) {
     dispatch_next(
         game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -186,7 +185,7 @@ fn pyramidal_mound_formal_entry_shaft_round_trip_uses_rewards_and_restores_recal
     }
     assert!(game.player_has_telepathy());
     let saved = game.to_save();
-    let mut game = Game::from_save(saved.clone()).unwrap();
+    let mut game = Game::from_save(saved.clone(), Game::default_behavior_preferences()).unwrap();
     assert_eq!(game.to_save(), saved);
     for depth in [90, 88, 86, 84, 82, 80, 76, 72, 68, 64] {
         clear_monsters(&mut game);
@@ -210,7 +209,7 @@ fn pyramidal_mound_formal_entry_shaft_round_trip_uses_rewards_and_restores_recal
     assert!(game.entities.iter().all(|a| a.kind_id != GUARDIAN));
     assert!(game.items.iter().all(|i| i.id != scroll));
     assert_eq!(game.items.iter().filter(|i| i.kind_id == AMUN).count(), 1);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     for current in [&mut game, &mut restored] {
         clear_monsters(current);
@@ -253,7 +252,7 @@ fn pyramidal_mound_inactive_pantheon_hides_entry_and_guardian_and_rejects_transi
             .unwrap()
             .is_none()
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(
         restored
@@ -806,7 +805,12 @@ fn pyramidal_mound_guardians_melee_uses_true_identity_and_mummy_instance_account
     assert!(game.dungeon_states[DUNGEON].entrance_guardian_defeated);
     assert!(!game.dungeon_states[DUNGEON].guardian_defeated);
     assert!(game.unique_actor_kind_is_available("demo.actor.mummy-king"));
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -889,7 +893,12 @@ fn pyramidal_mound_amun_early_melee_rewards_are_picked_up_used_and_saved_once() 
         }
     }
     assert!(game.player_has_telepathy());
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(restored.generated_artifact_ids.contains(AMUN));
     let rewards = restored.items.iter().filter(|i| i.kind_id == AMUN).count();
@@ -1036,8 +1045,12 @@ fn pyramidal_mound_phoenix_rebirth_keeps_melee_and_status_targets_alive() {
             }
         }
         let game = reborn.expect("one-third revival must be reachable");
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         // A later actual fatal blow still reaches ordinary death and rewards.
         defeat_in_melee(&mut restored);
@@ -1073,7 +1086,12 @@ fn pyramidal_mound_osiris_extra_potion_is_consumed_after_real_death_and_pickup()
             .any(|i| i.kind_id != "demo.item.new-life-potion")
     );
     let id = pick_up_drop(&mut game, "demo.item.new-life-potion", kind, &update);
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     for current in [&mut game, &mut restored] {
         choose_human_talent_if_pending(current);
@@ -1131,7 +1149,7 @@ fn pyramidal_mound_amun_uses_normal_artifact_rarity_and_unique_registration() {
     game.items.push(item);
     assert!(game.generated_artifact_ids.contains(AMUN));
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     let rng = restored.rng.clone();
     assert!(
@@ -1285,7 +1303,7 @@ fn pyramidal_mound_amun_equips_senses_expires_and_recovers_across_save() {
         game.process_inventory_device_recovery(&mut events);
     }
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(restored.player_has_telepathy());
     assert_eq!(restored.items[0].device_recovery_progress, 100);

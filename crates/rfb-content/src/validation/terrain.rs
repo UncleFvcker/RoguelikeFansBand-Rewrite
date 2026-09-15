@@ -152,7 +152,6 @@ pub(super) fn validate_terrain(
                 .expect("validated terrain target must remain available");
             if target_id == &terrain.id
                 || terrain.walkable
-                || !terrain.blocks_sight
                 || !target.walkable
                 || target.blocks_sight
             {
@@ -166,9 +165,8 @@ pub(super) fn validate_terrain(
                 .find(|candidate| candidate.id == *target_id)
                 .expect("validated jam target must remain available");
             if terrain.walkable
-                || !terrain.blocks_sight
                 || target.walkable
-                || !target.blocks_sight
+                || terrain.blocks_sight != target.blocks_sight
                 || !terrain.tags.iter().any(|tag| tag == "door")
                 || !target.tags.iter().any(|tag| tag == "door")
             {

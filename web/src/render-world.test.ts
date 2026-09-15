@@ -6,6 +6,21 @@ import test from "node:test";
 
 import { RenderWorld } from "./render-world.ts";
 
+test("pet map highlight consumes projection and disappears when disabled or hidden", () => {
+  const world = new RenderWorld(2, 1);
+  const snapshot = snapshotFixture();
+  snapshot.cells[0] = cell(0, 0, "pet");
+  snapshot.entities = [{ id: "pet", kindId: "demo.actor.horse", highlightMap: true }];
+  assert.equal(world.applySnapshot(snapshot)[0].highlightPet, true);
+  const update = { ...snapshot, changedCells: snapshot.cells, changedVisualCells: snapshot.visualCells };
+  update.entities = [{ ...snapshot.entities[0], highlightMap: false }];
+  assert.equal(world.applyUpdate(update)[0].highlightPet, false);
+  snapshot.visualCells[0] = visual(0, 0, "remembered", 0xffffff, 0);
+  assert.equal(world.applySnapshot(snapshot)[0].highlightPet, undefined);
+  snapshot.entities = [];
+  assert.equal(world.applySnapshot(snapshot)[0].highlightPet, undefined);
+});
+
 test("render world consumes authoritative light independently from terrain semantics", () => {
   const world = new RenderWorld(3, 1);
   const snapshot = snapshotFixture();
@@ -139,8 +154,8 @@ test("hallucination scrambles occupants deterministically without randomness", (
     { id: "demo.actor.orc.1", kindId: "demo.actor.orc" },
   ];
   snapshot.items = [
-    { id: "demo.item.shard.1", kindId: "demo.item.shard" },
-    { id: "demo.item.ration.1", kindId: "demo.item.ration" },
+    { id: "demo.item.shard.1", visual: { id: "demo.item.shard", glyph: "!" }, kindId: "demo.item.shard" },
+    { id: "demo.item.ration.1", visual: { id: "demo.item.ration", glyph: "!" }, kindId: "demo.item.ration" },
   ];
 
   const first = new RenderWorld(3, 1).applySnapshot(snapshot);
@@ -187,7 +202,7 @@ function snapshotFixture() {
     items: [
       {
         id: "demo.item.ration-of-food.1",
-        kindId: "demo.item.ration-of-food",
+        visual: { id: "demo.item.ration-of-food", glyph: "!" }, kindId: "demo.item.ration-of-food",
         position: { x: 0, y: 0 },
         quantity: 1,
       },

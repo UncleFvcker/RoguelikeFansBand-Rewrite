@@ -164,7 +164,7 @@ fn asgard_odin_actual_death_summons_once_and_unique_lifetime_survives_save() {
         .clone();
     death(&mut game, &avenger, false);
     assert!(!game.unique_actor_kind_is_available(VIDARR));
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.defeated_limited_actor_counts[VIDARR], 1);
     assert_eq!(restored.defeated_limited_actor_counts[ODIN], 1);
@@ -213,7 +213,7 @@ fn asgard_odin_respects_existing_dead_and_full_map_avenger_limits_and_pet_contro
             .iter()
             .all(|item| item.kind_id != "demo.item.runespear")
     );
-    let saved = Game::from_save(pet_game.to_save()).unwrap();
+    let saved = Game::from_save(pet_game.to_save(), pet_game.behavior_preferences()).unwrap();
     assert_eq!(saved.state_hash(), pet_game.state_hash());
 }
 
@@ -255,7 +255,7 @@ fn asgard_chest_opening_uses_saved_state_and_cannot_repeat_after_restore() {
     let mut game = game();
     let id = chest(&mut game, -6);
     let before_turn = game.turn;
-    let mut saved = Game::from_save(game.to_save()).unwrap();
+    let mut saved = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let command = GameCommand::OpenChest {
         item_id: id.clone(),
     };
@@ -293,7 +293,7 @@ fn asgard_chest_opening_uses_saved_state_and_cannot_repeat_after_restore() {
         .iter()
         .map(|pile| (pile.id.clone(), pile.amount))
         .collect::<Vec<_>>();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     dispatch_next(&mut restored, command);
     assert_eq!(
         restored
@@ -321,7 +321,7 @@ fn asgard_chest_opening_uses_saved_state_and_cannot_repeat_after_restore() {
         .as_mut()
         .unwrap()
         .difficulty = 16;
-    assert!(Game::from_save(corrupted).is_err());
+    assert!(Game::from_save(corrupted, Game::default_behavior_preferences()).is_err());
 }
 
 #[test]
@@ -369,7 +369,7 @@ fn asgard_chest_disarm_requires_knowledge_and_preserves_treasure() {
     assert!(game.gold_piles.is_empty());
     let hp = game.player.hp;
     let attributes = game.progress.attributes;
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     restored
         .interact_chest(&id, false, &mut Vec::new(), &mut BTreeSet::new())
         .unwrap();
@@ -446,7 +446,7 @@ fn asgard_chest_scatter_poison_needles_alarm_and_summoning_have_real_effects() {
                 .difficulty,
             0
         );
-        let restored = Game::from_save(game.to_save())
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences())
             .unwrap_or_else(|error| panic!("difficulty {difficulty}: {error}"));
         assert_eq!(restored.state_hash(), game.state_hash());
     }
@@ -461,7 +461,9 @@ fn asgard_mundanity_empties_chests_without_losing_valid_save_state() {
     assert_eq!(empty.chest.unwrap().difficulty, 0);
     assert_eq!(empty.chest.unwrap().opening_depth, 0);
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
 }

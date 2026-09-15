@@ -63,7 +63,7 @@ fn birth_books_count_once_and_other_starting_items_do_not_acquire_counters() {
             .all(|(id, state)| state.found_count == 0
                 || game.content.item(id).unwrap().ability_book_id.is_some())
     );
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -90,7 +90,7 @@ fn cumulative_discoveries_survive_drops_destruction_and_save_beyond_allocator_th
                 .unwrap()
                 .book_counted
         );
-        let mut restored = Game::from_save(save).unwrap();
+        let mut restored = Game::from_save(save, Game::default_behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         restored.pick_up_item_at_player(Some(&id)).unwrap();
         restored.destroy_item(&id, 1).unwrap();
@@ -132,7 +132,6 @@ fn leaving_and_restoring_a_floor_preserves_counted_and_unseen_books() {
     support::dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -152,8 +151,8 @@ fn leaving_and_restoring_a_floor_preserves_counted_and_unseen_books() {
         .find(|item| item.id == counted)
         .unwrap()
         .quantity = 2;
-    assert!(Game::from_save(invalid).is_err());
-    let restored = Game::from_save(save).unwrap();
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
+    let restored = Game::from_save(save, Game::default_behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     game = restored;
     support::dispatch_next(&mut game, GameCommand::LeaveWorldMap);
@@ -204,7 +203,7 @@ fn discovery_save_rejects_invalid_kinds_counts_and_instance_marks() {
             .find(|entry| entry.kind_id == BOOK)
             .unwrap()
             .kind_id = kind.to_owned();
-        assert!(Game::from_save(invalid).is_err());
+        assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
     }
     let mut invalid = save.clone();
     invalid
@@ -213,7 +212,7 @@ fn discovery_save_rejects_invalid_kinds_counts_and_instance_marks() {
         .find(|entry| entry.kind_id == BOOK)
         .unwrap()
         .found_count = MAX_BOOK_FOUND_COUNT + 1;
-    assert!(Game::from_save(invalid).is_err());
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
     let mut invalid = save.clone();
     invalid
         .inventory
@@ -221,10 +220,10 @@ fn discovery_save_rejects_invalid_kinds_counts_and_instance_marks() {
         .find(|item| item.id == id)
         .unwrap()
         .quantity = 2;
-    assert!(Game::from_save(invalid).is_err());
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
     let mut invalid = save.clone();
     invalid.equipment[0].book_counted = true;
-    assert!(Game::from_save(invalid).is_err());
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
     let mut changed = save.clone();
     changed
         .inventory
@@ -233,7 +232,9 @@ fn discovery_save_rejects_invalid_kinds_counts_and_instance_marks() {
         .unwrap()
         .book_counted = false;
     assert_ne!(
-        Game::from_save(changed).unwrap().state_hash(),
+        Game::from_save(changed, Game::default_behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
     let mut saturated = save;
@@ -243,7 +244,7 @@ fn discovery_save_rejects_invalid_kinds_counts_and_instance_marks() {
         .find(|entry| entry.kind_id == BOOK)
         .unwrap()
         .found_count = MAX_BOOK_FOUND_COUNT;
-    let mut restored = Game::from_save(saturated).unwrap();
+    let mut restored = Game::from_save(saturated, Game::default_behavior_preferences()).unwrap();
     assert_ne!(restored.state_hash(), game.state_hash());
     let id = generate_book(&mut restored, ItemLocation::Inventory);
     assert_eq!(found(&restored), MAX_BOOK_FOUND_COUNT);
@@ -255,5 +256,5 @@ fn discovery_save_rejects_invalid_kinds_counts_and_instance_marks() {
             .unwrap()
             .book_counted
     );
-    Game::from_save(restored.to_save()).unwrap();
+    Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
 }

@@ -2102,6 +2102,7 @@ impl Game {
             .actor_definitions()
             .filter(|actor| actor.role == rfb_content::ActorRole::Monster)
             .map(|actor| rfb_protocol::ResearchMonsterDto {
+                rideable: actor.rideable,
                 kind_id: actor.id.clone(),
                 name_key: actor.name_key.clone(),
                 glyph: actor.glyph.clone(),
@@ -3100,6 +3101,15 @@ impl Game {
                             let affordable = self.gold / unit_price.max(1);
                             let slot_carryable = self.inventory_quantity_capacity_for(item, false);
                             ShopStockItemDto {
+                                visual: rfb_protocol::EditableVisualDto {
+                                    prf: None,
+                                    id: item.kind_id.clone(),
+                                    glyph: definition.glyph.clone(),
+                                    name_key: definition.name_key.clone(),
+                                    category: rfb_protocol::VisualCategoryDto::Item,
+                                },
+                                origin_kind: item.origin_kind,
+                                discount_percent: item.discount_percent,
                                 id: item.id.clone(),
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: definition.name_key.clone(),

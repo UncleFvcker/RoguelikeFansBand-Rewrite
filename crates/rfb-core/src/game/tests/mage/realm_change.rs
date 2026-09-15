@@ -67,7 +67,7 @@ fn zul_node_acceptance_and_claim_follow_the_changed_secondary_realm() {
         Err("task-membership-required")
     );
     assert_eq!(game.to_save(), before);
-    game = Game::from_save(before).unwrap();
+    game = Game::from_save(before, Game::default_behavior_preferences()).unwrap();
     begin(&mut game, &nature);
     confirm(&mut game, true);
     assert!(game.claim_task_reward(tower, task).is_ok());
@@ -137,7 +137,7 @@ fn carried_and_floor_books_prompt_without_paying_and_rejection_preserves_the_old
             command_error(&mut game, GameCommand::Wait),
             CoreError::RealmChangeRequired
         ));
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for game in [&mut game, &mut restored] {
             confirm(game, false);
             assert_eq!(game.mage_realms, realms);
@@ -202,7 +202,7 @@ fn confirmation_clears_only_secondary_progress_without_refunding_and_can_stop_be
     );
     // Cancelling the spell picker needs no rollback command: the new realm is already committed.
     assert!(game.pending_realm_change_book().is_none());
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.current_second_realm_id(), Some("nature"));
     assert!(!restored.learned_abilities.contains(NATURE));
     dispatch_next(&mut restored, GameCommand::Wait);
@@ -222,7 +222,7 @@ fn returning_to_a_former_realm_starts_fresh_and_save_continuation_keeps_rng_and_
     cast(&mut game, SECONDARY, TargetSelection::SelfTarget);
     let nature_book = give_book(&mut game, "nature");
     begin(&mut game, &nature_book);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let mut generated = Vec::new();
     for game in [&mut game, &mut restored] {
         game.debug_ability_casts_succeed = true;
@@ -283,7 +283,7 @@ fn returning_to_a_former_realm_starts_fresh_and_save_continuation_keeps_rng_and_
         assert!(!items.is_empty());
         generated.push(crate::save::inventory_to_save(&items));
         game.items.extend(items);
-        assert!(Game::from_save(game.to_save()).is_ok());
+        assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
     }
     assert_eq!(generated[0], generated[1]);
     assert_eq!(game.state_hash(), restored.state_hash());
@@ -351,7 +351,7 @@ fn invalid_books_status_and_budget_cannot_begin_a_realm_change() {
         ),
         CoreError::RealmChangeUnavailable("learning-capacity-full")
     ));
-    Game::from_save(game.to_save()).unwrap();
+    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let mut other = at_level("demo.build.high-mage-death", 30);
     let book = give_book(&mut other, "nature");
     assert!(matches!(
@@ -407,7 +407,7 @@ fn replacing_a_forgotten_realm_can_exhaust_budget_before_selecting_a_spell() {
     );
     assert_eq!(game.ability_progress[PRIMARY], primary);
     assert!(!game.ability_progress.contains_key(&advanced));
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     restored.apply_player_experience(restored.experience_required_for_level(30), &mut Vec::new());
     assert!(!restored.ability_progress.contains_key(&advanced));
     assert_eq!(restored.spent_spell_learning, u32::from(capacity));
@@ -434,7 +434,7 @@ fn saved_current_realms_history_pending_books_and_progress_are_validated() {
         .as_mut()
         .unwrap()
         .pending_change_book_item_id = Some("missing".to_owned());
-    assert!(Game::from_save(missing_book).is_err());
+    assert!(Game::from_save(missing_book, Game::default_behavior_preferences()).is_err());
     confirm(&mut game, true);
     learn(&mut game, NATURE);
     let baseline = game.to_save();
@@ -458,9 +458,12 @@ fn saved_current_realms_history_pending_books_and_progress_are_validated() {
             10 => save.player.spent_spell_learning = 1000,
             _ => realms.pending_change_book_item_id = Some(book.clone()),
         }
-        assert!(Game::from_save(save).is_err(), "corruption {corruption}");
+        assert!(
+            Game::from_save(save, Game::default_behavior_preferences()).is_err(),
+            "corruption {corruption}"
+        );
     }
-    assert!(Game::from_save(baseline).is_ok());
+    assert!(Game::from_save(baseline, Game::default_behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -511,7 +514,7 @@ fn guild_membership_and_prices_follow_current_realms_without_changing_primary_or
     game.player.hp = 1;
     game.gold = 0;
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for run in [&mut game, &mut restored] {
         dispatch_next(
             run,
@@ -581,7 +584,7 @@ fn zul_balance_ritual_rebuilds_current_realm_virtues_and_replays_after_save() {
     assert_eq!(game.to_save(), before);
     game.player.hp = 1;
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let realms = game.mage_realms.clone();
     let rng = game.rng_draw_counter();
     for run in [&mut game, &mut restored] {
@@ -618,7 +621,7 @@ fn zul_balance_ritual_rebuilds_current_realm_virtues_and_replays_after_save() {
         assert!(run.rng_draw_counter() > rng);
     }
     assert_eq!(game.state_hash(), restored.state_hash());
-    let mut after = Game::from_save(game.to_save()).unwrap();
+    let mut after = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for run in [&mut game, &mut after] {
         run.use_town_facility_service(
             id,
@@ -664,7 +667,7 @@ fn confirmation_applies_new_realm_autopick_inscription_without_pickup_or_destruc
         assert_eq!(item.inscription.as_deref(), Some("changed"));
         assert_eq!(item.location, ItemLocation::Ground(game.player.position));
         assert_eq!(game.rng, before);
-        assert!(Game::from_save(game.to_save()).is_ok());
+        assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
     }
 }
 
@@ -687,7 +690,7 @@ fn automatic_identification_during_confirmation_cannot_destroy_the_selected_carr
     );
     begin(&mut game, &book);
     assert!(game.items.iter().any(|item| item.id == "test.identify"));
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for game in [&mut game, &mut restored] {
         confirm(game, true);
         let item = game.items.iter().find(|item| item.id == book).unwrap();
@@ -698,7 +701,7 @@ fn automatic_identification_during_confirmation_cannot_destroy_the_selected_carr
         );
         assert!(!game.items.iter().any(|item| item.id == "test.identify"));
         assert_eq!(game.spent_spell_learning, 0);
-        assert!(Game::from_save(game.to_save()).is_ok());
+        assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
     }
     assert_eq!(game.state_hash(), restored.state_hash());
     assert_eq!(game.rng, restored.rng);

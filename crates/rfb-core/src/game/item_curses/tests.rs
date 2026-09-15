@@ -44,7 +44,7 @@ fn every_random_curse_is_active_only_while_equipped_and_cursed_and_is_hidden_unt
         assert!(game.player_has_equipped_curse_effect(effect), "{effect:?}");
     }
     let saved = game.to_save();
-    let mut restored = Game::from_save(saved).unwrap();
+    let mut restored = Game::from_save(saved, Game::default_behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     restored.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
     for effect in ego::curses::CURSE_EFFECTS.into_iter().flatten() {
@@ -298,6 +298,7 @@ fn summoning_bad_mutation_baby_curse_fear_and_allergy_have_actual_effects() {
         "demo.build.warrior",
         "rfb-legacy.race.hobbit",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     hobbit.items = game.items.clone();

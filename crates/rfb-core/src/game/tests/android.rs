@@ -8,8 +8,14 @@ const OIL: &str = "demo.item.flask-of-oil";
 const START: Position = Position { x: 99, y: 33 };
 
 fn prepared() -> Game {
-    let mut game =
-        Game::new_with_build_race_and_name(83, "demo.build.warrior", ANDROID, "test").unwrap();
+    let mut game = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        ANDROID,
+        "test",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     clear_monsters(&mut game);
     game.player.position = START;
     for y in 30..=36 {
@@ -25,9 +31,14 @@ fn prepared() -> Game {
 #[test]
 fn android_birth_omits_body_armor_and_has_oil_light_and_valid_derived_progress() {
     for build in ["warrior", "mage-life-sorcery", "berserker"] {
-        let game =
-            Game::new_with_build_race_and_name(83, &format!("demo.build.{build}"), ANDROID, "test")
-                .unwrap();
+        let game = Game::new_with_build_race_and_name(
+            83,
+            &format!("demo.build.{build}"),
+            ANDROID,
+            "test",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         let oil = game.items.iter().find(|item| item.kind_id == OIL).unwrap();
         assert!((7..=12).contains(&oil.quantity));
         assert!(game.inventory_item_dto(oil).usable);
@@ -60,7 +71,12 @@ fn android_birth_omits_body_armor_and_has_oil_light_and_valid_derived_progress()
             game.android_equipment_experience()
         );
         assert_eq!(game.progress.maximum_experience, game.progress.experience);
-        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.snapshot(), game.snapshot());
     }
@@ -93,7 +109,12 @@ fn android_chain_mail_uses_real_value_and_equip_commands_raise_and_lower_level_o
     );
     assert_eq!((game.progress.experience, game.progress.level), (2534, 9));
     let rewards = game.progress.pending_attribute_increases;
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(
         dispatch_next(
             &mut game,
@@ -159,7 +180,14 @@ fn android_chain_mail_uses_real_value_and_equip_commands_raise_and_lower_level_o
     assert!(game.progress.level < 9);
     let mut save = game.to_save();
     save.player.progress.as_mut().unwrap().experience += 1;
-    assert!(Game::from_save_with_content(save, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            save,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
 }
 
 #[test]
@@ -177,7 +205,12 @@ fn android_new_mithril_plate_experience_survives_save_and_unequip() {
         },
     );
     assert_eq!(game.progress.experience, 91_406);
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     let command = GameCommand::Unequip {
         slot_id: "body".to_owned(),
     };
@@ -266,7 +299,12 @@ fn android_fixed_ego_and_random_artifact_experience_survives_save_and_mundanity(
     assert_eq!(game.progress.experience, experience);
     assert_eq!(game.rng, rng);
     game.reveal_current_visibility();
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         restored.android_item_experience(
@@ -290,9 +328,14 @@ fn android_fixed_ego_and_random_artifact_experience_survives_save_and_mundanity(
 
 #[test]
 fn android_caster_downgrade_clamps_mana_and_forgets_then_remembers_without_new_learning() {
-    let mut game =
-        Game::new_with_build_race_and_name(83, "demo.build.mage-life-sorcery", ANDROID, "test")
-            .unwrap();
+    let mut game = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.mage-life-sorcery",
+        ANDROID,
+        "test",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     clear_monsters(&mut game);
     give_inventory_item(&mut game, "test.mail", "demo.item.chain-mail");
     game.items.last_mut().unwrap().enchantments.to_armor = 9;
@@ -341,7 +384,12 @@ fn android_caster_downgrade_clamps_mana_and_forgets_then_remembers_without_new_l
     assert!(pool.current <= pool.maximum);
     assert!(!game.learned_abilities.contains(&ability.id));
     assert!(game.ability_learning_order.contains(&ability.id));
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     let equip = GameCommand::Equip {
         item_id: "test.mail".to_owned(),
         slot_id: Some("body".to_owned()),

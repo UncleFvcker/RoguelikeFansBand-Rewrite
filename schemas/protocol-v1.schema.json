@@ -7510,6 +7510,85 @@
         "index"
       ]
     },
+    "AutoExploreStateDto": {
+      "type": "object",
+      "properties": {
+        "floorId": {
+          "type": "string"
+        },
+        "knownCells": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AutoExploreTargetDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "visitedFrontiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "floorId",
+        "position",
+        "visitedFrontiers",
+        "knownCells"
+      ]
+    },
+    "AutoExploreTargetDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "type": {
+              "type": "string",
+              "const": "frontier"
+            }
+          },
+          "required": [
+            "type",
+            "position"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "objectId": {
+              "type": "string"
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "type": {
+              "type": "string",
+              "const": "object"
+            }
+          },
+          "required": [
+            "type",
+            "objectId",
+            "position"
+          ]
+        }
+      ]
+    },
     "AutoGetModeDto": {
       "type": "string",
       "enum": [
@@ -7531,6 +7610,30 @@
       "required": [
         "objectId",
         "position"
+      ]
+    },
+    "BehaviorPreferencesDto": {
+      "type": "object",
+      "properties": {
+        "locale": {
+          "$ref": "#/$defs/LocaleDto"
+        },
+        "mogaminator": {
+          "$ref": "#/$defs/MogaminatorPreferencesDto"
+        },
+        "operations": {
+          "$ref": "#/$defs/OperationOptionsDto"
+        },
+        "travel": {
+          "$ref": "#/$defs/TravelOptionsDto"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "locale",
+        "travel",
+        "operations",
+        "mogaminator"
       ]
     },
     "BodySlotDto": {
@@ -7829,12 +7932,19 @@
       "enum": [
         "active",
         "victorious",
-        "retired"
+        "retired",
+        "abandoned"
       ]
     },
     "CapturedActorDto": {
       "type": "object",
       "properties": {
+        "customName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "experience": {
           "type": "integer",
           "format": "uint64",
@@ -8154,6 +8264,10 @@
             "null"
           ]
         },
+        "knownProjectilePassage": {
+          "description": "Passage through remembered terrain only; never consult hidden terrain.",
+          "type": "boolean"
+        },
         "locations": {
           "type": "array",
           "items": {
@@ -8168,6 +8282,7 @@
         }
       },
       "required": [
+        "knownProjectilePassage",
         "position",
         "terrainId"
       ]
@@ -8765,6 +8880,15 @@
         "psy-spear"
       ]
     },
+    "DefaultTargetModeDto": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "old-target",
+        "nearest-enemy",
+        "old-then-nearest"
+      ]
+    },
     "DeviceCommandDto": {
       "type": "object",
       "properties": {
@@ -8794,6 +8918,73 @@
         "south-west",
         "west",
         "north-west"
+      ]
+    },
+    "DiscoveryDto": {
+      "type": "object",
+      "properties": {
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DiscoveryEntryDto"
+          }
+        },
+        "dungeons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DungeonDiscoveryDto"
+          }
+        },
+        "egos": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DiscoveryEntryDto"
+          }
+        },
+        "monsters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MonsterDiscoveryDto"
+          }
+        },
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DiscoveryEntryDto"
+          }
+        }
+      },
+      "required": [
+        "objects",
+        "artifacts",
+        "egos",
+        "monsters",
+        "dungeons"
+      ]
+    },
+    "DiscoveryEntryDto": {
+      "type": "object",
+      "properties": {
+        "customName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "descriptionKey": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nameKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "nameKey",
+        "descriptionKey"
       ]
     },
     "DuelistChoiceDto": {
@@ -8915,6 +9106,62 @@
         }
       ]
     },
+    "DungeonDiscoveryDto": {
+      "type": "object",
+      "properties": {
+        "conquered": {
+          "type": "boolean"
+        },
+        "dungeonId": {
+          "type": "string"
+        },
+        "maxDepth": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "nameKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "dungeonId",
+        "nameKey",
+        "maxDepth",
+        "conquered"
+      ]
+    },
+    "EditableVisualDto": {
+      "type": "object",
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/VisualCategoryDto"
+        },
+        "glyph": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "prf": {
+          "description": "Source PRF identity, only populated in the knowledge-gated catalog.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "glyph",
+        "nameKey",
+        "category"
+      ]
+    },
     "EntityDto": {
       "type": "object",
       "properties": {
@@ -8945,6 +9192,12 @@
             "null"
           ]
         },
+        "customName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "defense": {
           "type": "integer",
           "format": "int32",
@@ -8963,12 +9216,21 @@
           "description": "The currently projected map glyph. Telepathy may conceal kind identity\nwhile retaining the original monster symbol.",
           "type": "string"
         },
+        "highlightList": {
+          "type": "boolean"
+        },
+        "highlightMap": {
+          "type": "boolean"
+        },
         "hp": {
           "type": "integer",
           "format": "int32"
         },
         "id": {
           "type": "string"
+        },
+        "inLineOfEffect": {
+          "type": "boolean"
         },
         "kindId": {
           "type": "string"
@@ -9051,6 +9313,9 @@
       },
       "required": [
         "id",
+        "inLineOfEffect",
+        "highlightMap",
+        "highlightList",
         "kindId",
         "glyph",
         "position",
@@ -9247,6 +9512,12 @@
             }
           ]
         },
+        "discountPercent": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
         "displayNameKey": {
           "type": "string",
           "default": ""
@@ -9329,6 +9600,16 @@
             "strength": 0,
             "wisdom": 0
           }
+        },
+        "originKind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemOriginKindDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "passives": {
           "type": "array",
@@ -9431,6 +9712,9 @@
             "null"
           ]
         },
+        "visual": {
+          "$ref": "#/$defs/EditableVisualDto"
+        },
         "weightTenthsPound": {
           "type": "integer",
           "format": "uint16",
@@ -9440,6 +9724,8 @@
         }
       },
       "required": [
+        "visual",
+        "discountPercent",
         "id",
         "kindId",
         "quantity",
@@ -10023,6 +10309,82 @@
         {
           "type": "object",
           "properties": {
+            "actorId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "dismiss-pet"
+            }
+          },
+          "required": [
+            "type",
+            "actorId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "actorId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "set-pet-target"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "option": {
+              "$ref": "#/$defs/PetOptionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "set-pet-option"
+            }
+          },
+          "required": [
+            "type",
+            "option",
+            "enabled"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "actorId": {
+              "type": "string"
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "set-pet-name"
+            }
+          },
+          "required": [
+            "type",
+            "actorId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "direction": {
               "$ref": "#/$defs/Direction"
             },
@@ -10245,10 +10607,6 @@
               "type": "boolean",
               "default": false
             },
-            "leavePets": {
-              "type": "boolean",
-              "default": false
-            },
             "type": {
               "type": "string",
               "const": "enter-world-map"
@@ -10305,6 +10663,123 @@
         {
           "type": "object",
           "properties": {
+            "type": {
+              "type": "string",
+              "const": "find-nearest-unknown-item"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "destination": {
+              "$ref": "#/$defs/Position"
+            },
+            "objectId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "travel-unknown-item"
+            }
+          },
+          "required": [
+            "type",
+            "objectId",
+            "destination"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/Direction"
+            },
+            "maxSteps": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint16",
+              "maximum": 9999,
+              "minimum": 1
+            },
+            "type": {
+              "type": "string",
+              "const": "run"
+            }
+          },
+          "required": [
+            "type",
+            "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "continue-run"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "cancel-run"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "auto-explore"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "continue-auto-explore"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "cancel-auto-explore"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "direction": {
               "$ref": "#/$defs/Direction"
             },
@@ -10316,6 +10791,42 @@
           "required": [
             "type",
             "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/Direction"
+            },
+            "type": {
+              "type": "string",
+              "const": "walk-special"
+            }
+          },
+          "required": [
+            "type",
+            "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "firstSlotId": {
+              "type": "string"
+            },
+            "secondSlotId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "swap-rings"
+            }
+          },
+          "required": [
+            "type",
+            "firstSlotId",
+            "secondSlotId"
           ]
         },
         {
@@ -10411,6 +10922,18 @@
           "properties": {
             "type": {
               "type": "string",
+              "const": "end-character"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
               "const": "continue-fishing"
             }
           },
@@ -10452,6 +10975,44 @@
         {
           "type": "object",
           "properties": {
+            "turns": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 9999,
+              "minimum": 1
+            },
+            "type": {
+              "type": "string",
+              "const": "rest-for-turns"
+            }
+          },
+          "required": [
+            "type",
+            "turns"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "turns": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 9999,
+              "minimum": 1
+            },
+            "type": {
+              "type": "string",
+              "const": "rest-until-resources"
+            }
+          },
+          "required": [
+            "type",
+            "turns"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "type": {
               "type": "string",
               "const": "search"
@@ -10459,6 +11020,50 @@
           },
           "required": [
             "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "toggle-search"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/Direction"
+            },
+            "type": {
+              "type": "string",
+              "const": "alter"
+            }
+          },
+          "required": [
+            "type",
+            "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/Direction"
+            },
+            "type": {
+              "type": "string",
+              "const": "spike-door"
+            }
+          },
+          "required": [
+            "type",
+            "direction"
           ]
         },
         {
@@ -10820,6 +11425,38 @@
         {
           "type": "object",
           "properties": {
+            "preferences": {
+              "$ref": "#/$defs/MogaminatorPreferencesDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "configure-mogaminator-preferences"
+            }
+          },
+          "required": [
+            "type",
+            "preferences"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "preferences": {
+              "$ref": "#/$defs/BehaviorPreferencesDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "configure-preferences"
+            }
+          },
+          "required": [
+            "type",
+            "preferences"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "mode": {
               "$ref": "#/$defs/SummonCommandModeDto"
             },
@@ -11086,6 +11723,18 @@
           "required": [
             "type"
           ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "stay"
+            }
+          },
+          "required": [
+            "type"
+          ]
         }
       ]
     },
@@ -11156,6 +11805,22 @@
     },
     "GameEventOutcomeDto": {
       "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "$ref": "#/$defs/AutoGetTargetDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "unknown-item-travel-target"
+            }
+          },
+          "required": [
+            "type",
+            "target"
+          ]
+        },
         {
           "type": "object",
           "properties": {
@@ -11687,6 +12352,9 @@
         "mogaminator": {
           "$ref": "#/$defs/MogaminatorDto"
         },
+        "operationOptions": {
+          "$ref": "#/$defs/OperationOptionsDto"
+        },
         "player": {
           "$ref": "#/$defs/PlayerDto"
         },
@@ -11782,6 +12450,7 @@
       },
       "required": [
         "travelOptions",
+        "operationOptions",
         "protocolVersion",
         "revision",
         "turn",
@@ -11826,6 +12495,9 @@
           "items": {
             "$ref": "#/$defs/CellVisualDto"
           }
+        },
+        "commandRepeatable": {
+          "type": "boolean"
         },
         "commandSeq": {
           "type": "integer",
@@ -11908,6 +12580,9 @@
         },
         "mogaminator": {
           "$ref": "#/$defs/MogaminatorDto"
+        },
+        "operationOptions": {
+          "$ref": "#/$defs/OperationOptionsDto"
         },
         "player": {
           "$ref": "#/$defs/PlayerDto"
@@ -11996,7 +12671,9 @@
         }
       },
       "required": [
+        "commandRepeatable",
         "travelOptions",
+        "operationOptions",
         "baseRevision",
         "revision",
         "turn",
@@ -12325,6 +13002,12 @@
             }
           ]
         },
+        "discountPercent": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
         "displayNameKey": {
           "type": "string",
           "default": ""
@@ -12428,6 +13111,16 @@
             "$ref": "#/$defs/AbilityItemTargetDto"
           }
         },
+        "originKind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemOriginKindDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "passives": {
           "type": "array",
           "items": {
@@ -12519,6 +13212,16 @@
           "type": "boolean",
           "default": false
         },
+        "useCategory": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemUseCategoryDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "useTargetSpec": {
           "anyOf": [
             {
@@ -12535,6 +13238,9 @@
             "null"
           ]
         },
+        "visual": {
+          "$ref": "#/$defs/EditableVisualDto"
+        },
         "weightTenthsPound": {
           "type": "integer",
           "format": "uint16",
@@ -12544,6 +13250,8 @@
         }
       },
       "required": [
+        "visual",
+        "discountPercent",
         "id",
         "kindId",
         "quantity"
@@ -12821,9 +13529,13 @@
         },
         "usable": {
           "type": "boolean"
+        },
+        "visual": {
+          "$ref": "#/$defs/EditableVisualDto"
         }
       },
       "required": [
+        "visual",
         "id",
         "kindId",
         "position",
@@ -13015,6 +13727,20 @@
         "aware"
       ]
     },
+    "ItemOriginKindDto": {
+      "type": "string",
+      "enum": [
+        "chest",
+        "shop",
+        "mixed",
+        "mundanity",
+        "artifact-creation",
+        "acquire",
+        "player-made",
+        "rubble",
+        "endless-quiver"
+      ]
+    },
     "ItemPropertyDto": {
       "type": "object",
       "properties": {
@@ -13062,6 +13788,17 @@
         "ordinary",
         "fine",
         "exceptional"
+      ]
+    },
+    "ItemUseCategoryDto": {
+      "type": "string",
+      "enum": [
+        "food",
+        "potion",
+        "scroll",
+        "wand",
+        "staff",
+        "rod"
       ]
     },
     "LocaleDto": {
@@ -13379,11 +14116,18 @@
             }
           ]
         },
+        "protectionTemplates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MogaminatorProtectionTemplateDto"
+          }
+        },
         "source": {
           "type": "string"
         }
       },
       "required": [
+        "protectionTemplates",
         "enabled",
         "leaveDestroyedItems",
         "autoGetMode",
@@ -13486,6 +14230,49 @@
         "itemKindId",
         "quantity",
         "ruleLine"
+      ]
+    },
+    "MogaminatorPreferencesDto": {
+      "type": "object",
+      "properties": {
+        "autoGetMode": {
+          "$ref": "#/$defs/AutoGetModeDto"
+        },
+        "enUsSource": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "leaveDestroyedItems": {
+          "type": "boolean"
+        },
+        "zhCnSource": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "leaveDestroyedItems",
+        "autoGetMode",
+        "zhCnSource",
+        "enUsSource"
+      ]
+    },
+    "MogaminatorProtectionTemplateDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "source"
       ]
     },
     "MonsterAbilityCandidateResolutionDto": {
@@ -13728,6 +14515,29 @@
         "good-and-evil"
       ]
     },
+    "MonsterDiscoveryDto": {
+      "type": "object",
+      "properties": {
+        "alive": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "kills": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "monster": {
+          "$ref": "#/$defs/ResearchMonsterDto"
+        }
+      },
+      "required": [
+        "monster",
+        "kills"
+      ]
+    },
     "MonsterDisplacementResolutionDto": {
       "type": "object",
       "properties": {
@@ -13820,6 +14630,46 @@
         "weak",
         "faint",
         "starving"
+      ]
+    },
+    "OperationOptionsDto": {
+      "type": "object",
+      "properties": {
+        "autoRepeat": {
+          "type": "boolean"
+        },
+        "cutCorners": {
+          "type": "boolean"
+        },
+        "defaultTarget": {
+          "$ref": "#/$defs/DefaultTargetModeDto"
+        },
+        "easyDisarm": {
+          "type": "boolean"
+        },
+        "easyOpen": {
+          "type": "boolean"
+        },
+        "runStops": {
+          "$ref": "#/$defs/RunStopsDto"
+        },
+        "targetPets": {
+          "type": "boolean"
+        },
+        "travelIgnoreItems": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "runStops",
+        "cutCorners",
+        "travelIgnoreItems",
+        "defaultTarget",
+        "targetPets",
+        "easyOpen",
+        "easyDisarm",
+        "autoRepeat"
       ]
     },
     "PendingAbilityDirectionDto": {
@@ -13920,10 +14770,22 @@
           "maximum": 255,
           "minimum": 0
         },
+        "canName": {
+          "type": "boolean"
+        },
+        "customName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "experience": {
           "type": "integer",
           "format": "uint64",
           "minimum": 0
+        },
+        "highlight": {
+          "type": "boolean"
         },
         "level": {
           "type": "integer",
@@ -13948,11 +14810,28 @@
       "additionalProperties": false,
       "required": [
         "actorId",
+        "canName",
+        "highlight",
         "actorKindId",
         "nameKey",
         "level",
         "experience",
         "riding"
+      ]
+    },
+    "PetOptionDto": {
+      "type": "string",
+      "enum": [
+        "riding-two-hands",
+        "highlight-map",
+        "highlight-lists",
+        "open-doors",
+        "pickup-items",
+        "no-breeding",
+        "attack-spells",
+        "summon-spells",
+        "teleport",
+        "allow-player-damage"
       ]
     },
     "PetUpkeepDto": {
@@ -14072,6 +14951,16 @@
           "format": "int32",
           "default": 0
         },
+        "autoExplore": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AutoExploreStateDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "baseAttack": {
           "type": "integer",
           "format": "int32",
@@ -14117,6 +15006,9 @@
           "type": "integer",
           "format": "int32",
           "default": 0
+        },
+        "discovery": {
+          "$ref": "#/$defs/DiscoveryDto"
         },
         "duelistTargetId": {
           "type": [
@@ -14171,6 +15063,9 @@
               "type": "null"
             }
           ]
+        },
+        "floorFeelingMessageKey": {
+          "type": "string"
         },
         "gold": {
           "type": "integer",
@@ -14262,6 +15157,12 @@
           "default": 0,
           "maximum": 255,
           "minimum": 0
+        },
+        "monsterRecall": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResearchMonsterDto"
+          }
         },
         "mutations": {
           "type": "array",
@@ -14358,6 +15259,13 @@
             }
           ]
         },
+        "quiverItemIds": {
+          "description": "Inventory stacks currently covered by equipped quiver capacity, derived by Core.\nThese IDs remain in `inventory`; they are not a second item container.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "realityChangeTicks": {
           "type": "integer",
           "format": "uint8",
@@ -14394,6 +15302,22 @@
             "null"
           ]
         },
+        "ridingWithoutReins": {
+          "type": "boolean"
+        },
+        "running": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunningStateDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "searching": {
+          "type": "boolean"
+        },
         "sniperConcentration": {
           "anyOf": [
             {
@@ -14411,6 +15335,10 @@
           "maximum": 65535,
           "minimum": 0
         },
+        "speedEnergyPerTick": {
+          "type": "integer",
+          "format": "int32"
+        },
         "statuses": {
           "type": "array",
           "default": [],
@@ -14424,14 +15352,33 @@
         "traitDetails": {
           "$ref": "#/$defs/CharacterTraitDetailsDto"
         },
+        "trapDetectedGrids": {
+          "description": "Detected coverage intersected with known local terrain.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Position"
+          }
+        },
         "virtues": {
           "type": "array",
           "items": {
             "$ref": "#/$defs/VirtueDto"
           }
+        },
+        "visualCatalog": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EditableVisualDto"
+          }
         }
       },
       "required": [
+        "visualCatalog",
+        "speedEnergyPerTick",
+        "trapDetectedGrids",
+        "discovery",
+        "floorFeelingMessageKey",
+        "monsterRecall",
         "pendingMaiaPathChoice",
         "traitDetails",
         "id",
@@ -14442,7 +15389,9 @@
         "maxHp",
         "fame",
         "fasting",
-        "virtues"
+        "searching",
+        "virtues",
+        "ridingWithoutReins"
       ]
     },
     "PlayerMutationDto": {
@@ -14862,11 +15811,15 @@
         "nameKey": {
           "type": "string"
         },
+        "rideable": {
+          "type": "boolean"
+        },
         "unique": {
           "type": "boolean"
         }
       },
       "required": [
+        "rideable",
         "kindId",
         "nameKey",
         "glyph",
@@ -15043,6 +15996,7 @@
     "RestStopReasonDto": {
       "type": "string",
       "enum": [
+        "displaced",
         "maia-path-choice-required",
         "damaged",
         "enemy-visible",
@@ -15078,6 +16032,77 @@
         "rank",
         "current",
         "maximum"
+      ]
+    },
+    "RunStopsDto": {
+      "type": "object",
+      "properties": {
+        "knownTreasure": {
+          "type": "boolean"
+        },
+        "openDoors": {
+          "type": "boolean"
+        },
+        "stairs": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "stairs",
+        "openDoors",
+        "knownTreasure"
+      ]
+    },
+    "RunningStateDto": {
+      "type": "object",
+      "properties": {
+        "breakLeft": {
+          "type": "boolean"
+        },
+        "breakRight": {
+          "type": "boolean"
+        },
+        "direction": {
+          "$ref": "#/$defs/Direction"
+        },
+        "floorId": {
+          "type": "string"
+        },
+        "ignoreAvoidRun": {
+          "type": "boolean"
+        },
+        "openArea": {
+          "type": "boolean"
+        },
+        "origin": {
+          "$ref": "#/$defs/Position"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "previousDirection": {
+          "$ref": "#/$defs/Direction"
+        },
+        "remainingSteps": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "direction",
+        "previousDirection",
+        "openArea",
+        "ignoreAvoidRun",
+        "breakLeft",
+        "breakRight",
+        "origin",
+        "position",
+        "floorId",
+        "remainingSteps"
       ]
     },
     "ShopCategoryDto": {
@@ -15311,6 +16336,12 @@
             }
           ]
         },
+        "discountPercent": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
         "displayNameKey": {
           "type": "string"
         },
@@ -15344,6 +16375,16 @@
           "format": "uint32",
           "minimum": 0
         },
+        "originKind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemOriginKindDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "permanentDestructionImmunities": {
           "type": "array",
           "items": {
@@ -15363,6 +16404,9 @@
           "format": "uint32",
           "minimum": 0
         },
+        "visual": {
+          "$ref": "#/$defs/EditableVisualDto"
+        },
         "weightTenthsPound": {
           "type": "integer",
           "format": "uint16",
@@ -15371,6 +16415,8 @@
         }
       },
       "required": [
+        "visual",
+        "discountPercent",
         "id",
         "kindId",
         "displayNameKey",
@@ -15699,6 +16745,14 @@
     "SummonCommandDto": {
       "type": "object",
       "properties": {
+        "allowPlayerDamage": {
+          "type": "boolean",
+          "default": false
+        },
+        "attackSpells": {
+          "type": "boolean",
+          "default": true
+        },
         "guardPosition": {
           "anyOf": [
             {
@@ -15709,8 +16763,46 @@
             }
           ]
         },
+        "highlightLists": {
+          "type": "boolean",
+          "default": true
+        },
+        "highlightMap": {
+          "type": "boolean",
+          "default": false
+        },
         "mode": {
           "$ref": "#/$defs/SummonCommandModeDto"
+        },
+        "noBreeding": {
+          "type": "boolean",
+          "default": false
+        },
+        "openDoors": {
+          "type": "boolean",
+          "default": false
+        },
+        "pickupItems": {
+          "type": "boolean",
+          "default": false
+        },
+        "ridingTwoHands": {
+          "type": "boolean",
+          "default": false
+        },
+        "summonSpells": {
+          "type": "boolean",
+          "default": true
+        },
+        "targetActorId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "teleport": {
+          "type": "boolean",
+          "default": true
         }
       },
       "required": [
@@ -15723,7 +16815,9 @@
         "follow",
         "attack",
         "keep-distance",
-        "guard"
+        "guard",
+        "stay-close",
+        "give-space"
       ]
     },
     "SummonCommandResolutionDto": {
@@ -15747,6 +16841,10 @@
     "SummonDto": {
       "type": "object",
       "properties": {
+        "ownerDependent": {
+          "type": "boolean",
+          "default": false
+        },
         "ownerId": {
           "type": "string"
         },
@@ -16434,6 +17532,9 @@
     "TravelOptionsDto": {
       "type": "object",
       "properties": {
+        "alwaysPickup": {
+          "type": "boolean"
+        },
         "autoDetectTraps": {
           "type": "boolean"
         },
@@ -16445,6 +17546,7 @@
         }
       },
       "required": [
+        "alwaysPickup",
         "autoDetectTraps",
         "autoMapArea",
         "disturbTrapDetect"
@@ -16498,6 +17600,15 @@
         "visible",
         "remembered",
         "hidden"
+      ]
+    },
+    "VisualCategoryDto": {
+      "type": "string",
+      "enum": [
+        "item",
+        "monster",
+        "terrain",
+        "marker"
       ]
     },
     "WeaponBrandDto": {

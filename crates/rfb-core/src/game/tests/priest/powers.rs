@@ -125,7 +125,8 @@ fn both_powers_pay_mp_then_hp_on_success_and_failure_and_reject_shortfall_atomic
                 })
                 .unwrap();
             let hp = game.player.hp;
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             let events = cast(&mut game, ability, target.clone());
             assert_eq!(events, cast(&mut restored, ability, target));
             assert_eq!(game.to_save(), restored.to_save());
@@ -193,7 +194,7 @@ fn blessing_targets_cancel_freely_and_preserve_partial_knowledge_through_save_an
     cast(&mut game, BLESS, item_target(&id));
     assert_eq!(game.to_save(), before);
     game.items[i].location = ItemLocation::Ground(game.player.position);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     restored.debug_set_ability_casts_succeed(true);
     assert_eq!(
         cast(&mut game, BLESS, item_target(&id)),
@@ -215,10 +216,10 @@ fn blessing_targets_cancel_freely_and_preserve_partial_knowledge_through_save_an
         .unwrap()
         .known_blessed = true;
     // A real unblessed inventory item always has a persisted knowledge entry.
-    assert!(Game::from_save(forged).is_err());
+    assert!(Game::from_save(forged, Game::default_behavior_preferences()).is_err());
     game.mundanify_item(&id);
     assert!(!game.known_item_blessed(&game.items[index(&game, &id)]));
-    Game::from_save(game.to_save()).unwrap();
+    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
 }
 
 #[test]
@@ -250,7 +251,7 @@ fn blessing_obeys_curse_threshold_then_slay_resistance_and_ordered_disenchantmen
                 .contains(&WeaponTraitDto::Blessed),
             succeeds
         );
-        Game::from_save(game.to_save()).unwrap();
+        Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     }
     for (level, odds) in [(SlayLevel::Slay, 3_u64), (SlayLevel::Kill, 5)] {
         let mut game = prepared(BUILD, 50);
@@ -299,7 +300,7 @@ fn blessing_obeys_curse_threshold_then_slay_resistance_and_ordered_disenchantmen
         cast(&mut game, BLESS, item_target(&id));
         assert!(game.known_item_blessed(&game.items[i]));
         assert_eq!(game.rng, expected);
-        Game::from_save(game.to_save()).unwrap();
+        Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     }
 }
 
@@ -389,9 +390,14 @@ fn edged_weapon_penalties_are_per_hand_and_blessing_does_not_raise_proficiency_c
             penalty(&game).sources.len(),
             if build == BUILD { 2 } else { 0 }
         );
-        let mut tonberry =
-            Game::new_with_build_race_and_name(925, build, "rfb-legacy.race.tonberry", "Priest")
-                .unwrap();
+        let mut tonberry = Game::new_with_build_race_and_name(
+            925,
+            build,
+            "rfb-legacy.race.tonberry",
+            "Priest",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(
             tonberry
                 .player_weapon_proficiencies()
@@ -465,7 +471,7 @@ fn evocation_damages_all_alignments_then_fears_and_teleports_only_survivors() {
         .unwrap()
         .position;
     let expected_damage = 200 + i32::from(game.casting_spell_damage_bonus());
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     restored.debug_set_ability_casts_succeed(true);
     let events = cast(&mut game, EVOCATION, TargetSelection::SelfTarget);
     assert_eq!(
@@ -497,7 +503,7 @@ fn evocation_damages_all_alignments_then_fears_and_teleports_only_survivors() {
     );
     assert!(effects.iter().any(|resolution| resolution.effects.iter().any(|effect|
         matches!(effect, AbilityEffectResolutionDto::TeleportAway { target_entity_id, power: 200, to: Some(_), .. } if target_entity_id == "test.alive"))));
-    Game::from_save(game.to_save()).unwrap();
+    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
 }
 
 #[test]
@@ -522,7 +528,7 @@ fn evocation_hits_unseen_in_sight_respects_unique_teleport_resistance_and_walls(
     game.reveal_current_visibility();
     assert!(!game.entity_is_visible_to_player(&game.entities[0]));
     let before = game.entities.clone();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     restored.debug_set_ability_casts_succeed(true);
     let events = cast(&mut game, EVOCATION, TargetSelection::SelfTarget);
     assert_eq!(
@@ -563,7 +569,7 @@ fn successful_blessing_dispatch_spends_a_turn_and_continues_after_loading() {
             .any(|event| event.kind == "ability.cast-success")
     );
     assert!(game.world_tick > before_tick);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         dispatch_next(&mut game, GameCommand::Wait).events,
         dispatch_next(&mut restored, GameCommand::Wait).events

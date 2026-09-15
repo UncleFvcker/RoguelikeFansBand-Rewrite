@@ -381,7 +381,12 @@ fn ent_created_trees_block_sight_allow_tree_movement_and_persist_through_save() 
     );
     assert_eq!(game.player.position, Position { x: 100, y: 33 });
     assert!(game.world_tick > before_tick);
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.snapshot(), game.snapshot());
     assert_eq!(restored.state_hash(), game.state_hash());
     for state in [&mut game, &mut restored] {
@@ -525,7 +530,7 @@ fn formal_ent_six_class_journey_drinks_levels_equips_plants_walks_and_restores()
             },
         );
         assert_eq!(game.player.position, Position { x: 100, y: 33 });
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.snapshot(), game.snapshot());
         assert_eq!(restored.state_hash(), game.state_hash());
         for state in [&mut game, &mut restored] {
@@ -644,8 +649,12 @@ fn formal_ogre_sustains_intelligence_and_places_capped_explosive_runes() {
     .expect("Explosive Rune should resolve");
     assert_eq!(game.player.hp, hp_before - 35);
     assert_eq!(game.terrain_at(position), EXPLOSIVE_RUNE_TERRAIN_ID);
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("placed Explosive Rune should restore");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("placed Explosive Rune should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.terrain_at(position), EXPLOSIVE_RUNE_TERRAIN_ID);
 
@@ -712,8 +721,12 @@ fn explosive_rune_step_explodes_or_is_destroyed_by_the_authoritative_roll() {
         })
         .expect("Explosive Rune should have a destruction seed");
 
-    let restored = Game::from_save_with_content(base.to_save(), base.content.clone())
-        .expect("armed Explosive Rune should restore");
+    let restored = Game::from_save_with_content(
+        base.to_save(),
+        base.content.clone(),
+        base.behavior_preferences(),
+    )
+    .expect("armed Explosive Rune should restore");
     assert_eq!(restored.state_hash(), base.state_hash());
 
     let mut exploded = base.clone();
@@ -889,8 +902,12 @@ fn formal_wood_elf_nature_awareness_unlocks_at_twenty_and_reuses_full_detection(
     }
     assert_eq!(game.player.hp, hp_before - 15);
     assert_eq!(game.state_hash(), replay.state_hash());
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Wood-Elf detection knowledge should restore");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Wood-Elf detection knowledge should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -901,6 +918,7 @@ fn formal_dwarf_detection_powers_reveal_original_terrain_categories_only() {
         "demo.build.high-mage-death",
         "rfb-legacy.race.dwarf",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Dwarf High-Mage should create");
     clear_monsters(&mut game);
@@ -1087,8 +1105,12 @@ fn formal_dwarf_detection_powers_reveal_original_terrain_categories_only() {
         mana_before - 10
     );
     assert_eq!(game.state_hash(), replay.state_hash());
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Dwarf detection knowledge should restore");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Dwarf detection knowledge should restore");
     for position in [trap, door, magma, quartz] {
         assert!(restored.revealed_terrain.contains(&position));
     }
@@ -1112,6 +1134,7 @@ fn formal_nibelung_intrinsics_and_detection_powers_unlock_at_level_ten() {
         "demo.build.high-mage-death",
         "rfb-legacy.race.nibelung",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Nibelung High-Mage should create");
     assert_eq!(game.player_infravision_range(), 5);
@@ -1184,6 +1207,7 @@ fn formal_half_giant_stone_to_mud_does_not_grant_mining_rewards() {
         "demo.build.high-mage-death",
         "rfb-legacy.race.half-giant",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Half-Giant High-Mage should create");
     clear_monsters(&mut game);
@@ -1262,6 +1286,7 @@ fn half_titan_probe_knowledge_survives_losing_the_race_power_and_reloading() {
         "demo.build.high-mage-death",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human High-Mage should create");
     clear_monsters(&mut game);
@@ -1345,8 +1370,12 @@ fn half_titan_probe_knowledge_survives_losing_the_race_power_and_reloading() {
     );
     assert!(game.probed_actor_kind_ids.contains("demo.actor.sheep"));
     let hash = game.state_hash();
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("probe knowledge should not require a current Sniper or Half-Titan source");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("probe knowledge should not require a current Sniper or Half-Titan source");
     assert!(restored.probed_actor_kind_ids.contains("demo.actor.sheep"));
     assert_eq!(restored.state_hash(), hash);
 }

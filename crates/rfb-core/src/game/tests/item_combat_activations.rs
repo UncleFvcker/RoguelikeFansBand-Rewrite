@@ -95,7 +95,7 @@ fn charge(game: &Game, id: &str) -> u32 {
 }
 
 fn restore(game: &Game) -> Game {
-    Game::from_save(game.to_save()).unwrap()
+    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap()
 }
 
 fn hits(events: &[DomainEvent]) -> usize {
@@ -550,6 +550,14 @@ fn c3_bloodrip_backlash_is_once_per_hand_after_misses_and_extends_cut_with_saved
         Position { x: 11, y: 10 },
     );
     game.apply_player_melee_status(STATUS_BLEEDING, 9998, "test.prior-cut");
+    // Isolate miss/backlash RNG from the additional two-handed grip hit bonus.
+    give_inventory_item(
+        &mut game,
+        "test.backlash-shield",
+        "demo.item.small-metal-shield",
+    );
+    game.equip_inventory_item("test.backlash-shield", Some("left-hand"))
+        .unwrap();
     let profiles = game.player_melee_profiles(&game.player_derived_stats());
     assert_eq!(profiles.len(), 1);
     assert!(profiles[0].melee_skill.value <= 0);

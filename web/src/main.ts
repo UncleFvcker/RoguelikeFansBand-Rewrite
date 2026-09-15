@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { HighScorePanel, confirmCharacterEnd } from "./high-scores";
 
 import "./styles.css";
 
@@ -21,22 +22,24 @@ import {
 } from "./native-save-storage";
 import { createPresentationFormatter } from "./event-format";
 import { MessagePanel, type MessageRecord } from "./message-panel";
-import { NativeSavePanel, nativeSaveErrorKey } from "./save-panel";
+import { NativeSaveCommands, nativeSaveErrorKey } from "./save-panel";
 import { createAppDom } from "./app-dom";
 import { AppState, type ConnectionState } from "./app-state";
 import type { NewSessionRequest } from "./core-transport";
 import { InputController } from "./input-controller";
+import type { CommandShortcut, ItemShortcut } from "./command-shortcuts";
 import { GameSession } from "./game-session";
 import { DuelistPanel } from "./duelist-panel";
+import { PetMenu } from "./pet-menu";
 import { MagicEaterPanel } from "./magic-eater-panel";
 import { SpellRealmsPanel } from "./spell-realms-panel";
 import {
   SettingsPanel,
   inputPresetMessageKey,
   isInputPreset,
-  readLocale,
 } from "./settings-panel";
-import { StatusPanel, formatAttributeValue } from "./status-panel";
+import { StatusPanel, formatAttributeValue, abilityConfirmationMessageKey, hudLocationText } from "./status-panel";
+import { isAutomaticallyRepeatedCommand } from "./terrain-interaction";
 import {
   InventoryPanel,
   createItemCurseSeverityName,
@@ -54,12 +57,18 @@ import { TaskServicePanel } from "./task-service-panel";
 import { ObjectListPanel } from "./object-list";
 import { MogaminatorEditor } from "./mogaminator-editor";
 import { MonsterProbePanel } from "./monster-probe-panel";
+import { MapIntelligencePanel, type MapInquiry } from "./map-intelligence";
+import { HelpKnowledgePanel, type KnowledgeEntry } from "./help-knowledge";
+import { ConfigRecords } from "./config-records";
+import { PreferencesClient, behaviorPreferences } from "./preferences";
+import { nativePreferences } from "./native-preferences";
 import { CombatSummaryPanel } from "./combat-summary";
 
 const core = new TauriNativeTransport();
 const currentWindow = getCurrentWindow();
 const crashDiagnostics = new DesktopCrashDiagnostics();
 const nativeSaveStorage = new NativeSaveStorage();
+const preferences = new PreferencesClient(nativePreferences);
 const renderer = new MapRenderer();
 const appState = new AppState();
 let rendererInitialized = false;
@@ -76,17 +85,13 @@ const {
   messageList,
   combatSummaryList,
   turnValue,
-  nativeSaveName,
-  nativeSaveCreate,
-  nativeSaveRefresh,
-  nativeSaveList,
   replayButton,
   saveButton,
-  loadInput,
+  loadButton,
   clearMessages,
 } = appDom;
 
-const localization = new Localization(readLocale(localStorage), LOCALIZATION_SOURCES);
+const localization = new Localization("zh-CN", LOCALIZATION_SOURCES);
 const playerUiLayout = new PlayerUiLayout({
   document,
   window,
@@ -151,6 +156,7 @@ const objectListPanel = new ObjectListPanel({
   onCommand: (command) => void dispatch(command),
 });
 const monsterProbePanel = new MonsterProbePanel({
+  state: appState,
   document,
   window,
   localization,
@@ -158,19 +164,35 @@ const monsterProbePanel = new MonsterProbePanel({
   damageTypeName,
   statusName,
 });
+const mapIntelligencePanel = new MapIntelligencePanel(appState, localization, document,
+  () => settingsPanel.inputPreset, contentName, () => renderer.recenter());
+document.getElementById("title-high-scores")!.addEventListener("click", () => { void highScorePanel.open(); });
+document.getElementById("result-high-scores")!.addEventListener("click", () => { void highScorePanel.open(); });
+const highScorePanel = new HighScorePanel(document, localization, () => nativeSaveStorage.scores());
+const helpKnowledgePanel = new HelpKnowledgePanel(appState, localization, document,
+  () => settingsPanel.inputPreset, openKnowledgeView, contentName, statusName);
 const settingsPanel = new SettingsPanel({
   dom: appDom,
   state: appState,
   localization,
-  renderer,
-  storage: localStorage,
+  renderer, document, preferences, rendererReady: () => rendererInitialized,
+  beforeEdit: async () => {
+    if (appState.mode === "playing") await inputController.prepareSessionAccess();
+    await gameSession.whenIdle();
+    inputController.cancelTargeting(false);
+    configRecords.finishRecording();
+    playerUiLayout.closePage();
+  },
+  openKeys: () => configRecords.open("input-config"),
+  openMogaminator: () => mogaminatorEditor?.open(),
+  download: downloadBytes,
   renderTargeting: () => inputController.render(),
   renderLocaleDependentUi: () => {
     renderConnectionStatus();
     if (appState.status) statusPanel.render(appState.status);
     inputController.render();
+    renderContinuousAction();
     inventoryPanel.render(appState.inventory, appState.equipment);
-    nativeSavePanel.localize();
     sessionShell.localize();
     journeyResult.localize();
     playerUiLayout.localize();
@@ -184,8 +206,9 @@ const settingsPanel = new SettingsPanel({
     combatSummaryPanel.localize();
     magicEaterPanel.render();
   },
-  onLocaleChange: (locale) => dispatch({ type: "set-interface-locale", locale }),
-  refreshBusyControls: () => inventoryPanel.updateActions(),
+  onBehaviorChange: async (p) => {
+    if (await gameSession.dispatch({ type: "configure-preferences", preferences: behaviorPreferences(p) }) !== "applied") throw new Error("preferences-apply-failed");
+  },
   announce: addLocalizedMessage,
 });
 const gameSession = new GameSession({
@@ -205,6 +228,9 @@ const gameSession = new GameSession({
     statusPanel.render(update);
     if (update.player.pendingMaiaPathChoice) playerUiLayout.showMaiaChoice();
     objectListPanel.reconcileStatus();
+    mapIntelligencePanel.reconcileStatus();
+    helpKnowledgePanel.reconcileStatus();
+    configRecords.reconcileStatus();
     inventoryPanel.render(update.inventory, update.equipment);
     shopPanel.render(update);
     homePanel.render(update);
@@ -215,18 +241,33 @@ const gameSession = new GameSession({
     combatSummaryPanel.observe(update.events, update.turn);
     for (const event of update.events) addGameEvent(event);
     journeyResult.renderUpdate(update);
+    refreshSaveControls();
   },
   refreshBusyControls,
   showError,
+  onRememberedCommand: command => configRecords.observe(command),
 });
-dispatch = (command: GameCommand) => gameSession.dispatch(command);
+dispatch = async (command: GameCommand) => {
+  try {
+    if (inputController.continuousAction) await inputController.prepareSessionAccess();
+    if (isAutomaticallyRepeatedCommand(command)) await inputController.dispatchCounted(command);
+    else await gameSession.dispatch(command);
+  } catch (error) { showError(error); }
+};
 
+function refreshSaveControls(): void {
+  for (const id of ["save-button", "save-as-button", "save-exit-button", "load-button"]) {
+    (document.getElementById(id) as HTMLButtonElement).disabled = appState.busy || appState.mode !== "playing";
+  }
+}
 function refreshBusyControls(): void {
+  refreshSaveControls();
   inventoryPanel.updateActions();
   shopPanel.updateActions();
   homePanel.updateActions();
   taskServicePanel.updateActions();
   inputController.render();
+  renderContinuousAction();
   duelistPanel.render();
   spellRealmsPanel.render();
   magicEaterPanel.render();
@@ -241,6 +282,7 @@ function promptMogaminatorQuery(mogaminator: MogaminatorDto): void {
     return;
   }
   if (promptedMogaminatorItemId === pending.itemId) return;
+  void inputController.stopContinuousAction();
   promptedMogaminatorItemId = pending.itemId;
   const pickUp = window.confirm(
     localization.format("mogaminator-query-pick-up", {
@@ -256,12 +298,23 @@ function promptMogaminatorQuery(mogaminator: MogaminatorDto): void {
   });
 }
 
+async function reloadSavedMogaminator(): Promise<void> {
+  if (appState.mode !== "playing" || appState.playerDead || appState.campaignEnded) throw new Error(localization.format("prf-reload-playing"));
+  await inputController.prepareSessionAccess();
+  await gameSession.whenIdle();
+  const saved = await preferences.savedMogaminator();
+  if (await gameSession.dispatch({ type: "configure-mogaminator-preferences", preferences: saved }) !== "applied") throw new Error("preferences-apply-failed");
+  settingsPanel.noteMogaminatorApplied(saved);
+}
+
 mogaminatorEditor = new MogaminatorEditor({
   document,
   window,
   state: appState,
   localization,
-  dispatch,
+  preferences,
+  commit: (p, revision) => settingsPanel.commit(p, revision),
+  reloadSaved: reloadSavedMogaminator,
 });
 const inputController = new InputController({
   state: appState,
@@ -270,7 +323,26 @@ const inputController = new InputController({
   window,
   getInputPreset: () => settingsPanel.inputPreset,
   getZoom: () => settingsPanel.zoom,
-  dispatch,
+  dispatch: (command, repeatCommand) => gameSession.dispatch(command, repeatCommand),
+  getLastCommand: () => gameSession.lastCommand,
+  confirmRepeat: command => {
+    if (!inventoryPanel.confirmRepeatedCommand(command)) return false;
+    if (command.type === "cast-ability") {
+      const key = abilityConfirmationMessageKey(command.abilityId);
+      if (key && !window.confirm(localization.format(key))) return false;
+    }
+    const target = "target" in command ? command.target : undefined;
+    if (command.type === "destroy-item" || target?.type === "item" || target?.type.endsWith("-item")) {
+      return window.confirm(localization.format("confirm-repeat-item-operation"));
+    }
+    return true;
+  },
+  whenIdle: () => gameSession.whenIdle(),
+  onShortcut: handleCommandShortcut,
+  customKey: (event, execute) => configRecords.handleBinding(event, execute),
+  hasCustomKey: event => configRecords.hasBinding(event),
+  chooseChest: (command, items, count) => inventoryPanel.selectChest(command, items, selected => inputController.dispatchCounted(selected, count)),
+  onContinuousActionChange: renderContinuousAction,
   describeLook: describeLookPosition,
   openObjectList: () => objectListPanel.open(),
   openMogaminator: () => mogaminatorEditor?.open(),
@@ -278,6 +350,87 @@ const inputController = new InputController({
   onLookFocusChange: (position) => renderer.setCameraFocus(position),
   announce: addLocalizedMessage,
 });
+const configRecords = new ConfigRecords({
+  state: appState, localization, document, storage: localStorage, preferences, preset: () => settingsPanel.inputPreset,
+  saveBindings: async (keyBindings, revision) => {
+    if (!preferences.snapshot) throw new Error("preferences-unavailable");
+    await settingsPanel.commit({ ...preferences.snapshot.preferences, keyBindings }, revision);
+  },
+  execute: key => inputController.executeOriginalKey(key),
+  repeat: command => inputController.repeatCommand(command), play: commands => inputController.playMacro(commands),
+  lastCommand: () => gameSession.lastCommand,
+  describe: () => document.querySelector("#message-list li:last-child")?.textContent ?? localization.format("cfg-recorded-command"),
+  location: () => hudLocationText(appState.status!, localization, contentName),
+  capturePng: () => renderer.capturePng(), download: downloadBytes,
+  message: (key, args) => addLocalizedMessage(key, args, "system"), error: showError,
+});
+function renderContinuousAction(): void {
+  const kind = inputController.continuousAction;
+  appDom.stopContinuousAction.hidden = !kind;
+  appDom.stopContinuousAction.disabled = false;
+  appDom.stopContinuousAction.textContent = localization.format("action-stop-continuous");
+  appDom.continuousActionStatus.textContent = kind ? localization.format(`continuous-action-${kind}`) : "";
+}
+
+function handleCommandShortcut(command: CommandShortcut, count?: number): void {
+  if (command === "end-character") {
+    if (!appState.status || appState.busy || appState.commandBlocked || inputController.continuousAction) return;
+    if (!confirmCharacterEnd(appState.status.campaign.status === "victorious", key => localization.format(key), message => window.confirm(message), message => window.prompt(message))) return;
+    configRecords.finishRecording();
+    void dispatch({ type: "end-character" });
+    return;
+  }
+  if (["input-config", "command-menu", "notes", "screen-export", "record-register", "play-register"].includes(command)) {
+    if (!inputController.continuousAction) {
+      if (!settingsPanel.close()) return;
+      playerUiLayout.closePage();
+      configRecords.open(command as "input-config" | "command-menu" | "notes" | "screen-export" | "record-register" | "play-register");
+    }
+    return;
+  }
+  if (command === "help" || command === "knowledge") {
+    if (!inputController.continuousAction) helpKnowledgePanel.open(command);
+    return;
+  }
+  if (command === "map-center") { renderer.recenter(); return; }
+  if (["map-overview", "map-locate", "monster-list", "symbol-query", "floor-feeling"].includes(command)) {
+    mapIntelligencePanel.open(command as MapInquiry); return;
+  }
+  if (command === "save" || command === "save-exit") {
+    void nativeSavePanel.saveFromShortcut(
+      undefined,
+      command === "save-exit" ? () => currentWindow.destroy() : undefined,
+    );
+    return;
+  }
+  if (command === "glyphs" || command === "colors") { void settingsPanel.open(command); return; }
+  if (command === "advanced-preferences") { void settingsPanel.open("advanced"); return; }
+  if (command === "reload-pickup-rules") {
+    void reloadSavedMogaminator().then(() => addLocalizedMessage("mogaminator-reloaded", undefined, "system"))
+      .catch(error => addLocalizedMessage("mogaminator-preferences-error", { error: error instanceof Error ? error.message : String(error) }, "system"));
+    return;
+  }
+  if (command === "settings") { void settingsPanel.open(); return; }
+  if (command === "messages") { playerUiLayout.showMessages(); return; }
+  if (command === "pets") { openPetMenu(); return; }
+  if (command === "swap-rings") { inventoryPanel.swapRings(); return; }
+  if (command === "character" || command === "tasks" || command === "inventory") { playerUiLayout.open(command); return; }
+  if (command === "equipment") {
+    playerUiLayout.open("inventory");
+    appDom.equipmentList.tabIndex = -1;
+    appDom.equipmentList.focus();
+    appDom.equipmentList.scrollIntoView({ block: "nearest" });
+    return;
+  }
+  if (command === "study" || command === "browse" || command === "power" || command === "cast") {
+    if (command === "cast" && magicEaterPanel.openDeviceCommand("m")) return;
+    playerUiLayout.open("ability");
+    statusPanel.focusCommand(command);
+    return;
+  }
+  playerUiLayout.open("inventory");
+  inventoryPanel.openCommand(command as ItemShortcut, count);
+}
 const inventoryPanel = new InventoryPanel({
   dom: appDom,
   state: appState,
@@ -295,7 +448,6 @@ const inventoryPanel = new InventoryPanel({
     playerUiLayout.closePage();
     inputController.startTargetingWithSpec(spec, intent);
   },
-  updateCampaignAction: () => statusPanel.updateCampaignAction(),
   announce: addLocalizedMessage,
   itemCurseSeverityName,
 });
@@ -310,25 +462,52 @@ const duelistPanel = new DuelistPanel({
 const magicEaterPanel = new MagicEaterPanel({
   document, state: appState, localization, dispatch, visibleItemName,
   inspectItem: id => inventoryPanel.openDetail(id),
-  selectItemTarget: (ids, select) => inventoryPanel.selectItemTarget(undefined, select, undefined, ids),
+  selectItemTarget: (ids, select, cancel, command) => inventoryPanel.selectItemTarget(undefined, select, cancel, ids, command),
+  selectItemTargets: (excluded, select, cancel, command, multiple) => inventoryPanel.selectItemTargets(excluded, select, cancel, command, multiple),
+  confirmItemChoice: (id, command) => inventoryPanel.confirmItemChoice(id, command),
   startTargeting: (spec, intent) => { playerUiLayout.closePage(); inputController.startTargetingWithSpec(spec, intent); },
   beforeOpen: () => { playerUiLayout.closePage(); inputController.cancelTargeting(false); },
-  exportSave,
-  importSave: () => loadInput.click(),
+  saveGame: async () => { await nativeSavePanel.saveFromShortcut(); },
+  loadGame: () => { void openSaveList(); },
 });
+const petMenu = new PetMenu({
+  document, state: appState, localization, dispatch, contentName,
+  confirm: message => window.confirm(message),
+  startRiding: () => inputController.startRiding(),
+});
+function openKnowledgeView(entry: KnowledgeEntry): void {
+  if (entry === "scores") { void highScorePanel.open(); return; }
+  switch (entry) {
+    case "artifacts": case "objects": case "egos": playerUiLayout.open("inventory"); break;
+    case "autopick": mogaminatorEditor?.open(); break;
+    case "materials": case "mutations": case "virtues": case "extra": playerUiLayout.showCharacter("other"); break;
+    case "self": playerUiLayout.showCharacter("overview"); break;
+    case "weapon": case "shooter": playerUiLayout.showCharacter("details", "offense"); break;
+    case "weapon-skills": playerUiLayout.showCharacter("proficiencies"); break;
+    case "spell-skills": playerUiLayout.open("ability"); break;
+    case "monsters": case "uniques": mapIntelligencePanel.open("symbol-query", entry === "uniques" ? "unique" : "all"); break;
+    case "terrain": mapIntelligencePanel.open("symbol-query"); break;
+    case "dungeons": mapIntelligencePanel.open("map-overview"); break;
+    case "quests": playerUiLayout.open("tasks"); break;
+  }
+}
+
+function openPetMenu(): void {
+  if (inputController.continuousAction) return;
+  playerUiLayout.closePage();
+  petMenu.open();
+}
 const travelControls = {
+  alwaysPickup: document.getElementById("travel-always-pickup") as HTMLInputElement,
   autoDetectTraps: document.getElementById("travel-auto-detect") as HTMLInputElement,
   autoMapArea: document.getElementById("travel-auto-map") as HTMLInputElement,
   disturbTrapDetect: document.getElementById("travel-disturb-detect") as HTMLInputElement,
 };
-for (const [key, control] of Object.entries(travelControls)) control.addEventListener("change", () => {
-  const options = appState.status?.travelOptions;
-  if (options && !appState.busy && !appState.commandBlocked) void dispatch({ type: "configure-travel", options: { ...options, [key]: control.checked } });
-});
 function renderTravelOptions(): void {
-  const options = appState.status?.travelOptions;
+  if ((document.getElementById("player-ui-settings-dialog") as HTMLDialogElement).open) return;
+  const options = preferences.snapshot?.preferences.travel;
   for (const [key, control] of Object.entries(travelControls)) {
-    control.disabled = appState.busy || appState.commandBlocked || !options;
+    control.disabled = !options;
     if (options) control.checked = options[key as keyof typeof options];
   }
 }
@@ -341,10 +520,12 @@ const statusPanel = new StatusPanel({
   state: appState,
   localization,
   dispatch,
+  restUntilRecovered: () => { playerUiLayout.closePage(); return inputController.chooseRestMode(); },
   contentName,
   statusName,
-  selectItemTarget: (excludedItemId, onSelect, allowedItemIds) =>
-    inventoryPanel.selectItemTarget(excludedItemId, onSelect, undefined, allowedItemIds),
+  selectItemTarget: (excludedItemId, onSelect, allowedItemIds, command) =>
+    inventoryPanel.selectItemTarget(excludedItemId, onSelect, undefined, allowedItemIds, command),
+  confirmItemChoice: (id, command) => inventoryPanel.confirmItemChoice(id, command),
   startAbilityTargeting: (ability) => {
     playerUiLayout.closePage();
     inputController.startAbilityTargeting(ability);
@@ -407,21 +588,18 @@ const taskServicePanel = new TaskServicePanel({
     inputController.cancelTargeting(false);
   },
 });
-const nativeSavePanel = new NativeSavePanel({
+let savedStateHash: string | undefined;
+let activeCharacter = false;
+const nativeSavePanel = new NativeSaveCommands({
   storage: nativeSaveStorage,
-  localization,
-  nameInput: nativeSaveName,
-  createButton: nativeSaveCreate,
-  refreshButton: nativeSaveRefresh,
-  list: nativeSaveList,
   isGameBusy: () => appState.busy,
+  beforeSessionAccess: () => inputController.prepareSessionAccess(),
   setGameBusy: (value) => {
     appState.busy = value;
     refreshBusyControls();
   },
-  applySnapshot: applyLoadedSnapshot,
   announce: addLocalizedMessage,
-  confirm: (message) => window.confirm(message),
+  onSaved: () => { savedStateHash = appState.status?.stateHash; },
 });
 const sessionShell = new SessionShell({
   dom: sessionShellDom,
@@ -429,7 +607,11 @@ const sessionShell = new SessionShell({
   localization,
   onStart: startNewSession,
   onLoad: async (result, summary) => {
+    await preferences.load();
+    await settingsPanel.apply();
     await initializeGameView(result.snapshot);
+    activeCharacter = true;
+    savedStateHash = result.snapshot.stateHash;
     if (result.museumRecovered) {
       addLocalizedMessage("message-museum-character-recovered", {}, "system");
       return;
@@ -448,16 +630,10 @@ const sessionShell = new SessionShell({
       );
     }
   },
-  onExit: () => currentWindow.close(),
-  onLocaleChange: (locale) => {
-    appDom.languageSelect.value = locale;
-    appDom.languageSelect.dispatchEvent(new Event("change", { bubbles: true }));
-  },
-  onInputPresetChange: (preset) => {
-    appDom.inputPresetSelect.value = preset;
-    appDom.inputPresetSelect.dispatchEvent(new Event("change", { bubbles: true }));
-  },
-  getInputPreset: () => settingsPanel.inputPreset,
+  onExit: closeSessionWindow,
+  beforeLoad: confirmSessionChange,
+  onResume: () => { appState.mode = "playing"; refreshBusyControls(); },
+  onOpenSettings: () => { void settingsPanel.open(); },
   confirm: (message) => window.confirm(message),
 });
 const journeyResult = new JourneyResult({
@@ -470,11 +646,10 @@ const journeyResult = new JourneyResult({
   onNewGame: () => showSessionView("new-game"),
   onLoad: () => showSessionView("load"),
   onMenu: () => showSessionView("title"),
-  onExit: () => currentWindow.close(),
+  onExit: closeSessionWindow,
 });
 playerUiLayout.initialize();
 settingsPanel.initialize();
-nativeSavePanel.localize();
 renderConnectionStatus();
 inputController.render();
 installFrontendCrashHandlers();
@@ -487,10 +662,23 @@ void start();
 async function start(): Promise<void> {
   appState.mode = "title";
   await sessionShell.initialize();
+  try {
+    await preferences.load(localStorage);
+    await settingsPanel.apply();
+    settingsPanel.initialize();
+  } catch (error) {
+    await settingsPanel.open();
+    settingsPanel.showLoadError(error);
+  }
   await refreshCrashDiagnosticStatus();
 }
 
 inputController.install();
+appDom.stopContinuousAction.addEventListener("click", () => void inputController.stopContinuousAction());
+void currentWindow.onCloseRequested(async event => {
+  event.preventDefault();
+  await closeSessionWindow();
+});
 settingsPanel.install();
 statusPanel.install();
 inventoryPanel.install();
@@ -498,14 +686,26 @@ shopPanel.install();
 homePanel.install();
 taskServicePanel.install();
 objectListPanel.install();
+for (const button of document.querySelectorAll<HTMLButtonElement>("[data-map-inquiry]")) {
+  button.addEventListener("click", () => handleCommandShortcut(button.dataset.mapInquiry as CommandShortcut));
+}
+for (const button of document.querySelectorAll<HTMLButtonElement>("[data-guide]")) {
+  button.addEventListener("click", () => handleCommandShortcut(button.dataset.guide as "help" | "knowledge"));
+}
+for (const button of document.querySelectorAll<HTMLButtonElement>("[data-config-record]")) {
+  button.addEventListener("click", () => handleCommandShortcut(button.dataset.configRecord as CommandShortcut));
+}
+document.getElementById("command-record-status")!.addEventListener("click", () => configRecords.finishRecording());
 monsterProbePanel.install();
 mogaminatorEditor.install();
 journeyResult.install();
 playerUiLayout.install();
-saveButton.addEventListener("click", () => void exportSave());
+saveButton.addEventListener("click", () => void nativeSavePanel.saveFromShortcut());
+document.getElementById("save-as-button")!.addEventListener("click", () => void nativeSavePanel.saveFromShortcut(
+  () => window.prompt(localization.format("shortcut-save-name"), appState.status?.player.name ?? ""), undefined, true));
+document.getElementById("save-exit-button")!.addEventListener("click", () => handleCommandShortcut("save-exit"));
 replayButton.addEventListener("click", () => void exportReplay());
-loadInput.addEventListener("change", () => void importSave());
-nativeSavePanel.install();
+loadButton.addEventListener("click", () => void openSaveList());
 sessionShell.install();
 clearMessages.addEventListener("click", () => {
   messagePanel.clear();
@@ -606,21 +806,6 @@ function announceCrashDiagnosticError(context: string, error: unknown): void {
   addLocalizedMessage("message-crash-diagnostic-unavailable", { code }, "error");
 }
 
-async function exportSave(): Promise<void> {
-  if (appState.busy) return;
-  appState.busy = true;
-  refreshBusyControls();
-  try {
-    const bytes = await core.save();
-    downloadBytes(bytes, "rfb-rewrite-demo.rfbsave");
-    addLocalizedMessage("message-save-exported", undefined, "system");
-  } catch (error) {
-    showError(error);
-  } finally {
-    appState.busy = false;
-    refreshBusyControls();
-  }
-}
 
 async function exportReplay(): Promise<void> {
   try {
@@ -632,28 +817,16 @@ async function exportReplay(): Promise<void> {
   }
 }
 
-async function importSave(): Promise<void> {
-  const file = loadInput.files?.[0];
-  loadInput.value = "";
-  if (!file || appState.busy) return;
-  appState.busy = true;
-  refreshBusyControls();
-  try {
-    const result = await core.load(new Uint8Array(await file.arrayBuffer()));
-    appState.busy = false;
-    applyLoadedSnapshot(result.snapshot);
-    addLocalizedMessage(result.museumRecovered ? "message-museum-character-recovered" : "message-save-loaded", undefined, "system");
-  } catch (error) {
-    appState.busy = false;
-    refreshBusyControls();
-    showError(error);
-  }
-}
 
 function applyLoadedSnapshot(snapshot: GameSnapshot): void {
+  mapIntelligencePanel.close();
+  helpKnowledgePanel.close();
+  inventoryPanel.reset();
   magicEaterPanel.reset();
-  inputController.cancelTargeting(false);
-  inputController.resetLocalTravel();
+  petMenu.close();
+  inputController.resetSession();
+  gameSession.resetCommandHistory();
+  configRecords.reset();
   combatSummaryPanel.clear();
   objectListPanel.close();
   monsterProbePanel.close();
@@ -671,6 +844,7 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   renderer.applySnapshot(snapshot);
   appState.replaceVisualCells(snapshot.visualCells);
   statusPanel.render(snapshot);
+  refreshSaveControls();
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
   shopPanel.render(snapshot);
   homePanel.render(snapshot);
@@ -680,18 +854,26 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   sessionShell.showGame(snapshot);
   if (snapshot.player.pendingMaiaPathChoice) playerUiLayout.showMaiaChoice();
   journeyResult.renderSnapshot(snapshot);
-  if (snapshot.mogaminator.locale !== localization.locale) {
-    void dispatch({ type: "set-interface-locale", locale: localization.locale });
-  }
 }
 
 async function startNewSession(request: NewSessionRequest): Promise<GameSnapshot> {
+  if (!preferences.snapshot) throw new Error(localization.format("preferences-unavailable"));
+  await inputController.prepareSessionAccess();
+  await preferences.load();
+  await settingsPanel.apply();
+  inventoryPanel.reset();
+  petMenu.close();
+  inputController.resetSession();
+  gameSession.resetCommandHistory();
+  configRecords.reset();
   appState.mode = "starting-session";
   appState.connection = "starting";
   renderConnectionStatus();
   try {
     const snapshot = await core.initialize(request);
     await initializeGameView(snapshot);
+    activeCharacter = true;
+    savedStateHash = undefined;
     addLocalizedMessage("message-core-started", undefined, "system");
     return snapshot;
   } catch (error) {
@@ -702,9 +884,15 @@ async function startNewSession(request: NewSessionRequest): Promise<GameSnapshot
 }
 
 async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
+  if (!preferences.snapshot) throw new Error(localization.format("preferences-unavailable"));
+  mapIntelligencePanel.close();
+  helpKnowledgePanel.close();
+  inventoryPanel.reset();
   magicEaterPanel.reset();
-  inputController.cancelTargeting(false);
-  inputController.resetLocalTravel();
+  petMenu.close();
+  inputController.resetSession();
+  gameSession.resetCommandHistory();
+  configRecords.reset();
   combatSummaryPanel.clear();
   objectListPanel.close();
   monsterProbePanel.close();
@@ -741,6 +929,7 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   await synchronizeCrashDiagnosticContext(snapshot);
   appState.mode = "playing";
   statusPanel.render(snapshot);
+  refreshSaveControls();
   mogaminatorEditor?.render(snapshot.mogaminator);
   promptMogaminatorQuery(snapshot.mogaminator);
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
@@ -751,9 +940,6 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   appState.connection = "ready";
   renderConnectionStatus();
   if (snapshot.player.pendingMaiaPathChoice) playerUiLayout.showMaiaChoice();
-  if (snapshot.mogaminator.locale !== localization.locale) {
-    await dispatch({ type: "set-interface-locale", locale: localization.locale });
-  }
 }
 
 async function restartSameSetup(): Promise<void> {
@@ -768,9 +954,54 @@ async function restartSameSetup(): Promise<void> {
   }
 }
 
-function showSessionView(view: "title" | "new-game" | "load"): void {
-  inputController.cancelTargeting(false);
-  inputController.resetLocalTravel();
+let closingSession = false;
+async function closeSessionWindow(): Promise<void> {
+  if (closingSession) return;
+  closingSession = true;
+  try {
+    await inputController.prepareSessionAccess();
+    if (await confirmSessionChange()) await currentWindow.destroy();
+  } catch (error) { showError(error); }
+  finally { closingSession = false; }
+}
+
+async function confirmSessionChange(): Promise<boolean> {
+  if (!activeCharacter || appState.playerDead || appState.campaignEnded || appState.status?.stateHash === savedStateHash) return true;
+  const dialog = document.getElementById("save-decision-dialog") as HTMLDialogElement;
+  if (dialog.open || appState.busy) return false;
+  localization.localizeDocument(dialog);
+  const choice = await new Promise<string>(resolve => {
+    dialog.returnValue = "cancel";
+    dialog.addEventListener("close", () => resolve(dialog.returnValue), { once: true });
+    dialog.showModal();
+  });
+  if (choice === "save") return nativeSavePanel.saveFromShortcut();
+  return choice === "discard";
+}
+
+async function openSaveList(): Promise<void> {
+  try {
+    await inputController.prepareSessionAccess();
+    if (appState.busy) return;
+    playerUiLayout.closePage();
+    magicEaterPanel.reset();
+    appState.mode = "title";
+    sessionShell.showLoad(activeCharacter);
+  } catch (error) { showError(error); }
+}
+
+async function showSessionView(view: "title" | "new-game" | "load"): Promise<void> {
+  if (view === "load") { await openSaveList(); return; }
+  try { await inputController.prepareSessionAccess(); } catch (error) { showError(error); return; }
+  if (!(await confirmSessionChange())) return;
+  activeCharacter = false;
+  mapIntelligencePanel.close();
+  helpKnowledgePanel.close();
+  inventoryPanel.reset();
+  petMenu.close();
+  inputController.resetSession();
+  gameSession.resetCommandHistory();
+  configRecords.reset();
   objectListPanel.close();
   monsterProbePanel.close();
   mogaminatorEditor?.close();
@@ -784,9 +1015,6 @@ function showSessionView(view: "title" | "new-game" | "load"): void {
       break;
     case "new-game":
       sessionShell.showNewGame(true);
-      break;
-    case "load":
-      sessionShell.showLoad();
       break;
   }
 }
@@ -828,7 +1056,7 @@ function describeLookPosition(position: { readonly x: number; readonly y: number
   if (actor) {
     return withTerrain(
       localization.format("look-contents-actor", {
-        actor: contentName(actor.kindId),
+        actor: actor.customName ?? contentName(actor.kindId),
       }),
     );
   }

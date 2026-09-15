@@ -24,6 +24,7 @@ impl Game {
             });
             return false;
         }
+        self.searching = false;
         self.fishing_direction = Some(direction);
         self.mark_item_aware(source);
         events.push(DomainEvent::FishingStarted);

@@ -122,7 +122,7 @@ fn pending_change_cancels_freely_then_confirmation_learns_and_preserves_primary_
             rejected(&mut game, GameCommand::Wait),
             CoreError::RealmChangeRequired
         ));
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for game in [&mut game, &mut restored] {
             confirm(game, false);
             assert_eq!(game.current_second_realm_id(), Some("sorcery"));
@@ -138,7 +138,7 @@ fn pending_change_cancels_freely_then_confirmation_learns_and_preserves_primary_
             begin(game, &id);
         }
         assert_eq!(game.state_hash(), restored.state_hash());
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for game in [&mut game, &mut restored] {
             confirm(game, true);
             assert!(game.world_tick > before.0);
@@ -159,7 +159,7 @@ fn pending_change_cancels_freely_then_confirmation_learns_and_preserves_primary_
         }
         assert_eq!(game.state_hash(), restored.state_hash());
         assert_eq!(game.rng, restored.rng);
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for game in [&mut game, &mut restored] {
             // Continue the next random draw after the changed-realm save, then
             // learn the remaining eligible gifts and cast a real new-realm prayer.
@@ -204,7 +204,7 @@ fn no_candidate_confirmation_keeps_the_new_realm_without_spending_or_a_turn() {
             (game.world_tick, game.player.energy_need, game.rng.clone()),
             before
         );
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for game in [&mut game, &mut restored] {
             game.apply_player_experience(
                 game.experience_required_for_level(level),
@@ -263,7 +263,7 @@ fn changing_back_and_forth_cannot_refund_the_shared_learning_budget() {
         ),
         CoreError::RealmChangeUnavailable("learning-capacity-full")
     ));
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -337,7 +337,7 @@ fn saved_current_history_and_pending_books_cannot_cross_the_primary_alignment() 
                 realms.second_realm_id = opposite.to_owned();
             }
             assert!(matches!(
-                Game::from_save(save),
+                Game::from_save(save, Game::default_behavior_preferences()),
                 Err(CoreError::InvalidSave("spell realms are invalid"))
             ));
         }
@@ -348,7 +348,7 @@ fn saved_current_history_and_pending_books_cannot_cross_the_primary_alignment() 
             .unwrap()
             .pending_change_book_item_id = Some(forbidden);
         assert!(matches!(
-            Game::from_save(save),
+            Game::from_save(save, Game::default_behavior_preferences()),
             Err(CoreError::InvalidSave("pending realm change is invalid"))
         ));
         for corruption in 0..6 {
@@ -363,11 +363,11 @@ fn saved_current_history_and_pending_books_cannot_cross_the_primary_alignment() 
                 _ => realms.pending_change_book_item_id = Some(craft.clone()),
             }
             assert!(
-                Game::from_save(save).is_err(),
+                Game::from_save(save, Game::default_behavior_preferences()).is_err(),
                 "{first}, corruption {corruption}"
             );
         }
-        assert!(Game::from_save(baseline).is_ok());
+        assert!(Game::from_save(baseline, Game::default_behavior_preferences()).is_ok());
     }
 }
 
@@ -384,7 +384,7 @@ fn saved_historical_spending_uses_ninety_six_instead_of_the_mage_limit() {
     // ceiling. The old generic Mage bound of 100 + 64 would accept it.
     save.player.spent_spell_learning = 96 + 64 + 1;
     assert!(matches!(
-        Game::from_save(save),
+        Game::from_save(save, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("player spell memory is invalid"))
     ));
 }

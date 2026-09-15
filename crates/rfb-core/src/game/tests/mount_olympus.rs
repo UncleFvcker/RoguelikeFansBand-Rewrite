@@ -68,7 +68,6 @@ fn mount_olympus_formal_eleven_floor_round_trip_uses_rewards_and_preserves_conqu
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -192,7 +191,7 @@ fn mount_olympus_formal_eleven_floor_round_trip_uses_rewards_and_preserves_conqu
         }),
     );
     let consumed = game.to_save();
-    let mut game = Game::from_save(consumed).unwrap();
+    let mut game = Game::from_save(consumed, Game::default_behavior_preferences()).unwrap();
     assert!(game.generated_artifact_ids.contains("demo.item.zeus"));
     for depth in (80..90).rev() {
         clear_monsters(&mut game);
@@ -221,7 +220,7 @@ fn mount_olympus_formal_eleven_floor_round_trip_uses_rewards_and_preserves_conqu
     assert!(game.entities.iter().all(|a| a.kind_id != ZEUS));
     assert!(game.items.iter().all(|i| i.id != scroll));
     let state = game.state_hash();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), state);
     clear_monsters(&mut game);
     clear_monsters(&mut restored);
@@ -544,7 +543,12 @@ fn mount_olympus_early_zeus_conquest_survives_save_and_reward_scroll_is_usable()
             .iter()
             .any(|i| i.origin_kind == Some(rfb_protocol::ItemOriginKindDto::Acquire))
     );
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     let mut restored = restored;
     restored
@@ -680,8 +684,12 @@ fn mount_olympus_artifacts_equip_activate_and_round_trip() {
         }
         game.reveal_current_visibility();
         let save = game.to_save();
-        let restored = Game::from_save_with_content(save.clone(), game.content.clone())
-            .unwrap_or_else(|e| panic!("{name}: {e}"));
+        let restored = Game::from_save_with_content(
+            save.clone(),
+            game.content.clone(),
+            Game::default_behavior_preferences(),
+        )
+        .unwrap_or_else(|e| panic!("{name}: {e}"));
         let left = serde_json::to_value(restored.to_save()).unwrap();
         let right = serde_json::to_value(&save).unwrap();
         let differences = right
@@ -702,7 +710,14 @@ fn mount_olympus_artifacts_equip_activate_and_round_trip() {
                 .find(|i| i.discount_percent == 99)
                 .unwrap()
                 .discount_percent = 98;
-            assert!(Game::from_save_with_content(invalid.to_save(), game.content.clone()).is_err());
+            assert!(
+                Game::from_save_with_content(
+                    invalid.to_save(),
+                    game.content.clone(),
+                    invalid.behavior_preferences()
+                )
+                .is_err()
+            );
         }
         if name != "poseidon" {
             let state = game.to_save();
@@ -763,7 +778,12 @@ fn mount_olympus_artemis_partial_stack_preserves_origins_and_saved_continuation(
     assert_eq!(remainder.inscription, None);
     assert_eq!(game.rng, preview.rng);
     game.reveal_current_visibility();
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     for current in [&mut game, &mut restored] {
         current
@@ -841,8 +861,12 @@ fn mount_olympus_enchantment_preserves_mundane_and_mixed_origins_after_save() {
             (3, 3)
         );
         game.reveal_current_visibility();
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         for current in [&mut game, &mut restored] {
             current
@@ -866,7 +890,11 @@ fn mount_olympus_enchantment_preserves_mundane_and_mixed_origins_after_save() {
             .unwrap()
             .discount_percent = 98;
         assert!(matches!(
-            Game::from_save_with_content(game.to_save(), game.content.clone()),
+            Game::from_save_with_content(
+                game.to_save(),
+                game.content.clone(),
+                game.behavior_preferences()
+            ),
             Err(CoreError::InvalidSave("item creation state is invalid"))
         ));
     }
@@ -919,7 +947,12 @@ fn mount_olympus_aphrodite_summons_follow_the_hostile_roll_and_keep_pet_ownershi
             }
         }
         game.reveal_current_visibility();
-        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
     }
 }
@@ -982,7 +1015,12 @@ fn mount_olympus_ambrosia_is_local_and_preserves_satiated_nutrition() {
         );
         assert!(!game.items.iter().any(|i| i.id == "test.food"));
     }
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 
     let mut zombie = super::support::zombie_game(47);

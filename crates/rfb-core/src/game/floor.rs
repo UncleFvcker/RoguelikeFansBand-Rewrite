@@ -1169,10 +1169,9 @@ impl Game {
         let all_items = std::mem::take(&mut self.items);
         let (floor_items, global_items): (Vec<_>, Vec<_>) =
             all_items.into_iter().partition(|item| {
-                matches!(
-                    item.location,
-                    ItemLocation::Ground(_) | ItemLocation::CarriedBy { .. }
-                )
+                matches!(item.location, ItemLocation::Ground(_))
+                    || matches!(&item.location, ItemLocation::CarriedBy { actor_id }
+                        if self.riding_actor_id.as_deref() != Some(actor_id.as_str()))
             });
         let current = FloorState {
             id: plan.from_floor_id.clone(),
@@ -1514,6 +1513,18 @@ impl Game {
             followed.push((entity.id.clone(), entity.kind_id.clone()));
             self.entities.push(entity);
         }
+        // Transfer carried objects only after their owner successfully follows.
+        // Pets that cannot fit remain with their objects on the source floor.
+        if let Some(source) = self.stored_floors.get_mut(from_storage_key) {
+            let (carried, remaining): (Vec<_>, Vec<_>) = std::mem::take(&mut source.items)
+                .into_iter()
+                .partition(|item| {
+                    matches!(&item.location, ItemLocation::CarriedBy { actor_id }
+                    if followed.iter().any(|(id, _)| id == actor_id))
+                });
+            source.items = remaining;
+            self.items.extend(carried);
+        }
         self.entities.sort_by(|left, right| left.id.cmp(&right.id));
         (followed, Vec::new())
     }
@@ -1567,7 +1578,7 @@ impl Game {
             .collect::<BTreeSet<_>>();
         self.item_property_knowledge
             .retain(|item_id, _| !discarded_ids.contains(item_id));
-        self.riding_actor_id = None;
+        self.clear_riding_state();
         self.activate_floor(floor, global_items);
         if self.summon_command.mode == SummonCommandModeDto::Guard {
             self.summon_command.guard_position = Some(self.player.position);
@@ -1614,6 +1625,7 @@ impl Game {
             .expect("town entry must preserve validated item allocation");
         self.update_recall_destination_for_current_floor();
         self.reveal_current_visibility();
+        self.record_visible_discoveries();
     }
 
     pub(super) fn update_recall_destination_for_current_floor(&mut self) {

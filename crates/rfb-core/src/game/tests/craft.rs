@@ -115,7 +115,7 @@ fn generated_craft_book_is_counted_studied_cast_and_restored() {
     game.study_player_ability(&id, &ability).unwrap();
     cast(&mut game, &ability, TargetSelection::SelfTarget);
     assert!(game.player_has_status_kind(STATUS_TELEPATHY));
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(restored.learned_abilities.contains(&ability));
 }
@@ -157,7 +157,7 @@ fn enchantment_caps_bonuses_and_rejects_forbidden_targets_before_payment() {
         (game.rng.clone(), game.resources.clone(), game.items.clone()),
         before
     );
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -183,7 +183,7 @@ fn polish_shield_grants_real_reflection_and_repeated_polish_fails() {
     cast(&mut game, &id, item("test.shield"));
     assert_eq!(game.virtue_current(VirtueKindDto::Enchantment), virtue - 2);
     assert!(
-        Game::from_save(game.to_save())
+        Game::from_save(game.to_save(), game.behavior_preferences())
             .unwrap()
             .player_reflects_bolts()
     );
@@ -211,7 +211,7 @@ fn mundanity_converts_fixed_artifact_preserves_ledger_and_erases_device_magic() 
             .unwrap()
             .is_none()
     );
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(
         restored
@@ -329,7 +329,7 @@ fn elemental_choices_are_level_gated_replace_previous_element_and_survive_save()
         game.effective_player_resistances().level(DamageType::Cold),
         ResistanceLevel::Immune
     );
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -364,7 +364,9 @@ fn armor_and_weapon_mastery_change_actual_stats_without_stacking_stone_skin() {
         dice + 2
     );
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
 }
@@ -380,7 +382,7 @@ fn living_trump_on_surface_grants_usable_mutation_and_restores_it() {
             .active_mutation_ids
             .contains("rfb.mutation.teleport")
     );
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(
         restored
@@ -445,7 +447,9 @@ fn mana_brand_consumes_mana_on_real_weapon_hits_and_elemental_brand_changes_dama
     // before comparing against loading, which performs the same visibility step.
     hit.reveal_current_visibility();
     assert_eq!(
-        Game::from_save(hit.to_save()).unwrap().state_hash(),
+        Game::from_save(hit.to_save(), hit.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         hit.state_hash()
     );
 }
@@ -488,7 +492,9 @@ fn crafting_uses_common_ego_factory_and_requires_exact_risky_stack_confirmation(
     assert!(!ammo.affix_ids.is_empty());
     assert_eq!(ammo.discount_percent, 99);
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
 }

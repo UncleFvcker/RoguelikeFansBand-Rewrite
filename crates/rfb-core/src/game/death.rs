@@ -195,6 +195,7 @@ impl Game {
                 true,
             );
             entity.summon = Some(SummonIdentity {
+                owner_dependent: false,
                 owner_id: actor.id.clone(),
                 source_ability_id: SOFTWARE_BUG_DEATH_SUMMON_SOURCE_ID.to_owned(),
                 remaining_turns: LEGACY_SUMMON_DURATION_TURNS,
@@ -668,7 +669,7 @@ impl Game {
     ) -> Result<(), CoreError> {
         let dying_actor = self.entities[index].clone();
         if self.riding_actor_id.as_deref() == Some(dying_actor.id.as_str()) {
-            self.riding_actor_id = None;
+            self.clear_riding_state();
         }
         self.clear_riding_bond_for(&dying_actor.id);
         self.clear_duelist_challenge_for(&dying_actor.id);
@@ -765,7 +766,7 @@ impl Game {
         }
         let dying_actor = self.entities[index].clone();
         if self.riding_actor_id.as_deref() == Some(dying_actor.id.as_str()) {
-            self.riding_actor_id = None;
+            self.clear_riding_state();
         }
         self.clear_riding_bond_for(&dying_actor.id);
         self.clear_duelist_challenge_for(&dying_actor.id);
@@ -827,6 +828,7 @@ impl Game {
         self.record_banor_rupart_group_defeat(&removed.kind_id);
         let experience_value = self.player_kill_experience_reward(removed_experience_value);
         if credit_player {
+            self.record_discovery_kill(&removed.kind_id);
             self.apply_player_experience(experience_value, events);
             self.reward_player_kill_riding_bond(&removed, events);
         }

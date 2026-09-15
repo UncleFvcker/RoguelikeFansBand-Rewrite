@@ -80,7 +80,7 @@ fn export_c5b_desktop_save() {
     let input = std::path::PathBuf::from(std::env::var("C5B_DESKTOP_INPUT").unwrap());
     let (header, payload) = rfb_save::decode(&std::fs::read(&input).unwrap()).unwrap();
     assert!(header.museum_binding.is_some());
-    let mut game = Game::from_save(payload).unwrap();
+    let mut game = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
     choose_human_talent_if_pending(&mut game);
     clear_monsters(&mut game);
     game.items.clear();
@@ -90,7 +90,7 @@ fn export_c5b_desktop_save() {
     game.items[0].charges.as_mut().unwrap().current = 0;
     game.items[0].device_recovery_progress = 123;
     game.reveal_current_visibility();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), restored.state_hash());
     std::fs::write(input.with_file_name("prepared.hash"), game.state_hash()).unwrap();
     std::fs::write(
@@ -125,7 +125,7 @@ fn c5a_darnya_ordinary_generation_permanent_curse_cancel_failure_and_cooldown_su
         game.visible_item_modifiers(&game.items[0]),
         StatModifiersDto::default()
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), restored.state_hash());
     assert_eq!(game.rng, restored.rng);
     assert!(!game.inventory_item_dto(&game.items[0]).usable);
@@ -189,7 +189,7 @@ fn c5a_darnya_ordinary_generation_permanent_curse_cancel_failure_and_cooldown_su
         let mut expected_rng = game.rng.clone();
         expected_rng.bounded(100);
         let before = game.progress.clone();
-        let mut saved = Game::from_save(game.to_save()).unwrap();
+        let mut saved = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let events = activate(&mut game, &id, target);
         assert_eq!(events, activate(&mut saved, &id, target));
         assert!(events.iter().any(|event| matches!(event, DomainEvent::DeviceSkillChecked { succeeded, .. } if *succeeded == succeeds)));
@@ -221,7 +221,7 @@ fn c5a_darnya_ordinary_generation_permanent_curse_cancel_failure_and_cooldown_su
     game.rng = RfbRng::seeded(SEEDS[6]);
     activate(&mut game, &id, Some(&EAST));
     assert_eq!(charge(&game, &id), 0);
-    let mut saved = Game::from_save(game.to_save()).unwrap();
+    let mut saved = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for run in [&mut game, &mut saved] {
         for tick in 1..=5000 {
             run.world_tick += 1;
@@ -314,7 +314,7 @@ fn c5a_one_ring_all_ten_rolls_keep_source_weights_permanent_costs_and_saved_rng(
     for (index, seed) in SEEDS.into_iter().enumerate() {
         let mut game = base.clone();
         game.rng = RfbRng::seeded(seed);
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let events = activate(&mut game, &id, Some(&EAST));
         assert_eq!(events, activate(&mut restored, &id, Some(&EAST)));
         let expected_branch = match index {
@@ -364,7 +364,7 @@ fn c5a_one_ring_all_ten_rolls_keep_source_weights_permanent_costs_and_saved_rng(
                 game.rng.draw_counter, 15,
                 "including virtue rolls between current and maximum drains"
             );
-            let mut healed = Game::from_save(game.to_save()).unwrap();
+            let mut healed = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             // Ordinary restoration can only reach the newly reduced maxima.
             healed.restore_all_player_attributes();
             healed.restore_player_experience_and_life_force(0, &mut Vec::new());
@@ -393,7 +393,9 @@ fn c5a_one_ring_all_ten_rolls_keep_source_weights_permanent_costs_and_saved_rng(
         assert_eq!(game.state_hash(), restored.state_hash());
         assert_eq!(
             game.state_hash(),
-            Game::from_save(game.to_save()).unwrap().state_hash()
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash()
         );
     }
 }
@@ -441,7 +443,7 @@ fn c5a_one_ring_dispel_ball_and_bolt_hit_real_targets_without_device_boost() {
     ] {
         let mut game = base.clone();
         game.rng = RfbRng::seeded(SEEDS[index]);
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let hp = game
             .entities
             .iter()
@@ -512,7 +514,7 @@ fn c5a_backlash_recalculates_lost_levels_and_resources_once_and_respects_lower_b
         let old_level = game.progress.level;
         game.reveal_current_visibility();
         game.rng = RfbRng::seeded(SEEDS[0]);
-        let mut saved = Game::from_save(game.to_save()).unwrap();
+        let mut saved = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let events = activate(&mut game, &id, Some(&EAST));
         assert_eq!(events, activate(&mut saved, &id, Some(&EAST)));
         let current = amount - amount / 4;
@@ -547,7 +549,9 @@ fn c5a_backlash_recalculates_lost_levels_and_resources_once_and_respects_lower_b
         assert_eq!(game.state_hash(), saved.state_hash());
         assert_eq!(
             game.state_hash(),
-            Game::from_save(game.to_save()).unwrap().state_hash()
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash()
         );
     }
 }
@@ -605,7 +609,7 @@ fn c5b_one_ring_ordinary_generation_permanent_properties_and_shared_activation_s
         Some(&rfb_content::ActorResistanceLevel::Resistant)
     );
     assert!(game.visible_item_passives(&game.items[0]).is_empty());
-    let mut loaded = Game::from_save(game.to_save()).unwrap();
+    let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), loaded.state_hash());
     let before = loaded.effective_player_attributes();
     loaded.equip_inventory_item(&id, None).unwrap();
@@ -698,7 +702,7 @@ fn c5b_one_ring_ordinary_generation_permanent_properties_and_shared_activation_s
     loaded.apply_player_experience(100, &mut Vec::new());
     let maximum_before = loaded.progress.maximum_attributes;
     loaded.rng = RfbRng::seeded(SEEDS[0]);
-    let mut saved = Game::from_save(loaded.to_save()).unwrap();
+    let mut saved = Game::from_save(loaded.to_save(), loaded.behavior_preferences()).unwrap();
     let events = activate(&mut loaded, &id, Some(&EAST));
     assert_eq!(events, activate(&mut saved, &id, Some(&EAST)));
     assert_eq!(
@@ -795,7 +799,7 @@ fn c5b_one_ring_reading_uses_pack_or_floor_and_reading_energy_without_activation
             assert_eq!(game.rng, rng);
             assert_eq!(game.items[0], before_item);
             assert_eq!(game.item_property_knowledge, before_knowledge);
-            let mut saved = Game::from_save(game.to_save()).unwrap();
+            let mut saved = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             let tick = game.world_tick;
             let command = GameCommand::UseItem {
                 item_id: id.clone(),
@@ -899,7 +903,7 @@ fn c5b_one_ring_mastery_and_brands_follow_weapon_hands_and_innate_attacks_after_
                 y: START.y,
             },
         );
-        game = Game::from_save(game.to_save()).unwrap();
+        game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let stats = game.player_derived_stats();
         let profiles = game.player_melee_profiles(&stats);
         for profile in &profiles {
@@ -959,7 +963,7 @@ fn c5b_one_ring_mastery_and_brands_follow_weapon_hands_and_innate_attacks_after_
             10
         );
         game.rng = RfbRng::seeded(SEEDS[0]);
-        let mut saved = Game::from_save(game.to_save()).unwrap();
+        let mut saved = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let mut events = Vec::new();
         let hp = game.entities[0].hp;
         game.resolve_player_melee(0, true, &mut events, &mut BTreeSet::new(), &mut Vec::new())

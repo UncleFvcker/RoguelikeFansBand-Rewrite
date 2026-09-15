@@ -46,8 +46,12 @@ fn pantheons_birth_selection_persists_without_rng_and_rejects_invalid_saves() {
             game.dungeon_is_active(DUNGEON),
             game.active_pantheons & 2 != 0
         );
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(game.state_hash(), restored.state_hash());
         assert_eq!(game.rng_draw_counter(), restored.rng_draw_counter());
         assert_eq!(game.clone().rng.bounded(1000), restored.rng.bounded(1000));
@@ -57,7 +61,14 @@ fn pantheons_birth_selection_persists_without_rng_and_rejects_invalid_saves() {
     for mask in [0, 2, 0x1e, 0x81] {
         let mut invalid = game.to_save();
         invalid.active_pantheons = mask;
-        assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+        assert!(
+            Game::from_save_with_content(
+                invalid,
+                game.content.clone(),
+                Game::default_behavior_preferences()
+            )
+            .is_err()
+        );
     }
     let mut invalid = game.to_save();
     invalid
@@ -66,7 +77,14 @@ fn pantheons_birth_selection_persists_without_rng_and_rejects_invalid_saves() {
         .find(|d| d.dungeon_id == DUNGEON)
         .unwrap()
         .suppressed = false;
-    assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            invalid,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
     let mut missing = serde_json::to_value(game.to_save()).unwrap();
     missing.as_object_mut().unwrap().remove("activePantheons");
     assert!(serde_json::from_value::<rfb_protocol::SavePayloadV1>(missing).is_err());
@@ -94,7 +112,6 @@ fn pantheons_control_world_entry_and_entrance_guardian() {
         dispatch_next(
             &mut game,
             GameCommand::EnterWorldMap {
-                leave_pets: false,
                 cancel_recall: false,
             },
         );
@@ -119,7 +136,12 @@ fn pantheons_control_world_entry_and_entrance_guardian() {
                     .is_none()
             );
         }
-        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(game.state_hash(), restored.state_hash());
         assert_eq!(restored.dungeon_is_active(DUNGEON), active);
     }

@@ -48,6 +48,10 @@ const RFB_STRENGTH_BLOW: [u16; 38] = [
     3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110,
     120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240,
 ];
+const RFB_STRENGTH_DAMAGE: [i32; 38] = [
+    -2, -2, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 5, 5, 6, 7, 8, 9, 10,
+    11, 12, 13, 14, 15, 16, 18, 20,
+];
 const RFB_DEXTERITY_TO_HIT: [i32; 38] = [
     -3, -2, -2, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 6, 7, 8, 9, 9,
     10, 11, 12, 13, 14, 15, 15, 16,
@@ -1791,17 +1795,13 @@ impl Game {
         let throwing = self.item_has_rfb_flag(item, "THROWING");
         // RFB py_throw.c: THROWING adds 100 to the multiplier and halves the
         // effective weight for range; mighty throw adds another 100.
-        const STRENGTH_DAMAGE: [i32; 38] = [
-            -2, -2, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 3, 3, 3, 3, 3, 4, 5, 5, 6, 7, 8,
-            9, 10, 11, 12, 13, 14, 15, 16, 18, 20,
-        ];
         let index = usize::from(
             self.effective_player_attributes()
                 .index(AttributeKind::Strength)
                 .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
         );
         let multiplier = (100 + i32::from(throwing) * 100 + i32::from(mighty) * 100)
-            * (100 + STRENGTH_DAMAGE[index])
+            * (100 + RFB_STRENGTH_DAMAGE[index])
             / 100;
         let limit = 10 + 2 * (multiplier - 100) / 100;
         let divisor = weight.max(10) / if throwing { 2 } else { 1 };
@@ -2165,7 +2165,7 @@ impl Game {
         if ring_hand == Some(hand) {
             return true;
         }
-        self.weapon_uses_two_hands(weapon)
+        ring_hand == Some(hand ^ 1) && self.weapon_uses_two_hands(weapon)
     }
 
     pub(super) fn item_is_fixed_artifact(&self, item: &ItemInstance, source_index: u32) -> bool {
@@ -2202,16 +2202,25 @@ impl Game {
         else {
             return false;
         };
-        let other_empty = self.body_slots.iter().any(|slot| {
-            matches!(slot.slot_type.as_str(), "weapon" | "shield")
-                && &slot.id != weapon_slot
-                && !self.items.iter().any(|item| {
-                    matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == &slot.id)
-                })
-        });
+        // equip.c pairs hands per arm pair; a spare third/fourth hand must
+        // not grant the same second hand to multiple weapons.
+        let hands = self
+            .body_slots
+            .iter()
+            .filter(|slot| matches!(slot.slot_type.as_str(), "weapon" | "shield"))
+            .collect::<Vec<_>>();
+        let other_empty = hands
+            .iter()
+            .position(|slot| &slot.id == weapon_slot)
+            .and_then(|hand| hands.get(hand ^ 1))
+            .is_some_and(|slot| {
+                !self.items.iter().any(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == &slot.id)
+            })
+            });
         let definition = self.content.item(&weapon.kind_id).unwrap();
         other_empty
-            && self.riding_mount_level().is_none()
+            && (self.riding_actor_id.is_none() || self.summon_command.riding_two_hands)
             && (self.item_instance_weight(weapon) > 99
                 || definition
                     .rfb_base_kind
@@ -2406,6 +2415,34 @@ impl Game {
             .position(|item| Some(item.id.as_str()) == source_item_id.as_deref())
             .unwrap_or(0) as i32;
         let count = weapons.len().max(1) as i32;
+        // xtra1.c: a properly held two-handed weapon gains the attribute
+        // to-hit bonus again and 3/4 of adj_str_td (at least one each).
+        if !self.player_is_duelist()
+            && let Some(weapon) = weapons
+                .iter()
+                .find(|item| Some(item.id.as_str()) == source_item_id.as_deref())
+            && self.weapon_uses_two_hands(weapon)
+        {
+            let attributes = self.effective_player_attributes();
+            if crate::stats::strength_hold_pounds(attributes.strength) * 2
+                >= self.item_instance_weight(weapon) / 5
+            {
+                let strength = usize::from(
+                    attributes
+                        .index(AttributeKind::Strength)
+                        .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
+                );
+                let hit = self.player_attribute_to_hit().max(1);
+                to_hit += hit;
+                to_damage += (RFB_STRENGTH_DAMAGE[strength] * 3 / 4).max(1);
+                melee_skill = melee_skill.with_modifier(
+                    StatLayer::Equipment,
+                    weapon.id.clone(),
+                    hit,
+                    StatBounds::UNBOUNDED,
+                );
+            }
+        }
         if self.player_is_berserker()
             && let Some(weapon) = weapons
                 .iter()
@@ -3873,6 +3910,10 @@ impl Game {
         } else {
             max_hp
         };
+        // xtra1.c calc_bonuses: SEARCH slows the rider too; light speed overrides later.
+        if include_equipment && self.searching {
+            pipeline.add(StatKind::Speed, StatLayer::Status, "rfb.action.search", -10);
+        }
         let speed = pipeline.resolve(StatKind::Speed, StatBounds::ACTOR_SPEED);
         let speed = if include_equipment
             && self.riding_actor_id.is_none()

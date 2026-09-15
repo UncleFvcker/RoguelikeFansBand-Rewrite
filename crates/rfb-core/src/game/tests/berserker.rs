@@ -12,7 +12,7 @@ mod spells;
 fn desktop_fixture_preserves_real_level_and_item_save_invariants() {
     let mut game = Game::new_with_build(923, BUILD).unwrap();
     game.debug_prepare_berserker_e2e(30, true, true).unwrap();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     let snapshot = restored.snapshot();
     assert_eq!(snapshot.player.progress.level, 30);
@@ -84,7 +84,7 @@ fn birth_has_no_mana_negative_skills_equipment_and_source_proficiencies() {
     assert!(game.player_derived_stats().ranged_skill.value < -1900);
     assert!(game.player_derived_stats().saving_throw_skill.value < 0);
     assert_eq!(game.player_derived_stats().stealth_skill.value, 0);
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -145,7 +145,7 @@ fn permanent_berserk_has_level_boundaries_and_potions_only_heal() {
         assert_eq!(game.player_reflects_bolts(), reflect);
         assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
     }
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -530,9 +530,14 @@ fn mutations_guild_membership_and_draconian_scaling_use_class_identity() {
             rfb_protocol::FacilityMembershipDto::Owner
         );
     }
-    let mut draconian =
-        Game::new_with_build_race_and_name(923, BUILD, "rfb-legacy.race.draconian-red", "test")
-            .unwrap();
+    let mut draconian = Game::new_with_build_race_and_name(
+        923,
+        BUILD,
+        "rfb-legacy.race.draconian-red",
+        "test",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     draconian.progress.level = 15;
     assert_eq!(draconian.draconian_metamorphosis_attack_level(), 52);
 }
@@ -594,7 +599,9 @@ fn weapon_bonuses_follow_hands_and_negative_blows_stop_at_zero() {
         .unwrap();
     game.items[weapon_index].intrinsic_weight_tenths_pound = Some(10_000);
     let overweight = game.player_melee_profile(&game.player_derived_stats());
-    assert_eq!(two_hands.to_damage - overweight.to_damage, 5);
+    // P6 adds the source's general two-hand bonus (+3 hit, +2 damage)
+    // to this fixture's existing Berserker bonus (+6 hit, +5 damage).
+    assert_eq!(two_hands.to_damage - overweight.to_damage, 7);
     assert_eq!(
         (overweight.attacks, overweight.extra_attack_chance_percent),
         (2, 20)
@@ -613,8 +620,8 @@ fn weapon_bonuses_follow_hands_and_negative_blows_stop_at_zero() {
             .is_some()
     );
     let one_hand = game.player_melee_profile(&game.player_derived_stats());
-    assert_eq!(two_hands.to_damage - one_hand.to_damage, 5);
-    assert_eq!(two_hands.to_hit - one_hand.to_hit, 6);
+    assert_eq!(two_hands.to_damage - one_hand.to_damage, 7);
+    assert_eq!(two_hands.to_hit - one_hand.to_hit, 9);
     let mut form =
         monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.tonberry").status;
     form.granted_race_id = Some("rfb-legacy.race.tonberry".to_owned());

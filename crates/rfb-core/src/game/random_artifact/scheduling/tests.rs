@@ -366,7 +366,7 @@ fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
                 .iter()
                 .any(|name| !name.is_empty() && !produced.contains(name))
         );
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(game.state_hash(), restored.state_hash());
         let mut context = context;
         context.table_id = "demo.loot-table.mage".into();
@@ -403,7 +403,7 @@ fn random_artifact_save_preserves_rejected_names_and_continued_generation() {
         ] {
             let mut invalid = game.to_save();
             invalid.random_artifact_names = names;
-            assert!(Game::from_save(invalid).is_err());
+            assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
         }
         let mut altered = game.clone();
         altered
@@ -498,7 +498,7 @@ fn random_artifact_negative_power_reaches_a_cursed_equippable_instance() {
                     .unwrap(),
             );
         }
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         for run in [&mut game, &mut restored] {
             assert_eq!(
@@ -604,7 +604,7 @@ fn real_berserker_generated_flags_and_activation_rejection_survive_save_and_cont
                 .unwrap(),
         );
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(game.state_hash(), restored.state_hash());
         for run in [&mut game, &mut restored] {
             if feature == "activation" {
@@ -720,7 +720,7 @@ fn real_build_generated_devices_keep_use_costs_charges_and_continued_rng() {
                 .unwrap(),
         );
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(game.state_hash(), restored.state_hash());
         for run in [&mut game, &mut restored] {
             let tick = run.world_tick;

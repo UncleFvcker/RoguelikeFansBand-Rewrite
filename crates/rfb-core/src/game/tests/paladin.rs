@@ -189,7 +189,8 @@ fn death_paladin_unlocks_hell_lance_and_fear_resistance_at_original_levels() {
             .level(DamageType::Fear),
         ResistanceLevel::Resistant
     );
-    let restored = Game::from_save(restorable.to_save()).expect("level 40 Paladin should reload");
+    let restored = Game::from_save(restorable.to_save(), restorable.behavior_preferences())
+        .expect("level 40 Paladin should reload");
     assert_eq!(restored.progress.level, 40);
     assert_eq!(
         restored

@@ -1408,7 +1408,8 @@ mod tests {
             .kind_id = "demo.item.long-sword".to_owned();
         let two_handed = game.player_melee_profile(&game.player_derived_stats());
         assert_eq!(two_handed.damage_dice, 4);
-        assert_eq!(two_handed.to_damage, dagger.to_damage + 12);
+        // The offhand ring adds 12 and this character's two-handed grip adds 1.
+        assert_eq!(two_handed.to_damage, dagger.to_damage + 13);
         assert_eq!(two_handed.extra_attack_chance_percent, 50);
         game.debug_add_generated_inventory_item("test.shield", "demo.item.small-metal-shield", 1)
             .unwrap();
@@ -1421,7 +1422,7 @@ mod tests {
         let shielded = game.player_melee_profile(&game.player_derived_stats());
         assert_eq!(shielded.damage_dice, 2);
         assert_eq!(shielded.extra_attack_chance_percent, 0);
-        assert_eq!(shielded.to_damage, two_handed.to_damage - 12);
+        assert_eq!(shielded.to_damage, two_handed.to_damage - 13);
         game.items.last_mut().unwrap().kind_id = "demo.item.dagger".to_owned();
         let dual = game.player_melee_profiles(&game.player_derived_stats());
         assert_eq!(dual[0].damage_dice, 2);
@@ -1514,7 +1515,7 @@ mod tests {
             );
             assert_eq!(resolution.entity_ids.len(), usize::from(!is_spell));
         }
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert!(restored.player_has_anti_teleport());
         game.items.last_mut().unwrap().location = ItemLocation::Inventory;
         assert!(!game.equipment_blocks_summoning());

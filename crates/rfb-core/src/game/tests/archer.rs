@@ -57,8 +57,11 @@ fn equipped_quiver_carries_sixty_ammunition_outside_the_pack() {
         .position(|item| item.kind_id == "demo.item.arrow")
         .expect("birth arrows should exist");
     game.items[arrow_index].quantity = 60;
+    let arrow_id = game.items[arrow_index].id.clone();
+    assert_eq!(game.snapshot().player.quiver_item_ids, [arrow_id.clone()]);
     let with_sixty = game.inventory_used_slots();
     game.items[arrow_index].quantity = 61;
+    assert!(game.snapshot().player.quiver_item_ids.is_empty());
     assert_eq!(game.inventory_used_slots(), with_sixty + 1);
     game.items[arrow_index].quantity = 60;
 
@@ -77,6 +80,59 @@ fn equipped_quiver_carries_sixty_ammunition_outside_the_pack() {
         Some("demo.item.quiver".to_owned())
     );
     assert_eq!(game.inventory_used_slots(), with_sixty + 2);
+    assert!(game.snapshot().player.quiver_item_ids.is_empty());
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("unequipped quiver should restore");
+    assert!(restored.snapshot().player.quiver_item_ids.is_empty());
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn quiver_projection_partitions_whole_stacks_without_changing_inventory_or_save_state() {
+    let mut game = archer_game(7);
+    let arrow = game
+        .items
+        .iter_mut()
+        .find(|item| item.kind_id == "demo.item.arrow")
+        .unwrap();
+    arrow.quantity = 50;
+    let arrow_id = arrow.id.clone();
+    for (id, quantity) in [("test.quiver-small", 10), ("test.quiver-overflow", 80)] {
+        give_inventory_item(&mut game, id, "demo.item.arrow");
+        game.items
+            .iter_mut()
+            .find(|item| item.id == id)
+            .unwrap()
+            .quantity = quantity;
+    }
+    let before = game.state_hash();
+    let snapshot = game.snapshot();
+    let mut expected = vec![arrow_id, "test.quiver-small".to_owned()];
+    expected.sort();
+    assert_eq!(snapshot.player.quiver_item_ids, expected);
+    assert_eq!(
+        snapshot
+            .inventory
+            .iter()
+            .filter(|item| expected.contains(&item.id))
+            .count(),
+        2
+    );
+    assert!(
+        snapshot
+            .inventory
+            .iter()
+            .any(|item| item.id == "test.quiver-overflow")
+    );
+    assert_eq!(
+        game.state_hash(),
+        before,
+        "projection must not relocate items or consume RNG"
+    );
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("mixed quiver stacks should restore");
+    assert_eq!(restored.snapshot().player.quiver_item_ids, expected);
+    assert_eq!(restored.state_hash(), before);
 }
 
 #[test]

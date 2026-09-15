@@ -236,8 +236,8 @@ fn naturally_generated_negative_equipment_can_be_equipped_uncursed_and_saved_wit
             ItemIdentificationDto::Identified,
             "the existing equip rule identifies the worn item"
         );
-        let restored =
-            Game::from_save(game.to_save()).unwrap_or_else(|error| panic!("{kind}: {error:?}"));
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap_or_else(|error| panic!("{kind}: {error:?}"));
         assert_eq!(restored.state_hash(), game.state_hash());
         game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
         game.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
@@ -248,7 +248,7 @@ fn naturally_generated_negative_equipment_can_be_equipped_uncursed_and_saved_wit
             "uncursing retains the generated negative flags and pval"
         );
         assert_eq!(
-            Game::from_save(game.to_save())
+            Game::from_save(game.to_save(), game.behavior_preferences())
                 .unwrap_or_else(|error| panic!("uncursed {kind}: {error:?}"))
                 .state_hash(),
             game.state_hash()

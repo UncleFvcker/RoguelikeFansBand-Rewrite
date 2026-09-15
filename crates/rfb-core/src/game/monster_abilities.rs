@@ -156,6 +156,9 @@ impl Game {
         entity.friendly = true;
         if !monster_saves() {
             entity.controller_id = Some(self.player.id.clone());
+            if let Some(summon) = entity.summon.as_mut() {
+                summon.owner_dependent = true;
+            }
         }
     }
 
@@ -401,6 +404,9 @@ impl Game {
                 changed,
                 removed_entities,
             ));
+            if self.equipment_blocks_summoning() {
+                continue;
+            }
             let kind_id = if candidates.is_empty() || self.rng.bounded(13) == 0 {
                 STAR_BLADE_KIND_ID.to_owned()
             } else {
@@ -432,11 +438,12 @@ impl Game {
                 true,
             );
             self.maybe_initialize_chameleon_form(&mut entity);
-            entity.summon = Some(SummonIdentity {
-                owner_id: owner_id.clone(),
-                source_ability_id: plan.ability.id.clone(),
-                remaining_turns: duration_turns,
-            });
+            self.initialize_monster_summon(
+                source_index,
+                &mut entity,
+                &plan.ability.id,
+                duration_turns,
+            );
             changed.insert(position);
             affected_positions.push(position);
             entity_ids.push(id);
@@ -483,7 +490,7 @@ impl Game {
         let removed = self.entities.remove(index);
         self.clear_duelist_challenge_for(&removed.id);
         if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
-            self.riding_actor_id = None;
+            self.clear_riding_state();
         }
         if let Some(pack_id) = removed
             .pack
@@ -842,6 +849,9 @@ impl Game {
         let mut summoned_kind_ids = Vec::new();
         let mut positions = Vec::new();
         for kind_id in requested_kind_ids {
+            if self.equipment_blocks_summoning() {
+                continue;
+            }
             if !self.monster_family_actor_is_available(kind_id) {
                 continue;
             }
@@ -867,11 +877,12 @@ impl Game {
                 true,
             );
             self.maybe_initialize_chameleon_form(&mut entity);
-            entity.summon = Some(SummonIdentity {
-                owner_id: owner_id.clone(),
-                source_ability_id: plan.ability.id.clone(),
-                remaining_turns: MONSTER_FAMILY_SUMMON_DURATION_TURNS,
-            });
+            self.initialize_monster_summon(
+                source_index,
+                &mut entity,
+                &plan.ability.id,
+                MONSTER_FAMILY_SUMMON_DURATION_TURNS,
+            );
             changed.insert(position);
             affected_positions.push(position);
             entity_ids.push(id);
@@ -930,9 +941,7 @@ impl Game {
                 ))
                 .expect("bounded draw fits usize");
                 let destination = escape_destinations[choice];
-                self.entities[source_index].position = destination;
-                changed.insert(source_position);
-                changed.insert(destination);
+                self.relocate_spell_caster(source_index, destination, events, changed);
                 affected_positions.push(destination);
                 events.push(DomainEvent::MonsterTeleported {
                     source_kind_id: source_kind_id.to_owned(),
@@ -1054,7 +1063,6 @@ impl Game {
             unreachable!("monster animate dead executor requires an animate dead effect")
         };
         let origin = self.entities[source_index].position;
-        let owner_id = self.entities[source_index].id.clone();
         let definition = self
             .content
             .actor(actor_kind_id)
@@ -1098,11 +1106,7 @@ impl Game {
                 INITIAL_MONSTER_ENERGY_NEED,
                 true,
             );
-            entity.summon = Some(SummonIdentity {
-                owner_id: owner_id.clone(),
-                source_ability_id: ability_id.to_owned(),
-                remaining_turns: 0,
-            });
+            self.initialize_monster_summon(source_index, &mut entity, ability_id, 0);
             self.entities.push(entity);
             entity_ids.push(id);
             positions.push(position);
@@ -1188,11 +1192,12 @@ impl Game {
                 true,
             );
             self.maybe_initialize_chameleon_form(&mut entity);
-            entity.summon = Some(SummonIdentity {
-                owner_id: owner_id.clone(),
-                source_ability_id: plan.ability.id.clone(),
-                remaining_turns: duration_turns,
-            });
+            self.initialize_monster_summon(
+                source_index,
+                &mut entity,
+                &plan.ability.id,
+                duration_turns,
+            );
             self.apply_cult_of_personality_to_summon(source_index, &mut entity, &definition);
             changed.insert(position);
             entity_ids.push(id);
@@ -1623,11 +1628,7 @@ impl Game {
             .saturating_mul(i32::from(*damage_multiplier_numerator))
             .saturating_div(i32::from(*damage_multiplier_denominator))
             .max(0);
-        let target_actors = self
-            .monster_hostile_targets(source_index)
-            .into_iter()
-            .filter(|target| affected_positions.contains(&target.position()))
-            .collect::<Vec<_>>();
+        let target_actors = self.monster_area_targets(source_index, affected_positions);
         let mut targets = Vec::with_capacity(target_actors.len());
         for target in target_actors {
             let position = target.position();
@@ -1677,9 +1678,7 @@ impl Game {
             .iter()
             .position(|entity| entity.id == source_entity_id)
             .expect("jumping monster must remain on the floor");
-        self.entities[source_index].position = destination;
-        changed.insert(origin);
-        changed.insert(destination);
+        self.relocate_spell_caster(source_index, destination, events, changed);
         events.push(DomainEvent::MonsterBlinked {
             source_kind_id: source_kind_id.to_owned(),
             resolution: MonsterDisplacementResolutionDto {
@@ -2184,6 +2183,9 @@ impl Game {
                     Some(eligible[self.roll_weighted_index(&weights)].0.clone())
                 };
                 for position in planned_positions {
+                    if self.equipment_blocks_summoning() {
+                        continue;
+                    }
                     if candidate_kind_ids.is_empty() {
                         break;
                     }
@@ -2231,11 +2233,12 @@ impl Game {
                         true,
                     );
                     self.maybe_initialize_chameleon_form(&mut entity);
-                    entity.summon = Some(SummonIdentity {
-                        owner_id: owner_id.clone(),
-                        source_ability_id: plan.ability.id.clone(),
-                        remaining_turns: duration_turns,
-                    });
+                    self.initialize_monster_summon(
+                        source_index,
+                        &mut entity,
+                        &plan.ability.id,
+                        duration_turns,
+                    );
                     self.apply_cult_of_personality_to_summon(
                         source_index,
                         &mut entity,
@@ -2284,9 +2287,7 @@ impl Game {
                 .expect("bounded draw fits usize");
                 let destination = destinations[choice];
                 let from = self.entities[source_index].position;
-                self.entities[source_index].position = destination;
-                changed.insert(from);
-                changed.insert(destination);
+                self.relocate_spell_caster(source_index, destination, events, changed);
                 let resolution = MonsterDisplacementResolutionDto {
                     actor_id: source_entity_id.clone(),
                     from,
@@ -2502,11 +2503,7 @@ impl Game {
         primary: &MonsterHostileTarget,
         affected_positions: &[Position],
     ) -> Vec<MonsterHostileTarget> {
-        let mut targets = self
-            .monster_hostile_targets(source_index)
-            .into_iter()
-            .filter(|target| affected_positions.contains(&target.position()))
-            .collect::<Vec<_>>();
+        let mut targets = self.monster_area_targets(source_index, affected_positions);
         targets.sort_by(|left, right| {
             (left.entity_id() != primary.entity_id())
                 .cmp(&(right.entity_id() != primary.entity_id()))
@@ -3582,7 +3579,7 @@ impl Game {
                     .map(|(_, position)| position)
                     .collect::<Vec<_>>();
                 let enemy_target_count = u16::try_from(
-                    self.monster_hostile_targets(index)
+                    self.monster_spell_targets(index)
                         .into_iter()
                         .filter(|target| affected_positions.contains(&target.position()))
                         .count(),
@@ -3593,6 +3590,25 @@ impl Game {
                         reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
                         enemy_target_count: 0,
                         friendly_risk_count: 0,
+                    });
+                }
+                let friendly_risk_count = if self.entity_is_player_aligned(index) {
+                    self.monster_footprint_faction_counts(index, &affected_positions)
+                        .1
+                } else {
+                    0
+                };
+                if self.entity_is_player_aligned(index)
+                    && !self.pet_spell_risk_is_allowed(
+                        index,
+                        &affected_positions,
+                        friendly_risk_count,
+                    )
+                {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::FriendlyRisk,
+                        enemy_target_count,
+                        friendly_risk_count,
                     });
                 }
                 let blink_radius = u32::from(*blink_radius);
@@ -3616,11 +3632,17 @@ impl Game {
                         destinations,
                     },
                     enemy_target_count,
-                    0,
+                    friendly_risk_count,
                 )
             }
             AbilityEffectDefinition::TeleportSelf { minimum_distance } => {
-                let player = self.player.position;
+                let player = if self.entity_is_player_aligned(index) {
+                    self.monster_spell_targets(index)
+                        .first()
+                        .map_or(origin, MonsterHostileTarget::position)
+                } else {
+                    self.player.position
+                };
                 let escape_candidates = |minimum: u32| {
                     self.displacement_destinations(index, |position| {
                         player
@@ -3666,7 +3688,7 @@ impl Game {
             | AbilityEffectDefinition::TransformTerrain { .. } => {
                 let mut first_rejection = None;
                 let mut selected = None;
-                for hostile_target in self.monster_hostile_targets(index) {
+                for hostile_target in self.monster_spell_targets(index) {
                     match self.monster_targeted_ability_plan(index, &ability, hostile_target) {
                         Ok(plan) => {
                             selected = Some(plan);
@@ -4079,7 +4101,7 @@ impl Game {
         };
         let (enemy_target_count, friendly_risk_count) =
             self.monster_footprint_faction_counts(source_index, &affected_positions);
-        if friendly_risk_count > 0 {
+        if !self.pet_spell_risk_is_allowed(source_index, &affected_positions, friendly_risk_count) {
             return Err(MonsterAbilityPlanRejection {
                 reason: MonsterAbilityRejectionReasonDto::FriendlyRisk,
                 enemy_target_count,
@@ -4160,6 +4182,13 @@ impl Game {
                 .iter()
                 .filter(|position| **position != target)
             {
+                if self.entity_is_player_aligned(index) && *position == self.player.position {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::FriendlyRisk,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 1,
+                    });
+                }
                 if let Some((candidate_index, _)) =
                     self.entities
                         .iter()

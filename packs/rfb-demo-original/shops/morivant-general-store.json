@@ -138,7 +138,8 @@
       "initialMaximum": 1,
       "maintenanceMinimum": 1,
       "maintenanceMaximum": 1
-    }
+    },
+    { "itemKindId": "demo.item.iron-spike", "initialMinimum": 6, "initialMaximum": 42, "maintenanceMinimum": 6, "maintenanceMaximum": 42 }
   ],
   "maintenance": {
     "intervalWorldTicks": 10000

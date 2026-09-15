@@ -446,7 +446,8 @@ fn tanuki_keeps_true_runtime_stats_behind_one_persistent_disguise() {
         Some(appearance.as_str())
     );
 
-    let restored = Game::from_save(game.to_save()).expect("tanuki disguise should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("tanuki disguise should round-trip");
     assert_eq!(
         restored.entities[0].appearance_kind_id.as_deref(),
         Some(appearance.as_str())
@@ -537,7 +538,8 @@ fn chameleon_keeps_its_identity_while_its_form_drives_runtime_behavior() {
         saved.appearance_kind_id.as_deref(),
         Some("demo.actor.earth-spirit")
     );
-    let restored = Game::from_save(save).expect("chameleon form should round-trip");
+    let restored = Game::from_save(save, Game::default_behavior_preferences())
+        .expect("chameleon form should round-trip");
     assert_eq!(restored.state_hash(), expected_hash);
     let restored_actor = restored
         .entities
@@ -612,7 +614,8 @@ fn eldritch_horror_triggers_on_fresh_sight_and_persists_its_repeat_gate() {
             .expect("Ghast should be saved")
             .eldritch_horror_triggered
     );
-    let restored = Game::from_save(save).expect("Eldritch trigger state should round-trip");
+    let restored = Game::from_save(save, Game::default_behavior_preferences())
+        .expect("Eldritch trigger state should round-trip");
     assert_eq!(restored.state_hash(), expected_hash);
 
     let repeat_miss_seed = first_seed_for(|rng| rng.bounded(100) < 9 && rng.bounded(5) != 0);
@@ -1370,7 +1373,8 @@ fn defeated_unique_state_round_trips_after_normal_unique_death() {
     )
     .expect("normal unique death should resolve");
 
-    let restored = Game::from_save(game.to_save()).expect("unique state should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("unique state should round-trip");
 
     assert!(
         restored
@@ -1481,7 +1485,8 @@ fn save_rejects_duplicate_living_normal_unique_instances() {
         second,
     );
 
-    let error = Game::from_save(game.to_save()).expect_err("duplicate Unique save must fail");
+    let error = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect_err("duplicate Unique save must fail");
     assert!(matches!(
         error,
         CoreError::InvalidSave("living limited actor state exceeds its lifetime limit")
@@ -1565,7 +1570,8 @@ fn nazgul_lifetime_limit_counts_current_and_stored_floors_and_round_trips() {
 
     assert_eq!(game.actor_kind_available_instance_count(&definition.id), 0);
     let hash = game.state_hash();
-    let restored = Game::from_save(game.to_save()).expect("five living Nazgul should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("five living Nazgul should round-trip");
     assert_eq!(restored.state_hash(), hash);
     assert_eq!(
         restored.actor_kind_available_instance_count(&definition.id),
@@ -1612,7 +1618,8 @@ fn nazgul_deaths_permanently_consume_the_five_instance_limit() {
 
     assert_eq!(game.defeated_limited_actor_counts.get(kind_id), Some(&5));
     assert!(!game.unique_actor_kind_is_available(kind_id));
-    let restored = Game::from_save(game.to_save()).expect("Nazgul death count should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Nazgul death count should round-trip");
     assert_eq!(
         restored.defeated_limited_actor_counts.get(kind_id),
         Some(&5)
@@ -1768,8 +1775,8 @@ fn p71_one_split_death_closes_the_shared_lifetime_and_round_trips() {
     ));
 
     let hash = game.state_hash();
-    let restored =
-        Game::from_save(game.to_save()).expect("one surviving split form should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("one surviving split form should restore");
     assert_eq!(restored.state_hash(), hash);
     assert_eq!(restored.entities.len(), 1);
     assert!(restored.banor_rupart_group_is_defeated());

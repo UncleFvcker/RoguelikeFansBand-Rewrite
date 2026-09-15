@@ -72,7 +72,14 @@ fn zul_towers_project_realm_owners_beastman_members_and_public_prices() {
         ),
         ("demo.build.warrior", "demo.race.rfb-human", false, false),
     ] {
-        let mut game = Game::new_with_build_race_and_name(42, build, race, "Zul").unwrap();
+        let mut game = Game::new_with_build_race_and_name(
+            42,
+            build,
+            race,
+            "Zul",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         enter_town(&mut game, "demo.town.zul", Position { x: 77, y: 6 });
         for id in [sorcery_id, chaos_id, nature_id] {
             let facility = game.content.town_facility(id).unwrap();
@@ -158,7 +165,7 @@ fn zul_sorcery_identifies_all_for_visitors_and_rejects_unpaid_or_empty_work() {
     let knowledge = &game.item_property_knowledge["test.zul.identify"];
     assert!(knowledge.appraised || knowledge.identified);
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     let before = restored.to_save();
     assert_eq!(
@@ -177,6 +184,7 @@ fn zul_chaos_cures_only_unlocked_mutations_and_charges_members_the_public_price(
         "demo.build.warrior",
         "rfb-legacy.race.beastman",
         "Zul",
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     enter_town_facility(&mut game, id);
@@ -206,7 +214,7 @@ fn zul_chaos_cures_only_unlocked_mutations_and_charges_members_the_public_price(
     }
     game.progress.locked_mutation_ids.clear();
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for run in [&mut game, &mut restored] {
         let update = dispatch_next(
             run,
@@ -256,7 +264,7 @@ fn zul_special_shops_buy_sell_restore_restock_and_reject_without_mutation() {
             .find(|item| item.id == purchase.item_id)
             .unwrap()
             .clone();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         let bought_index = game
             .items
@@ -265,7 +273,7 @@ fn zul_special_shops_buy_sell_restore_restock_and_reject_without_mutation() {
             .unwrap();
         game.items[bought_index].discount_percent = 77;
         assert!(
-            Game::from_save(game.to_save()).is_err(),
+            Game::from_save(game.to_save(), game.behavior_preferences()).is_err(),
             "unsupported shop discount must be rejected"
         );
         game.items[bought_index].discount_percent = acquired.discount_percent;
@@ -308,6 +316,7 @@ fn zul_desktop_preparation_uses_physical_arrival_and_preserves_save_boundaries()
         "demo.build.mage-sorcery-nature",
         "rfb-legacy.race.beastman",
         "Zul desktop",
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     let before = game.to_save();
@@ -323,7 +332,7 @@ fn zul_desktop_preparation_uses_physical_arrival_and_preserves_save_boundaries()
         game.facility_town_travel_destinations("demo.town-facility.zul-sorcery-tower")
             .is_empty()
     );
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -334,6 +343,7 @@ fn zul_high_level_generated_stock_restores_across_source_rolls() {
         "demo.build.mage-sorcery-nature",
         "rfb-legacy.race.beastman",
         "Zul stock",
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     base.debug_prepare_town_map_e2e("demo.town.zul").unwrap();
@@ -347,12 +357,13 @@ fn zul_high_level_generated_stock_restores_across_source_rolls() {
             game.mark_shop_visited_at_player().unwrap();
             let bytes = rfb_protocol::to_msgpack(&game.to_save()).unwrap();
             let payload = rfb_protocol::from_msgpack(&bytes).unwrap();
-            let restored = Game::from_save(payload).unwrap_or_else(|error| {
-                panic!(
-                    "{id} seed {seed}: {error:?}; stock {:?}",
-                    game.shop_states[id].inventory
-                )
-            });
+            let restored = Game::from_save(payload, Game::default_behavior_preferences())
+                .unwrap_or_else(|error| {
+                    panic!(
+                        "{id} seed {seed}: {error:?}; stock {:?}",
+                        game.shop_states[id].inventory
+                    )
+                });
             assert_eq!(restored.state_hash(), game.state_hash());
         }
     }
@@ -407,7 +418,7 @@ fn zul_ordinary_shops_trade_independently_and_save_without_unlocking_teleport() 
             }
         }
     }
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     // Physical visitation must not grant the quest-77 teleport qualification.
     game.teleport_to_town("demo.town.outpost").unwrap();
@@ -464,7 +475,12 @@ fn at1_shop_doors_share_stock_transactions_projection_and_save() {
             .count(),
         1
     );
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     let item = projected_shop(&game.snapshot().shops, id).stock[0]
         .id
         .clone();
@@ -483,7 +499,14 @@ fn at1_shop_doors_share_stock_transactions_projection_and_save() {
         .town_local_to_active_position("demo.town.anambar", position_from_content(second))
         .unwrap();
     game.shop_states.get_mut(id).unwrap().visited = false;
-    assert!(Game::from_save_with_content(game.to_save(), game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences()
+        )
+        .is_err()
+    );
 }
 
 #[test]
@@ -614,7 +637,12 @@ fn at1_task_home_shared_cell_updates_service_and_preserves_town_across_save() {
     assert_eq!(game.player.position, home_position);
     assert_eq!(game.terrain_at(home_position), "demo.terrain.surface-grass");
     assert!(!game.town_facility_accessible(ANAMBAR_HOME_ID));
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     for current in [&mut game, &mut restored] {
         current.player.position = current
             .town_facility_entrance_position(current.content.town_facility(service_id).unwrap())
@@ -652,7 +680,14 @@ fn at1_task_home_shared_cell_updates_service_and_preserves_town_across_save() {
         "demo.terrain.door-open"
     );
     assert_eq!(game.terrain_at(home_position), "demo.terrain.home-entrance");
-    assert!(Game::from_save_with_content(game.to_save(), game.content.clone()).is_ok());
+    assert!(
+        Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences()
+        )
+        .is_ok()
+    );
 }
 
 fn enter_morivant(game: &mut Game) {
@@ -715,7 +750,7 @@ fn at2_anambar_far_task_returns_to_scrolled_entrance_and_preserves_ground_item()
             .unwrap()
     );
     assert_eq!(game.terrain_at(game.player.position), "demo.terrain.dirt");
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     restored.teleport_to_town("demo.town.outpost").unwrap();
     restored.teleport_to_town("demo.town.anambar").unwrap();
@@ -730,7 +765,7 @@ fn at2_anambar_far_task_returns_to_scrolled_entrance_and_preserves_ground_item()
         restored.terrain_at(Position { x: 183, y: 62 }),
         "demo.terrain.dirt"
     );
-    assert!(Game::from_save(restored.to_save()).is_ok());
+    assert!(Game::from_save(restored.to_save(), restored.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -763,7 +798,8 @@ fn at2_anambar_dinosaur_failure_rolls_once_and_keeps_the_actor_after_save_and_tr
     assert_eq!(game.current_floor_id, "demo.floor.anambar-dinosaur-quest");
     let before = game.to_save();
     for should_spawn in [false, true] {
-        let mut current = Game::from_save(before.clone()).unwrap();
+        let mut current =
+            Game::from_save(before.clone(), Game::default_behavior_preferences()).unwrap();
         // Select either side of the real 33% draw without changing formal content.
         let seed = (0..1000)
             .find(|seed| (RfbRng::seeded(*seed).bounded(100) < 33) == should_spawn)
@@ -789,7 +825,8 @@ fn at2_anambar_dinosaur_failure_rolls_once_and_keeps_the_actor_after_save_and_tr
         let _ = current.snapshot();
         let _ = current.snapshot();
         assert_eq!(current.rng_draw_counter(), rng);
-        let mut restored = Game::from_save(current.to_save()).unwrap();
+        let mut restored =
+            Game::from_save(current.to_save(), current.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), current.state_hash());
         for copy in [&mut current, &mut restored] {
             copy.teleport_to_town("demo.town.outpost").unwrap();
@@ -878,7 +915,8 @@ fn at3_thalos_museum_closes_for_dark_academy_and_restores_its_collection_on_succ
     let inside = game.to_save();
     // The persistent museum remains closed after either unsuccessful departure.
     for abandon in [false, true] {
-        let mut failed = Game::from_save(inside.clone()).unwrap();
+        let mut failed =
+            Game::from_save(inside.clone(), Game::default_behavior_preferences()).unwrap();
         if abandon {
             dispatch_next(&mut failed, GameCommand::AbandonTask);
         } else {
@@ -900,7 +938,7 @@ fn at3_thalos_museum_closes_for_dark_academy_and_restores_its_collection_on_succ
             "demo.terrain.permanent-wall"
         );
         assert!(!failed.town_facility_accessible(THALOS_MUSEUM_ID));
-        failed = Game::from_save(failed.to_save()).unwrap();
+        failed = Game::from_save(failed.to_save(), failed.behavior_preferences()).unwrap();
         failed.teleport_to_town("demo.town.outpost").unwrap();
         failed.teleport_to_town("demo.town.thalos").unwrap();
         assert_eq!(
@@ -925,7 +963,7 @@ fn at3_thalos_museum_closes_for_dark_academy_and_restores_its_collection_on_succ
         game.terrain_at(Position { x: 86, y: 50 }),
         "demo.terrain.permanent-wall"
     );
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     dispatch_next(
         &mut game,
         GameCommand::ClaimTaskReward {
@@ -953,7 +991,7 @@ fn at3_thalos_museum_closes_for_dark_academy_and_restores_its_collection_on_succ
         },
     );
     assert!(game.home_states[THALOS_MUSEUM_ID].inventory.is_empty());
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -991,7 +1029,7 @@ fn at3_thalos_staff_variants_share_one_door_without_closing_the_other_branch_mus
             game.terrain_at(game.player.position),
             task_id.replace("demo.task.", "demo.terrain.") + "-entry"
         );
-        game = Game::from_save(game.to_save()).unwrap();
+        game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         dispatch_next(&mut game, GameCommand::TraverseStairs);
         assert_eq!(
             game.current_floor_id,
@@ -1119,12 +1157,12 @@ fn at3_thalos_tower_cells_follow_palace_conclusion_and_sorcerer_return() {
     );
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(game.current_floor_id, "demo.floor.thalos-renegade-sorcerer");
-    let mut failed = Game::from_save(game.to_save()).unwrap();
+    let mut failed = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     dispatch_next(&mut failed, GameCommand::AbandonTask);
     failed.player.position = Position { x: 156, y: 61 };
     dispatch_next(&mut failed, GameCommand::Wait);
     assert_tower(&failed, false);
-    failed = Game::from_save(failed.to_save()).unwrap();
+    failed = Game::from_save(failed.to_save(), failed.behavior_preferences()).unwrap();
     assert_tower(&failed, false);
     // Prepare the sorcerer kill result; this test verifies return and conclusion geometry.
     support::clear_monsters(&mut game);
@@ -1148,7 +1186,7 @@ fn at3_thalos_tower_cells_follow_palace_conclusion_and_sorcerer_return() {
         TaskStatusKindDto::Completed
     );
     assert_tower(&game, true);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for current in [&mut game, &mut restored] {
         current.teleport_to_town("demo.town.outpost").unwrap();
         current.teleport_to_town("demo.town.thalos").unwrap();
@@ -1225,7 +1263,7 @@ fn zul_eddies_entry_loot_return_reward_and_town_travel_survive_save() {
         assert!(item.artifact_name.is_none());
         assert!(!item.rolled_affixes.is_empty());
     }
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         game.items
             .iter()
@@ -1306,7 +1344,7 @@ fn zul_eddies_entry_loot_return_reward_and_town_travel_survive_save() {
             .iter()
             .any(|destination| destination.town_id == "demo.town.zul")
     );
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     dispatch_next(
         &mut game,
         GameCommand::TravelFromInn {
@@ -1370,7 +1408,7 @@ fn zul_eddies_failure_and_abandonment_never_unlock_town_teleport() {
         );
         assert_eq!(game.player.position, entry);
         assert_eq!(game.terrain_at(entry), "demo.terrain.surface-grass");
-        game = Game::from_save(game.to_save()).unwrap();
+        game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         game.player.position = game
             .town_local_to_active_position("demo.town.zul", Position { x: 65, y: 16 })
             .unwrap();
@@ -1427,7 +1465,8 @@ fn zul_eddies_reward_choice_is_durable_and_generated_artifacts_are_replaced() {
             game.facility_town_travel_destinations(tower)[0].cost,
             game.town_service_price(500)
         );
-        let mut restored = Game::from_save(save.clone()).unwrap();
+        let mut restored =
+            Game::from_save(save.clone(), Game::default_behavior_preferences()).unwrap();
         let original_items = restored.items.clone();
         for index in 0..restored.inventory_slot_capacity() {
             support::give_inventory_item(
@@ -1456,7 +1495,7 @@ fn zul_eddies_reward_choice_is_durable_and_generated_artifacts_are_replaced() {
                 .kind_id,
             kind
         );
-        let mut duplicate = Game::from_save(save).unwrap();
+        let mut duplicate = Game::from_save(save, Game::default_behavior_preferences()).unwrap();
         duplicate.generated_artifact_ids.insert(kind);
         duplicate.claim_task_reward(tower, task).unwrap();
         let replacement = duplicate
@@ -1596,6 +1635,7 @@ fn zul_nodes_enter_save_complete_return_and_deliver_each_source_book_once() {
             "demo.build.mage-sorcery-nature",
             "rfb-legacy.race.beastman",
             "Nodes",
+            Game::default_behavior_preferences(),
         )
         .unwrap();
         enter_town_facility(&mut game, &tower);
@@ -1643,7 +1683,7 @@ fn zul_nodes_enter_save_complete_return_and_deliver_each_source_book_once() {
             );
         }
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         let mut expected_entities = game.entities.clone();
         expected_entities.sort_by(|left, right| left.id.cmp(&right.id));
@@ -1724,7 +1764,7 @@ fn zul_nodes_enter_save_complete_return_and_deliver_each_source_book_once() {
             Err("reward-unavailable")
         );
         assert_eq!(restored.to_save(), before);
-        restored = Game::from_save(before).unwrap();
+        restored = Game::from_save(before, Game::default_behavior_preferences()).unwrap();
         // Separately prepare 77 settlement to exercise the unlocked cross-town/save path.
         prepare_zul_task_status(
             &mut restored,
@@ -1763,6 +1803,7 @@ fn zul_node_failed_or_abandoned_return_restores_gate_and_cannot_be_reaccepted() 
                 "demo.build.mage-sorcery-nature",
                 "rfb-legacy.race.beastman",
                 "Nodes",
+                Game::default_behavior_preferences(),
             )
             .unwrap();
             enter_town_facility(&mut game, &tower);
@@ -1810,7 +1851,7 @@ fn zul_node_failed_or_abandoned_return_restores_gate_and_cannot_be_reaccepted() 
                     .unwrap()
                     .walkable
             );
-            game = Game::from_save(game.to_save()).unwrap();
+            game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             let door = game
                 .content
                 .town_facility(&tower)
@@ -1952,7 +1993,6 @@ fn enter_town(game: &mut Game, town_id: &str, position: Position) {
     dispatch_next(
         game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -2055,7 +2095,7 @@ fn casino_poker_round_trip(id: &str) {
         CasinoRoundSaveDto::Poker { deck } => deck.clone(),
         _ => panic!("expected poker"),
     };
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.casino.as_ref().unwrap().facility_id, id);
     let other_casino = if id == "demo.town-facility.morivant-casino" {
@@ -2074,7 +2114,7 @@ fn casino_poker_round_trip(id: &str) {
     if let CasinoRoundSaveDto::Poker { deck } = &mut invalid.casino.as_mut().unwrap().round {
         deck[1] = deck[0];
     }
-    assert!(Game::from_save(invalid).is_err());
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
     for target in [&mut game, &mut restored] {
         let before = target.state_hash();
         assert!(
@@ -2125,8 +2165,10 @@ fn casino_games_repeat_deterministically_and_craps_resumes_its_point() {
     let mut template = town_facility_game(62, "demo.build.warrior", id);
     template.gold = 10_000;
     for kind in [InBetween, Roulette, DiceSlots, Craps] {
-        let mut game = Game::from_save(template.to_save()).unwrap();
-        let mut replay = Game::from_save(template.to_save()).unwrap();
+        let mut game =
+            Game::from_save(template.to_save(), template.behavior_preferences()).unwrap();
+        let mut replay =
+            Game::from_save(template.to_save(), template.behavior_preferences()).unwrap();
         for target in [&mut game, &mut replay] {
             let choice = (kind == Roulette).then_some(7);
             dispatch_next(
@@ -2157,7 +2199,8 @@ fn casino_games_repeat_deterministically_and_craps_resumes_its_point() {
                     target.casino.as_ref().unwrap().round,
                     CasinoRoundSaveDto::Craps { .. }
                 ) {
-                    let restored = Game::from_save(target.to_save()).unwrap();
+                    let restored =
+                        Game::from_save(target.to_save(), target.behavior_preferences()).unwrap();
                     assert_eq!(restored.state_hash(), target.state_hash());
                     *target = restored;
                     saved_point = true;
@@ -2201,7 +2244,8 @@ fn casino_games_repeat_deterministically_and_craps_resumes_its_point() {
             }
             assert!(kind != Craps || saved_point);
             let gold = target.gold;
-            let restored = Game::from_save(target.to_save()).unwrap();
+            let restored =
+                Game::from_save(target.to_save(), target.behavior_preferences()).unwrap();
             assert_eq!(restored.gold, gold);
             let before = target.state_hash();
             assert!(
@@ -2281,7 +2325,7 @@ fn reputation_is_paid_uses_original_bands_and_survives_save() {
     }
     assert_eq!(game.world_tick, tick);
     assert_eq!(game.rng, rng);
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.fame, 150);
     assert_eq!(restored.state_hash(), game.state_hash());
     game.player.position.x -= 1;
@@ -2450,8 +2494,8 @@ fn building_enchantment_quotes_tiers_forces_only_selected_steps_and_preserves_sa
         .unwrap()
         .enchantments
         .to_hit = 256;
-    assert!(Game::from_save(invalid).is_err());
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     support::give_inventory_item(
         &mut restored,
@@ -2548,7 +2592,9 @@ fn building_enchantment_quotes_tiers_forces_only_selected_steps_and_preserves_sa
     );
     assert_eq!(restored.rng.draw_counter, 1);
     assert_eq!(
-        Game::from_save(restored.to_save()).unwrap().state_hash(),
+        Game::from_save(restored.to_save(), restored.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         restored.state_hash()
     );
 }
@@ -2656,7 +2702,7 @@ fn morivant_monster_research_reveals_unseen_kinds_only_after_paid_confirmation()
     let actor = game.content.actor("demo.actor.sheep").unwrap();
     assert_eq!(knowledge.max_hp, actor.max_hp);
     assert_eq!(knowledge.armor_class, rating_to_armor_class(actor.defense));
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         restored.research_monster_dtos(),
@@ -2671,6 +2717,7 @@ fn morivant_inn_meals_are_atomic_and_feed_skeletons_without_creating_items() {
         "demo.build.warrior",
         "rfb-legacy.race.skeleton",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     enter_morivant(&mut game);
@@ -2729,7 +2776,7 @@ fn morivant_inn_meals_are_atomic_and_feed_skeletons_without_creating_items() {
     assert_eq!(game.items, items);
     assert_eq!(game.rng, rng);
     assert_eq!(game.world_tick, tick);
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -2887,7 +2934,7 @@ fn morivant_identification_uses_the_projected_membership_price() {
                 .iter()
                 .all(|id| game.item_property_knowledge[id].appraised)
         );
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
     }
 }
@@ -3010,7 +3057,7 @@ fn nine_shops_trade_and_save(
         );
         assert_eq!(game.shop_states[GENERAL_STORE_ID].inventory, outpost_stock);
     }
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -3071,7 +3118,7 @@ fn morivant_shares_home_rests_and_revisits_through_inns() {
     assert_eq!(game.player.hp, game.effective_player_max_hp());
     assert_eq!(game.gold, 1_400);
     let stock = game.shop_states[MORIVANT_INN_ID].inventory.clone();
-    let mut game = Game::from_save(game.to_save()).unwrap();
+    let mut game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     dispatch_next(
         &mut game,
         GameCommand::TravelFromInn {
@@ -3092,7 +3139,7 @@ fn morivant_shares_home_rests_and_revisits_through_inns() {
     assert_eq!(game.gold, 0);
     assert!(projected_shop(&game.snapshot().shops, MORIVANT_INN_ID).player_at_entrance);
     assert_eq!(game.shop_states[MORIVANT_INN_ID].inventory, stock);
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -3185,7 +3232,7 @@ fn inn_services_and_visited_travel_survive_save(
     assert_eq!(game.player.hp, game.effective_player_max_hp());
     assert_eq!(game.world_tick, 50_000);
     let stock = game.shop_states[inn].inventory.clone();
-    let mut game = Game::from_save(game.to_save()).unwrap();
+    let mut game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     dispatch_next(
         &mut game,
         GameCommand::TravelFromInn {
@@ -3212,7 +3259,9 @@ fn inn_services_and_visited_travel_survive_save(
     assert!(projected_shop(&game.snapshot().shops, inn).player_at_entrance);
     assert_eq!(game.shop_states[inn].inventory, stock);
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
 }
@@ -3279,7 +3328,7 @@ fn telmora_and_angwil_home_and_museum_use_existing_storage() {
         assert_eq!(game.home_states.len(), 2);
         assert_eq!(game.home_states[storage].inventory.len(), 1);
         assert!(!game.home_states.contains_key(facility));
-        let mut game = Game::from_save(game.to_save()).unwrap();
+        let mut game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let home = game
             .snapshot()
             .homes
@@ -3298,7 +3347,9 @@ fn telmora_and_angwil_home_and_museum_use_existing_storage() {
         );
         assert!(game.home_states[storage].inventory.is_empty());
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash()
         );
     }
@@ -3393,7 +3444,9 @@ fn telmora_and_angwil_research_and_assessment_charge_the_source_quotes() {
             assert!(game.probed_actor_kind_ids.contains("demo.actor.sheep"));
         }
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash()
         );
     }
@@ -3509,7 +3562,9 @@ fn telmora_and_angwil_paladin_guild_enchants_equipped_armor_at_the_selected_memb
             choice.result.to_armor
         );
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash()
         );
     }
@@ -3615,7 +3670,7 @@ fn angwil_inner_temple_uses_class_membership_for_healing_and_restoration() {
                 assert_eq!(game.progress.attributes, game.progress.maximum_attributes);
                 assert_eq!(game.progress.life_force, 1000);
             }
-            let restored = Game::from_save(game.to_save()).unwrap();
+            let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             assert_eq!(restored.state_hash(), game.state_hash());
             assert_eq!(
                 restored
@@ -3786,7 +3841,12 @@ fn angwil_trump_tower_prices_and_recall_survive_save_and_return() {
         );
         assert_eq!(game.gold, 0);
         assert_eq!(game.recall.as_ref().unwrap().remaining_turns, Some(2));
-        let mut game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut game = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(
             game.snapshot()
                 .task_services
@@ -3799,16 +3859,25 @@ fn angwil_trump_tower_prices_and_recall_survive_save_and_return() {
         dispatch_next(&mut game, GameCommand::Wait);
         dispatch_next(&mut game, GameCommand::Wait);
         assert_eq!(game.current_floor_id, "demo.floor.tidal-cave-depth-15");
-        let mut game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut game = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         game.entities.clear();
         game.start_recall(0);
         dispatch_next(&mut game, GameCommand::Wait);
         assert_eq!(game.current_town().unwrap().id, "demo.town.angwil");
         assert_eq!(game.player.position, departure);
         assert_eq!(
-            Game::from_save_with_content(game.to_save(), game.content.clone())
-                .unwrap()
-                .state_hash(),
+            Game::from_save_with_content(
+                game.to_save(),
+                game.content.clone(),
+                game.behavior_preferences()
+            )
+            .unwrap()
+            .state_hash(),
             game.state_hash()
         );
     }
@@ -3886,10 +3955,10 @@ fn morivant_level_teleport_validates_choices_before_charging_and_resumes_after_s
         game.dungeon_states[dungeon_id].recall_floor_id.as_deref(),
         Some("demo.floor.tidal-cave-depth-20")
     );
-    let mut game = Game::from_save(game.to_save()).unwrap();
+    let mut game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     dispatch_next(&mut game, GameCommand::Wait);
     assert_eq!(game.current_floor_id, "demo.floor.tidal-cave-depth-20");
-    let mut game = Game::from_save(game.to_save()).unwrap();
+    let mut game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     game.entities.clear();
     game.start_recall(0);
     dispatch_next(&mut game, GameCommand::Wait);
@@ -3897,7 +3966,9 @@ fn morivant_level_teleport_validates_choices_before_charging_and_resumes_after_s
     assert_eq!(game.player.position, departure);
     assert_eq!(game.wilderness_position, Some(Position { x: 47, y: 50 }));
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
 }
@@ -3934,7 +4005,9 @@ fn dungeon_recall_records_survive_switching_dungeons_and_allow_explicit_lowering
     game.current_floor_id = surface;
     let mut saved = game.to_save();
     assert_eq!(
-        Game::from_save(saved.clone()).unwrap().state_hash(),
+        Game::from_save(saved.clone(), Game::default_behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
     saved
@@ -3944,7 +4017,7 @@ fn dungeon_recall_records_survive_switching_dungeons_and_allow_explicit_lowering
         .unwrap()
         .recall_floor_id = Some("demo.floor.warrens-depth-1".to_owned());
     assert!(matches!(
-        Game::from_save(saved),
+        Game::from_save(saved, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("dungeon recall floor is invalid"))
     ));
 }
@@ -3975,18 +4048,18 @@ fn morivant_recall_resumes_after_save_and_returns_to_the_departure_position() {
         },
     );
     assert_eq!(game.gold, 0);
-    let mut game = Game::from_save(game.to_save()).unwrap();
+    let mut game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     dispatch_next(&mut game, GameCommand::Wait);
     dispatch_next(&mut game, GameCommand::Wait);
     assert_eq!(game.current_floor_id, "demo.floor.tidal-cave-depth-15");
-    let mut game = Game::from_save(game.to_save()).unwrap();
+    let mut game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     game.entities.clear();
     game.start_recall(0);
     dispatch_next(&mut game, GameCommand::Wait);
     assert_eq!(game.current_town().unwrap().id, MORIVANT_TOWN_ID);
     assert_eq!(game.wilderness_position, Some(Position { x: 47, y: 50 }));
     assert_eq!(game.player.position, departure);
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -4085,7 +4158,7 @@ fn i6_shop_quotes_keep_discounts_separate_and_purchase_blends_only_the_transfer(
             .unit_price,
         1
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for current in [&mut game, &mut restored] {
         let update = dispatch_next(
             current,
@@ -4136,7 +4209,7 @@ fn i6_home_withdrawal_merges_into_a_full_pack_and_preserves_saved_metadata() {
         );
     }
     assert_eq!(game.inventory_used_slots(), game.inventory_slot_capacity());
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for current in [&mut game, &mut restored] {
         let update = dispatch_next(
             current,
@@ -4167,7 +4240,7 @@ fn i6_home_withdrawal_merges_into_a_full_pack_and_preserves_saved_metadata() {
         assert!(current.snapshot().homes[0].stored_items.is_empty());
     }
     assert_eq!(restored.state_hash(), game.state_hash());
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 fn anambar_inn_game(seed: u64) -> Game {
@@ -4176,7 +4249,6 @@ fn anambar_inn_game(seed: u64) -> Game {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -4196,7 +4268,6 @@ fn thalos_game(seed: u64) -> Game {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -4215,7 +4286,6 @@ fn anambar_library_game(seed: u64) -> Game {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -4240,16 +4310,19 @@ fn anambar_facility_game(
     facility_id: &str,
 ) -> Game {
     let mut game = match race_id {
-        Some(race_id) => {
-            Game::new_with_build_race_and_name(seed, build_id, race_id, Game::DEFAULT_PLAYER_NAME)
-        }
+        Some(race_id) => Game::new_with_build_race_and_name(
+            seed,
+            build_id,
+            race_id,
+            Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
+        ),
         None => Game::new_with_build(seed, build_id),
     }
     .expect("Middle-earth game should start");
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -4427,7 +4500,6 @@ fn p108c_thalos_projects_its_embedded_icky_cave_and_returns_to_town() {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -4467,7 +4539,7 @@ fn p108c_thalos_projects_its_embedded_icky_cave_and_returns_to_town() {
     let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(entered.floor_id, "demo.floor.icky-cave-depth-10");
     assert_eq!(game.current_floor_id, "demo.floor.icky-cave-depth-10");
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
 
     let upstairs_index = game
         .terrain
@@ -4493,7 +4565,7 @@ fn p108c_thalos_projects_its_embedded_icky_cave_and_returns_to_town() {
         game.terrain_at(returned_entrance),
         "demo.terrain.icky-cave-entrance"
     );
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -4619,7 +4691,7 @@ fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
         .find(|home| home.id == ANAMBAR_MUSEUM_ID)
         .unwrap();
     assert_eq!(second_door.stored_items, vec![stored.clone()]);
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let home_before = game.home_states["demo.town-facility.outpost-home"].clone();
     enter_town_facility(&mut game, THALOS_MUSEUM_ID);
     let thalos_collection = game
@@ -4654,7 +4726,7 @@ fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
         game.home_states["demo.town-facility.outpost-home"],
         home_before
     );
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -4694,7 +4766,9 @@ fn stored_blood_sours_and_only_museum_donations_clear_inscriptions() {
         assert_eq!(retained.quantity, 1);
         assert_eq!(retained.inscription.as_deref(), Some("sample"));
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash()
         );
     }
@@ -4723,6 +4797,7 @@ fn shared_museum_import_preserves_instances_and_knowledge_without_id_collisions(
         .find(|item| item.id == "test.ball")
         .unwrap()
         .captured_actor = Some(CapturedActor {
+        custom_name: None,
         kind_id: "demo.actor.horse".to_owned(),
         speed: 117,
         hp: 3,
@@ -4791,7 +4866,9 @@ fn shared_museum_import_preserves_instances_and_knowledge_without_id_collisions(
         rfb_protocol::ItemKnowledgeDto::Unknown
     );
     assert_eq!(
-        Game::from_save(imported.to_save()).unwrap().state_hash(),
+        Game::from_save(imported.to_save(), imported.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         imported.state_hash()
     );
     let mut corrupt = museum.clone();
@@ -4863,7 +4940,8 @@ fn shroomery_trade_maintenance_and_save_round_trip_use_existing_shop_state() {
         5
     );
 
-    let restored = Game::from_save(game.to_save()).expect("Shroomery state should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Shroomery state should round-trip");
     assert_eq!(restored.shop_states, game.shop_states);
     assert_eq!(restored.state_hash(), game.state_hash());
 }
@@ -4887,6 +4965,7 @@ fn shroomery_refuses_formal_and_temporary_snotlings() {
         "demo.build.warrior",
         "rfb-legacy.race.snotling",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Snotling should create");
     let item_id = prepare(&mut formal);
@@ -5011,7 +5090,8 @@ fn inn_stays_use_content_prices_and_restore_the_player_at_half_day() {
         assert_eq!(game.nutrition, nutrition);
         assert_eq!(game.rng_draw_counter(), draws);
 
-        let restored = Game::from_save(game.to_save()).expect("inn result should round-trip");
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+            .expect("inn result should round-trip");
         assert_eq!(restored.state_hash(), game.state_hash());
     }
 }
@@ -5205,7 +5285,8 @@ fn outpost_count_legal_name_change_is_validated_saved_and_projected() {
             .any(|event| event.kind == "facility.renamed")
     );
 
-    let restored = Game::from_save(game.to_save()).expect("renamed player should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("renamed player should round-trip");
     assert_eq!(restored.snapshot().player.name, "Elessar");
     assert_eq!(restored.gold, 6);
 
@@ -5693,7 +5774,8 @@ fn home_deposit_withdraw_grouping_and_save_are_authoritative() {
         .clone();
     assert_eq!(stored.quantity, 1);
 
-    let restored = Game::from_save(game.to_save()).expect("home inventory should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("home inventory should round-trip");
     assert_eq!(restored.home_states, game.home_states);
     let mut game = restored;
     let withdrawal = dispatch_next(
@@ -5749,7 +5831,6 @@ fn anambar_home_uses_the_outpost_home_inventory() {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -5820,7 +5901,12 @@ fn anambar_home_uses_the_outpost_home_inventory() {
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(game.player.position, home_position);
     assert!(!game.town_facility_accessible(ANAMBAR_HOME_ID));
-    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    game = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     game.player.position = game
         .town_facility_entrance_position(game.content.town_facility(police_id).unwrap())
         .unwrap();
@@ -5854,7 +5940,8 @@ fn anambar_home_uses_the_outpost_home_inventory() {
     );
 
     assert!(game.home_states[HOME_ID].inventory.is_empty());
-    let restored = Game::from_save(game.to_save()).expect("shared Home should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("shared Home should round-trip");
     assert_eq!(restored.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!(restored.home_states, game.home_states);
 }
@@ -5962,7 +6049,8 @@ fn entering_general_store_entrance_marks_persistent_shop_visit() {
             .all(|shop| shop.id == GENERAL_STORE_ID)
     );
 
-    let restored = Game::from_save(game.to_save()).expect("shop visit should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("shop visit should round-trip");
     assert!(projected_shop(&restored.snapshot().shops, GENERAL_STORE_ID).visited);
 }
 
@@ -5972,7 +6060,7 @@ fn malformed_town_state_is_rejected() {
     let mut payload = game.to_save();
     payload.town_states[0].visited = false;
     assert!(matches!(
-        Game::from_save(payload),
+        Game::from_save(payload, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("town state is invalid"))
     ));
 }
@@ -5993,7 +6081,8 @@ fn missing_unentered_shop_state_is_created_on_first_entry() {
     let game = Game::new_with_build(42, "demo.build.warrior").expect("Warrens game should start");
     let mut payload = game.to_save();
     payload.shop_states.clear();
-    let mut restored = Game::from_save(payload).expect("unentered shop state may remain sparse");
+    let mut restored = Game::from_save(payload, Game::default_behavior_preferences())
+        .expect("unentered shop state may remain sparse");
     assert!(restored.shop_states.is_empty());
 
     restored.player.position = Position { x: 71, y: 39 };
@@ -6042,7 +6131,8 @@ fn initial_shop_stock_is_seeded_independent_and_persistent() {
             assert!(actual_kinds.contains(guaranteed.item_kind_id.as_str()));
         }
     }
-    let restored = Game::from_save(left.to_save()).expect("store stock should round-trip");
+    let restored = Game::from_save(left.to_save(), left.behavior_preferences())
+        .expect("store stock should round-trip");
     assert_eq!(restored.shop_states, left.shop_states);
     assert_eq!(restored.state_hash(), left.state_hash());
 }
@@ -6156,7 +6246,8 @@ fn black_market_uses_original_warrior_markup_and_markdown() {
         1
     );
 
-    let restored = Game::from_save(game.to_save()).expect("Black Market should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Black Market should round-trip");
     assert_eq!(restored.shop_states, game.shop_states);
     assert_eq!(restored.state_hash(), game.state_hash());
 }
@@ -6220,7 +6311,8 @@ fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
     );
     assert!(!projected_shop(&snapshot.shops, TEMPLE_ID).player_at_entrance);
 
-    let restored = Game::from_save(game.to_save()).expect("seven shops should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("seven shops should round-trip");
     assert_eq!(restored.shop_states, game.shop_states);
     assert_eq!(restored.state_hash(), game.state_hash());
 }
@@ -6267,7 +6359,7 @@ fn book_discovery_shop_groups_and_repurchase_do_not_count_as_found() {
     let sale = game
         .sell_to_shop(BOOKSTORE_ID, &purchase.item_id, 1)
         .unwrap();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     game = restored;
     let repurchase = game.buy_from_shop(BOOKSTORE_ID, &sale.item_id, 1).unwrap();
@@ -6314,7 +6406,7 @@ fn book_discovery_home_partial_groups_preserve_each_instance_through_save() {
     let deposit = game.deposit_at_home(HOME_ID, "test.book-one", 2).unwrap();
     assert_eq!(game.item_knowledge[kind].found_count, 2);
     assert_eq!(game.home_states[HOME_ID].inventory.len(), 2);
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     game = restored;
     game.withdraw_from_home(HOME_ID, &deposit.item_id, 1)
@@ -6443,8 +6535,12 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             .any(|ability| { ability.id == "demo.ability.death-detect-evil" && ability.learned })
     );
 
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("bookstore trade should round-trip");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("bookstore trade should round-trip");
     assert_eq!(restored.snapshot(), game.snapshot());
 }
 
@@ -6538,7 +6634,8 @@ fn shared_forge_shops_group_stock_and_sell_equipment_that_can_be_used() {
             .any(|item| { item.kind_id == "demo.item.leather-gloves" && item.slot_id == "hands" })
     );
 
-    let restored = Game::from_save(game.to_save()).expect("forge trade should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("forge trade should round-trip");
     assert_eq!(restored.snapshot(), game.snapshot());
 }
 
@@ -6629,7 +6726,8 @@ fn magic_shop_purchase_device_use_and_save_are_authoritative() {
         })
     );
 
-    let restored = Game::from_save(game.to_save()).expect("Magic Shop device state should reload");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Magic Shop device state should reload");
     assert_eq!(restored.snapshot(), game.snapshot());
 }
 
@@ -7170,7 +7268,8 @@ fn p106_dynamic_bounty_spawns_only_counted_targets_and_round_trips() {
     );
     assert_eq!(game.bounty_state.mission.as_ref().unwrap().remaining, 0);
 
-    let mut restored = Game::from_save(game.to_save()).expect("bounty mission should round-trip");
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("bounty mission should round-trip");
     assert_eq!(restored.bounty_state, game.bounty_state);
     restored.current_floor_id = "demo.floor.surface".to_owned();
     restored.current_dungeon_instance_id = None;

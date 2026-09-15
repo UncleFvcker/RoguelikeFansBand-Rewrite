@@ -3496,7 +3496,8 @@ mod tests {
                         .iter()
                         .any(|e| matches!(e, DomainEvent::ProjectileSlew { .. }))
                 );
-                let restored = Game::from_save(game.to_save()).unwrap();
+                let restored =
+                    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 assert_eq!(restored.state_hash(), game.state_hash());
             } else {
                 assert!(game.entities.is_empty());

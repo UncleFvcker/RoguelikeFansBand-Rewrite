@@ -82,7 +82,7 @@ fn eight_births_have_arcane_two_books_equipment_and_valid_unlearned_memory() {
                 .iter()
                 .any(|item| item.kind_id == "demo.item.healing-potion")
         );
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
     }
@@ -134,7 +134,7 @@ fn growth_uses_intelligence_eighty_four_capacity_and_normal_mana_recovery() {
         game.player_resource_recovery_change(MANA, true),
         i64::from(resource.rest_recovery_amount)
     );
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
 }
@@ -180,11 +180,19 @@ fn proficiencies_virtues_and_racial_births_use_warrior_mage_rules() {
         "rfb-legacy.race.einheri",
         "rfb-legacy.race.draconian-red",
     ] {
-        let mut game =
-            Game::new_with_build_race_and_name(925, BUILD, race, "Warrior-Mage").unwrap();
+        let mut game = Game::new_with_build_race_and_name(
+            925,
+            BUILD,
+            race,
+            "Warrior-Mage",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(game.active_casting_realm_profiles().len(), 2);
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash(),
             "{race}"
         );

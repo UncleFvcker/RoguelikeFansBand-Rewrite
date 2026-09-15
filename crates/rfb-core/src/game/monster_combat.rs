@@ -1664,6 +1664,8 @@ impl Game {
                 continue;
             }
 
+            // melee1.c: a hit disturbs searching even when repelled or harmless (BEG).
+            self.searching = false;
             if self.protection_from_evil_repels(&definition) {
                 events.push(DomainEvent::MonsterMeleeRepelled {
                     source_kind_id: kind_id.clone(),

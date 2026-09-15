@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -31,7 +32,8 @@ export async function runBerserkerUiScenario(driver, directory, profile) {
   await mkdir(directory, { recursive: true });
   const keyboard = await connectKeyboard(profile);
   await driver.waitFor('return document.documentElement.dataset.appMode === "title"', "Berserker title", 60_000);
-  await driver.execute('window.__berserkerReload = true; localStorage.setItem("rfb.locale", "zh-CN"); localStorage.setItem("rfb.input-preset", "numpad"); setTimeout(() => location.reload(), 50); return true;');
+  await setPreferences(driver, { locale: "zh-CN", inputPreset: "numpad" });
+  await driver.execute('window.__berserkerReload = true;   setTimeout(() => location.reload(), 50); return true;');
   await driver.waitFor('return !window.__berserkerReload && document.documentElement.dataset.appMode === "title"', "Chinese title", 60_000);
   const sources = Object.fromEntries(await Promise.all(["zh-CN", "en-US"].map(async locale => [locale,
     await Promise.all(["ui", "content", "game"].map(file => readFile(new URL(`../../locales/${locale}/${file}.ftl`, import.meta.url), "utf8"))),
@@ -327,7 +329,7 @@ export async function runBerserkerUiScenario(driver, directory, profile) {
     }
     await checkItems(final);
     for (const locale of ["zh-CN", "en-US"]) {
-      await driver.execute('const select = document.querySelector("#language-select"); select.value = arguments[0]; select.dispatchEvent(new Event("change", { bubbles: true })); return true;', [locale]);
+      await setPreferences(driver, { locale });
       await ready(); localization.setLocale(locale);
       const wounded = await prepareLevel(30, true);
       await checkAbilities(wounded);

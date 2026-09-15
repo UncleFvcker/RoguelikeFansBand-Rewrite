@@ -11,13 +11,33 @@ use rfb_content::AmmunitionTypeDefinition;
 use rfb_localization::{Locale, Localizer, MogaminatorNames};
 use rfb_protocol::{
     AutoGetModeDto, AutoGetTargetDto, ItemFeelingDto, LocaleDto, MogaminatorActionDto,
-    MogaminatorDiagnosticDto, MogaminatorDispositionDto, MogaminatorDto, MogaminatorItemMatchDto,
-    MogaminatorLineDto, MogaminatorLineKindDto, MogaminatorPendingQueryDto,
-    MogaminatorPendingQuerySaveDto, MogaminatorSaveDto,
+    MogaminatorContextDto, MogaminatorDiagnosticDto, MogaminatorDispositionDto, MogaminatorDto,
+    MogaminatorItemMatchDto, MogaminatorLineDto, MogaminatorLineKindDto,
+    MogaminatorPendingQueryDto, MogaminatorPendingQuerySaveDto,
 };
 
 const DEFAULT_ZH_CN_SOURCE: &str = include_str!("mogaminator-default-zh-CN.prf");
 const DEFAULT_EN_US_SOURCE: &str = include_str!("mogaminator-default-en-US.prf");
+
+// Ordinary first-match leave rules; vocabulary is the existing bilingual RFB grammar.
+// No unopened-chest or real-known-value predicate exists; do not offer broader substitutes.
+fn protection_templates(locale: LocaleDto) -> Vec<rfb_protocol::MogaminatorProtectionTemplateDto> {
+    [
+        ("equipment", "~武器\n~防具", "~weapons\n~armors"),
+        ("wanted", "~悬赏中 尸体", "~wanted corpses"),
+        ("remains", "~尸体\n~残骸", "~corpses\n~skeletons"),
+        ("junk", "~杂物", "~junk"),
+        ("special", "~特殊的 物品", "~special items"),
+    ]
+    .into_iter()
+    .map(
+        |(id, zh, en)| rfb_protocol::MogaminatorProtectionTemplateDto {
+            id: id.into(),
+            source: if locale == LocaleDto::ZhCn { zh } else { en }.into(),
+        },
+    )
+    .collect()
+}
 
 pub(super) enum MogaminatorItemResolution {
     PickUp {
@@ -84,26 +104,8 @@ impl Default for MogaminatorState {
 }
 
 impl MogaminatorState {
-    pub(super) fn from_save(saved: MogaminatorSaveDto) -> Result<Self, Vec<MogaminatorDiagnostic>> {
-        compile_mogaminator(&saved.zh_cn_source)?;
-        compile_mogaminator(&saved.en_us_source)?;
-        Ok(Self {
-            enabled: saved.enabled,
-            leave_destroyed_items: saved.leave_destroyed_items,
-            auto_get_mode: saved.auto_get_mode,
-            zh_cn_source: saved.zh_cn_source,
-            en_us_source: saved.en_us_source,
-            pending_query: saved.pending_query.map(|pending| MogaminatorPendingQuery {
-                item_id: pending.item_id,
-                rule_line: pending.rule_line,
-            }),
-            dismissed_query_item_ids: saved.dismissed_query_item_ids.into_iter().collect(),
-            wanted_actor_kind_ids: saved.wanted_actor_kind_ids.into_iter().collect(),
-        })
-    }
-
-    pub(super) fn to_save(&self) -> MogaminatorSaveDto {
-        MogaminatorSaveDto {
+    pub(super) fn to_context(&self) -> MogaminatorContextDto {
+        MogaminatorContextDto {
             enabled: self.enabled,
             leave_destroyed_items: self.leave_destroyed_items,
             auto_get_mode: self.auto_get_mode,
@@ -232,6 +234,7 @@ impl Game {
             .enabled
             .then(|| self.mogaminator_matches(&compiled));
         MogaminatorDto {
+            protection_templates: protection_templates(self.interface_locale),
             enabled: self.mogaminator.enabled,
             leave_destroyed_items: self.mogaminator.leave_destroyed_items,
             auto_get_mode: self.mogaminator.auto_get_mode,
@@ -368,6 +371,75 @@ impl Game {
         }
 
         candidates
+    }
+
+    pub(super) fn unknown_item_travel_candidates(&self) -> Vec<AutoGetTargetDto> {
+        // RFB master@a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, cmd2.c::do_cmd_get_nearest.
+        // Source max_autopick includes an implicit =g entry; our compiled list contains only file rules.
+        let locale = localization_locale(self.interface_locale);
+        let names = MogaminatorNames::new(locale).expect("bundled matching names");
+        let compiled = compile_mogaminator(self.mogaminator.source(self.interface_locale))
+            .expect("validated rules");
+        let filter = self.mogaminator.enabled
+            && compiled.rules.iter().any(|rule| {
+                rule.condition
+                    .as_ref()
+                    .is_none_or(|condition| self.evaluate_mogaminator_condition(condition, locale))
+            });
+        self.items
+            .iter()
+            .filter_map(|item| {
+                let ItemLocation::Ground(position) = item.location else {
+                    return None;
+                };
+                if position == self.player.position
+                    || self.index(position).is_none()
+                    || !self.item_is_discovered(&item.id)
+                    || self.item_identification(item) != ItemIdentificationDto::Unexamined
+                {
+                    return None;
+                }
+                let definition = self.content.item(&item.kind_id).unwrap();
+                let device = definition
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "wand" | "staff" | "rod"));
+                if !device
+                    && self.item_feeling(item).is_some_and(|feeling| {
+                        !matches!(
+                            feeling,
+                            ItemFeelingDto::Excellent
+                                | ItemFeelingDto::Special
+                                | ItemFeelingDto::Awful
+                                | ItemFeelingDto::Terrible
+                                | ItemFeelingDto::Enchanted
+                        )
+                    })
+                {
+                    return None;
+                }
+                if filter
+                    && !item
+                        .inscription
+                        .as_deref()
+                        .is_some_and(|text| text.contains("=g"))
+                    && !self
+                        .mogaminator_match_for_item(&compiled, &names, locale, item)
+                        .is_some_and(|(_, (action, _))| {
+                            matches!(
+                                action.disposition,
+                                MogaminatorDisposition::PickUp | MogaminatorDisposition::Query
+                            )
+                        })
+                {
+                    return None;
+                }
+                Some(AutoGetTargetDto {
+                    object_id: item.id.clone(),
+                    position,
+                })
+            })
+            .collect()
     }
 
     pub(super) fn apply_mogaminator_at_player(
@@ -1350,12 +1422,54 @@ mod tests {
     use rfb_protocol::GameCommand;
 
     #[test]
+    fn protection_templates_precede_destroy_rules_and_track_current_wanted_targets() {
+        let mut game = Game::new_with_build(83, "demo.build.warrior").unwrap();
+        let wanted = game
+            .mogaminator
+            .wanted_actor_kind_ids
+            .iter()
+            .next()
+            .unwrap()
+            .clone();
+        let mut corpse = game.items[0].clone();
+        corpse.kind_id = "demo.item.corpse-remains".into();
+        corpse.origin_actor_kind_id = Some(wanted);
+        for locale in [LocaleDto::ZhCn, LocaleDto::EnUs] {
+            let templates = protection_templates(locale);
+            for template in &templates {
+                compile_mogaminator(&template.source).unwrap();
+            }
+            let template = templates.iter().find(|t| t.id == "wanted").unwrap();
+            let compiled = compile_mogaminator(&format!("{}\n!items", template.source)).unwrap();
+            let locale = if locale == LocaleDto::ZhCn {
+                Locale::ZhCn
+            } else {
+                Locale::EnUs
+            };
+            assert!(game.mogaminator_rule_matches(&compiled.rules[0], locale, &corpse, ""));
+            assert_eq!(
+                compiled.rules[0].rule.action.disposition,
+                MogaminatorDisposition::Leave
+            );
+            assert_eq!(
+                compiled.rules[1].rule.action.disposition,
+                MogaminatorDisposition::Destroy
+            );
+            let before = game.mogaminator.wanted_actor_kind_ids.clone();
+            game.mogaminator.wanted_actor_kind_ids.clear();
+            assert!(!game.mogaminator_rule_matches(&compiled.rules[0], locale, &corpse, ""));
+            game.mogaminator.wanted_actor_kind_ids = before;
+        }
+    }
+
+    #[test]
     fn human_and_special_corpse_predicates_use_source_glyph_and_current_diet() {
         let game = Game::new_with_build_race_and_name(
             83,
             "demo.build.warrior",
             "rfb-legacy.race.balrog",
             "test",
+            Game::default_behavior_preferences(),
         )
         .unwrap();
         let mut corpse = game
@@ -1418,7 +1532,7 @@ mod tests {
                 MogaminatorPredicate::FavoriteWeapons,
                 &game.items[index]
             ));
-            let restored = Game::from_save(game.to_save()).unwrap();
+            let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             assert!(restored.mogaminator_predicate_matches(
                 MogaminatorPredicate::FavoriteWeapons,
                 &restored.items[index]
@@ -1593,8 +1707,8 @@ mod tests {
         assert_eq!(dto.source, "weapons");
         assert_ne!(game.state_hash(), initial_hash);
 
-        let restored =
-            Game::from_save(game.to_save()).expect("Mogaminator state should round-trip");
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+            .expect("Mogaminator state should round-trip");
         assert_eq!(restored.interface_locale, LocaleDto::EnUs);
         assert_eq!(restored.mogaminator, game.mogaminator);
     }
@@ -1931,10 +2045,11 @@ mod tests {
     }
 
     #[test]
-    fn query_rules_round_trip_and_rejection_is_not_repeated() {
+    fn loading_clears_query_cache_and_explicit_rescan_can_ask_again() {
         let mut game = Game::new(11);
         game.interface_locale = LocaleDto::ZhCn;
         game.player.position = Position { x: 4, y: 3 };
+        game.reveal_current_visibility();
         game.items.clear();
         add_auto_get_item(
             &mut game,
@@ -1962,7 +2077,12 @@ mod tests {
             .pending_query
             .clone()
             .expect("one ground item should be pending");
-        let mut restored = Game::from_save(game.to_save()).expect("pending query should reload");
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences())
+            .expect("character should reload");
+        assert!(restored.mogaminator.pending_query.is_none());
+        assert!(restored.mogaminator.dismissed_query_item_ids.is_empty());
+        assert_eq!(restored.to_save(), game.to_save());
+        restored.apply_mogaminator_at_player().unwrap();
         assert_eq!(restored.mogaminator.pending_query, Some(pending.clone()));
 
         assert!(

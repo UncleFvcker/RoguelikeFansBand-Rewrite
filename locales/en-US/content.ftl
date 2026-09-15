@@ -10159,3 +10159,10 @@ terrain-demo-random-mountain-entrance-description = 一条通向未知山脉的�
 floor-demo-random-sea-depth-name = Random Sea
 terrain-demo-random-sea-entrance-name = Random Sea
 terrain-demo-random-sea-entrance-description = 一条通往未知失落之地的水下道路
+
+item-demo-iron-spike-name = Iron Spike
+item-demo-iron-spike-description = Jams a closed door; each attempt consumes one spike.
+terrain-demo-glass-door-jammed-name = Jammed glass door
+terrain-demo-glass-door-jammed-description = A glass door jammed with spikes, still transparent.
+terrain-demo-glass-door-broken-name = Broken glass door
+terrain-demo-glass-door-broken-description = A glass door that has been bashed apart.

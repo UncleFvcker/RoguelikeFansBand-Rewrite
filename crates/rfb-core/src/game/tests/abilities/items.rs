@@ -133,7 +133,8 @@ fn death_weapon_branding_targets_plain_weapons_across_player_locations() {
         .expect("vampiric branding content")
         .clone();
     saved.resolve_player_brand_weapon_effect(&ability, "test.saved-brand", &mut Vec::new());
-    Game::from_save(saved.to_save()).expect("branded weapon should round-trip");
+    Game::from_save(saved.to_save(), saved.behavior_preferences())
+        .expect("branded weapon should round-trip");
 }
 
 #[test]
@@ -192,6 +193,7 @@ fn formal_hobbit_high_mage(seed: u64, level: u16) -> Game {
         "demo.build.high-mage-death",
         "rfb-legacy.race.hobbit",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Hobbit High-Mage should create");
     clear_monsters(&mut game);
@@ -271,8 +273,12 @@ fn formal_hobbit_create_food_projects_and_round_trips_an_acquired_ration() {
     assert!(game.is_walkable(position));
     assert!(rfb_distance(position, game.player.position) <= 3);
 
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Hobbit Create Food save should restore");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Hobbit Create Food save should restore");
     let restored_item = restored
         .items
         .iter()
@@ -367,8 +373,12 @@ fn create_item_ability_places_an_acquired_item_and_merges_repeated_casts() {
     assert_eq!(merged.quantity, 2);
     assert_eq!(game.next_item_instance_serial, serial_after_first);
 
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("an acquired item should survive a save round trip");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("an acquired item should survive a save round trip");
     let restored_item = restored
         .items
         .iter()

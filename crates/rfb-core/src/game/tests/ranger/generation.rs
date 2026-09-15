@@ -25,7 +25,8 @@ fn rewards_keep_birth_selection_replace_unique_bows_and_fail_atomically() {
             let before = game.clone();
             let mut advanced = game.clone();
             advanced.rng.bounded(12345);
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             game.claim_task_reward(&facility, &task).unwrap();
             restored.claim_task_reward(&facility, &task).unwrap();
             assert_eq!(game.to_save(), restored.to_save());
@@ -61,7 +62,8 @@ fn rewards_keep_birth_selection_replace_unique_bows_and_fail_atomically() {
                     Err("inventory-full")
                 );
                 assert_eq!(full.to_save(), full_save);
-                let mut restored = Game::from_save(duplicate.to_save()).unwrap();
+                let mut restored =
+                    Game::from_save(duplicate.to_save(), duplicate.behavior_preferences()).unwrap();
                 for run in [&mut duplicate, &mut restored] {
                     run.claim_task_reward(&facility, &task).unwrap();
                     let item = run.items.iter().find(|item| item.id == id).unwrap();
@@ -71,7 +73,7 @@ fn rewards_keep_birth_selection_replace_unique_bows_and_fail_atomically() {
                         run.claim_task_reward(&facility, &task),
                         Err("reward-unavailable")
                     );
-                    Game::from_save(run.to_save()).unwrap();
+                    Game::from_save(run.to_save(), run.behavior_preferences()).unwrap();
                     run.rng.bounded(1000);
                 }
                 assert_eq!(duplicate.to_save(), restored.to_save());
@@ -153,7 +155,7 @@ fn fixed_bows_generate_equip_fire_and_keep_uniqueness_after_loading() {
             .find(|item| item.id == ammunition)
             .unwrap()
             .quantity;
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let tick = game.world_tick;
         let gain = energy_gain(derived_speed(&game.player_derived_stats().speed));
         let ticks = u32::try_from((profile.energy_cost + gain - 1) / gain).unwrap();
@@ -232,7 +234,8 @@ fn guild_enchantments_and_tower_identification_use_ranger_roles_and_saved_contin
                     );
                 }
                 game.gold = cost;
-                let mut restored = Game::from_save(game.to_save()).unwrap();
+                let mut restored =
+                    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 let before = (game.world_tick, game.rng.clone());
                 for run in [&mut game, &mut restored] {
                     let result = dispatch_next(
@@ -271,7 +274,8 @@ fn guild_enchantments_and_tower_identification_use_ranger_roles_and_saved_contin
             assert_eq!(price, game.town_service_price(1000));
             give_inventory_item(&mut game, "test.unidentified", "demo.item.long-bow");
             game.gold = price;
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             for run in [&mut game, &mut restored] {
                 run.identify_all_at_facility(&facility).unwrap();
                 assert_eq!(run.gold, 0);
@@ -345,7 +349,7 @@ fn changing_realm_updates_autopick_and_realm_guild_but_keeps_class_membership() 
     enter_town_facility(&mut game, &tower.id);
     game.reveal_current_visibility();
     game.gold = old_price;
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for run in [&mut game, &mut restored] {
         let before = run.to_save();
         assert_eq!(

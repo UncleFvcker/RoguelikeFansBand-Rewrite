@@ -5,6 +5,183 @@ use crate::game::initialization::dungeon_substitution_uses_alternate;
 use crate::game::lighting::{DUNGEON_AMBIENT_LIGHT, SURFACE_AMBIENT_LIGHT};
 
 #[test]
+fn world_map_party_survives_travel_save_return_and_repeated_town_entry() {
+    let mut game = world_map_party();
+    // Suppress random low-level road ambushes; the ambush path has its own case.
+    game.apply_player_experience(game.experience_required_for_level(50), &mut Vec::new());
+    choose_human_talent_if_pending(&mut game);
+    let origin = game.wilderness_position.unwrap();
+    dispatch_next(&mut game, enter_world_map_command());
+    assert_eq!(game.map_scale, MapScaleDto::World);
+    assert_world_map_party(&game);
+    dispatch_next(
+        &mut game,
+        GameCommand::TravelWorld {
+            destination: Position {
+                x: origin.x + 1,
+                y: origin.y,
+            },
+        },
+    );
+    assert_eq!(game.map_scale, MapScaleDto::World);
+    assert_ne!(game.wilderness_position, Some(origin));
+    assert_world_map_party(&game);
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(game.state_hash(), restored.state_hash());
+    for state in [&mut game, &mut restored] {
+        dispatch_next(state, GameCommand::LeaveWorldMap);
+        assert_eq!(state.map_scale, MapScaleDto::Local);
+        assert_world_map_party(state);
+        dispatch_next(state, enter_world_map_command());
+        state.wilderness_position = Some(origin);
+        dispatch_next(state, GameCommand::LeaveWorldMap);
+        assert_world_map_party(state);
+        // Loading the embedded town must not duplicate its former pets or cargo.
+        dispatch_next(state, enter_world_map_command());
+        dispatch_next(state, GameCommand::LeaveWorldMap);
+        assert_world_map_party(state);
+        let saved = Game::from_save(state.to_save(), state.behavior_preferences()).unwrap();
+        assert_eq!(state.state_hash(), saved.state_hash());
+    }
+    assert_eq!(game.state_hash(), restored.state_hash());
+}
+
+#[test]
+fn world_map_ambush_and_embedded_town_keep_the_same_party() {
+    let mut game = world_map_party();
+    dispatch_next(&mut game, enter_world_map_command());
+    assert!(game.move_on_world_map(Direction::East, &mut BTreeSet::new()));
+    game.activate_wilderness_ambush().unwrap();
+    assert_eq!(game.map_scale, MapScaleDto::Local);
+    assert_world_map_party(&game);
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    assert_eq!(game.state_hash(), restored.state_hash());
+
+    let mut town = world_map_party();
+    town.activate_embedded_town_floor().unwrap();
+    assert_world_map_party(&town);
+    town.initialize_continuous_wilderness_surface().unwrap();
+    assert_world_map_party(&town);
+    let restored = Game::from_save(town.to_save(), town.behavior_preferences()).unwrap();
+    assert_eq!(town.state_hash(), restored.state_hash());
+}
+
+fn world_map_party() -> Game {
+    let mut game = Game::new_with_build(509, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    let positions =
+        game.open_positions_around_for_actor_kind(game.player.position, 5, "demo.actor.horse");
+    for (id, position) in [
+        ("test.world-mount", game.player.position),
+        ("test.world-pet", positions[0]),
+        ("test.world-child", positions[1]),
+    ] {
+        let kind = if id == "test.world-child" {
+            "demo.actor.risen-thrall"
+        } else {
+            "demo.actor.horse"
+        };
+        game.push_generated_actor(id.into(), kind, position);
+        let actor = game.entities.last_mut().unwrap();
+        actor.controller_id = Some(game.player.id.clone());
+        actor.custom_name = Some(id.into());
+        actor.energy_need = STANDARD_ACTION_COST;
+    }
+    game.entities.last_mut().unwrap().summon = Some(SummonIdentity {
+        owner_id: "test.world-pet".into(),
+        owner_dependent: true,
+        source_ability_id: "rfb-legacy.ability.animate-dead".into(),
+        remaining_turns: 0,
+    });
+    game.entities.sort_by(|left, right| left.id.cmp(&right.id));
+    game.riding_actor_id = Some("test.world-mount".into());
+    game.summon_command.riding_two_hands = true;
+    game.summon_command.mode = SummonCommandModeDto::Guard;
+    game.summon_command.guard_position = Some(game.player.position);
+    give_inventory_item(&mut game, "test.world-cargo", "demo.item.short-sword");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.world-cargo")
+        .unwrap()
+        .location = ItemLocation::CarriedBy {
+        actor_id: "test.world-child".into(),
+    };
+    game
+}
+
+fn assert_world_map_party(game: &Game) {
+    for id in ["test.world-mount", "test.world-pet", "test.world-child"] {
+        let actor = game.entities.iter().find(|actor| actor.id == id).unwrap();
+        assert_eq!(actor.custom_name.as_deref(), Some(id));
+        assert_eq!(
+            actor.controller_id.as_deref(),
+            Some(game.player.id.as_str())
+        );
+        assert!(actor.hp > 0);
+        assert_eq!(
+            game.entities
+                .iter()
+                .chain(
+                    game.stored_floors
+                        .values()
+                        .flat_map(|floor| floor.entities.iter())
+                )
+                .filter(|actor| actor.id == id)
+                .count(),
+            1
+        );
+    }
+    let child = game
+        .entities
+        .iter()
+        .find(|actor| actor.id == "test.world-child")
+        .unwrap();
+    let summon = child.summon.as_ref().unwrap();
+    assert_eq!(summon.owner_id, "test.world-pet");
+    assert!(summon.owner_dependent);
+    assert_eq!(summon.remaining_turns, 0);
+    let cargo = game
+        .items
+        .iter()
+        .filter(|item| item.id == "test.world-cargo")
+        .collect::<Vec<_>>();
+    assert_eq!(cargo.len(), 1);
+    assert_eq!(
+        cargo[0].location,
+        ItemLocation::CarriedBy {
+            actor_id: child.id.clone()
+        }
+    );
+    assert!(
+        game.stored_floors
+            .values()
+            .all(|floor| floor.items.iter().all(|item| item.id != "test.world-cargo"))
+    );
+    let mount = game
+        .entities
+        .iter()
+        .find(|actor| actor.id == "test.world-mount")
+        .unwrap();
+    assert_eq!(game.riding_actor_id.as_deref(), Some(mount.id.as_str()));
+    assert_eq!(mount.position, game.player.position);
+    assert!(game.summon_command.riding_two_hands);
+    assert_eq!(
+        game.summon_command.guard_position,
+        Some(game.player.position)
+    );
+    assert_eq!(
+        game.entities
+            .iter()
+            .filter(|actor| actor.id.starts_with("test.world-"))
+            .map(|actor| actor.position)
+            .collect::<BTreeSet<_>>()
+            .len(),
+        3
+    );
+}
+
+#[test]
 fn anti_magic_cave_real_entry_chain_and_return() {
     anti_cave_round_trip(
         1,
@@ -101,7 +278,12 @@ fn anti_cave_round_trip(seed: u64, slug: &str, suppressed: &str, world_position:
         .unwrap()
         .hp = 7;
     let hash = game.state_hash();
-    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    game = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(hash, game.state_hash());
     assert_eq!(
         game.entities.iter().filter(|a| a.id == guardian_id).count(),
@@ -170,7 +352,12 @@ fn anti_cave_round_trip(seed: u64, slug: &str, suppressed: &str, world_position:
     assert!(!game.dungeon_states[&dungeon_id].guardian_defeated);
     assert_eq!(game.campaign_counts().0, 0);
     let hash = game.state_hash();
-    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    game = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(hash, game.state_hash());
     for depth in (39..=49).rev() {
         place_player_on_terrain(&mut game, "demo.terrain.stairs-up");
@@ -190,7 +377,12 @@ fn anti_cave_round_trip(seed: u64, slug: &str, suppressed: &str, world_position:
     assert!(!game.dungeon_blocks_magic());
     assert!(!game.dungeon_blocks_melee());
     assert!(game.dungeon_states[&dungeon_id].entrance_guardian_defeated);
-    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    game = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     let mut invalid = game.to_save();
     let recall = invalid
         .player
@@ -202,7 +394,14 @@ fn anti_cave_round_trip(seed: u64, slug: &str, suppressed: &str, world_position:
         .unwrap();
     recall.dungeon_id = suppressed_id.clone();
     recall.floor_id = format!("demo.floor.{suppressed}-depth-40");
-    assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            invalid,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
     game.start_recall(0);
     dispatch_next(&mut game, GameCommand::Wait);
     assert_eq!(game.current_floor_id, format!("demo.floor.{slug}-depth-50"));
@@ -426,7 +625,12 @@ fn guardianless_dungeon_entry_terminal_save_and_return_do_not_conquer() {
     assert_eq!(game.campaign_counts().0, 0);
     assert!(!game.generated_artifact_ids.contains("demo.item.razorback"));
     let hash = game.state_hash();
-    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    game = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert!(game.dungeon_blocks_magic());
     assert!(game.dungeon_blocks_melee());
     assert_eq!(game.state_hash(), hash);
@@ -438,7 +642,11 @@ fn guardianless_dungeon_entry_terminal_save_and_return_do_not_conquer() {
         .unwrap()
         .guardian_defeated = true;
     assert!(matches!(
-        Game::from_save_with_content(invalid, game.content.clone()),
+        Game::from_save_with_content(
+            invalid,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        ),
         Err(CoreError::InvalidSave("dungeon guardian state is invalid"))
     ));
     for expected in ["demo.floor.rlyeh-depth-80", wilderness::WILDERNESS_FLOOR_ID] {
@@ -456,7 +664,12 @@ fn guardianless_dungeon_entry_terminal_save_and_return_do_not_conquer() {
     assert!(!game.dungeon_blocks_melee());
     assert_eq!(game.wilderness_position, Some(world_position));
     assert_eq!(game.player.position, departure);
-    game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    game = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     game.start_recall(0);
     dispatch_next(&mut game, GameCommand::Wait);
     assert_eq!(game.current_floor_id, "demo.floor.rlyeh-depth-81");
@@ -714,7 +927,7 @@ fn rlyeh_full_chain_water_reward_and_surface_return_survive_save() {
     );
     let id = reward.id.clone();
     assert!(game.generated_artifact_ids.contains("demo.item.razorback"));
-    let mut game = Game::from_save(game.to_save()).unwrap();
+    let mut game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         game.items
             .iter()
@@ -765,7 +978,7 @@ fn rlyeh_full_chain_water_reward_and_surface_return_survive_save() {
         1
     );
     let hash = game.state_hash();
-    let mut game = Game::from_save(game.to_save()).unwrap();
+    let mut game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), hash);
     clear_monsters(&mut game);
     game.start_recall(0);
@@ -808,11 +1021,13 @@ fn rlyeh_full_chain_water_reward_and_surface_return_survive_save() {
     let fallback = replacement
         .items
         .iter()
-        .find(|item| {
-            item.kind_id == "demo.item.multi-hued-dragon-scale-mail"
-                && item.quality == ItemQualityDto::Exceptional
-        })
-        .expect("replacement reward must also survive an open-water death");
+        .find(|item| item.kind_id == "demo.item.galadriel")
+        .expect("AM_GOOD replacement artifact must also survive an open-water death");
+    assert!(
+        replacement
+            .generated_artifact_ids
+            .contains(&fallback.kind_id)
+    );
     let ItemLocation::Ground(landing) = fallback.location else {
         panic!("replacement must land on the floor")
     };
@@ -821,7 +1036,6 @@ fn rlyeh_full_chain_water_reward_and_surface_return_survive_save() {
 
 fn enter_world_map_command() -> GameCommand {
     GameCommand::EnterWorldMap {
-        leave_pets: false,
         cancel_recall: false,
     }
 }
@@ -1023,8 +1237,12 @@ fn p89b_substitute_selection_is_seeded_persisted_and_hashed() {
             .iter()
             .any(|state| { state.dungeon_id == "demo.dungeon.hideout" && state.suppressed })
     );
-    let restored = Game::from_save_with_content(payload, alternate.content.clone())
-        .expect("substitution state should restore");
+    let restored = Game::from_save_with_content(
+        payload,
+        alternate.content.clone(),
+        Game::default_behavior_preferences(),
+    )
+    .expect("substitution state should restore");
     assert_eq!(restored.state_hash(), alternate.state_hash());
     assert!(!restored.dungeon_is_active("demo.dungeon.hideout"));
     assert!(restored.dungeon_is_active("demo.dungeon.man-cave"));
@@ -1904,7 +2122,8 @@ fn p90c_troll_cave_shared_entry_shafts_conquest_and_reward_are_one_shot() {
         1
     );
     let hash = game.state_hash();
-    let restored = Game::from_save(game.to_save()).expect("Troll cave conquest should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Troll cave conquest should restore");
     assert_eq!(restored.state_hash(), hash);
     assert!(restored.dungeon_states["demo.dungeon.troll-cave"].guardian_defeated);
 }
@@ -2023,7 +2242,8 @@ fn p91c_eyrie_guardians_shafts_conquest_and_new_life_reward_are_one_shot() {
             .all(|actor| actor.id != "demo.guardian.eyrie-entrance.1")
     );
     let initial_hash = game.state_hash();
-    game = Game::from_save(game.to_save()).expect("distant Eyrie guardian state should restore");
+    game = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("distant Eyrie guardian state should restore");
     assert_eq!(game.state_hash(), initial_hash);
     dispatch_next(&mut game, enter_world_map_command());
     game.wilderness_position = Some(Position { x: 76, y: 46 });
@@ -2043,7 +2263,8 @@ fn p91c_eyrie_guardians_shafts_conquest_and_new_life_reward_are_one_shot() {
         "demo.terrain.surface-path"
     );
     let guarded_hash = game.state_hash();
-    game = Game::from_save(game.to_save()).expect("visible Eyrie guardian should restore");
+    game = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("visible Eyrie guardian should restore");
     assert_eq!(game.state_hash(), guarded_hash);
 
     let (entrance_update, _) = p89_defeat_guardian(&mut game, "demo.guardian.eyrie-entrance.1");
@@ -2139,7 +2360,8 @@ fn p91c_eyrie_guardians_shafts_conquest_and_new_life_reward_are_one_shot() {
         }
     }
     let hash = game.state_hash();
-    let restored = Game::from_save(game.to_save()).expect("Eyrie conquest should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Eyrie conquest should restore");
     assert_eq!(restored.state_hash(), hash);
     assert!(restored.dungeon_states["demo.dungeon.eyrie"].entrance_guardian_defeated);
     assert!(restored.dungeon_states["demo.dungeon.eyrie"].guardian_defeated);
@@ -2480,8 +2702,8 @@ fn p93c_smaug_drops_arkenstone_with_clairvoyance_and_replacement() {
     );
     choose_human_talent_if_pending(&mut game);
     let hash = game.state_hash();
-    let restored =
-        Game::from_save(game.to_save()).expect("Lonely Mountain conquest should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Lonely Mountain conquest should restore");
     assert_eq!(restored.state_hash(), hash);
     assert!(restored.dungeon_states["demo.dungeon.lonely-mountain"].guardian_defeated);
 
@@ -2528,7 +2750,8 @@ fn p93c_smaug_drops_arkenstone_with_clairvoyance_and_replacement() {
         game.process_inventory_device_recovery(&mut recovery_events);
     }
     assert!(game.items[arkenstone_index].device_recovery_progress > 1_000);
-    let restored = Game::from_save(game.to_save()).expect("long artifact cooldown should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("long artifact cooldown should restore");
     let restored_stone = restored
         .items
         .iter()
@@ -2626,7 +2849,8 @@ fn p97e_dragon_lair_guardians_and_scale_mail_reward_are_one_shot() {
         1
     );
     let hash = game.state_hash();
-    let restored = Game::from_save(game.to_save()).expect("Dragon's Lair conquest should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Dragon's Lair conquest should restore");
     assert_eq!(restored.state_hash(), hash);
     assert!(restored.dungeon_states["demo.dungeon.dragon-lair"].entrance_guardian_defeated);
     assert!(restored.dungeon_states["demo.dungeon.dragon-lair"].guardian_defeated);
@@ -2776,7 +3000,8 @@ fn p98c_castle_guardians_and_conquest_are_one_shot() {
         0
     );
     let hash = game.state_hash();
-    let restored = Game::from_save(game.to_save()).expect("Castle conquest should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Castle conquest should restore");
     assert_eq!(restored.state_hash(), hash);
     assert!(restored.dungeon_states["demo.dungeon.castle"].entrance_guardian_defeated);
     assert!(restored.dungeon_states["demo.dungeon.castle"].guardian_defeated);
@@ -2804,7 +3029,8 @@ fn crystal_castle_entrance_uses_source_coordinates_and_restores_the_surface() {
     let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(entered.floor_id, "demo.floor.crystal-castle-depth-40");
     let hash = game.state_hash();
-    let mut restored = Game::from_save(game.to_save()).expect("Crystal castle should restore");
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Crystal castle should restore");
     assert_eq!(restored.state_hash(), hash);
     clear_monsters(&mut restored);
     place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
@@ -2889,7 +3115,8 @@ fn p100f_graveyard_guardians_and_rolled_soulsword_reward_are_one_shot() {
         1
     );
     let hash = game.state_hash();
-    let restored = Game::from_save(game.to_save()).expect("Graveyard conquest should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Graveyard conquest should restore");
     assert_eq!(restored.state_hash(), hash);
     assert!(restored.dungeon_states["demo.dungeon.graveyard"].entrance_guardian_defeated);
     assert!(restored.dungeon_states["demo.dungeon.graveyard"].guardian_defeated);
@@ -3029,7 +3256,8 @@ fn p94c_mine_guardians_and_star_healing_reward_are_one_shot() {
         potions
     );
     let hash = game.state_hash();
-    let restored = Game::from_save(game.to_save()).expect("Mine conquest should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Mine conquest should restore");
     assert_eq!(restored.state_hash(), hash);
     assert!(restored.dungeon_states["demo.dungeon.mine"].entrance_guardian_defeated);
     assert!(restored.dungeon_states["demo.dungeon.mine"].guardian_defeated);
@@ -3197,7 +3425,8 @@ fn p95c_battlefield_guardians_reward_and_no_enchant_are_one_shot() {
         1
     );
     let hash = game.state_hash();
-    let restored = Game::from_save(game.to_save()).expect("Battlefield conquest should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Battlefield conquest should restore");
     assert_eq!(restored.state_hash(), hash);
     assert!(restored.dungeon_states["demo.dungeon.battlefield"].guardian_defeated);
 }
@@ -3233,7 +3462,8 @@ fn p89f_hideout_conquest_and_am_quest_reward_are_one_shot() {
         1
     );
     let hash = game.state_hash();
-    let restored = Game::from_save(game.to_save()).expect("Hideout conquest should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Hideout conquest should restore");
     assert_eq!(restored.state_hash(), hash);
 }
 
@@ -3274,7 +3504,8 @@ fn p89f_man_cave_conquest_lotharang_activation_and_replacement_are_one_shot() {
             .contains("demo.item.lotharang")
     );
     let hash = conquered.state_hash();
-    let restored = Game::from_save(conquered.to_save()).expect("Man cave conquest should restore");
+    let restored = Game::from_save(conquered.to_save(), conquered.behavior_preferences())
+        .expect("Man cave conquest should restore");
     assert_eq!(restored.state_hash(), hash);
     assert!(restored.dungeon_states["demo.dungeon.man-cave"].guardian_defeated);
     assert_eq!(
@@ -3433,7 +3664,8 @@ fn dungeon_round_trip_restores_the_scrolled_town_position() {
     game.player.position = entrance;
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(game.current_floor_id, "demo.floor.warrens-depth-1");
-    let mut game = Game::from_save(game.to_save()).expect("scrolled dungeon state should reload");
+    let mut game = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("scrolled dungeon state should reload");
     assert_eq!(game.wilderness_position, Some(world_position));
     assert_eq!(game.wilderness_view_offset, Position { x: 1, y: 0 });
 
@@ -4868,7 +5100,8 @@ fn world_map_projects_authoritative_wilderness_cells_and_restores_the_local_map(
         save.wilderness_seed,
         42_u64.wrapping_add(wilderness::WILDERNESS_SEED_STEP)
     );
-    let mut restored = Game::from_save(save).expect("world map state should reload");
+    let mut restored = Game::from_save(save, Game::default_behavior_preferences())
+        .expect("world map state should reload");
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.snapshot().map_scale, MapScaleDto::World);
 
@@ -4969,7 +5202,7 @@ fn world_map_round_trip_preserves_the_visible_town_surface() {
     assert!(backing.revealed_terrain.contains(&local));
     assert!(backing.detection_coverage.traps.contains(&local));
     assert!(backing.detection_coverage.mapping.contains(&local));
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
 
     dispatch_next(&mut game, GameCommand::LeaveWorldMap);
 
@@ -5053,7 +5286,8 @@ fn wilderness_ambush_enters_local_combat_and_locks_world_map_until_cleared() {
             .expect("ambush initiative ticks must fit u32")
     );
 
-    let mut restored = Game::from_save(game.to_save()).expect("ambush should round-trip");
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("ambush should round-trip");
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.world_travel_destination, Some(travel_destination));
     let blocked = restored.dispatch(command(
@@ -5081,6 +5315,7 @@ fn wilderness_ambush_enters_local_combat_and_locks_world_map_until_cleared() {
         .clone();
     summoned.id = "summon.test.ambush-threat".to_owned();
     summoned.summon = Some(SummonIdentity {
+        owner_dependent: false,
         owner_id,
         source_ability_id: "test.ability.summon".to_owned(),
         remaining_turns: 10,
@@ -5150,7 +5385,8 @@ fn local_wilderness_is_coordinate_seeded_and_restores_from_save() {
     );
     assert!(game.stored_floors.contains_key("demo.floor.surface"));
 
-    let restored = Game::from_save(game.to_save()).expect("local wilderness should reload");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("local wilderness should reload");
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.wilderness_view_offset, Position::default());
     assert_eq!(restored.terrain, game.terrain);
@@ -5337,6 +5573,17 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
     game.explored[remembered_index] = true;
     game.revealed_terrain.insert(remembered);
     game.summon_command = SummonCommandDto {
+        riding_two_hands: false,
+        highlight_map: false,
+        highlight_lists: true,
+        open_doors: false,
+        pickup_items: false,
+        no_breeding: false,
+        attack_spells: true,
+        summon_spells: true,
+        teleport: true,
+        allow_player_damage: false,
+        target_actor_id: None,
         mode: SummonCommandModeDto::Guard,
         guard_position: Some(remembered),
     };
@@ -5663,8 +5910,12 @@ fn scrolling_into_and_out_of_a_town_stays_on_the_continuous_wilderness_surface()
     assert_eq!(game.wilderness_terrain_cache, terrain_cache);
     assert_eq!(game.wilderness_seed, wilderness_seed);
 
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("continuous town state should round-trip");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("continuous town state should round-trip");
     assert_eq!(restored.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!(restored.wilderness_position, Some(town_position));
     assert_eq!(restored.wilderness_view_offset, Position::default());
@@ -5699,7 +5950,8 @@ fn wilderness_view_offset_round_trips_and_rejects_out_of_range_values() {
         },
     );
 
-    let shifted = Game::from_save(game.to_save()).expect("scrolled wilderness should reload");
+    let shifted = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("scrolled wilderness should reload");
     assert_eq!(shifted.wilderness_view_offset, Position { x: 1, y: 0 });
     assert_eq!(shifted.wilderness_position, game.wilderness_position);
     assert_eq!(shifted.terrain, game.terrain);
@@ -5708,7 +5960,7 @@ fn wilderness_view_offset_round_trips_and_rejects_out_of_range_values() {
     let mut invalid_save = game.to_save();
     invalid_save.wilderness_view_offset = Position { x: 2, y: 0 };
     assert!(matches!(
-        Game::from_save(invalid_save),
+        Game::from_save(invalid_save, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("wilderness view offset is invalid"))
     ));
 }
@@ -5898,8 +6150,12 @@ fn formal_towns_share_the_continuous_surface_and_initialize_facilities_lazily() 
     assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!(game.shop_states[SECOND_SHOP_ID].inventory, stock);
 
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("second town should round-trip");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("second town should round-trip");
     assert_eq!(restored.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!(
         restored.current_town().map(|town| town.id.as_str()),

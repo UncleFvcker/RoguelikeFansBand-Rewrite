@@ -27,6 +27,7 @@ pub(super) struct MuseumProfile {
 pub(super) struct CharacterCheckpoint {
     pub epoch: u64,
     pub save: Option<Vec<u8>>,
+    pub score: Option<crate::score_storage::ScoreRecord>,
 }
 
 /// One file is the commit point for both sides of a transfer. The lock file is
@@ -87,6 +88,7 @@ impl MuseumStore {
             CharacterCheckpoint {
                 epoch: 0,
                 save: None,
+                score: None,
             },
         );
         Ok(MuseumBindingSaveDto {

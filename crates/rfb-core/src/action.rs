@@ -7,6 +7,13 @@ use rfb_protocol::{
 
 use crate::{scheduler::STANDARD_ACTION_COST, stats::AttributeKind};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RestMode {
+    Turns,
+    Resources,
+    Complete,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum GameAction {
     Casino {
@@ -91,6 +98,20 @@ pub(crate) enum GameAction {
         direction: Direction,
     },
     DismissPets,
+    DismissPet {
+        actor_id: String,
+    },
+    SetPetTarget {
+        actor_id: Option<String>,
+    },
+    SetPetOption {
+        option: rfb_protocol::PetOptionDto,
+        enabled: bool,
+    },
+    SetPetName {
+        actor_id: String,
+        name: Option<String>,
+    },
     ResolveMutationDirection {
         direction: Direction,
     },
@@ -99,6 +120,7 @@ pub(crate) enum GameAction {
     },
     Move {
         direction: Direction,
+        flip_pickup: bool,
     },
     Ride {
         direction: Direction,
@@ -132,18 +154,36 @@ pub(crate) enum GameAction {
     /// No command maps to it; it advances world time at standard cost.
     ParalyzedIdle,
     Wait,
+    Stay,
+    SwapRings {
+        first_slot_id: String,
+        second_slot_id: String,
+    },
     ContinueFishing,
     CancelFishing,
     PickUp,
     Retire,
+    EndCharacter,
     Rest {
         turns: u16,
+        mode: RestMode,
     },
     RefuelLight {
         target_item_id: String,
         source_item_id: String,
     },
     Search,
+    ToggleSearch,
+    Alter {
+        direction: Direction,
+    },
+    SpikeDoor {
+        direction: Direction,
+    },
+    // Internal selection by directional interactions; attacks without walking or confusing direction twice.
+    AttackAdjacent {
+        direction: Direction,
+    },
     SellToShop {
         shop_id: String,
         item_id: String,
@@ -211,6 +251,12 @@ pub(crate) enum GameAction {
     ConfigureTravel {
         options: rfb_protocol::TravelOptionsDto,
     },
+    ConfigureMogaminatorPreferences {
+        preferences: rfb_protocol::MogaminatorPreferencesDto,
+    },
+    ConfigurePreferences {
+        preferences: rfb_protocol::BehaviorPreferencesDto,
+    },
     ForgetAbility {
         ability_id: String,
     },
@@ -238,14 +284,27 @@ pub(crate) enum GameAction {
         target: TargetSelection,
     },
     EnterWorldMap {
-        leave_pets: bool,
         cancel_recall: bool,
     },
     LeaveWorldMap,
     TravelWorld {
         destination: rfb_protocol::Position,
     },
+    Run {
+        direction: Direction,
+        max_steps: u16,
+    },
+    ContinueRun,
+    CancelRun,
+    AutoExplore,
+    ContinueAutoExplore,
+    CancelAutoExplore,
     TravelLocal {
+        destination: rfb_protocol::Position,
+    },
+    FindNearestUnknownItem,
+    TravelUnknownItem {
+        object_id: String,
         destination: rfb_protocol::Position,
     },
     Throw {
@@ -284,12 +343,17 @@ impl GameAction {
             | Self::ClaimTaskReward { .. }
             | Self::DepositAtHome { .. }
             | Self::DismissPets
+            | Self::DismissPet { .. }
+            | Self::SetPetTarget { .. }
+            | Self::SetPetOption { .. }
+            | Self::SetPetName { .. }
             | Self::IncreaseAttribute { .. }
             | Self::ChooseRaceMutation { .. }
             | Self::ChooseMaiaPath { .. }
             | Self::EnterWorldMap { .. }
             | Self::LeaveWorldMap
             | Self::Retire
+            | Self::EndCharacter
             | Self::SellToShop { .. }
             | Self::IdentifyAtFacility { .. }
             | Self::ResearchItemAtFacility { .. }
@@ -309,17 +373,29 @@ impl GameAction {
             | Self::ConfigureMogaminator { .. }
             | Self::AutoGet { .. }
             | Self::PickUp
+            | Self::SwapRings { .. }
             | Self::ResolveMogaminatorQuery { .. }
             | Self::ResolveMutationDirection { .. }
             | Self::CancelAbilityDirection
+            | Self::ToggleSearch
             | Self::CancelFishing
             | Self::ClearDuelistChallenge
             | Self::ResolveDuelistChoice { .. }
             | Self::InscribeItem { .. }
             | Self::SwapAbsorbedDevices { .. }
             | Self::SetInterfaceLocale { .. }
-            | Self::ConfigureTravel { .. } => 0,
-            Self::TravelLocal { .. } => 0,
+            | Self::ConfigureTravel { .. }
+            | Self::ConfigurePreferences { .. }
+            | Self::ConfigureMogaminatorPreferences { .. } => 0,
+            Self::TravelLocal { .. }
+            | Self::FindNearestUnknownItem
+            | Self::TravelUnknownItem { .. }
+            | Self::Run { .. }
+            | Self::ContinueRun
+            | Self::CancelRun
+            | Self::AutoExplore
+            | Self::ContinueAutoExplore
+            | Self::CancelAutoExplore => 0,
             Self::RefuelLight { .. } => STANDARD_ACTION_COST / 2,
             _ => STANDARD_ACTION_COST,
         }
@@ -433,23 +509,48 @@ impl From<GameCommand> for GameAction {
             GameCommand::DisarmTrap { direction } => Self::DisarmTrap { direction },
             GameCommand::DigTerrain { direction } => Self::DigTerrain { direction },
             GameCommand::DismissPets => Self::DismissPets,
+            GameCommand::DismissPet { actor_id } => Self::DismissPet { actor_id },
+            GameCommand::SetPetTarget { actor_id } => Self::SetPetTarget { actor_id },
+            GameCommand::SetPetOption { option, enabled } => Self::SetPetOption { option, enabled },
+            GameCommand::SetPetName { actor_id, name } => Self::SetPetName { actor_id, name },
             GameCommand::ResolveMutationDirection { direction } => {
                 Self::ResolveMutationDirection { direction }
             }
             GameCommand::ResolveAbilityDirection { direction } => {
                 Self::ResolveAbilityDirection { direction }
             }
-            GameCommand::EnterWorldMap {
-                leave_pets,
-                cancel_recall,
-            } => Self::EnterWorldMap {
-                leave_pets,
-                cancel_recall,
-            },
+            GameCommand::EnterWorldMap { cancel_recall } => Self::EnterWorldMap { cancel_recall },
             GameCommand::LeaveWorldMap => Self::LeaveWorldMap,
             GameCommand::TravelWorld { destination } => Self::TravelWorld { destination },
+            GameCommand::Run {
+                direction,
+                max_steps,
+            } => Self::Run {
+                direction,
+                max_steps: max_steps.unwrap_or(1000),
+            },
+            GameCommand::ContinueRun => Self::ContinueRun,
+            GameCommand::CancelRun => Self::CancelRun,
+            GameCommand::AutoExplore => Self::AutoExplore,
+            GameCommand::ContinueAutoExplore => Self::ContinueAutoExplore,
+            GameCommand::CancelAutoExplore => Self::CancelAutoExplore,
             GameCommand::TravelLocal { destination } => Self::TravelLocal { destination },
-            GameCommand::Move { direction } => Self::Move { direction },
+            GameCommand::FindNearestUnknownItem => Self::FindNearestUnknownItem,
+            GameCommand::TravelUnknownItem {
+                object_id,
+                destination,
+            } => Self::TravelUnknownItem {
+                object_id,
+                destination,
+            },
+            GameCommand::Move { direction } => Self::Move {
+                direction,
+                flip_pickup: false,
+            },
+            GameCommand::WalkSpecial { direction } => Self::Move {
+                direction,
+                flip_pickup: true,
+            },
             GameCommand::Ride { direction } => Self::Ride { direction },
             GameCommand::OpenChest { item_id } => Self::OpenChest { item_id },
             GameCommand::DisarmChest { item_id } => Self::DisarmChest { item_id },
@@ -462,11 +563,31 @@ impl From<GameCommand> for GameAction {
                 inscription,
             },
             GameCommand::Wait => Self::Wait,
+            GameCommand::Stay => Self::Stay,
+            GameCommand::SwapRings {
+                first_slot_id,
+                second_slot_id,
+            } => Self::SwapRings {
+                first_slot_id,
+                second_slot_id,
+            },
             GameCommand::ContinueFishing => Self::ContinueFishing,
             GameCommand::CancelFishing => Self::CancelFishing,
             GameCommand::PickUp => Self::PickUp,
             GameCommand::Retire => Self::Retire,
-            GameCommand::Rest { turns } => Self::Rest { turns },
+            GameCommand::EndCharacter => Self::EndCharacter,
+            GameCommand::Rest { turns } => Self::Rest {
+                turns,
+                mode: RestMode::Complete,
+            },
+            GameCommand::RestForTurns { turns } => Self::Rest {
+                turns,
+                mode: RestMode::Turns,
+            },
+            GameCommand::RestUntilResources { turns } => Self::Rest {
+                turns,
+                mode: RestMode::Resources,
+            },
             GameCommand::RefuelLight {
                 target_item_id,
                 source_item_id,
@@ -475,6 +596,9 @@ impl From<GameCommand> for GameAction {
                 source_item_id,
             },
             GameCommand::Search => Self::Search,
+            GameCommand::ToggleSearch => Self::ToggleSearch,
+            GameCommand::Alter { direction } => Self::Alter { direction },
+            GameCommand::SpikeDoor { direction } => Self::SpikeDoor { direction },
             GameCommand::SellToShop {
                 shop_id,
                 item_id,
@@ -571,6 +695,12 @@ impl From<GameCommand> for GameAction {
             GameCommand::SetSummonCommand { mode } => Self::SetSummonCommand { mode },
             GameCommand::SetInterfaceLocale { locale } => Self::SetInterfaceLocale { locale },
             GameCommand::ConfigureTravel { options } => Self::ConfigureTravel { options },
+            GameCommand::ConfigureMogaminatorPreferences { preferences } => {
+                Self::ConfigureMogaminatorPreferences { preferences }
+            }
+            GameCommand::ConfigurePreferences { preferences } => {
+                Self::ConfigurePreferences { preferences }
+            }
             GameCommand::ForgetAbility { ability_id } => Self::ForgetAbility { ability_id },
             GameCommand::StudyAbility {
                 book_item_id,

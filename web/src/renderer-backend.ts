@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import type { EditableVisualDto } from "./protocol";
+import type { VisualPreferences } from "./visual-preferences";
 import type { CameraTransform } from "./camera";
 import type { VisibilityState } from "./protocol";
 import type { TilesetWarning } from "./tileset-runtime";
@@ -19,6 +21,7 @@ export interface RenderCell {
   itemKindId?: string;
   actorKindId?: string;
   actorGlyph?: string;
+  highlightPet?: boolean;
   visibility: CellVisibility;
   light: CellLight;
 }
@@ -58,6 +61,9 @@ export interface RendererBackend {
   applyCells(cells: readonly RenderCell[]): number;
   setCameraTransform(transform: CameraTransform): void;
   setTileset(tilesetManifestUrl: string): Promise<TilesetChangeResult>;
+  setVisuals(preferences: VisualPreferences, catalog: readonly EditableVisualDto[]): boolean;
+  visualBase(id: string): { glyph: string; foreground: string; background?: string };
   setCanvasLabel(label: string): void;
+  capturePng(): string;
   destroy(): void;
 }

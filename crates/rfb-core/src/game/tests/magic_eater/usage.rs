@@ -441,7 +441,7 @@ fn recovery_uses_source_rounding_stable_slots_and_saved_fraction_even_outside_re
         replace_terrain(&mut game, Position { x, y: 10 }, "demo.terrain.floor");
     }
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let before = item(&game, "test.rod").charges.unwrap().current;
     for step in 0..20 {
         let command = match step % 3 {
@@ -546,37 +546,56 @@ fn speed_and_regeneration_egos_keep_their_body_semantics() {
 
 #[test]
 fn rest_includes_body_sp_and_stops_at_full_or_visible_danger() {
+    for command in [
+        GameCommand::Rest { turns: 100 },
+        GameCommand::RestUntilResources { turns: 100 },
+    ] {
+        let mut game = at_level(1);
+        body(&mut game, "test.rod", "demo.item.detection-rod", 0);
+        let maximum = item(&game, "test.rod").charges.unwrap().maximum;
+        sp(&mut game, "test.rod", maximum - 1);
+        assert_eq!(game.player.hp, game.effective_player_max_hp());
+        assert!(game.resources.is_empty());
+        let update = dispatch_next(&mut game, command.clone());
+        assert_eq!(
+            rest_resolution(&update).stop_reason,
+            RestStopReasonDto::FullResources
+        );
+        assert!(rest_resolution(&update).completed_turns > 0);
+        assert_eq!(item(&game, "test.rod").charges.unwrap().current, maximum);
+        assert_eq!(item(&game, "test.rod").device_recovery_progress, 0);
+        let rng = game.rng.clone();
+        game.process_inventory_device_recovery(&mut Vec::new());
+        assert_eq!(game.rng, rng);
+        sp(&mut game, "test.rod", 0);
+        game.player.position = Position { x: 10, y: 10 };
+        replace_terrain(&mut game, Position { x: 10, y: 10 }, "demo.terrain.floor");
+        replace_terrain(&mut game, Position { x: 11, y: 10 }, "demo.terrain.floor");
+        game.push_generated_actor(
+            "test.danger".into(),
+            "demo.actor.sheep",
+            Position { x: 11, y: 10 },
+        );
+        game.reveal_current_visibility();
+        let update = dispatch_next(&mut game, command.clone());
+        assert_eq!(
+            rest_resolution(&update).stop_reason,
+            RestStopReasonDto::EnemyVisible
+        );
+        assert_eq!(rest_resolution(&update).completed_turns, 0);
+    }
+}
+
+#[test]
+fn single_step_rest_matches_absorbed_sp_fractions_and_rng() {
     let mut game = at_level(1);
     body(&mut game, "test.rod", "demo.item.detection-rod", 0);
     let maximum = item(&game, "test.rod").charges.unwrap().maximum;
     sp(&mut game, "test.rod", maximum - 1);
-    assert_eq!(game.player.hp, game.effective_player_max_hp());
-    assert!(game.resources.is_empty());
-    let update = dispatch_next(&mut game, GameCommand::Rest { turns: 100 });
+    let final_game = crate::game::tests::support::assert_rest_batch_matches_steps(game, 100);
     assert_eq!(
-        rest_resolution(&update).stop_reason,
-        RestStopReasonDto::FullResources
+        item(&final_game, "test.rod").charges.unwrap().current,
+        maximum
     );
-    assert!(rest_resolution(&update).completed_turns > 0);
-    assert_eq!(item(&game, "test.rod").charges.unwrap().current, maximum);
-    assert_eq!(item(&game, "test.rod").device_recovery_progress, 0);
-    let rng = game.rng.clone();
-    game.process_inventory_device_recovery(&mut Vec::new());
-    assert_eq!(game.rng, rng);
-    sp(&mut game, "test.rod", 0);
-    game.player.position = Position { x: 10, y: 10 };
-    replace_terrain(&mut game, Position { x: 10, y: 10 }, "demo.terrain.floor");
-    replace_terrain(&mut game, Position { x: 11, y: 10 }, "demo.terrain.floor");
-    game.push_generated_actor(
-        "test.danger".into(),
-        "demo.actor.sheep",
-        Position { x: 11, y: 10 },
-    );
-    game.reveal_current_visibility();
-    let update = dispatch_next(&mut game, GameCommand::Rest { turns: 100 });
-    assert_eq!(
-        rest_resolution(&update).stop_reason,
-        RestStopReasonDto::EnemyVisible
-    );
-    assert_eq!(rest_resolution(&update).completed_turns, 0);
+    assert_eq!(item(&final_game, "test.rod").device_recovery_progress, 0);
 }

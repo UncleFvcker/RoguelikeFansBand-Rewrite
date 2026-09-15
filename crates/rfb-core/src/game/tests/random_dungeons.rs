@@ -80,7 +80,12 @@ fn enter_at_depth(game: &mut Game, depth: u16) {
 fn restore(game: &Game) -> Game {
     let bytes = rfb_protocol::to_msgpack(&game.to_save()).unwrap();
     let payload = rfb_protocol::from_msgpack(&bytes).unwrap();
-    let restored = Game::from_save_with_content(payload, game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        payload,
+        game.content.clone(),
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     restored
 }
@@ -369,7 +374,14 @@ fn random_recall_save_rejects_random_destinations_and_empty_pending_state() {
         destination: None,
         remaining_turns: Some(2),
     });
-    assert!(Game::from_save_with_content(invalid_surface, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            invalid_surface,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
     enter_at_depth(&mut game, 37);
     game.start_recall(3);
     restore(&game);
@@ -379,20 +391,48 @@ fn random_recall_save_rejects_random_destinations_and_empty_pending_state() {
             dungeon_id: FOREST.to_owned(),
             floor_id: floor_id(37),
         });
-    assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            invalid,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
     let mut invalid = game.to_save();
     invalid.player.recall.as_mut().unwrap().remaining_turns = None;
-    assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            invalid,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
     let mut invalid = game.to_save();
     invalid.player.recall.as_mut().unwrap().remaining_turns = Some(0);
-    assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            invalid,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
     let mut invalid = game.clone();
     invalid
         .dungeon_states
         .get_mut(FOREST)
         .unwrap()
         .recall_floor_id = Some(floor_id(37));
-    assert!(Game::from_save_with_content(invalid.to_save(), game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            invalid.to_save(),
+            game.content.clone(),
+            invalid.behavior_preferences()
+        )
+        .is_err()
+    );
 }
 
 fn replay_command(
@@ -591,7 +631,11 @@ fn random_dungeon_save_requires_its_stored_surface_and_bound_return_position() {
         .stored_floors
         .remove(wilderness::WILDERNESS_FLOOR_ID);
     assert!(matches!(
-        Game::from_save_with_content(missing.to_save(), game.content.clone()),
+        Game::from_save_with_content(
+            missing.to_save(),
+            game.content.clone(),
+            missing.behavior_preferences()
+        ),
         Err(CoreError::InvalidSave(
             "random dungeon return entrance is invalid"
         ))
@@ -604,7 +648,14 @@ fn random_dungeon_save_requires_its_stored_surface_and_bound_return_position() {
     surface
         .connections
         .retain(|connection| connection.position != surface.player_position);
-    assert!(Game::from_save_with_content(unbound.to_save(), game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            unbound.to_save(),
+            game.content.clone(),
+            unbound.behavior_preferences()
+        )
+        .is_err()
+    );
     let mut displaced = game.clone();
     displaced
         .stored_floors
@@ -612,7 +663,14 @@ fn random_dungeon_save_requires_its_stored_surface_and_bound_return_position() {
         .unwrap()
         .player_position
         .x += 1;
-    assert!(Game::from_save_with_content(displaced.to_save(), game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            displaced.to_save(),
+            game.content.clone(),
+            displaced.behavior_preferences()
+        )
+        .is_err()
+    );
     let mut dangling = game.clone();
     let surface = dangling
         .stored_floors
@@ -628,7 +686,14 @@ fn random_dungeon_save_requires_its_stored_surface_and_bound_return_position() {
         .unwrap()
         .placement
         .encounter_id = "test.missing-template".into();
-    assert!(Game::from_save_with_content(dangling.to_save(), game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            dangling.to_save(),
+            game.content.clone(),
+            dangling.behavior_preferences()
+        )
+        .is_err()
+    );
     let mut wrong_destination = game.to_save();
     wrong_destination.player.recall = Some(RecallStateDto {
         destination: Some(rfb_protocol::RecallDestinationDto {
@@ -637,7 +702,14 @@ fn random_dungeon_save_requires_its_stored_surface_and_bound_return_position() {
         }),
         remaining_turns: Some(3),
     });
-    assert!(Game::from_save_with_content(wrong_destination, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            wrong_destination,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
 }
 
 #[test]

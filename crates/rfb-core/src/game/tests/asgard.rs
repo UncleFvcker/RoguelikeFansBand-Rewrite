@@ -123,7 +123,7 @@ fn asgard_factory_records_all_fixed_identities_and_ordinary_eligibility_survives
     ] {
         artifact(&mut game, slug);
     }
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.generated_artifact_ids, game.generated_artifact_ids);
     assert!((0..1000).all(|_| {
@@ -164,7 +164,7 @@ fn asgard_horn_requires_equipment_recalls_controlled_pets_and_preserves_cooldown
             .any(|event| matches!(event, DomainEvent::MonsterBlinked { .. }))
     );
     assert!(rfb_distance(game.entities[0].position, game.player.position) <= 2);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let before = restored.rng.clone();
     assert!(
         activate(&mut restored, &id, Some(&TargetSelection::SelfTarget))
@@ -174,7 +174,7 @@ fn asgard_horn_requires_equipment_recalls_controlled_pets_and_preserves_cooldown
     );
     assert_eq!(restored.rng, before);
     restored.entities[0].position = Position { x: -1, y: 10 };
-    assert!(Game::from_save(restored.to_save()).is_err());
+    assert!(Game::from_save(restored.to_save(), restored.behavior_preferences()).is_err());
 }
 
 #[test]
@@ -234,6 +234,7 @@ fn asgard_fishing_start_block_save_cancel_and_ecology_resume() {
     let id = artifact(&mut game, "njord");
     game.equip_inventory_item(&id, None).unwrap();
     let water = Position { x: 11, y: 10 };
+    game.searching = true;
     let seed = successful_seed(&game, &id, Some(&east()));
     game.rng = RfbRng::seeded(seed);
     assert!(
@@ -243,6 +244,7 @@ fn asgard_fishing_start_block_save_cancel_and_ecology_resume() {
             .any(|e| matches!(e, DomainEvent::FishingNoWater))
     );
     replace_terrain(&mut game, water, "demo.terrain.surface-water-shallow");
+    assert!(game.searching);
     game.push_generated_actor("test.blocker".into(), "demo.actor.war-bear", water);
     game.rng = RfbRng::seeded(seed);
     assert_eq!(activate(&mut game, &id, Some(&east())).0, Some(0));
@@ -250,7 +252,14 @@ fn asgard_fishing_start_block_save_cancel_and_ecology_resume() {
     game.rng = RfbRng::seeded(seed);
     activate(&mut game, &id, Some(&east()));
     assert_eq!(game.fishing_direction, Some(Direction::East));
-    let mut saved = Game::from_save(game.to_save()).unwrap();
+    assert!(!game.searching);
+    let mut saved = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    let mut invalid_modes = game.to_save();
+    invalid_modes.player.searching = true;
+    assert!(Game::from_save(invalid_modes, Game::default_behavior_preferences()).is_err());
+    let mut toggled = game.clone();
+    dispatch_next(&mut toggled, GameCommand::ToggleSearch);
+    assert!(toggled.searching && toggled.fishing_direction.is_none());
     assert_eq!(saved.state_hash(), game.state_hash());
     let tick = saved.world_tick;
     dispatch_next(&mut saved, GameCommand::CancelFishing);
@@ -258,7 +267,7 @@ fn asgard_fishing_start_block_save_cancel_and_ecology_resume() {
     assert_eq!(saved.fishing_direction, None);
     let mut invalid = game.to_save();
     invalid.player.fishing_direction = Some(Direction::West);
-    assert!(Game::from_save(invalid).is_err());
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
     let seed = (0..100_000)
         .find(|seed| {
             if RfbRng::seeded(*seed).bounded(1000) != 0 {
@@ -274,7 +283,7 @@ fn asgard_fishing_start_block_save_cancel_and_ecology_resume() {
         })
         .expect("depth-3 allocation can actually catch an aquatic creature");
     game.rng = RfbRng::seeded(seed);
-    saved = Game::from_save(game.to_save()).unwrap();
+    saved = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let left = dispatch_next(&mut game, GameCommand::ContinueFishing);
     let right = dispatch_next(&mut saved, GameCommand::ContinueFishing);
     assert_eq!(left, right);
@@ -392,7 +401,7 @@ fn asgard_mjollnir_gloves_add_one_attack_and_throw_keeps_identity_or_drops_it() 
     for seed in 0..1000 {
         let mut trial = game.clone();
         trial.rng = RfbRng::seeded(seed);
-        let mut saved = Game::from_save(trial.to_save()).unwrap();
+        let mut saved = Game::from_save(trial.to_save(), trial.behavior_preferences()).unwrap();
         throw(&mut trial);
         throw(&mut saved);
         assert_eq!(trial.state_hash(), saved.state_hash());

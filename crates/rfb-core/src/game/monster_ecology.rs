@@ -2076,9 +2076,11 @@ impl Game {
         {
             return false;
         }
-        // Original neutral Harmony always passes this check, but randint1(375)
-        // still advances the RNG before crowding and placement are considered.
-        let _harmony_roll = self.rng.bounded(375).saturating_add(1);
+        // melee2.c: Harmony and crowding consume RNG before pet restrictions.
+        let harmony_roll = self.rng.bounded(375).saturating_add(1) as i16;
+        if harmony_roll <= self.virtue_current(rfb_protocol::VirtueKindDto::Harmony) {
+            return false;
+        }
         let origin = self.entities[index].position;
         let adjacent_monsters = self
             .entities
@@ -2092,6 +2094,11 @@ impl Game {
                         .unwrap_or(u64::MAX)
                         .saturating_mul(ORIGINAL_MULTIPLY_ADJACENCY_FACTOR),
                 ) != 0)
+        {
+            return false;
+        }
+        if self.entity_is_player_aligned(index)
+            && (self.summon_command.no_breeding || self.pet_upkeep().percent > 80)
         {
             return false;
         }
@@ -2136,8 +2143,17 @@ impl Game {
             INITIAL_MONSTER_ENERGY_NEED,
             true,
         );
+        // Preserve the existing finite summon lifetime as well as control.
+        // Breeding does not renew the duration or grant a permanent pet.
         offspring.controller_id = self.entities[index].controller_id.clone();
         offspring.summon = self.entities[index].summon.clone();
+        if let Some(summon) = offspring
+            .summon
+            .as_mut()
+            .filter(|summon| summon.owner_dependent)
+        {
+            summon.owner_id = self.entities[index].id.clone();
+        }
         self.entities.push(offspring);
         changed.insert(position);
         true

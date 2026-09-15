@@ -12,7 +12,7 @@ fn export_ordinary_equipment_desktop_saves() {
     let directory = input.parent().unwrap();
     let (header, payload) = rfb_save::decode(&std::fs::read(&input).unwrap()).unwrap();
     assert!(header.museum_binding.is_some());
-    let fresh = Game::from_save(payload).unwrap();
+    let fresh = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
     let mut scenarios = Vec::new();
     for (name, slugs, action) in [
         (
@@ -121,7 +121,9 @@ fn export_ordinary_equipment_desktop_saves() {
             .unwrap();
         assert_eq!(
             game.state_hash(),
-            Game::from_save(game.to_save()).unwrap().state_hash()
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash()
         );
         std::fs::write(
             directory.join(format!("{name}.rfbsave")),
@@ -138,7 +140,14 @@ fn export_ordinary_equipment_desktop_saves() {
 }
 
 fn scythe_game(build: &str, race: &str) -> Game {
-    let mut game = Game::new_with_build_race_and_name(501, build, race, "Scythe").unwrap();
+    let mut game = Game::new_with_build_race_and_name(
+        501,
+        build,
+        race,
+        "Scythe",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     choose_human_talent_if_pending(&mut game);
     clear_monsters(&mut game);
     game.items.clear();
@@ -209,7 +218,9 @@ fn source_allocation_preserves_special_generation_and_distinct_crafting_rules() 
     game.pick_up_item_at_player(Some(&id)).unwrap();
     game.reveal_current_visibility();
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
     assert!(!game.item_is_valid_crafting_target(None, &id));
@@ -303,7 +314,8 @@ fn missed_and_duelist_hit_backlash_resume_and_stop_at_real_death() {
         for seed in 0..128 {
             let mut game = base.clone();
             game.rng = RfbRng::seeded(seed);
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             let events = attack(&mut game);
             assert_eq!(attack(&mut restored), events);
             assert_eq!(restored.state_hash(), game.state_hash());
@@ -513,7 +525,7 @@ fn ordinary_throw_drops_scythe_without_return_backlash() {
         _ => unreachable!(),
     };
     game.unequip_slot(&slot).unwrap();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let command = GameCommand::Throw {
         item_id: "test.scythe".into(),
         direction: Direction::East,

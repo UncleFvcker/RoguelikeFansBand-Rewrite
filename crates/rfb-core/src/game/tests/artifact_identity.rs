@@ -68,7 +68,7 @@ fn game_with_artifact(kind: &str) -> Game {
 }
 
 fn round_trip(game: &Game) -> Game {
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.to_save(), game.to_save());
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
@@ -344,7 +344,10 @@ fn artifact_identity_invalid_save_state_is_rejected() {
             8 => item.intrinsic_curse_effects = vec![ItemCurseEffectDto::LowMelee; 2],
             _ => unreachable!(),
         }
-        assert!(Game::from_save(save).is_err(), "case {invalid}");
+        assert!(
+            Game::from_save(save, Game::default_behavior_preferences()).is_err(),
+            "case {invalid}"
+        );
     }
 }
 
@@ -463,7 +466,6 @@ fn artifact_identity_museum_accepts_random_but_rejects_fixed_identity() {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );

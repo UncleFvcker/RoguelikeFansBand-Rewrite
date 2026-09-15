@@ -99,6 +99,7 @@ pub(crate) fn actor_from_spawn(
 ) -> Actor {
     Actor {
         id: id.to_owned(),
+        custom_name: None,
         kind_id: kind_id.to_owned(),
         experience: 0,
         appearance_kind_id: None,
@@ -139,6 +140,7 @@ pub(crate) fn actor_from_runtime_spawn(
 ) -> Actor {
     Actor {
         id: id.to_owned(),
+        custom_name: None,
         kind_id: kind_id.to_owned(),
         experience: 0,
         appearance_kind_id: None,
@@ -192,6 +194,7 @@ pub(crate) fn actor_from_player(
     let resistances = resistances_from_save(player.resistances)?;
     Ok(Actor {
         id: player.id,
+        custom_name: None,
         kind_id: player.kind_id,
         experience: 0,
         appearance_kind_id: None,
@@ -311,6 +314,7 @@ pub(crate) fn actor_from_entity(
         observed_resistances_from_save(entity.observed_player_resistances)?;
     Ok(Actor {
         id: entity.id,
+        custom_name: entity.custom_name,
         kind_id: entity.kind_id,
         experience: entity.experience,
         appearance_kind_id: entity.appearance_kind_id,
@@ -347,6 +351,7 @@ pub(crate) fn actor_from_entity(
         }),
         controller_id: entity.controller_id,
         summon: entity.summon.map(|summon| SummonIdentity {
+            owner_dependent: summon.owner_dependent,
             owner_id: summon.owner_id,
             source_ability_id: summon.source_ability_id,
             remaining_turns: summon.remaining_turns,
@@ -723,6 +728,10 @@ fn captured_actor_from_save(
             && actor.capture_policy != rfb_content::ActorCapturePolicyDefinition::Immune
     });
     if !item_definition.capture_ball
+        || value
+            .custom_name
+            .as_deref()
+            .is_some_and(|name| !crate::Game::pet_name_is_valid(name))
         || !valid_kind
         || value.speed == 0
         || value.hp <= 0
@@ -732,6 +741,7 @@ fn captured_actor_from_save(
         return Err(CoreError::InvalidSave("captured actor state is invalid"));
     }
     Ok(Some(CapturedActor {
+        custom_name: value.custom_name,
         kind_id: value.kind_id,
         speed: value.speed,
         hp: value.hp,
@@ -742,6 +752,7 @@ fn captured_actor_from_save(
 
 fn captured_actor_to_save(value: &CapturedActor) -> CapturedActorSaveDto {
     CapturedActorSaveDto {
+        custom_name: value.custom_name.clone(),
         kind_id: value.kind_id.clone(),
         speed: value.speed,
         hp: value.hp,
@@ -1043,6 +1054,9 @@ pub(crate) fn player_to_save(
         confusing_strike_ready: false,
         sniper_concentration: 0,
         fishing_direction: None,
+        running: None,
+        auto_explore: None,
+        searching: false,
         probed_actor_kind_ids: Vec::new(),
         resistances: player.resistances.to_save_dtos(),
         progress: Some(PlayerProgressSaveDto {
@@ -1140,6 +1154,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
         .iter()
         .map(|entity| ActorSaveDto {
             id: entity.id.clone(),
+            custom_name: entity.custom_name.clone(),
             kind_id: entity.kind_id.clone(),
             experience: entity.experience,
             appearance_kind_id: entity.appearance_kind_id.clone(),
@@ -1182,6 +1197,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             }),
             controller_id: entity.controller_id.clone(),
             summon: entity.summon.as_ref().map(|summon| SummonSaveDto {
+                owner_dependent: summon.owner_dependent,
                 owner_id: summon.owner_id.clone(),
                 source_ability_id: summon.source_ability_id.clone(),
                 remaining_turns: summon.remaining_turns,

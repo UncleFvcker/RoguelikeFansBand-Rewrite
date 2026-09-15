@@ -625,6 +625,11 @@ fn dungeon_anti_melee_allocation_filters_attack_spells_without_improving_player_
         let mut summoner = game.clone();
         if player_owned {
             summoner.entities[0].controller_id = Some(summoner.player.id.clone());
+            summoner.push_generated_actor(
+                "test.pet-target".into(),
+                MONSTER,
+                Position { x: 10, y: 8 },
+            );
         }
         let plan = summoner.monster_ability_plan(0, spell.clone(), 1).unwrap();
         let MonsterAbilityTargetPlan::SummonCategory {

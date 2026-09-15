@@ -143,6 +143,6 @@ impl Game {
             }
         }
         // Reuse the complete content, item, knowledge and uniqueness validation.
-        Self::from_save(save).map(Some)
+        Self::from_save(save, self.behavior_preferences()).map(Some)
     }
 }

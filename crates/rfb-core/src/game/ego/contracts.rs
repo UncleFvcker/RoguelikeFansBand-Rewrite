@@ -21,7 +21,7 @@ fn export_ego_desktop_acceptance_save() {
     let directory = input.parent().unwrap();
     let (header, payload) = rfb_save::decode(&std::fs::read(&input).unwrap()).unwrap();
     assert!(header.museum_binding.is_some());
-    let mut base = Game::from_save(payload).unwrap();
+    let mut base = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
     base.entities.clear();
     base.items.clear();
     let original = base.content.clone();
@@ -138,7 +138,7 @@ fn export_ego_desktop_acceptance_save() {
                 };
             }
         }
-        let game = Game::from_save(game.to_save()).unwrap();
+        let game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let mut equipped = game.clone();
         equipped
             .items
@@ -173,7 +173,9 @@ fn export_ego_desktop_acceptance_save() {
         let bytes = rfb_save::encode(&header, &game.to_save()).unwrap();
         let (_, saved) = rfb_save::decode(&bytes).unwrap();
         assert_eq!(
-            Game::from_save(saved).unwrap().state_hash(),
+            Game::from_save(saved, Game::default_behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash()
         );
         std::fs::write(directory.join(format!("e88-{case}.rfbsave")), bytes).unwrap();
@@ -319,7 +321,7 @@ fn all_160_source_egos_have_an_effect_and_save_stable_instances() {
                     (item.id.clone(), value)
                 })
                 .collect::<BTreeMap<_, _>>();
-            let restored = Game::from_save(game.to_save())
+            let restored = Game::from_save(game.to_save(), game.behavior_preferences())
                 .unwrap_or_else(|error| panic!("source {source}, level {level}: {error}"));
             assert_eq!(restored.rng, game.rng, "source {source}, level {level}");
             assert_eq!(

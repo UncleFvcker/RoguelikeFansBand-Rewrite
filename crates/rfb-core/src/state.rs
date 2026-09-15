@@ -19,6 +19,7 @@ pub(crate) const ARTIFACT_MUSHROOM_COOLDOWN_TICKS: u16 = 990;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Actor {
     pub(crate) id: String,
+    pub(crate) custom_name: Option<String>,
     pub(crate) kind_id: String,
     pub(crate) experience: u64,
     pub(crate) appearance_kind_id: Option<String>,
@@ -70,6 +71,8 @@ pub(crate) struct MonsterPackIdentity {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct SummonIdentity {
+    // owner_id is provenance; this flag makes it a live parent dependency.
+    pub(crate) owner_dependent: bool,
     pub(crate) owner_id: String,
     pub(crate) source_ability_id: String,
     pub(crate) remaining_turns: u16,
@@ -167,6 +170,7 @@ impl ItemInstance {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CapturedActor {
+    pub(crate) custom_name: Option<String>,
     pub(crate) kind_id: String,
     pub(crate) speed: u16,
     pub(crate) hp: i32,

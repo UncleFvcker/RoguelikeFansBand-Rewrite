@@ -3725,7 +3725,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 133);
+        assert_eq!(crate::STATE_HASH_SCHEMA_VERSION, 146);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,
@@ -3854,7 +3854,8 @@ mod tests {
                 .charisma,
             2
         );
-        let restored = Game::from_save(saved).expect("ranged item state should round-trip");
+        let restored = Game::from_save(saved, Game::default_behavior_preferences())
+            .expect("ranged item state should round-trip");
         assert_eq!(
             restored
                 .items

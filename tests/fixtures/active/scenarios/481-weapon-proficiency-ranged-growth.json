@@ -15,6 +15,7 @@
     "entities": [
       {
         "id": "contract.weapon-proficiency-target",
+        "customName": null,
         "kindId": "demo.actor.adobe-golem",
         "experience": 0,
         "position": {
@@ -62,28 +63,16 @@
         "y": 33
       },
       "revision": 1,
-      "rngDrawCounter": 198,
-      "stateHash": "d6d6c979470da13f3b7639f1dd8888df774a64724acb08e34985cb73a7e199f1",
+      "rngDrawCounter": 196,
+      "stateHash": "7e51db959fada4ddcbf90fa09d5ae63541a734d9bdbaff801cff37de706e6649",
       "turn": 1
     },
     "events": [
       {
-        "kind": "combat.projectile-hit",
-        "messageKey": "projectile-hit",
+        "kind": "combat.projectile-miss",
+        "messageKey": "projectile-miss",
         "args": {
-          "damage": "12",
           "target": "demo.actor.adobe-golem"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 15,
-            "armorReduction": 3,
-            "resistanceAdjustment": 0,
-            "finalDamage": 12,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
         },
         "trace": {
           "origin": {

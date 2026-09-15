@@ -305,7 +305,8 @@ fn forced_base_bags_cover_ordinary_good_great_all_egos_known_capacity_and_save()
                     game.equipment_dto()[0].known_properties.len(),
                     usize::from(quality == ItemQualityDto::Exceptional)
                 );
-                let restored = Game::from_save(game.to_save()).unwrap();
+                let restored =
+                    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 assert_eq!(restored.rng, game.rng);
                 assert_eq!(restored.state_hash(), game.state_hash());
                 assert_eq!(restored.equipment_dto()[0].bag_capacity, Some(expected));
@@ -351,7 +352,7 @@ fn bag_slots_exclude_ammunition_and_full_bags_still_accept_compatible_stacks() {
         .unwrap()
         .location = ItemLocation::Inventory;
     assert!(matches!(
-        Game::from_save(overloaded.to_save()),
+        Game::from_save(overloaded.to_save(), overloaded.behavior_preferences()),
         Err(crate::error::CoreError::InvalidSave(
             "inventory exceeds slot capacity"
         ))
@@ -401,7 +402,7 @@ fn bag_slots_exclude_ammunition_and_full_bags_still_accept_compatible_stacks() {
     ));
     assert_eq!(game.items, before);
     game.reveal_current_visibility();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -426,7 +427,9 @@ fn smaller_bag_or_removal_rejects_overflow_without_losing_items() {
     assert_eq!(game.items, before);
     assert_eq!(game.rng, rng);
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
     game.items
@@ -448,7 +451,7 @@ fn phase_bag_removes_only_its_own_weight_even_with_a_separate_quiver() {
     equip_bag(&mut game, "fabric-bag", Some("phase-quiver"));
     assert_eq!(game.carried_weight_tenths_pound(), before);
     assert_eq!(game.item_instance_weight(game.items.last().unwrap()), 0);
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         restored.carried_weight_tenths_pound(),
         game.carried_weight_tenths_pound()
@@ -530,7 +533,9 @@ fn endless_bag_activation_refills_only_an_equipped_quiver() {
         assert_eq!(game.items[0].intrinsic_properties.bag_capacity, Some(4));
         assert_eq!(game.items[0].intrinsic_properties.ammunition_capacity, None);
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash()
         );
     }

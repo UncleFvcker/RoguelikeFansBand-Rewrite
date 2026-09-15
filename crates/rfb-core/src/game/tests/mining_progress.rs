@@ -91,7 +91,8 @@ fn mining_and_sparse_materials_project_and_round_trip_strictly() {
         .expect("new save should include progress");
     assert_eq!(progress.mining_proficiency, 6_000);
     assert_eq!(progress.materials.len(), 2);
-    let restored = Game::from_save(saved.clone()).expect("mining state should round-trip");
+    let restored = Game::from_save(saved.clone(), Game::default_behavior_preferences())
+        .expect("mining state should round-trip");
     assert_eq!(restored.progress.mining_proficiency, 6_000);
     assert_eq!(restored.progress.materials, game.progress.materials);
 
@@ -103,7 +104,7 @@ fn mining_and_sparse_materials_project_and_round_trip_strictly() {
         .expect("progress")
         .mining_proficiency = 8_001;
     assert!(matches!(
-        Game::from_save(excessive),
+        Game::from_save(excessive, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave(
             "player mining or material state is invalid"
         ))
@@ -125,7 +126,7 @@ fn mining_and_sparse_materials_project_and_round_trip_strictly() {
             },
         }];
         assert!(matches!(
-            Game::from_save(invalid),
+            Game::from_save(invalid, Game::default_behavior_preferences()),
             Err(CoreError::InvalidSave(
                 "player mining or material state is invalid"
             ))
@@ -149,7 +150,7 @@ fn mining_and_sparse_materials_project_and_round_trip_strictly() {
         },
     ];
     assert!(matches!(
-        Game::from_save(duplicate),
+        Game::from_save(duplicate, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("player material state is invalid"))
     ));
 }
@@ -311,7 +312,8 @@ fn rubble_item_origin_round_trips_on_any_generated_item_kind() {
     item.origin_kind = Some(ItemOriginKindDto::Rubble);
     let item_id = item.id.clone();
 
-    let restored = Game::from_save(game.to_save()).expect("rubble origin should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("rubble origin should round-trip");
     assert_eq!(
         restored
             .items

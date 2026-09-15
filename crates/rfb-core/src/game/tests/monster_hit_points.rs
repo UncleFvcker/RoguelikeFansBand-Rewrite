@@ -53,7 +53,8 @@ fn rolled_instance_hit_points_remain_authoritative_after_load() {
     game.push_generated_actor("test.rolled-hp".to_owned(), "demo.actor.newt", position);
     let rolled_max_hp = game.entities[0].max_hp;
 
-    let restored = Game::from_save(game.to_save()).expect("rolled HP save should load");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("rolled HP save should load");
 
     assert_eq!(restored.entities[0].max_hp, rolled_max_hp);
     assert_eq!(restored.entities[0].hp, rolled_max_hp);

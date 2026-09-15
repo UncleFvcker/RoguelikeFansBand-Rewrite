@@ -8,7 +8,14 @@ const HUMAN: &str = "demo.race.rfb-human";
 const STAFF: &str = "demo.item.staff-of-nothing";
 
 pub(super) fn birth(seed: u64, build: &str) -> Game {
-    Game::new_with_build_race_and_name(seed, build, SPECTRE, Game::DEFAULT_PLAYER_NAME).unwrap()
+    Game::new_with_build_race_and_name(
+        seed,
+        build,
+        SPECTRE,
+        Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
+    )
+    .unwrap()
 }
 
 fn form(game: &mut Game, race: &str) {
@@ -100,7 +107,12 @@ fn spectre_night_birth_preserves_all_six_class_kits_and_supplies_full_staff_and_
                 expected.equipped
             );
         }
-        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.snapshot(), game.snapshot());
     }
 }
@@ -203,7 +215,12 @@ fn spectre_absorbs_birth_staff_and_partial_floor_device_then_pays_for_empty_atte
             .any(|event| event.message_key == "item-device-empty")
     );
 
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     let command = GameCommand::AbsorbDevice { item_id: staff_id };
     assert_eq!(
         dispatch_next(&mut restored, command.clone()).events,

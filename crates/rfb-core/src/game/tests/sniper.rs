@@ -651,8 +651,12 @@ fn sniper_state_round_trips_and_rejects_invalid_build_or_bounds() {
         .clone();
     game.probed_actor_kind_ids.insert(probed_kind_id.clone());
     let hash = game.state_hash();
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Sniper state should round-trip");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Sniper state should round-trip");
     assert_eq!(restored.sniper_concentration, 2);
     assert_eq!(
         restored.probed_actor_kind_ids,
@@ -663,21 +667,29 @@ fn sniper_state_round_trips_and_rejects_invalid_build_or_bounds() {
     let mut excessive = game.to_save();
     excessive.player.sniper_concentration = 3;
     assert!(matches!(
-        Game::from_save_with_content(excessive, game.content.clone()),
+        Game::from_save_with_content(
+            excessive,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        ),
         Err(CoreError::InvalidSave("player sniper state is invalid"))
     ));
 
     let mut non_sniper = Game::new(6).to_save();
     non_sniper.player.sniper_concentration = 1;
     assert!(matches!(
-        Game::from_save(non_sniper),
+        Game::from_save(non_sniper, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("player sniper state is invalid"))
     ));
 
     let mut duplicate_knowledge = game.to_save();
     duplicate_knowledge.player.probed_actor_kind_ids = vec![probed_kind_id.clone(), probed_kind_id];
     assert!(matches!(
-        Game::from_save_with_content(duplicate_knowledge, game.content.clone()),
+        Game::from_save_with_content(
+            duplicate_knowledge,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        ),
         Err(CoreError::InvalidSave(
             "player probed actor knowledge is invalid"
         ))
@@ -686,7 +698,11 @@ fn sniper_state_round_trips_and_rejects_invalid_build_or_bounds() {
     let mut unknown_knowledge = game.to_save();
     unknown_knowledge.player.probed_actor_kind_ids = vec!["test.actor.missing".to_owned()];
     assert!(matches!(
-        Game::from_save_with_content(unknown_knowledge, game.content.clone()),
+        Game::from_save_with_content(
+            unknown_knowledge,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        ),
         Err(CoreError::InvalidSave(
             "player probed actor knowledge is invalid"
         ))

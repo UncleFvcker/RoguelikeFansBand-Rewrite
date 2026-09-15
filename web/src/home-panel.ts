@@ -244,8 +244,11 @@ export class HomePanel {
       button.dataset.homeItemId = item.id;
       button.disabled = item.maximumQuantity === 0;
       button.setAttribute("aria-pressed", String(item.id === this.#selectedItemId));
+      const glyph = span(this.#dom.list, "inventory-item-glyph", "");
+      glyph.hidden = !this.#state.display.showItemIcons; glyph.setAttribute("aria-hidden", "true");
+      if (item.details) this.#state.paintVisual(glyph, item.details.visual.id, item.details.visual.glyph);
       button.append(
-        span(this.#dom.list, "shop-item-name", displayName),
+        glyph, span(this.#dom.list, "shop-item-name", displayName),
         span(this.#dom.list, "shop-item-details", this.#itemDetails(item)),
         span(this.#dom.list, "shop-item-stock", this.#localization.format(this.#mode === "withdraw" ? "home-stored-count" : "shop-owned-count", { quantity: item.quantity })),
       );
@@ -305,20 +308,18 @@ export class HomePanel {
     return item.capturedActor
       ? this.#localization.format("capture-ball-name-contained", {
           ball,
-          actor: this.#localization.format(item.capturedActor.nameKey as MessageKey),
+          actor: item.capturedActor.customName ?? this.#localization.format(item.capturedActor.nameKey as MessageKey),
         })
       : ball;
   }
   #itemDetails(item: HomeItemDto): string {
-    const details = [
-      this.#localization.format("shop-item-weight", {
-        weight: formatTenths(item.weightTenthsPound),
-      }),
-    ];
+    const details: string[] = [];
+    if (this.#state.display.showWeights) details.push(this.#localization.format("shop-item-weight", { weight: formatTenths(item.weightTenthsPound) }));
+    if (this.#state.display.showDiscounts && item.details && item.details.discountPercent > 0) details.push(this.#localization.format("display-item-discount", { percent: item.details.discountPercent }));
     if (item.capturedActor) {
       details.push(
         this.#localization.format("capture-ball-contained", {
-          actor: this.#localization.format(item.capturedActor.nameKey as MessageKey),
+          actor: item.capturedActor.customName ?? this.#localization.format(item.capturedActor.nameKey as MessageKey),
           hp: item.capturedActor.hp,
           maximum: item.capturedActor.maxHp,
           experience: item.capturedActor.experience,

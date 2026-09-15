@@ -112,7 +112,7 @@ fn all_eight_builds_choose_and_cast_both_realms_with_source_experience() {
             assert_eq!(game.progress.experience - xp, u64::from(expected));
         }
         assert_eq!(game.spent_spell_learning, 2);
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
     }
@@ -184,7 +184,7 @@ fn repeated_study_updates_projection_caps_budget_and_knowledge_even_for_life() {
         ),
         (84, 2, 75)
     );
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -208,7 +208,7 @@ fn all_eighty_four_studies_can_be_spent_and_illegal_spending_is_rejected() {
         Err("learning-capacity-full")
     );
     assert_eq!(game.to_save(), before);
-    assert!(Game::from_save(before).is_ok());
+    assert!(Game::from_save(before, Game::default_behavior_preferences()).is_ok());
 
     let mut game = prepared(BUILD, 20);
     let book = learn(&mut game, SECONDARY);
@@ -243,9 +243,12 @@ fn all_eighty_four_studies_can_be_spent_and_illegal_spending_is_rejected() {
                 save.player.ability_progress.pop();
             }
         }
-        assert!(Game::from_save(save).is_err(), "{corruption}");
+        assert!(
+            Game::from_save(save, Game::default_behavior_preferences()).is_err(),
+            "{corruption}"
+        );
     }
-    assert!(Game::from_save(baseline).is_ok());
+    assert!(Game::from_save(baseline, Game::default_behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -325,7 +328,7 @@ fn drain_forgets_without_refunding_and_restored_growth_replays_identically() {
             .filter(|a| order.contains(&a.id))
             .all(|a| a.forgotten && !a.can_study && !a.can_cast)
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for game in [&mut game, &mut restored] {
         game.progress.attributes.intelligence = game.progress.maximum_attributes.intelligence;
         game.apply_player_experience(game.experience_required_for_level(50), &mut Vec::new());
@@ -358,7 +361,7 @@ fn pending_changes_cancel_freely_then_commit_without_random_study_and_replay_aft
         let primary = game.ability_progress[PRIMARY];
         let clock = (game.world_tick, game.player.energy_need, game.rng.clone());
         begin(&mut game, &new_book);
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for game in [&mut game, &mut restored] {
             confirm(game, false);
             assert_eq!(game.current_second_realm_id(), Some("sorcery"));
@@ -383,7 +386,7 @@ fn pending_changes_cancel_freely_then_commit_without_random_study_and_replay_aft
         }
         assert_eq!(game.state_hash(), restored.state_hash());
         // Cancelling the subsequent spell picker leaves the confirmed realm in the save.
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for game in [&mut game, &mut restored] {
             dispatch_next(
                 game,
@@ -410,7 +413,7 @@ fn pending_changes_cancel_freely_then_commit_without_random_study_and_replay_aft
         }
         assert_eq!(game.state_hash(), restored.state_hash());
         assert_eq!(game.rng, restored.rng);
-        assert!(Game::from_save(game.to_save()).is_ok());
+        assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
     }
 }
 
@@ -440,7 +443,7 @@ fn realm_eligibility_and_saved_history_keep_primary_arcane_and_the_eighty_four_c
         .as_mut()
         .unwrap()
         .pending_change_book_item_id = Some(primary);
-    assert!(Game::from_save(invalid).is_err());
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
     confirm(&mut game, true);
     let baseline = game.to_save();
     for corruption in 0..6 {
@@ -454,9 +457,12 @@ fn realm_eligibility_and_saved_history_keep_primary_arcane_and_the_eighty_four_c
             4 => realms.second_realm_id = "chaos".to_owned(),
             _ => save.player.spent_spell_learning = 84 + 64 + 1,
         }
-        assert!(Game::from_save(save).is_err(), "{corruption}");
+        assert!(
+            Game::from_save(save, Game::default_behavior_preferences()).is_err(),
+            "{corruption}"
+        );
     }
-    assert!(Game::from_save(baseline).is_ok());
+    assert!(Game::from_save(baseline, Game::default_behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -492,7 +498,7 @@ fn failure_uses_intelligence_without_secondary_surcharge_and_resumes_natural_fai
         .map(RfbRng::seeded)
         .find(|rng| rng.clone().bounded(100) < u64::from(failure(&game, SECONDARY)))
         .unwrap();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let mana = game.resources[MANA].current;
     let events = cast(&mut game, SECONDARY, false);
     assert!(
@@ -540,5 +546,5 @@ fn real_dungeon_practice_and_interpolated_restudy_respect_each_realm_cap() {
         assert_eq!(game.ability_progress[spell].proficiency, after);
     }
     assert_eq!(game.spent_spell_learning, 4);
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }

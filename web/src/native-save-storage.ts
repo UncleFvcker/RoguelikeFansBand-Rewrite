@@ -2,6 +2,7 @@
 
 import { invoke } from "@tauri-apps/api/core";
 
+import type { HighScore } from "./high-scores";
 import type { GameSnapshot } from "./protocol";
 
 export type NativeSaveStatus = "ready" | "recoverable" | "corrupt";
@@ -15,6 +16,8 @@ export type NativeSaveErrorCategory =
   | "internal";
 
 export interface NativeSaveSummary {
+  characterName: string | null;
+  characterLevel: number | null;
   museumCheckpoint: boolean;
   slotId: string;
   slotName: string;
@@ -41,14 +44,16 @@ export interface DesktopCommandError {
 }
 
 export class NativeSaveStorage {
+  scores(): Promise<HighScore[]> { return invoke<HighScore[]>("list_high_scores"); }
   list(): Promise<NativeSaveSummary[]> {
     return invoke<NativeSaveSummary[]>("list_native_saves");
   }
 
-  save(slotName: string, slotId?: string): Promise<NativeSaveSummary> {
+  save(slotName?: string, slotId?: string, newSlot = false): Promise<NativeSaveSummary> {
     return invoke<NativeSaveSummary>("save_native_game", {
       slotId: slotId ?? null,
-      slotName,
+      slotName: slotName ?? null,
+      newSlot,
       savedAt: new Date().toISOString(),
     });
   }

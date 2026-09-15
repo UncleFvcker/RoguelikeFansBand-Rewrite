@@ -35,9 +35,10 @@
                 "canReceiveRecharge": false,
                 "canSupplyRecharge": false,
                 "captureBall": false,
+                "discountPercent": 0,
                 "displayNameKey": "item-demo-ration-of-food-name",
                 "equipmentSlot": null,
-                "id": "generated.item.203",
+                "id": "generated.item.204",
                 "identification": "unexamined",
                 "kindId": "demo.item.ration-of-food",
                 "knowledge": "aware",
@@ -56,12 +57,21 @@
                   "wisdom": 0
                 },
                 "mountUsable": false,
+                "originKind": null,
                 "quantity": 1,
                 "usable": true,
+                "useCategory": "food",
+                "visual": {
+                  "category": "item",
+                  "glyph": ",",
+                  "id": "demo.item.ration-of-food",
+                  "nameKey": "item-demo-ration-of-food-name",
+                  "prf": null
+                },
                 "weightTenthsPound": 10
               },
               "displayNameKey": "item-demo-ration-of-food-name",
-              "id": "generated.item.203",
+              "id": "generated.item.204",
               "kindId": "demo.item.ration-of-food",
               "maximumQuantity": 1,
               "quantity": 1,
@@ -79,7 +89,7 @@
       },
       "lastCommandSeq": 1,
       "revision": 1,
-      "stateHash": "44fb5fe4d72ab6f5644595c3cdb0f8a96a748b1e6c220e53fa8254e7225b3772",
+      "stateHash": "ca95fddb4aec522ccb24caced4484271611e7d0db81a117116efe2a1b6a2178d",
       "turn": 1
     },
     "events": [
@@ -88,7 +98,7 @@
         "messageKey": "home-deposit-success",
         "args": {
           "facility": "demo.town-facility.outpost-home",
-          "item": "generated.item.203",
+          "item": "generated.item.204",
           "quantity": "1",
           "target": "demo.item.ration-of-food"
         }

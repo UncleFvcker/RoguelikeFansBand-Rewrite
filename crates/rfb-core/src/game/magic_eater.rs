@@ -178,6 +178,8 @@ impl Game {
                 GameAction::SelectMagicAbsorptionSlot { .. }
                     | GameAction::ResolveMagicAbsorption { .. }
                     | GameAction::SetInterfaceLocale { .. }
+                    | GameAction::ConfigurePreferences { .. }
+                    | GameAction::ConfigureMogaminatorPreferences { .. }
             )
         {
             return Err(CoreError::MagicAbsorptionUnavailable(
@@ -185,7 +187,11 @@ impl Game {
             ));
         }
         match action {
-            GameAction::SetInterfaceLocale { .. } if self.pending_magic_absorption.is_some() => {
+            GameAction::SetInterfaceLocale { .. }
+            | GameAction::ConfigurePreferences { .. }
+            | GameAction::ConfigureMogaminatorPreferences { .. }
+                if self.pending_magic_absorption.is_some() =>
+            {
                 Ok(Some(false))
             }
             GameAction::InscribeItem { item_id, .. }

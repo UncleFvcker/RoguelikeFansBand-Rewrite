@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -26,9 +27,7 @@ export async function runCraftScenario(driver, directory) {
     return snapshot;
   }
   await driver.waitFor('return document.documentElement.dataset.appMode === "title"', "Craft title", 60_000);
-  await click("#session-settings");
-  await driver.execute('const input=document.querySelector("#session-settings-language");input.value="zh-CN";input.dispatchEvent(new Event("change", {bubbles:true}));return true;');
-  await click("#session-settings-back");
+  await setPreferences(driver, { locale: "zh-CN" });
   await click("#session-new-game");
   await selectCreationRace(driver, "rfb-legacy.race.dwarf");
   await selectCreationBuild(driver, "demo.build.high-mage-craft");

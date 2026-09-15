@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
+import { defaultVisuals, type MapTheme, type VisualPreferences } from "./visual-preferences.ts";
+import type { EditableVisualDto } from "./protocol";
 
 import {
   Application,
@@ -9,7 +11,7 @@ import {
   type Texture,
 } from "pixi.js";
 
-import { MAP_CELL_SIZE, type CameraTransform } from "./camera";
+import { MAP_CELL_SIZE, type CameraTransform } from "./camera.ts";
 import { ensureContrast } from "./render-color";
 import {
   TERRAIN_CHUNK_SIZE,
@@ -29,8 +31,7 @@ import type {
 } from "./renderer-backend";
 import { TilesetRuntime, type RuntimeTileVisual } from "./tileset-runtime";
 
-const DEFAULT_BACKGROUND = 0x090d12;
-const GRID_COLOR = 0x18212d;
+const rgb = (color: string) => Number.parseInt(color.slice(1), 16);
 const DYNAMIC_DISPLAY_OBJECTS_PER_CELL = 7;
 const MAX_SPARE_DYNAMIC_VIEWS_PER_SHAPE = 1;
 
@@ -67,6 +68,8 @@ interface DynamicChunkView {
 
 export class PixiRendererBackend implements RendererBackend {
   readonly id = "pixi-layered-chunks-v3";
+  #visuals = defaultVisuals();
+  #visualCatalog: readonly EditableVisualDto[] = [];
   readonly #application = new Application();
   readonly #camera = new Container();
   readonly #terrainLayer = new Container();
@@ -243,14 +246,39 @@ export class PixiRendererBackend implements RendererBackend {
   async setTileset(tilesetManifestUrl: string): Promise<TilesetChangeResult> {
     const replacement = await TilesetRuntime.load(tilesetManifestUrl, this.#contentGlyphs);
     const previous = this.#tileset;
+    replacement.setVisuals(this.#visuals, this.#visualCatalog);
     this.#tileset = replacement;
     this.#forceTerrainRebuild = true;
     previous?.destroy();
     return this.#tilesetResult();
   }
 
+  setVisuals(preferences: VisualPreferences, catalog: readonly EditableVisualDto[]): boolean {
+    this.#visuals = preferences; this.#visualCatalog = catalog;
+    const changed = this.#tileset?.setVisuals(preferences, catalog) ?? false;
+    if (changed) {
+      this.#forceTerrainRebuild = true;
+      this.#application.renderer.background.color = rgb(preferences.theme.background);
+    }
+    return changed;
+  }
+  visualBase(id: string) { return this.#tileset!.visualBase(id); }
+
   setCanvasLabel(label: string): void {
     if (this.#host) this.#application.canvas.setAttribute("aria-label", label);
+  }
+
+  capturePng(): string {
+    this.#application.render();
+    const source = this.#application.canvas as HTMLCanvasElement;
+    const host = this.#host!;
+    const scaleX = source.width / source.clientWidth, scaleY = source.height / source.clientHeight;
+    const target = host.ownerDocument.createElement("canvas");
+    target.width = Math.round(Math.min(host.clientWidth, source.clientWidth - host.scrollLeft) * scaleX);
+    target.height = Math.round(Math.min(host.clientHeight, source.clientHeight - host.scrollTop) * scaleY);
+    target.getContext("2d")!.drawImage(source, host.scrollLeft * scaleX, host.scrollTop * scaleY,
+      target.width, target.height, 0, 0, target.width, target.height);
+    return target.toDataURL("image/png");
   }
 
   destroy(): void {
@@ -415,7 +443,7 @@ export class PixiRendererBackend implements RendererBackend {
       : cell.actorKindId
         ? tileset.resolve(cell.actorKindId)
         : undefined;
-    const terrainBackground = terrain.background ?? DEFAULT_BACKGROUND;
+    const terrainBackground = terrain.background ?? rgb(this.#visuals.theme.background);
     applyLayerVisual(
       view.itemBackground,
       view.itemSymbol,
@@ -429,11 +457,11 @@ export class PixiRendererBackend implements RendererBackend {
       view.actorSymbol,
       localX,
       localY,
-      actor,
+      actor && cell.highlightPet ? { ...actor, background: rgb(this.#visuals.theme.pet) } : actor,
       item?.background ?? terrainBackground,
     );
-    drawVisibility(view.visibilityMask, localX, localY, cell);
-    drawLighting(view.lightColor, view.darkness, localX, localY, cell);
+    drawVisibility(view.visibilityMask, localX, localY, cell, this.#visuals.theme);
+    drawLighting(view.lightColor, view.darkness, localX, localY, cell, this.#visuals.theme);
   }
 
   #rebuildTerrainChunk(chunkIndex: number): void {
@@ -449,9 +477,9 @@ export class PixiRendererBackend implements RendererBackend {
         const terrainId = this.#terrainIds[worldY * this.#width + worldX];
         if (!terrainId) continue;
         const terrain = tileset.resolve(terrainId);
-        const background = terrain.background ?? DEFAULT_BACKGROUND;
+        const background = terrain.background ?? rgb(this.#visuals.theme.background);
         const terrainBackground = new Graphics();
-        drawTerrainBackground(terrainBackground, localX, localY, background);
+        drawTerrainBackground(terrainBackground, localX, localY, background, rgb(this.#visuals.theme.grid));
         const terrainSymbol = cellSprite(localX, localY);
         applyVisual(terrainSymbol, terrain, background);
         source.addChild(terrainBackground, terrainSymbol);
@@ -559,6 +587,7 @@ function drawTerrainBackground(
   cellX: number,
   cellY: number,
   color: number,
+  gridColor: number,
 ): void {
   const x = cellX * MAP_CELL_SIZE;
   const y = cellY * MAP_CELL_SIZE;
@@ -566,7 +595,7 @@ function drawTerrainBackground(
     .rect(x, y, MAP_CELL_SIZE, MAP_CELL_SIZE)
     .fill(color)
     .rect(x, y, MAP_CELL_SIZE, MAP_CELL_SIZE)
-    .stroke({ color: GRID_COLOR, width: 1, alpha: 0.55 });
+    .stroke({ color: gridColor, width: 1, alpha: 0.55 });
 }
 
 function drawBackground(
@@ -586,11 +615,12 @@ function drawVisibility(
   cellX: number,
   cellY: number,
   cell: RenderCell,
+  theme: MapTheme,
 ): void {
   graphics.clear();
   if (cell.visibility === "visible") return;
-  const color = cell.visibility === "remembered" ? 0x12213a : 0x000000;
-  const alpha = cell.visibility === "remembered" ? 0.58 : 1;
+  const color = cell.visibility === "remembered" ? rgb(theme.memoryColor) : rgb(theme.hiddenColor);
+  const alpha = cell.visibility === "remembered" ? theme.memoryOpacity : 1;
   graphics
     .rect(cellX * MAP_CELL_SIZE, cellY * MAP_CELL_SIZE, MAP_CELL_SIZE, MAP_CELL_SIZE)
     .fill({ color, alpha });
@@ -602,6 +632,7 @@ function drawLighting(
   cellX: number,
   cellY: number,
   cell: RenderCell,
+  theme: MapTheme,
 ): void {
   lightColor.clear();
   darkness.clear();
@@ -609,13 +640,13 @@ function drawLighting(
   const x = cellX * MAP_CELL_SIZE;
   const y = cellY * MAP_CELL_SIZE;
   const intensity = Math.max(0, Math.min(1, cell.light.intensity));
-  const colorAlpha = Math.max(0, intensity - 0.5) * 0.18;
+  const colorAlpha = Math.max(0, intensity - 0.5) * theme.lightTintOpacity;
   if (colorAlpha > 0) {
     lightColor
       .rect(x, y, MAP_CELL_SIZE, MAP_CELL_SIZE)
       .fill({ color: cell.light.color, alpha: colorAlpha });
   }
-  const darknessAlpha = (1 - intensity) * 0.62;
+  const darknessAlpha = (1 - intensity) * theme.darknessOpacity;
   if (darknessAlpha > 0) {
     darkness
       .rect(x, y, MAP_CELL_SIZE, MAP_CELL_SIZE)

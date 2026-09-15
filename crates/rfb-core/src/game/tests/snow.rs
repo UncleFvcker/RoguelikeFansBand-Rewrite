@@ -116,6 +116,7 @@ fn flight_high_elf_and_snow_adapted_mounts_ignore_snow() {
         "demo.build.warrior",
         "rfb-legacy.race.high-elf",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal High-Elf should create");
     clear_monsters(&mut high_elf);
@@ -188,7 +189,6 @@ fn successful_world_map_move_into_snow_uses_the_capped_surcharge() {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );

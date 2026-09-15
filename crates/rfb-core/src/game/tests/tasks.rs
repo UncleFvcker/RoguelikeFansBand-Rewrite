@@ -17,7 +17,6 @@ fn morivant_snakes_game() -> Game {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -67,8 +66,12 @@ fn morivant_snakes_game() -> Game {
 #[test]
 fn morivant_snakes_fetch_pickup_save_and_exit_keep_one_artifact() {
     let accepted = morivant_snakes_game();
-    let mut game =
-        Game::from_save_with_content(accepted.to_save(), accepted.content.clone()).unwrap();
+    let mut game = Game::from_save_with_content(
+        accepted.to_save(),
+        accepted.content.clone(),
+        accepted.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(game.state_hash(), accepted.state_hash());
     let entry = game.player.position;
     let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
@@ -136,7 +139,12 @@ fn morivant_snakes_fetch_pickup_save_and_exit_keep_one_artifact() {
         game.task_states[SNAKES_TASK].current, 0,
         "fetch is not pickup"
     );
-    let mut game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut game = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(game.task_states[SNAKES_TASK].current, 0);
     dispatch_next(&mut game, GameCommand::PickUp);
     assert_eq!(game.task_states[SNAKES_TASK].current, 1);
@@ -194,7 +202,12 @@ fn morivant_snakes_fetch_pickup_save_and_exit_keep_one_artifact() {
         game.task_states[SNAKES_TASK].status,
         TaskStatusKindDto::RewardAvailable
     );
-    let mut game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut game = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     game.player.position = game
         .town_local_to_wilderness_view_position("demo.town.morivant", Position { x: 153, y: 18 })
         .unwrap();
@@ -228,7 +241,12 @@ fn morivant_snakes_fetch_pickup_save_and_exit_keep_one_artifact() {
             .count(),
         1
     );
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         restored
@@ -284,8 +302,12 @@ fn morivant_snakes_failed_and_abandoned_floors_stay_closed_after_save() {
         assert_eq!(game.player.position, entry);
         assert!(game.generated_artifact_ids.contains(JONES_WHIP));
         assert!(game.items.iter().all(|item| item.kind_id != JONES_WHIP));
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.task_states[SNAKES_TASK].status, expected);
         restored.player.position = restored
             .town_local_to_wilderness_view_position(
@@ -429,7 +451,7 @@ fn forced_base_ammunition_damage_dice_survive_generation_and_save() {
     assert_eq!(expected.kind_id, "demo.item.sheaf-arrow");
     assert_eq!(expected.damage_dice_override, Some(5));
     game.items.extend(drops);
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         restored.items.iter().find(|item| item.id == expected.id),
         Some(&expected)
@@ -615,7 +637,7 @@ fn warrior_shoot_monster_death_keeps_theme_through_pickup_equipment_and_save() {
     assert!(game.equip_inventory_item(&item.id, None).is_some());
     game.refresh_player_resource_maxima();
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
     dispatch_next(&mut game, GameCommand::Wait);
@@ -736,8 +758,8 @@ fn base_item_natural_egos_cover_all_equipment_types() {
         let generated = drops[0].clone();
         game.items.extend(drops);
         game.reveal_current_visibility();
-        let restored =
-            Game::from_save(game.to_save()).expect("natural equipment must load without rerolling");
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+            .expect("natural equipment must load without rerolling");
         assert_eq!(
             restored.items.iter().find(|item| item.id == generated.id),
             Some(&generated),
@@ -1113,8 +1135,12 @@ fn p107_task_substitutions_are_correlated_persisted_and_hide_losing_variants() {
     first.activate_wilderness_position(None, false).unwrap();
     assert_eq!(projected_ids(&mut first), first_ids);
     let content = first.content.clone();
-    let mut restored = Game::from_save_with_content(first.to_save(), content)
-        .expect("P107 task substitution should round-trip through existing task state");
+    let mut restored = Game::from_save_with_content(
+        first.to_save(),
+        content,
+        Game::default_behavior_preferences(),
+    )
+    .expect("P107 task substitution should round-trip through existing task state");
     assert_eq!(projected_ids(&mut restored), first_ids);
 }
 
@@ -1264,8 +1290,12 @@ fn p107j_rewardless_service_task_waits_for_conclusion_without_creating_an_item()
     );
 
     let content = game.content.clone();
-    let restored = Game::from_save_with_content(game.to_save(), content)
-        .expect("rewardless task conclusion should use the existing task state save");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        content,
+        Game::default_behavior_preferences(),
+    )
+    .expect("rewardless task conclusion should use the existing task state save");
     assert_eq!(
         restored.task_states[root_id].status,
         TaskStatusKindDto::Completed
@@ -1280,7 +1310,6 @@ fn p110_thalos_projects_five_correlated_tasks_from_each_quest_line() {
         dispatch_next(
             &mut game,
             GameCommand::EnterWorldMap {
-                leave_pets: false,
                 cancel_recall: false,
             },
         );
@@ -2005,7 +2034,7 @@ fn old_castle_unlocks_after_vapor_quest_and_rewards_the_warrior_artifact_pool() 
     game.player.position = entry;
     dispatch_next(&mut game, GameCommand::TraverseStairs);
     assert_eq!(game.current_floor_id, "demo.floor.old-castle");
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert!(game.entities.len() >= 75);
     game.entities.clear();
     dispatch_next(&mut game, GameCommand::Wait);
@@ -2678,9 +2707,21 @@ fn warrens_dungeon_conquest_returns_retires_and_round_trips() {
     }));
 
     let victorious_hash = game.state_hash();
-    let mut restored = Game::from_save(game.to_save()).expect("victory should round-trip");
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("victory should round-trip");
     assert_eq!(restored.world_id, DEFAULT_WORLD_ID);
     assert_eq!(restored.state_hash(), victorious_hash);
+
+    // Q can retire a winner in the dungeon, without requiring the surface route.
+    let mut immediate = restored.clone();
+    let ended = dispatch_next(&mut immediate, GameCommand::EndCharacter);
+    assert_eq!(ended.campaign.status, CampaignStatusDto::Retired);
+    assert_eq!(
+        Game::from_save(immediate.to_save(), immediate.behavior_preferences())
+            .unwrap()
+            .state_hash(),
+        immediate.state_hash()
+    );
 
     for expected_depth in (1..=8).rev() {
         place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
@@ -2705,7 +2746,8 @@ fn warrens_dungeon_conquest_returns_retires_and_round_trips() {
             .any(|event| event.kind == "campaign.retired")
     );
     let retired_hash = restored.state_hash();
-    let retired = Game::from_save(restored.to_save()).expect("retirement should round-trip");
+    let retired = Game::from_save(restored.to_save(), restored.behavior_preferences())
+        .expect("retirement should round-trip");
     assert_eq!(retired.state_hash(), retired_hash);
     assert_eq!(
         retired.snapshot().campaign.status,
@@ -2724,7 +2766,6 @@ fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -2820,7 +2861,8 @@ fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
     );
 
     let conquered_hash = game.state_hash();
-    let mut restored = Game::from_save(game.to_save()).expect("Orc Cave should round-trip");
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Orc Cave should round-trip");
     assert_eq!(restored.state_hash(), conquered_hash);
     assert!(restored.dungeon_states["demo.dungeon.orc-cave"].guardian_defeated);
 
@@ -2855,7 +2897,6 @@ fn p86d_camelot_entrance_recall_conquest_and_reward_round_trip() {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -2883,7 +2924,8 @@ fn p86d_camelot_entrance_recall_conquest_and_reward_round_trip() {
     }
 
     let mid_depth_hash = game.state_hash();
-    game = Game::from_save(game.to_save()).expect("Camelot depth 27 should round-trip");
+    game = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Camelot depth 27 should round-trip");
     assert_eq!(game.state_hash(), mid_depth_hash);
     assert_eq!(game.current_floor_id, "demo.floor.camelot-depth-27");
     support::clear_monsters(&mut game);
@@ -2996,7 +3038,8 @@ fn p86d_camelot_entrance_recall_conquest_and_reward_round_trip() {
     );
 
     let conquered_hash = game.state_hash();
-    let mut restored = Game::from_save(game.to_save()).expect("Camelot conquest should round-trip");
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Camelot conquest should round-trip");
     assert_eq!(restored.state_hash(), conquered_hash);
     assert!(restored.dungeon_states["demo.dungeon.camelot"].guardian_defeated);
     assert_eq!(
@@ -3052,7 +3095,6 @@ fn p87d_tidal_cave_entrance_recall_conquest_and_reward_round_trip() {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -3083,7 +3125,8 @@ fn p87d_tidal_cave_entrance_recall_conquest_and_reward_round_trip() {
     }
 
     let mid_depth_hash = game.state_hash();
-    game = Game::from_save(game.to_save()).expect("Tidal Cave depth 20 should round-trip");
+    game = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Tidal Cave depth 20 should round-trip");
     assert_eq!(game.state_hash(), mid_depth_hash);
     game.entities.clear();
     game.recall = Some(RecallStateDto {
@@ -3104,9 +3147,9 @@ fn p87d_tidal_cave_entrance_recall_conquest_and_reward_round_trip() {
     );
 
     assert!(game.recall_use_plan().is_some());
-    let mut pending = Game::from_save(game.to_save()).unwrap();
+    let mut pending = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     pending.start_recall(0);
-    let mut pending = Game::from_save(pending.to_save()).unwrap();
+    let mut pending = Game::from_save(pending.to_save(), pending.behavior_preferences()).unwrap();
     dispatch_next(&mut pending, GameCommand::Wait);
     assert_eq!(pending.current_floor_id, "demo.floor.tidal-cave-depth-20");
 
@@ -3204,8 +3247,8 @@ fn p87d_tidal_cave_entrance_recall_conquest_and_reward_round_trip() {
     );
 
     let conquered_hash = game.state_hash();
-    let mut restored =
-        Game::from_save(game.to_save()).expect("Tidal Cave conquest should round-trip");
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Tidal Cave conquest should round-trip");
     assert_eq!(restored.state_hash(), conquered_hash);
     assert!(restored.dungeon_states["demo.dungeon.tidal-cave"].guardian_defeated);
     assert_eq!(
@@ -3264,7 +3307,6 @@ fn p88d_icky_cave_entrance_recall_conquest_and_reward_round_trip() {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -3295,7 +3337,8 @@ fn p88d_icky_cave_entrance_recall_conquest_and_reward_round_trip() {
     }
 
     let mid_depth_hash = game.state_hash();
-    game = Game::from_save(game.to_save()).expect("Icky Cave depth 14 should round-trip");
+    game = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Icky Cave depth 14 should round-trip");
     assert_eq!(game.state_hash(), mid_depth_hash);
     game.entities.clear();
     game.recall = Some(RecallStateDto {
@@ -3427,8 +3470,8 @@ fn p88d_icky_cave_entrance_recall_conquest_and_reward_round_trip() {
     );
 
     let conquered_hash = game.state_hash();
-    let mut restored =
-        Game::from_save(game.to_save()).expect("Icky Cave conquest should round-trip");
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Icky Cave conquest should round-trip");
     assert_eq!(restored.state_hash(), conquered_hash);
     assert!(restored.dungeon_states["demo.dungeon.icky-cave"].guardian_defeated);
     assert_eq!(

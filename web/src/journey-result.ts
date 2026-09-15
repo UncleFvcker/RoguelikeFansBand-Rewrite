@@ -10,7 +10,7 @@ import type {
 
 type JourneyState = GameSnapshot | GameUpdate;
 
-export type JourneyResultKind = "death" | "victory-return" | "retired";
+export type JourneyResultKind = "death" | "victory-return" | "retired" | "abandoned";
 
 type ResultDom = Pick<
   AppDom,
@@ -44,6 +44,7 @@ const PLAYER_DEATH_MESSAGES = new Set([
 export function selectJourneyResultKind(
   state: JourneyState,
 ): JourneyResultKind | undefined {
+  if (state.campaign.status === "abandoned") return "abandoned";
   if (state.player.isDead) return "death";
   if (state.campaign.status === "retired") return "retired";
   if (state.campaign.status === "victorious") return "victory-return";
@@ -60,6 +61,7 @@ export function selectJourneyResultEvent(
         return PLAYER_DEATH_MESSAGES.has(event.messageKey);
       case "victory-return":
         return event.kind === "campaign.victorious";
+      case "abandoned": return event.kind === "campaign.abandoned";
       case "retired":
         return event.kind === "campaign.retired";
     }

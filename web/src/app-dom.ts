@@ -8,6 +8,11 @@ export interface AppDom {
   readonly mapHost: HTMLElement;
   readonly targetCursor: HTMLElement;
   readonly traverseStairs: HTMLButtonElement;
+  readonly autoExplore: HTMLButtonElement;
+  readonly nearestUnknownItem: HTMLButtonElement;
+  readonly searchModeToggle: HTMLButtonElement;
+  readonly stopContinuousAction: HTMLButtonElement;
+  readonly continuousActionStatus: HTMLElement;
   readonly targetModeToggle: HTMLButtonElement;
   readonly lookModeToggle: HTMLButtonElement;
   readonly targetModeStatus: HTMLElement;
@@ -83,16 +88,7 @@ export interface AppDom {
   readonly resourceRest: HTMLButtonElement;
   readonly nearbyCurrent: HTMLElement;
   readonly nearbyList: HTMLUListElement;
-  readonly summonCommandStatus: HTMLElement;
-  readonly summonCommandButtons: Readonly<Record<SummonCommandModeDto, HTMLButtonElement>>;
-  readonly dismissPets: HTMLButtonElement;
-  readonly petList: HTMLUListElement;
   readonly taskLogList: HTMLUListElement;
-  readonly campaignStatusValue: HTMLElement;
-  readonly campaignScoreValue: HTMLElement;
-  readonly campaignDungeonsValue: HTMLElement;
-  readonly campaignTasksValue: HTMLElement;
-  readonly campaignRetire: HTMLButtonElement;
   readonly inventoryCount: HTMLElement;
   readonly inventoryFilters: HTMLElement;
   readonly inventorySearch: HTMLInputElement;
@@ -126,13 +122,9 @@ export interface AppDom {
   readonly inventoryDestroy: HTMLButtonElement;
   readonly inventoryList: HTMLUListElement;
   readonly equipmentList: HTMLUListElement;
-  readonly nativeSaveName: HTMLInputElement;
-  readonly nativeSaveCreate: HTMLButtonElement;
-  readonly nativeSaveRefresh: HTMLButtonElement;
-  readonly nativeSaveList: HTMLUListElement;
   readonly replayButton: HTMLButtonElement;
   readonly saveButton: HTMLButtonElement;
-  readonly loadInput: HTMLInputElement;
+  readonly loadButton: HTMLButtonElement;
   readonly clearMessages: HTMLButtonElement;
   readonly inputPresetSelect: HTMLSelectElement;
   readonly tilesetPresetSelect: HTMLSelectElement;
@@ -147,6 +139,11 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     mapHost: element<HTMLElement>(document, "map-host"),
     targetCursor: element<HTMLElement>(document, "target-cursor"),
     traverseStairs: element<HTMLButtonElement>(document, "traverse-stairs"),
+    stopContinuousAction: element<HTMLButtonElement>(document, "stop-continuous-action"),
+    autoExplore: element<HTMLButtonElement>(document, "auto-explore"),
+    nearestUnknownItem: element<HTMLButtonElement>(document, "nearest-unknown-item"),
+    searchModeToggle: element<HTMLButtonElement>(document, "search-mode-toggle"),
+    continuousActionStatus: element<HTMLElement>(document, "continuous-action-status"),
     targetModeToggle: element<HTMLButtonElement>(document, "target-mode-toggle"),
     lookModeToggle: element<HTMLButtonElement>(document, "look-mode-toggle"),
     targetModeStatus: element<HTMLElement>(document, "target-mode-status"),
@@ -228,21 +225,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     resourceRest: element<HTMLButtonElement>(document, "resource-rest"),
     nearbyCurrent: element<HTMLElement>(document, "nearby-current"),
     nearbyList: element<HTMLUListElement>(document, "nearby-list"),
-    summonCommandStatus: element<HTMLElement>(document, "summon-command-status"),
-    summonCommandButtons: Object.freeze({
-      follow: element<HTMLButtonElement>(document, "summon-command-follow"),
-      attack: element<HTMLButtonElement>(document, "summon-command-attack"),
-      "keep-distance": element<HTMLButtonElement>(document, "summon-command-keep-distance"),
-      guard: element<HTMLButtonElement>(document, "summon-command-guard"),
-    }),
-    dismissPets: element<HTMLButtonElement>(document, "dismiss-pets"),
-    petList: element<HTMLUListElement>(document, "pet-list"),
     taskLogList: element<HTMLUListElement>(document, "task-log-list"),
-    campaignStatusValue: element<HTMLElement>(document, "campaign-status-value"),
-    campaignScoreValue: element<HTMLElement>(document, "campaign-score-value"),
-    campaignDungeonsValue: element<HTMLElement>(document, "campaign-dungeons-value"),
-    campaignTasksValue: element<HTMLElement>(document, "campaign-tasks-value"),
-    campaignRetire: element<HTMLButtonElement>(document, "campaign-retire"),
     inventoryCount: element<HTMLElement>(document, "inventory-count"),
     inventoryFilters: element<HTMLElement>(document, "inventory-filters"),
     inventorySearch: element<HTMLInputElement>(document, "inventory-search"),
@@ -276,13 +259,9 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     inventoryDestroy: element<HTMLButtonElement>(document, "inventory-destroy"),
     inventoryList: element<HTMLUListElement>(document, "inventory-list"),
     equipmentList: element<HTMLUListElement>(document, "equipment-list"),
-    nativeSaveName: element<HTMLInputElement>(document, "native-save-name"),
-    nativeSaveCreate: element<HTMLButtonElement>(document, "native-save-create"),
-    nativeSaveRefresh: element<HTMLButtonElement>(document, "native-save-refresh"),
-    nativeSaveList: element<HTMLUListElement>(document, "native-save-list"),
     replayButton: element<HTMLButtonElement>(document, "replay-button"),
     saveButton: element<HTMLButtonElement>(document, "save-button"),
-    loadInput: element<HTMLInputElement>(document, "load-input"),
+    loadButton: element<HTMLButtonElement>(document, "load-button"),
     clearMessages: element<HTMLButtonElement>(document, "clear-messages"),
     inputPresetSelect: element<HTMLSelectElement>(document, "input-preset"),
     tilesetPresetSelect: element<HTMLSelectElement>(document, "tileset-preset"),

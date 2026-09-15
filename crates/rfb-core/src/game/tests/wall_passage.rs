@@ -209,7 +209,7 @@ fn c4c_spectral_ordinary_equipment_inherited_breath_and_wall_lifecycle_survive_s
         .unwrap();
     game.rng = RfbRng::seeded(seed);
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let activate = |g: &mut Game| {
         let mut events = Vec::new();
         g.use_inventory_item(
@@ -239,7 +239,13 @@ fn c4c_spectral_ordinary_equipment_inherited_breath_and_wall_lifecycle_survive_s
     assert!(game.player.hp >= hp);
     game.player.hp = game.effective_player_max_hp() / 2;
     let rest = game
-        .resolve_player_rest(3, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .resolve_player_rest(
+            3,
+            crate::action::RestMode::Complete,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
         .unwrap();
     assert_eq!(rest.completed_turns, 3);
     assert_ne!(rest.stop_reason, RestStopReasonDto::Damaged);
@@ -295,7 +301,7 @@ fn c4c_spectral_ordinary_equipment_inherited_breath_and_wall_lifecycle_survive_s
     );
     game.reveal_current_visibility();
     let recovery_progress = game.items[0].device_recovery_progress;
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for run in [&mut game, &mut restored] {
         let hp = run.player.hp;
         while !run.world_tick.is_multiple_of(10) {
@@ -393,8 +399,12 @@ fn c4c_spectral_rider_still_requires_a_wall_passing_mount() {
             mount_passes
         );
         game.reveal_current_visibility();
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         for run in [&mut game, &mut restored] {
             dispatch_next(
                 run,
@@ -500,7 +510,9 @@ fn water_allows_player_and_monster_bolts_and_ammunition_stays_on_shore() {
     assert!(!game.is_walkable(EAST));
     game.reveal_current_visibility();
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
 }
@@ -560,7 +572,9 @@ fn dark_pit_requires_flight_but_allows_projectiles_and_keeps_drops_on_floor() {
     assert_ne!(position, EAST);
     game.reveal_current_visibility();
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
     replace_terrain(&mut game, EAST, "demo.terrain.glass-wall");
@@ -609,7 +623,9 @@ fn a_flying_monster_killed_above_a_pit_drops_its_carried_item_on_nearby_floor() 
     assert!(changed.contains(&position));
     game.reveal_current_visibility();
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
 }
@@ -918,7 +934,13 @@ fn wall_damage_interrupts_rest_after_mana_recovery_and_wait_also_recovers_mana()
             .current = 0;
         if resting {
             let resolution = game
-                .resolve_player_rest(20, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+                .resolve_player_rest(
+                    20,
+                    crate::action::RestMode::Complete,
+                    &mut Vec::new(),
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
                 .unwrap();
             assert_eq!(resolution.completed_turns, 1);
             assert_eq!(resolution.stop_reason, RestStopReasonDto::Damaged);
@@ -988,7 +1010,12 @@ fn wall_positions_round_trip_after_form_expiry_and_in_departed_floor_cache() {
     game.world_tick = 0;
     tick(&mut game);
     assert!(!game.player_can_pass_walls());
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     dispatch_next(
         &mut game,
@@ -1046,7 +1073,12 @@ fn wall_positions_round_trip_after_form_expiry_and_in_departed_floor_cache() {
         .unwrap();
     assert_eq!(cached.player_position, position);
     let saved = game.to_save();
-    let mut restored = Game::from_save_with_content(saved.clone(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        saved.clone(),
+        game.content.clone(),
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     for instance in [&mut game, &mut restored] {
         instance
@@ -1064,7 +1096,14 @@ fn wall_positions_round_trip_after_form_expiry_and_in_departed_floor_cache() {
         .find(|floor| floor.id == departed)
         .unwrap();
     cached.player_position.x = -1;
-    assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            invalid,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
 }
 
 #[test]

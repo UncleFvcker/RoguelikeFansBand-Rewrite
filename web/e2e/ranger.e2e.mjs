@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -159,7 +160,7 @@ export async function runRangerUiScenario(driver, directory, profile, playthroug
     return index;
   }
   async function playNewGame() {
-    await driver.execute('localStorage.setItem("rfb.locale","zh-CN");localStorage.setItem("rfb.input-preset","numpad");return true;');
+    await setPreferences(driver, { locale: "zh-CN", inputPreset: "numpad" });
     await keyboard.reload(); await driver.waitFor('return document.documentElement.dataset.appMode==="title"',"play title");
     await driver.execute(`const original=window.fetch, endpoint=window.__TAURI_INTERNALS__.convertFileSrc("dispatch_game_command","ipc");
       window.fetch=(url,options)=>url!==endpoint ? original(url,options) : original(url,options).then(async response=>{
@@ -280,7 +281,7 @@ export async function runRangerUiScenario(driver, directory, profile, playthroug
       localization.setLocale(locale);
       const births=[];
       for(const realm of ["death","arcane","daemon","sorcery"]) {
-        await driver.execute('localStorage.setItem("rfb.locale",arguments[0]); return true;',[locale]);
+        await setPreferences(driver, { locale });
         await keyboard.reload();
         await driver.waitFor('return document.documentElement.dataset.appMode==="title" && !document.querySelector("#session-new-game").disabled',"localized title",60_000);
         await viewport(1280,720); await click("#session-new-game");

@@ -113,7 +113,7 @@ fn clear_encounters(game: &mut Game) {
 #[track_caller]
 fn restore(game: &mut Game) {
     let hash = game.state_hash();
-    *game = Game::from_save(game.to_save()).unwrap();
+    *game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), hash);
 }
 
@@ -243,7 +243,6 @@ fn arena_dungeon_real_entry_full_chain_combat_reward_scroll_and_return() {
     dispatch_next(
         &mut game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );

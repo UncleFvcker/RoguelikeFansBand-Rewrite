@@ -65,7 +65,7 @@ fn rapier_reward_and_fixed_old_castle_choice_survive_rng_changes_and_loading() {
         let (mut game, id, facility, item_id) = ready(seed, "old-castle");
         let mut changed_rng = game.clone();
         changed_rng.rng.bounded(987);
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(
             game.claim_task_reward(&facility, &id),
             restored.claim_task_reward(&facility, &id)
@@ -83,7 +83,7 @@ fn rapier_reward_and_fixed_old_castle_choice_survive_rng_changes_and_loading() {
                 .kind_id
         );
         assert!(game.generated_artifact_ids.contains(&item.kind_id));
-        assert!(Game::from_save(game.to_save()).is_ok());
+        assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
         seen.insert(item.kind_id.clone());
         if seen.len() == 2 {
             break;
@@ -117,7 +117,7 @@ fn existing_old_castle_artifact_becomes_a_named_replacement_without_duplicate_or
         Err("inventory-full")
     );
     assert_eq!(full.to_save(), before);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     game.claim_task_reward(&facility, &id).unwrap();
     restored.claim_task_reward(&facility, &id).unwrap();
     same_save(&game, &restored);
@@ -125,7 +125,8 @@ fn existing_old_castle_artifact_becomes_a_named_replacement_without_duplicate_or
     assert_eq!(item.kind_id, "demo.item.rapier");
     assert!(item.artifact_name.is_some());
     assert!(matches!(item.intrinsic_weight_tenths_pound, Some(30 | 55)));
-    Game::from_save(game.to_save()).expect("replacement reward must reload");
+    Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("replacement reward must reload");
     assert_eq!(
         game.claim_task_reward(&facility, &id),
         Err("reward-unavailable")

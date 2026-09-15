@@ -7,6 +7,9 @@ import test from "node:test";
 import type { TargetSpecDto } from "./protocol";
 import {
   beginTargeting,
+  cycleTarget,
+  defaultTargetState,
+  moveTarget,
   moveTargetCursor,
   targetSelectionAtCursor,
   translateTargetingState,
@@ -17,6 +20,47 @@ const SPEC: TargetSpecDto = {
   range: 2,
   requiresLineOfEffect: true,
 };
+
+test("default targeting preserves all four intentions, line-of-effect and pet eligibility", () => {
+  const state = beginTargeting({ x: 3, y: 3 }, SPEC);
+  const entities = [
+    { id: "blocked", faction: "hostile", position: { x: 3, y: 4 }, inLineOfEffect: false },
+    { id: "near", faction: "hostile", position: { x: 4, y: 3 }, inLineOfEffect: true },
+    { id: "old", faction: "hostile", position: { x: 5, y: 3 }, inLineOfEffect: true },
+    { id: "pet", faction: "player", position: { x: 3, y: 2 }, inLineOfEffect: true },
+  ];
+  const old = { type: "entity", entityId: "old" };
+  assert.deepEqual(defaultTargetState(state, "manual", old, entities).cursor, state.origin);
+  assert.deepEqual(defaultTargetState(state, "old-target", old, entities).cursor, { x: 5, y: 3 });
+  assert.deepEqual(defaultTargetState(state, "nearest-enemy", old, entities).cursor, { x: 4, y: 3 });
+  assert.deepEqual(defaultTargetState(state, "old-then-nearest", old, entities).cursor, { x: 5, y: 3 });
+  const missing = { type: "entity", entityId: "gone" };
+  assert.deepEqual(defaultTargetState(state, "old-target", missing, entities).cursor, state.origin);
+  assert.deepEqual(defaultTargetState(state, "old-then-nearest", missing, entities).cursor, { x: 4, y: 3 });
+  const pet = { type: "entity", entityId: "pet" };
+  assert.deepEqual(defaultTargetState(state, "old-target", pet, entities).cursor, state.origin);
+  assert.deepEqual(defaultTargetState({ ...state, targetPets: true }, "old-target", pet, entities).cursor, { x: 3, y: 2 });
+  assert.deepEqual(defaultTargetState({ ...state, targetPets: true }, "nearest-enemy", pet, entities.filter(e => e.faction !== "hostile")).cursor, state.origin);
+});
+
+test("target list skips pets and out-of-range entities; directional selection falls back to free grids", () => {
+  const entities = [
+    { id: "pet", faction: "player", position: { x: 3, y: 3 } },
+    { id: "near", position: { x: 4, y: 3 } },
+    { id: "east", position: { x: 5, y: 3 } },
+    { id: "out", position: { x: 12, y: 3 } },
+  ];
+  let state = cycleTarget(beginTargeting({ x: 3, y: 3 }, SPEC), entities, 0);
+  assert.deepEqual(state.cursor, { x: 4, y: 3 });
+  state = moveTarget(state, "east", entities, 20, 20);
+  assert.deepEqual(state.cursor, { x: 5, y: 3 }); assert.equal(state.list, true);
+  state = moveTarget(state, "south", entities, 20, 20);
+  assert.deepEqual(state.cursor, { x: 5, y: 4 }); assert.equal(state.list, false);
+  state = cycleTarget(state, entities, 1);
+  assert.deepEqual(state.cursor, { x: 5, y: 3 });
+  assert.deepEqual(targetSelectionAtCursor({ ...state, list: false }, entities), { type: "position", position: { x: 5, y: 3 } });
+  assert.deepEqual(targetSelectionAtCursor({ ...state, list: false, spec: { ...SPEC, modes: ["entity"] } }, entities), { type: "entity", entityId: "east" });
+});
 
 test("target mode accepts direction, grid, or entity selection", () => {
   assert.equal(beginTargeting({ x: 3, y: 3 }, undefined), undefined);

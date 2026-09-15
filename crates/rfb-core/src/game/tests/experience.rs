@@ -8,8 +8,14 @@ fn experience_awards_stay_raw_and_racial_cost_changes_the_level_threshold() {
         ("demo.race.rfb-human", 100, 6, 140),
         ("rfb-legacy.race.spectre", 250, 3, 112),
     ] {
-        let mut game =
-            Game::new_with_build_race_and_name(83, "demo.build.warrior", race, "XP").unwrap();
+        let mut game = Game::new_with_build_race_and_name(
+            83,
+            "demo.build.warrior",
+            race,
+            "XP",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         let mut events = Vec::new();
         game.apply_player_experience(100, &mut events);
         let snapshot = game.snapshot();
@@ -81,7 +87,7 @@ fn experience_factor_recheck_changes_level_without_rewriting_xp_or_repeating_rew
             .iter()
             .any(|event| matches!(event, DomainEvent::ExperienceGained { .. }))
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.snapshot(), game.snapshot());
     for state in [&mut game, &mut restored] {
         state.build.as_mut().unwrap().race_id = "demo.race.rfb-human".to_owned();
@@ -131,7 +137,7 @@ fn temporary_form_keeps_native_xp_factor_through_drain_restore_and_save() {
     );
     assert!(game.restore_player_experience_and_life_force(0, &mut Vec::new()));
     assert_eq!((game.progress.experience, game.progress.level), (101, 6));
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.snapshot(), game.snapshot());
     assert_eq!(
         dispatch_next(&mut game, GameCommand::Wait),

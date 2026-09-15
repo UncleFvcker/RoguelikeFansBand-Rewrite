@@ -22,6 +22,7 @@ export interface ObjectListEntry {
   readonly position: Position;
   readonly name: string;
   readonly glyph: string;
+  readonly visualId: string;
   readonly distance: number;
   readonly offsetX: number;
   readonly offsetY: number;
@@ -115,6 +116,7 @@ export class ObjectListPanel {
     const status = this.#state.status;
     if (!status || this.#state.worldMap) return;
     this.#selectedIndex = 0;
+    this.#includeStairs = this.#state.display.listStairs;
     this.#render();
     if (!this.#dom.dialog.open) this.#dom.dialog.showModal();
     this.#window.requestAnimationFrame(() => this.#focusSelected());
@@ -156,6 +158,7 @@ export class ObjectListPanel {
   };
 
   readonly #handleKeydown = (event: KeyboardEvent): void => {
+    if (event.defaultPrevented || event.repeat || event.isComposing || event.ctrlKey || event.altKey || event.metaKey) return;
     const key = event.key.toLowerCase();
     if (event.key === "Escape" || key === "q") {
       event.preventDefault();
@@ -266,7 +269,8 @@ export class ObjectListPanel {
 
       const glyph = this.#document.createElement("span");
       glyph.className = "object-list-glyph";
-      glyph.textContent = entry.glyph;
+      glyph.hidden = entry.quantity !== undefined && !this.#state.display.showItemIcons;
+      this.#state.paintVisual(glyph, entry.visualId, entry.glyph);
       glyph.setAttribute("aria-hidden", "true");
       const name = this.#document.createElement("span");
       name.className = "object-list-name";
@@ -368,6 +372,7 @@ export function buildObjectListEntries(options: ObjectListProjection): ObjectLis
       category: "interesting",
       position: facility.entrancePosition,
       name: options.localize(facility.nameKey),
+      visualId: facility.entranceTerrainId,
       glyph: options.glyphFor(facility.entranceTerrainId) ?? "?",
       distance: gridDistance(options.playerPosition, facility.entrancePosition),
       offsetX: facility.entrancePosition.x - options.playerPosition.x,
@@ -400,7 +405,7 @@ export function buildObjectListEntries(options: ObjectListProjection): ObjectLis
       category: "interesting",
       position: cell.position,
       name: options.contentName(cell.terrainId),
-      glyph,
+      glyph, visualId: cell.terrainId,
       distance: gridDistance(options.playerPosition, cell.position),
       offsetX: cell.position.x - options.playerPosition.x,
       offsetY: cell.position.y - options.playerPosition.y,
@@ -421,7 +426,8 @@ export function buildObjectListEntries(options: ObjectListProjection): ObjectLis
       category: action?.disposition === "pick-up" ? "needed" : "items",
       position: item.position,
       name: annotations.length ? `${name} {${annotations.join(", ")}}` : name,
-      glyph: options.glyphFor(item.kindId) ?? "?",
+      visualId: item.visual.id,
+      glyph: item.visual.glyph,
       distance: gridDistance(options.playerPosition, item.position),
       offsetX: item.position.x - options.playerPosition.x,
       offsetY: item.position.y - options.playerPosition.y,

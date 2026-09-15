@@ -7,7 +7,7 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 pub const REPLAY_FORMAT: &str = "rfb-replay";
-pub const REPLAY_FORMAT_VERSION: u16 = 1;
+pub const REPLAY_FORMAT_VERSION: u16 = 2;
 pub const STATE_HASH_SCHEMA_VERSION: u16 = rfb_core::STATE_HASH_SCHEMA_VERSION;
 pub const DEFAULT_CHECKPOINT_INTERVAL: usize = 100;
 
@@ -25,6 +25,7 @@ pub struct ReplayV1 {
     pub protocol_version: String,
     pub content_hash: String,
     pub initial_save_hash: String,
+    pub initial_behavior: rfb_protocol::BehaviorContextDto,
     pub rng_algorithm: String,
     pub state_hash_schema_version: u16,
     pub commands: Vec<ReplayCommand>,
@@ -73,6 +74,7 @@ impl ReplayRecorder {
             protocol_version: PROTOCOL_VERSION.to_owned(),
             content_hash: game.content_hash().to_owned(),
             initial_save_hash: game.state_hash(),
+            initial_behavior: game.behavior_context(),
             rng_algorithm: game.rng_algorithm().to_owned(),
             state_hash_schema_version: STATE_HASH_SCHEMA_VERSION,
             commands: Vec::new(),
@@ -156,6 +158,7 @@ impl ReplayRecorder {
 }
 
 pub fn verify(replay: &ReplayV1, mut game: Game) -> Result<ReplayVerification, ReplayError> {
+    game.restore_behavior_context(replay.initial_behavior.clone())?;
     validate_metadata(replay, &game)?;
     validate_checkpoint_schedule(replay)?;
     let mut checkpoint_index = 0;

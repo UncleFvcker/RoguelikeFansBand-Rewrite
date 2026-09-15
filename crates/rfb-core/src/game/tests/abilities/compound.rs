@@ -439,8 +439,12 @@ fn mutation_earthquake_panic_hit_and_polymorph_enforce_their_boundaries() {
                 [AbilityEffectResolutionDto::PolymorphSelf { .. }]
             )
     )));
-    let restored = Game::from_save_with_content(polymorph.to_save(), polymorph.content.clone())
-        .expect("polymorph state should reload");
+    let restored = Game::from_save_with_content(
+        polymorph.to_save(),
+        polymorph.content.clone(),
+        polymorph.behavior_preferences(),
+    )
+    .expect("polymorph state should reload");
     assert_eq!(restored.state_hash(), polymorph.state_hash());
 }
 

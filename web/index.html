@@ -7,6 +7,17 @@
     <title data-l10n-id="app-title"></title>
   </head>
   <body>
+    <dialog id="save-decision-dialog" aria-labelledby="save-decision-title">
+      <form method="dialog">
+        <h2 id="save-decision-title" data-l10n-id="save-unsaved-title"></h2>
+        <p data-l10n-id="save-unsaved-message"></p>
+        <div class="header-actions">
+          <button value="save" data-l10n-id="save-before-leaving"></button>
+          <button value="discard" data-l10n-id="save-discard"></button>
+          <button value="cancel" data-l10n-id="save-cancel" autofocus></button>
+        </div>
+      </form>
+    </dialog>
     <main id="session-shell" class="session-shell" data-view="title">
       <section class="session-card" aria-labelledby="session-heading">
         <p class="eyebrow" data-l10n-id="session-eyebrow"></p>
@@ -20,7 +31,8 @@
             <button id="session-load-game" type="button" data-l10n-id="action-session-load-game"></button>
           </div>
           <div class="session-secondary-actions">
-            <button id="session-settings" class="quiet-button" type="button" data-l10n-id="action-session-settings"></button>
+            <button id="title-high-scores" type="button" data-l10n-id="guide-entry-scores"></button>
+          <button id="session-settings" class="quiet-button" type="button" data-l10n-id="action-session-settings"></button>
             <button id="session-exit" class="quiet-button" type="button" data-l10n-id="action-session-exit"></button>
           </div>
         </section>
@@ -123,33 +135,6 @@
           </div>
         </section>
 
-        <section id="session-settings-view" class="session-view" hidden>
-          <div class="session-view-heading">
-            <h2 data-l10n-id="session-settings-heading"></h2>
-            <p data-l10n-id="session-settings-description"></p>
-          </div>
-          <div class="session-settings-grid">
-            <label for="session-settings-language">
-              <span data-l10n-id="settings-language-label"></span>
-              <select id="session-settings-language">
-                <option value="en-US" data-l10n-id="language-name-en-us"></option>
-                <option value="zh-CN" data-l10n-id="language-name-zh-cn"></option>
-              </select>
-            </label>
-            <label for="session-settings-input">
-              <span data-l10n-id="settings-input-label"></span>
-              <select id="session-settings-input">
-                <option value="numpad" data-l10n-id="input-preset-numpad"></option>
-                <option value="vi" data-l10n-id="input-preset-vi"></option>
-                <option value="wasd" data-l10n-id="input-preset-wasd"></option>
-              </select>
-            </label>
-          </div>
-          <div class="session-form-actions">
-            <button id="session-settings-back" type="button" data-l10n-id="action-session-back"></button>
-          </div>
-        </section>
-
         <div class="session-feedback" role="region" tabindex="-1" data-l10n-aria-label="session-feedback-label">
           <p id="session-status" class="session-status" aria-live="polite"></p>
           <p id="session-error" class="session-error" aria-live="assertive"></p>
@@ -169,11 +154,10 @@
               <div class="header-actions">
                 <button id="player-ui-settings-open" class="quiet-button" type="button" data-l10n-id="action-game-settings"></button>
                 <button id="replay-button" type="button" data-l10n-id="action-export-replay"></button>
-                <button id="save-button" type="button" data-l10n-id="action-export-save"></button>
-                <label class="file-button">
-                  <span data-l10n-id="action-load-save"></span>
-                  <input id="load-input" type="file" accept=".rfbsave,application/octet-stream" />
-                </label>
+                <button id="save-button" type="button" data-l10n-id="save-game"></button>
+                <button id="save-as-button" type="button" data-l10n-id="save-as"></button>
+                <button id="load-button" type="button" data-l10n-id="action-session-load-game"></button>
+                <button id="save-exit-button" type="button" data-l10n-id="save-and-exit"></button>
               </div>
             </div>
           </details>
@@ -199,6 +183,7 @@
             <button id="result-restart" type="button" data-l10n-id="action-result-restart"></button>
             <button id="result-new-game" type="button" data-l10n-id="action-result-new-game"></button>
             <button id="result-load" type="button" data-l10n-id="action-result-load"></button>
+            <button id="result-high-scores" class="quiet-button" type="button" data-l10n-id="guide-entry-scores"></button>
             <button id="result-menu" class="quiet-button" type="button" data-l10n-id="action-result-menu"></button>
             <button id="result-exit" class="quiet-button" type="button" data-l10n-id="action-result-exit"></button>
           </div>
@@ -216,17 +201,42 @@
             <div id="target-cursor" class="target-cursor" aria-hidden="true" hidden></div>
           </div>
           <div class="input-toolbar">
+            <details class="map-intelligence-menu">
+              <summary data-l10n-id="cfg-menu"></summary>
+              <button type="button" data-config-record="input-config" data-l10n-id="cfg-input-config"></button>
+              <button type="button" data-config-record="command-menu" data-l10n-id="cfg-command-menu"></button>
+              <button type="button" data-config-record="notes" data-l10n-id="cfg-notes"></button>
+              <button type="button" data-config-record="screen-export" data-l10n-id="cfg-screen-export"></button>
+            </details>
+            <button id="command-record-status" type="button" hidden></button>
+            <button type="button" data-guide="help" data-l10n-id="guide-help"></button>
+            <button type="button" data-guide="knowledge" data-l10n-id="guide-knowledge"></button>
+            <details class="map-intelligence-menu">
+              <summary data-l10n-id="intel-menu"></summary>
+              <button type="button" data-map-inquiry="map-overview" data-l10n-id="intel-map-overview"></button>
+              <button type="button" data-map-inquiry="map-locate" data-l10n-id="intel-map-locate"></button>
+              <button type="button" data-map-inquiry="map-center" data-l10n-id="intel-map-center"></button>
+              <button type="button" data-map-inquiry="monster-list" data-l10n-id="intel-monster-list"></button>
+              <button type="button" data-map-inquiry="symbol-query" data-l10n-id="intel-symbol-query"></button>
+              <button type="button" data-map-inquiry="floor-feeling" data-l10n-id="intel-floor-feeling"></button>
+            </details>
             <div class="target-controls">
               <button id="traverse-stairs" type="button" disabled></button>
               <button id="look-mode-toggle" type="button"></button>
               <button id="target-mode-toggle" type="button"></button>
+                    <button id="auto-explore" type="button" data-l10n-id="action-auto-explore" disabled></button>
+                    <button id="search-mode-toggle" type="button" data-l10n-id="action-search-mode-off" aria-pressed="false" disabled></button>
+                    <button id="nearest-unknown-item" type="button" data-l10n-id="action-nearest-unknown-item" disabled></button>
+              <button id="stop-continuous-action" type="button" data-l10n-id="action-stop-continuous" hidden></button>
+              <span id="continuous-action-status" role="status"></span>
             </div>
             <label for="input-preset">
               <span data-l10n-id="settings-input-label"></span>
               <select id="input-preset">
-                <option value="numpad" data-l10n-id="input-preset-numpad"></option>
-                <option value="vi" data-l10n-id="input-preset-vi"></option>
-                <option value="wasd" data-l10n-id="input-preset-wasd"></option>
+
+
+                <option value="original" data-l10n-id="input-preset-original"></option>
+                <option value="roguelike" data-l10n-id="input-preset-roguelike"></option>
               </select>
             </label>
             <label for="tileset-preset">
@@ -280,10 +290,9 @@
           </div>
         </section>
 
-        <details class="support-drawer">
-          <summary data-l10n-id="support-drawer-title"></summary>
+        <section class="support-drawer" aria-labelledby="dungeon-info-title">
           <div id="support-panel-host" class="support-panel-host"></div>
-        </details>
+        </section>
 
         <section class="shortcut-bar" aria-labelledby="shortcut-bar-title">
           <div class="shortcut-bar-heading">
@@ -411,37 +420,8 @@
             <button id="magic-eater-open" type="button" data-l10n-id="magic-eater-open" hidden></button>
           </section>
 
-          <section id="summon-command-panel" class="status-panel summon-command-panel" aria-labelledby="summon-command-title">
-            <div class="panel-heading">
-              <span id="summon-command-title" data-l10n-id="panel-summon-command-title"></span>
-              <span id="summon-command-status" class="status-pill"></span>
-            </div>
-            <div class="summon-command-actions">
-              <button id="summon-command-follow" type="button" data-l10n-id="action-summon-command-follow"></button>
-              <button id="summon-command-attack" type="button" data-l10n-id="action-summon-command-attack"></button>
-              <button id="summon-command-keep-distance" type="button" data-l10n-id="action-summon-command-keep-distance"></button>
-              <button id="summon-command-guard" type="button" data-l10n-id="action-summon-command-guard"></button>
-              <button id="dismiss-pets" type="button" data-l10n-id="action-dismiss-pets"></button>
-            </div>
-            <ul id="pet-list" class="ability-list" aria-live="polite"></ul>
-          </section>
 
-          <section id="campaign-panel" class="status-panel" aria-labelledby="campaign-title">
-            <div class="panel-heading">
-              <span id="campaign-title" data-l10n-id="panel-campaign-title"></span>
-            </div>
-            <dl class="status-grid">
-              <div><dt data-l10n-id="campaign-status-label"></dt><dd id="campaign-status-value">--</dd></div>
-              <div><dt data-l10n-id="campaign-score-label"></dt><dd id="campaign-score-value">0</dd></div>
-              <div><dt data-l10n-id="campaign-dungeons-label"></dt><dd id="campaign-dungeons-value">0</dd></div>
-              <div><dt data-l10n-id="campaign-tasks-label"></dt><dd id="campaign-tasks-value">0</dd></div>
-            </dl>
-            <button id="campaign-retire" type="button" data-l10n-id="action-campaign-retire"></button>
-          </section>
 
-          <div id="task-log-entry" class="task-log-entry">
-            <button id="player-ui-tasks-open" type="button" data-l10n-id="action-open-task-log"></button>
-          </div>
 
           <section id="task-log-panel" class="inventory-panel" aria-labelledby="task-log-title">
             <div class="panel-heading">
@@ -470,20 +450,6 @@
             </div>
           </section>
 
-          <section id="native-save-panel" class="save-panel" aria-labelledby="native-save-title">
-            <div class="panel-heading">
-              <span id="native-save-title" data-l10n-id="panel-native-save-title"></span>
-              <button id="native-save-refresh" class="quiet-button" type="button" data-l10n-id="action-native-save-refresh"></button>
-            </div>
-            <div class="native-save-create">
-              <label for="native-save-name" data-l10n-id="native-save-name-label"></label>
-              <div>
-                <input id="native-save-name" type="text" maxlength="80" />
-                <button id="native-save-create" type="button" data-l10n-id="action-native-save-create"></button>
-              </div>
-            </div>
-            <ul id="native-save-list" class="native-save-list" aria-live="polite"></ul>
-          </section>
 
           <section id="message-panel" class="message-panel" aria-labelledby="message-title">
             <div class="panel-heading">
@@ -743,6 +709,14 @@
           <p data-l10n-id="mogaminator-help-language"></p>
         </details>
         <label class="mogaminator-source-label" for="mogaminator-source" data-l10n-id="mogaminator-source-label"></label>
+        <details class="mogaminator-help">
+          <summary data-l10n-id="mogaminator-protection-title"></summary>
+          <label for="mogaminator-template" data-l10n-id="mogaminator-protection-condition"></label>
+          <select id="mogaminator-template"></select>
+          <p data-l10n-id="mogaminator-protection-help"></p>
+          <pre id="mogaminator-template-preview"></pre>
+          <button id="mogaminator-insert-template" type="button" data-l10n-id="mogaminator-protection-insert"></button>
+        </details>
         <textarea id="mogaminator-source" class="mogaminator-source" spellcheck="false" wrap="off"></textarea>
         <section class="mogaminator-feedback" aria-live="polite">
           <p id="mogaminator-line-explanation"></p>
@@ -753,6 +727,7 @@
           <input id="mogaminator-import-file" type="file" accept=".prf,.txt,text/plain" hidden />
           <button id="mogaminator-import" class="quiet-button" type="button" data-l10n-id="mogaminator-import"></button>
           <button id="mogaminator-export" class="quiet-button" type="button" data-l10n-id="mogaminator-export"></button>
+          <button id="mogaminator-reload" class="quiet-button" type="button" data-l10n-id="mogaminator-reload"></button>
           <button id="mogaminator-reset" class="quiet-button" type="button" data-l10n-id="mogaminator-reset"></button>
           <button id="mogaminator-apply" class="primary-button" type="button" data-l10n-id="mogaminator-apply"></button>
         </footer>
@@ -879,22 +854,120 @@
         <header>
           <div>
             <p class="eyebrow" data-l10n-id="settings-interface-eyebrow"></p>
-            <h2 id="player-ui-settings-title" data-l10n-id="settings-interface-title"></h2>
+            <h2 id="player-ui-settings-title" data-l10n-id="preferences-title"></h2>
           </div>
           <button id="player-ui-settings-close" class="quiet-button dialog-close" type="button" data-l10n-id="action-dialog-close"></button>
         </header>
-        <div class="settings-section">
-          <h3 data-l10n-id="settings-gameplay-title"></h3>
-          <div id="gameplay-settings-host" class="settings-grid gameplay-settings-host">
-            <fieldset id="travel-options">
+        <div class="preferences-toolbar">
+          <label class="preferences-search-label" for="preferences-search"><span data-l10n-id="guide-search"></span><input id="preferences-search" type="search" /></label>
+          <p id="preferences-status" role="status" aria-live="polite"></p>
+        </div>
+        <div class="preferences-workspace">
+          <nav class="preferences-navigation" data-l10n-aria-label="preferences-title">
+            <button id="preferences-general" type="button" data-settings-page="general" data-l10n-id="settings-interface-eyebrow"></button>
+            <button id="preferences-behavior" type="button" data-settings-page="behavior" data-l10n-id="settings-gameplay-title"></button>
+            <button id="preferences-display" type="button" data-settings-page="display" data-l10n-id="preferences-display"></button>
+            <button id="preferences-glyphs" type="button" data-settings-page="glyphs" data-l10n-id="visual-glyphs"></button>
+            <button id="preferences-colors" type="button" data-settings-page="colors" data-l10n-id="visual-colors"></button>
+            <button id="preferences-advanced" type="button" data-settings-page="advanced" data-l10n-id="prf-title"></button>
+            <button id="preferences-changes" type="button" data-settings-page="changes" data-l10n-id="preferences-preview-title"></button>
+          </nav>
+          <div class="preferences-content">
+            <section class="settings-section" data-settings-panel="general">
+              <p data-l10n-id="preferences-description"></p>
+              <div id="gameplay-settings-host" class="settings-grid gameplay-settings-host"></div>
+              <div class="session-form-actions"><button id="preferences-keys" type="button" data-preference-row data-l10n-id="cfg-keys"></button><button id="preferences-mogaminator" type="button" data-preference-row data-l10n-id="preferences-mogaminator"></button></div>
+            </section>
+            <section class="settings-section settings-grid" data-settings-panel="behavior" hidden>
+<fieldset id="travel-options">
               <legend data-l10n-id="travel-options-title"></legend>
+              <label><input id="travel-always-pickup" type="checkbox" /><span data-l10n-id="travel-always-pickup"></span></label>
               <label><input id="travel-auto-detect" type="checkbox" /><span data-l10n-id="travel-auto-detect"></span></label>
               <label><input id="travel-auto-map" type="checkbox" /><span data-l10n-id="travel-auto-map"></span></label>
               <label><input id="travel-disturb-detect" type="checkbox" /><span data-l10n-id="travel-disturb-detect"></span></label>
             </fieldset>
+            <fieldset data-preference-row>
+              <legend data-l10n-id="preferences-running-title"></legend>
+              <p data-l10n-id="preferences-running-help"></p>
+              <label><input id="run-stop-stairs" type="checkbox" /><span data-l10n-id="preferences-stop-stairs"></span></label>
+              <label><input id="run-stop-openDoors" type="checkbox" /><span data-l10n-id="preferences-stop-doors"></span></label>
+              <label><input id="run-stop-knownTreasure" type="checkbox" /><span data-l10n-id="preferences-stop-treasure"></span></label>
+              <label><input id="operation-cutCorners" type="checkbox" /><span data-l10n-id="preferences-cut-corners"></span></label>
+              <label><input id="operation-travelIgnoreItems" type="checkbox" /><span data-l10n-id="preferences-travel-ignore-items"></span></label>
+            </fieldset>
+            <fieldset data-preference-row>
+              <legend data-l10n-id="preferences-aim-title"></legend>
+              <label for="operation-defaultTarget" data-l10n-id="preferences-default-target"></label>
+              <select id="operation-defaultTarget">
+                <option value="manual" data-l10n-id="preferences-target-manual"></option>
+                <option value="old-target" data-l10n-id="preferences-target-old"></option>
+                <option value="nearest-enemy" data-l10n-id="preferences-target-nearest"></option>
+                <option value="old-then-nearest" data-l10n-id="preferences-target-old-nearest"></option>
+              </select>
+              <p data-l10n-id="preferences-target-help"></p>
+              <label><input id="operation-targetPets" type="checkbox" /><span data-l10n-id="preferences-target-pets"></span></label>
+              <label><input id="operation-easyOpen" type="checkbox" /><span data-l10n-id="preferences-easy-open"></span></label>
+              <label><input id="operation-easyDisarm" type="checkbox" /><span data-l10n-id="preferences-easy-disarm"></span></label>
+              <label><input id="operation-autoRepeat" type="checkbox" /><span data-l10n-id="preferences-auto-repeat"></span></label>
+            </fieldset>
+                      </section>
+            <section class="settings-section" data-settings-panel="display" hidden>
+<fieldset id="display-options"><legend data-l10n-id="preferences-display"></legend>
+              <p data-l10n-id="preferences-display-help"></p>
+              <label data-preference-row><input id="display-highlightPlayer" type="checkbox"><span data-l10n-id="display-highlightPlayer"></span></label>
+              <label data-preference-row><input id="display-targetPath" type="checkbox"><span data-l10n-id="display-targetPath"></span></label>
+              <label data-preference-row><input id="display-unsafeGrids" type="checkbox"><span data-l10n-id="display-unsafeGrids"></span></label>
+              <label data-preference-row><input id="display-alertTrapDetect" type="checkbox"><span data-l10n-id="display-alertTrapDetect"></span></label>
+              <label data-preference-row><input id="display-effectiveSpeed" type="checkbox"><span data-l10n-id="display-effectiveSpeed"></span></label>
+              <label data-preference-row><input id="display-decimalStats" type="checkbox"><span data-l10n-id="display-decimalStats"></span></label>
+              <label data-preference-row><input id="display-experienceNeeded" type="checkbox"><span data-l10n-id="display-experienceNeeded"></span></label>
+              <label data-preference-row><input id="display-showOrigins" type="checkbox"><span data-l10n-id="display-showOrigins"></span></label>
+              <label data-preference-row><input id="display-describeSlots" type="checkbox"><span data-l10n-id="display-describeSlots"></span></label>
+              <label data-preference-row><input id="display-showWeights" type="checkbox"><span data-l10n-id="display-showWeights"></span></label>
+              <label data-preference-row><input id="display-showDiscounts" type="checkbox"><span data-l10n-id="display-showDiscounts"></span></label>
+              <label data-preference-row><input id="display-showItemIcons" type="checkbox"><span data-l10n-id="display-showItemIcons"></span></label>
+              <label data-preference-row><input id="display-monsterDistance" type="checkbox"><span data-l10n-id="display-monsterDistance"></span></label>
+              <label data-preference-row><input id="display-listStairs" type="checkbox"><span data-l10n-id="display-listStairs"></span></label>
+              <label data-preference-row><input id="display-alertPoison" type="checkbox"><span data-l10n-id="display-alertPoison"></span></label>
+              <label data-preference-row><select id="display-hpWarningPercent"><option value="0"></option><option value="10"></option><option value="20"></option><option value="30"></option><option value="40"></option><option value="50"></option><option value="60"></option><option value="70"></option><option value="80"></option><option value="90"></option></select><span data-l10n-id="display-hpWarningPercent"></span></label>
+              <label data-preference-row><select id="display-manaWarningPercent"><option value="0"></option><option value="10"></option><option value="20"></option><option value="30"></option><option value="40"></option><option value="50"></option><option value="60"></option><option value="70"></option><option value="80"></option><option value="90"></option></select><span data-l10n-id="display-manaWarningPercent"></span></label>
+            </fieldset>
+                        </section>
+            <section id="preferences-visual-editor" class="settings-section" data-settings-panel="visuals" hidden></section>
+<section id="preferences-advanced-section" class="settings-section preferences-backup" data-settings-panel="advanced" hidden>
+          <h3 data-l10n-id="prf-title"></h3>
+          <p data-l10n-id="prf-help"></p>
+          <label for="preferences-command" data-l10n-id="prf-command"></label>
+          <input id="preferences-command" type="text" spellcheck="false" autocomplete="off" placeholder="Y:always_pickup" />
+          <div class="session-form-actions">
+            <button id="preferences-prf-preview" type="button" data-l10n-id="prf-preview"></button>
+            <label><span data-l10n-id="prf-file"></span><input id="preferences-prf-file" type="file" accept=".prf,text/plain" /></label>
+            <button id="preferences-prf-export" type="button" data-l10n-id="prf-export"></button>
+          </div>
+          <pre id="preferences-prf-report" aria-live="polite" style="white-space: pre-wrap; overflow-wrap: anywhere;"></pre>
+          <label><input id="preferences-prf-subset" type="checkbox" /><span data-l10n-id="prf-subset-required"></span></label>
+          <button id="preferences-prf-accept" type="button" data-l10n-id="prf-accept" disabled></button>
+          <h3 data-l10n-id="preferences-backup-title"></h3>
+          <p data-l10n-id="preferences-backup-help"></p>
+          <div class="session-form-actions">
+            <button id="preferences-export" type="button" data-l10n-id="preferences-export"></button>
+            <label for="preferences-import"><span data-l10n-id="preferences-import"></span>
+              <input id="preferences-import" type="file" accept=".json,application/json" />
+            </label>
+          </div>
+        </section>
+        <section class="settings-section" data-settings-panel="changes" hidden>
+          <h3 data-l10n-id="preferences-preview-title"></h3>
+          <div id="preferences-preview" aria-live="polite"></div>
+        </section>
           </div>
         </div>
-        <details class="run-details">
+        <div class="session-form-actions preferences-actions">
+          <button id="preferences-save" type="button" data-l10n-id="preferences-save"></button>
+          <button id="preferences-reset" type="button" data-l10n-id="preferences-reset"></button>
+          <button id="preferences-reload" type="button" data-l10n-id="preferences-reload"></button>
+        </div>
+        <details id="preferences-session-details" class="run-details">
           <summary data-l10n-id="status-technical-details"></summary>
           <p class="run-metadata">
             <span data-l10n-id="run-build-label"></span>
@@ -945,7 +1018,7 @@
         <button id="magic-eater-confirm" type="button" data-l10n-id="magic-eater-confirm"></button>
       </div>
       <div class="magic-eater-actions">
-        <button id="magic-eater-save" type="button" data-l10n-id="action-export-save"></button>
+        <button id="magic-eater-save" type="button" data-l10n-id="save-game"></button>
         <button id="magic-eater-load" type="button" data-l10n-id="action-load-save"></button>
         <button id="magic-eater-close" type="button" data-l10n-id="action-dialog-cancel"></button>
       </div>

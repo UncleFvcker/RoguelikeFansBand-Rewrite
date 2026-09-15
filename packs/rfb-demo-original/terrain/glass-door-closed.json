@@ -10,5 +10,6 @@
   "allowsWallPassage": true,
   "monsterDestroyToTerrainId": "demo.terrain.floor",
   "openToTerrainId": "demo.terrain.glass-door-open",
+  "jamToTerrainId": "demo.terrain.glass-door-jammed-1",
   "tags": ["door", "door-closed", "glass", "passage"]
 }

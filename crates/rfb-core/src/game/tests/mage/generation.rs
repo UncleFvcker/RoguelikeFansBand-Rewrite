@@ -38,7 +38,8 @@ fn mage_task_rewards_keep_birth_selection_and_replace_previously_generated_artif
             let before = game.clone();
             let mut changed_rng = game.clone();
             changed_rng.rng.bounded(12345);
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             assert_eq!(
                 game.claim_task_reward(&facility, &task),
                 restored.claim_task_reward(&facility, &task)
@@ -71,7 +72,8 @@ fn mage_task_rewards_keep_birth_selection_and_replace_previously_generated_artif
                     Err("inventory-full")
                 );
                 assert!(full.to_save() == full_save);
-                let mut restored = Game::from_save(repeated.to_save()).unwrap();
+                let mut restored =
+                    Game::from_save(repeated.to_save(), repeated.behavior_preferences()).unwrap();
                 repeated.claim_task_reward(&facility, &task).unwrap();
                 restored.claim_task_reward(&facility, &task).unwrap();
                 same_save(&repeated, &restored);
@@ -83,13 +85,13 @@ fn mage_task_rewards_keep_birth_selection_and_replace_previously_generated_artif
                 };
                 assert_eq!(replacement.kind_id, base);
                 assert!(replacement.artifact_name.is_some());
-                Game::from_save(repeated.to_save()).unwrap();
+                Game::from_save(repeated.to_save(), repeated.behavior_preferences()).unwrap();
                 assert_eq!(
                     repeated.claim_task_reward(&facility, &task),
                     Err("reward-unavailable")
                 );
             }
-            Game::from_save(game.to_save()).unwrap();
+            Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             if seen.len() == 3 {
                 break;
             }
@@ -216,7 +218,8 @@ fn fixed_mage_artifacts_generate_extra_power_equip_and_resume_activation_cooldow
             }
             let (before, after) =
                 successful.expect("artifact activation succeeds for a low-level Mage");
-            let mut restored = Game::from_save(before.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(before.to_save(), before.behavior_preferences()).unwrap();
             restored
                 .use_inventory_item(
                     &id,
@@ -241,7 +244,8 @@ fn fixed_mage_artifacts_generate_extra_power_equip_and_resume_activation_cooldow
                 assert_eq!(status.granted_resistances.len(), 5);
                 assert!((21..=40).contains(&status.remaining_ticks));
             }
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             for run in [&mut game, &mut restored] {
                 for _ in 0..cooldown - 1 {
                     run.world_tick += 1;
@@ -279,7 +283,7 @@ fn fixed_mage_artifacts_generate_extra_power_equip_and_resume_activation_cooldow
                 Some(kind.clone())
             );
         }
-        Game::from_save(game.to_save()).unwrap();
+        Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     }
 }
 
@@ -330,7 +334,8 @@ fn mage_can_buy_both_early_volumes_of_each_realm_and_resume_the_purchase() {
                 .into_iter()
                 .find(|item| item.kind_id == kind)
                 .unwrap();
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             assert_eq!(
                 game.buy_from_shop(&shop.id, &stock.id, 1),
                 restored.buy_from_shop(&shop.id, &stock.id, 1)

@@ -138,7 +138,7 @@ fn repeated_study_pays_shared_budget_and_keeps_unique_order_and_source_caps() {
     assert_eq!((learning.learned_count, learning.remaining_slots), (2, 91));
     assert_eq!(game.ability_progress[UNLIFE].cast_count, 0);
     assert_eq!(game.ability_progress[DETECT].proficiency_cap, 1400);
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -186,7 +186,7 @@ fn all_study_opportunities_can_be_spent_without_learning_a_hundred_unique_spells
         Err("learning-capacity-full")
     );
     assert_eq!(game.to_save(), before);
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -264,7 +264,7 @@ fn level_and_attribute_loss_forget_latest_spells_without_refunding_repeat_studie
             Some(if id == DETECT { "sorcery" } else { "death" })
         );
     }
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for game in [&mut game, &mut restored] {
         game.progress.attributes.intelligence = game.progress.maximum_attributes.intelligence;
         game.apply_player_experience(game.experience_required_for_level(30), &mut Vec::new());
@@ -318,12 +318,15 @@ fn saved_learning_spend_and_dynamic_caps_are_authoritative_and_validated() {
                 save.player.ability_progress.pop();
             }
         }
-        assert!(Game::from_save(save).is_err(), "corruption {corruption}");
+        assert!(
+            Game::from_save(save, Game::default_behavior_preferences()).is_err(),
+            "corruption {corruption}"
+        );
     }
     let mut other = game.clone();
     other.spent_spell_learning -= 1;
     assert_ne!(game.state_hash(), other.state_hash());
-    let mut restored = Game::from_save(baseline).unwrap();
+    let mut restored = Game::from_save(baseline, Game::default_behavior_preferences()).unwrap();
     for game in [&mut game, &mut restored] {
         game.study_player_ability(&book, DETECT).unwrap();
         game.debug_ability_casts_succeed = false;
@@ -608,7 +611,7 @@ fn death_failure_pays_mana_and_rolls_book_damage_then_hold_life_before_experienc
             assert_eq!(hp - game.player.hp, damage);
         }
         assert_eq!(game.rng, expected_rng);
-        assert!(Game::from_save(game.to_save()).is_ok());
+        assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
     }
 }
 
@@ -632,7 +635,7 @@ fn fourth_death_book_can_blast_sanity_and_save_continuation_keeps_its_rng() {
             rng.bounded(100) + 1 < 31 && rng.bounded(2) == 0
         })
         .unwrap();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let hp = game.player.hp;
     let experience = game.progress.experience;
     let events = cast(&mut game, spell, TargetSelection::SelfTarget);
@@ -645,7 +648,7 @@ fn fourth_death_book_can_blast_sanity_and_save_continuation_keeps_its_rng() {
     assert_eq!(events, continued);
     assert_eq!(game.state_hash(), restored.state_hash());
     assert_eq!(game.rng, restored.rng);
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -787,9 +790,9 @@ fn pending_natures_wrath_does_not_work_or_train_until_direction_commits() {
             1 => cast.cast_count = 99,
             _ => cast.resource_paid = 0,
         }
-        assert!(Game::from_save(save).is_err());
+        assert!(Game::from_save(save, Game::default_behavior_preferences()).is_err());
     }
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let mut cancelled = restored.clone();
     dispatch_next(&mut cancelled, GameCommand::CancelAbilityDirection);
     assert_eq!(cancelled.ability_progress[spell].cast_count, 0);

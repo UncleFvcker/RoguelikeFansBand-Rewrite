@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -29,7 +30,8 @@ export async function runThingolScenario(driver, directory) {
     await driver.waitFor('return document.querySelector("#hash-value").title!==arguments[0] && document.querySelector("#connection-status").classList.contains("ready")',"Thingol action committed",15_000,[before]);
   }
   await driver.waitFor('return document.documentElement.dataset.appMode==="title"',"title",60_000);
-  await driver.execute('window.__thingolReload=true;localStorage.setItem("rfb.locale","zh-CN");setTimeout(()=>location.reload(),50);return true;');
+  await setPreferences(driver, { locale: "zh-CN" });
+  await driver.execute('window.__thingolReload=true;setTimeout(()=>location.reload(),50);return true;');
   await driver.waitFor('return !window.__thingolReload && document.documentElement.lang==="zh-CN" && document.documentElement.dataset.appMode==="title"',"Chinese title",60_000);
   await click("#session-new-game");
   await selectCreationRace(driver,"demo.race.rfb-human");

@@ -74,7 +74,13 @@ impl Game {
                 .ability(&candidate.ability_id)
                 .expect("validated monster ability must remain available")
                 .clone();
-            if world_stopped && ability.tags.iter().any(|tag| tag == "monster-world") {
+            if (world_stopped && ability.tags.iter().any(|tag| tag == "monster-world"))
+                || (self.entity_is_player_aligned(index)
+                    && self.entities[index]
+                        .statuses
+                        .iter()
+                        .any(|status| status.kind_id == STATUS_CONFUSION))
+            {
                 candidates.push(MonsterAbilityCandidateResolutionDto {
                     ability_id: candidate.ability_id.clone(),
                     base_weight: candidate.weight,
@@ -435,7 +441,41 @@ impl Game {
         base_weight: u32,
     ) -> Result<MonsterAbilityPlan, MonsterAbilityPlanRejection> {
         let origin = self.entities[index].position;
+        if self.entity_is_player_aligned(index) && !self.pet_spell_allowed(&ability) {
+            return Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::NoUtility,
+                enemy_target_count: 0,
+                friendly_risk_count: 0,
+            });
+        }
+        let summons = matches!(
+            ability.effect,
+            AbilityEffectDefinition::Summon { .. } | AbilityEffectDefinition::SummonCategory { .. }
+        ) || ability
+            .tags
+            .iter()
+            .any(|tag| tag == monster_abilities::MONSTER_FAMILY_SUMMON_TAG);
+        if self.entity_is_player_aligned(index)
+            && summons
+            && !has_line_of_effect(self, origin, self.player.position)
+        {
+            return Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::Blocked,
+                enemy_target_count: 0,
+                friendly_risk_count: 0,
+            });
+        }
+        // RFB default_ai_mon chooses a projectable enemy before considering
+        // any spell, including self-healing, buffs and escape.
+        if self.entity_is_player_aligned(index) && self.monster_spell_targets(index).is_empty() {
+            return Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
+                enemy_target_count: 0,
+                friendly_risk_count: 0,
+            });
+        }
         let mut plan = self.monster_ability_target_plan(index, ability, base_weight)?;
+        self.restrict_mounted_spell_destinations(index, &mut plan)?;
         let utility_multiplier = self
             .monster_ability_utility_multiplier(index, &plan.ability, &plan.target)
             .ok_or(MonsterAbilityPlanRejection {
@@ -561,7 +601,14 @@ impl Game {
         ability: &AbilityDefinition,
         target: &MonsterAbilityTargetPlan,
     ) -> Option<u32> {
-        if ability.tags.iter().any(|tag| tag == "monster-world") {
+        if ability.tags.iter().any(|tag| {
+            matches!(
+                tag.as_str(),
+                "monster-world"
+                    | monster_abilities::MONSTER_FAMILY_SUMMON_TAG
+                    | monster_abilities::MONSTER_DEAD_UNIQUE_SUMMON_TAG
+            )
+        }) {
             return Some(1);
         }
         if matches!(
@@ -595,11 +642,15 @@ impl Game {
         let mut multiplier = 1_u32;
         for effect in effects {
             match effect {
+                // The planner has already required usable remains.
+                AbilityEffectDefinition::AnimateDead { .. } => useful = true,
                 AbilityEffectDefinition::Damage { .. } if hostile_target.is_some() => useful = true,
                 AbilityEffectDefinition::CurseDamage { .. } if hostile_target.is_some() => {
                     useful = true;
                 }
-                AbilityEffectDefinition::PolymorphTarget if hostile_target.is_some() => {
+                AbilityEffectDefinition::PolymorphTarget | AbilityEffectDefinition::BirdDrop
+                    if hostile_target.is_some() =>
+                {
                     useful = true;
                 }
                 AbilityEffectDefinition::TeleportAway { .. }

@@ -8,14 +8,26 @@ use rfb_protocol::MaiaPathDto::{Corrupted, Enlightened};
 const MAIA: &str = "rfb-legacy.race.maia";
 
 fn prepared(build: &str, level: u16) -> Game {
-    let mut game = Game::new_with_build_race_and_name(83, build, MAIA, "test").unwrap();
+    let mut game = Game::new_with_build_race_and_name(
+        83,
+        build,
+        MAIA,
+        "test",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     clear_monsters(&mut game);
     game.apply_player_experience(game.experience_required_for_level(level), &mut Vec::new());
     game
 }
 
 fn restore(game: &Game) -> Game {
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     restored
 }
@@ -88,11 +100,25 @@ fn maia_save_rejects_paths_without_the_native_race_or_a_reached_initiation_level
     let game = prepared("demo.build.warrior", 1);
     let mut save = game.to_save();
     save.player.maia_path = Some(Corrupted);
-    assert!(Game::from_save_with_content(save, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            save,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
     let mut game = prepared("demo.build.warrior", 20);
     dispatch_next(&mut game, GameCommand::ChooseMaiaPath { path: Enlightened });
     game.build.as_mut().unwrap().race_id = "rfb-legacy.race.high-elf".to_owned();
-    assert!(Game::from_save_with_content(game.to_save(), game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences()
+        )
+        .is_err()
+    );
 }
 
 #[test]

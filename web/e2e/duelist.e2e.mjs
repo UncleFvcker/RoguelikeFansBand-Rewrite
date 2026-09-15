@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -234,7 +235,7 @@ export async function runDuelistUiScenario(driver, directory, profile) {
   try {
     await invoke("plugin:window|set_min_size", { label: "main", value: null });
     await viewport(1280, 720);
-    await click("#session-settings"); await fill("#session-settings-language", "zh-CN"); await fill("#session-settings-input", "numpad"); await click("#session-settings-back");
+    await setPreferences(driver, { locale: "zh-CN", inputPreset: "numpad" });
     await click("#session-new-game");
     await fill("#session-character-name", "决斗旅人"); await fill("#session-seed", "923");
     await click("#session-tab-career"); await click('[data-career-group="melee"]');
@@ -296,7 +297,7 @@ export async function runDuelistUiScenario(driver, directory, profile) {
     await driver.waitFor('return !document.querySelector("#duelist-choice-dialog").open', "free challenge accepted");
     assert.equal((await snapshot()).player.duelistTargetId, "e2e.duelist-next", await driver.execute('return document.querySelector("#message-list").textContent'));
     await viewport(1280, 720);
-    await fill("#language-select", "en-US"); localization.setLocale("en-US");
+    await setPreferences(driver, { locale: "en-US" }); localization.setLocale("en-US");
     await checkAbilities(await prepare(50, 8));
     await viewport(640, 480, 2); await frameFits("#player-page-dialog"); await screenshot("abilities-en-200percent");
     await keyboard.key("Escape"); await frameFits("#duelist-status");

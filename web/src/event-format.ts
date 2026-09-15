@@ -36,6 +36,21 @@ export function createPresentationFormatter(
 
   function formatEvent(event: GameEventDto): string {
     switch (event.messageKey) {
+      case "pet-name-changed":
+      case "pet-named-dismissed":
+        return localization.format(event.messageKey, { name: event.args.name ?? "" });
+      case "pet-name-cleared":
+      case "pet-name-invalid":
+      case "pet-option-changed":
+      case "pet-command-unavailable":
+      case "riding-control-unavailable":
+      case "riding-direction-changed":
+      case "riding-moved":
+        return localization.format(event.messageKey);
+      case "pet-evolved":
+        return localization.format("message-pet-evolved", {
+          source: event.args.name || contentName(event.args.source), target: contentName(event.args.target),
+        });
       case "duelist-challenge-cleared":
         return localization.format(event.messageKey);
       case "duelist-challenge-issued":
@@ -461,6 +476,8 @@ export function createPresentationFormatter(
         return localization.format("message-move-blocked");
       case "game-travel-left-detection-area":
         return localization.format("message-travel-left-detection-area");
+      case "game-travel-item-found":
+        return localization.format("message-travel-item-found");
       case "wilderness-ambushed":
         return localization.format("message-wilderness-ambushed");
       case "floor-transition":
@@ -481,7 +498,8 @@ export function createPresentationFormatter(
           score: event.args.score ?? "?",
         });
       case "campaign-retired":
-        return localization.format("message-campaign-retired", {
+      case "campaign-abandoned":
+        return localization.format(`message-${event.messageKey}`, {
           score: event.args.score ?? "?",
         });
       case "campaign-retire-unavailable":

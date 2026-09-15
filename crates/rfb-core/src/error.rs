@@ -5,6 +5,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum CoreError {
+    #[error("invalid behavior preferences: {0}")]
+    InvalidPreferences(String),
     #[error("absorbed device use is unavailable: {0}")]
     AbsorbedDeviceUnavailable(&'static str),
     #[error("magic absorption is unavailable: {0}")]

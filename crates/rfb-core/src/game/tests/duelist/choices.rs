@@ -53,7 +53,8 @@ fn over_range_confirmation_is_free_cancellable_and_round_trips_before_payment() 
         before
     );
     let saved = game.to_save();
-    let mut restored = Game::from_save(saved.clone()).unwrap();
+    let mut restored =
+        Game::from_save(saved.clone(), Game::default_behavior_preferences()).unwrap();
     let invalid = game.dispatch(command(
         game.last_command_seq + 1,
         game.revision,
@@ -75,7 +76,7 @@ fn over_range_confirmation_is_free_cancellable_and_round_trips_before_payment() 
         before
     );
     dispatch_next(&mut game, cast("demo.ability.duelist-charge"));
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         dispatch_next(&mut game, confirm(true)),
         dispatch_next(&mut restored, confirm(true))
@@ -124,8 +125,9 @@ fn weapon_kill_waits_before_class_hp_and_world_then_free_challenge_resumes_once(
         {
             *hit_point_cost += 1;
         }
-        assert!(Game::from_save(bad_cost.to_save()).is_err());
-        let mut restored = Game::from_save(saved.clone()).unwrap();
+        assert!(Game::from_save(bad_cost.to_save(), bad_cost.behavior_preferences()).is_err());
+        let mut restored =
+            Game::from_save(saved.clone(), Game::default_behavior_preferences()).unwrap();
         assert!(
             game.dispatch(command(
                 game.last_command_seq + 1,
@@ -166,7 +168,7 @@ fn free_challenge_survives_town_actor_storage_during_charge_scroll() {
         game.duelist_prompt(),
         Some(DuelistPromptDto::Challenge)
     ));
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         dispatch_next(&mut game, choose(Some("test.next"))),
         dispatch_next(&mut restored, choose(Some("test.next")))
@@ -174,7 +176,9 @@ fn free_challenge_survives_town_actor_storage_during_charge_scroll() {
     assert!(game.entities.iter().any(|actor| actor.id == "test.next"));
     assert_eq!(game.duelist_target_id.as_deref(), Some("test.next"));
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
 }
@@ -189,7 +193,7 @@ fn tampered_prompts_callers_and_costs_are_rejected_on_load() {
     invalid.pending_duelist.as_mut().unwrap().prompt = Some(DuelistPromptDto::BlockTeleport {
         source_entity_id: "test.far".to_owned(),
     });
-    assert!(Game::from_save(invalid.to_save()).is_err());
+    assert!(Game::from_save(invalid.to_save(), invalid.behavior_preferences()).is_err());
     let mut invalid = game.clone();
     invalid
         .pending_duelist
@@ -202,9 +206,9 @@ fn tampered_prompts_callers_and_costs_are_rejected_on_load() {
             pet_neglect_allowed: false,
             visible_auras_before: Vec::new(),
         });
-    assert!(Game::from_save(invalid.to_save()).is_err());
+    assert!(Game::from_save(invalid.to_save(), invalid.behavior_preferences()).is_err());
     game.pending_duelist.as_mut().unwrap().command_completion = None;
-    assert!(Game::from_save(game.to_save()).is_err());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_err());
 }
 
 fn teleport_caster(ability_id: &str) -> Game {
@@ -239,6 +243,49 @@ fn teleport_caster(ability_id: &str) -> Game {
     game.entities.push(caster);
     game.duelist_target_id = Some("test.caster".to_owned());
     game
+}
+
+#[test]
+fn single_step_rest_pauses_for_duelist_choice_and_resumes_the_paid_round_once() {
+    let mut game = teleport_caster("rfb-legacy.ability.banish");
+    game.player.hp -= 10;
+    game.player.statuses.push(
+        monster_combat::melee_status(crate::effect::STATUS_BLINDNESS, 1, "test.rest-blindness")
+            .status,
+    );
+    let turn = game.turn;
+    let update = dispatch_next(&mut game, GameCommand::Rest { turns: 1 });
+    let resolution = super::super::support::rest_resolution(&update);
+    assert_eq!(
+        resolution.stop_reason,
+        RestStopReasonDto::DuelistChoiceRequired
+    );
+    assert_eq!(resolution.completed_turns, 1);
+    assert_eq!(game.turn, turn, "the pending action has not finished");
+    assert!(
+        game.pending_duelist
+            .as_ref()
+            .unwrap()
+            .continuations
+            .iter()
+            .any(|frame| matches!(
+                frame,
+                DuelistContinuationDto::RestRecovery { completed_turns: 1 }
+            ))
+    );
+    let mut loaded = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
+    assert_eq!(
+        dispatch_next(&mut game, confirm(false)),
+        dispatch_next(&mut loaded, confirm(false))
+    );
+    assert_eq!(game.turn, turn + 1);
+    assert_eq!(game.state_hash(), loaded.state_hash());
+    assert!(game.pending_duelist.is_none());
 }
 
 #[test]
@@ -281,12 +328,21 @@ fn teleport_block_and_follow_pause_the_monster_pulse_and_restore_exactly() {
                     .any(|event| event.kind == "monster.ability-cast")
             );
             let saved = game.to_save();
-            let mut restored =
-                Game::from_save_with_content(saved.clone(), game.content.clone()).unwrap();
+            let mut restored = Game::from_save_with_content(
+                saved.clone(),
+                game.content.clone(),
+                Game::default_behavior_preferences(),
+            )
+            .unwrap();
             let mut invalid = game.clone();
             invalid.entities.retain(|actor| actor.id != "test.caster");
             assert!(
-                Game::from_save_with_content(invalid.to_save(), invalid.content.clone()).is_err()
+                Game::from_save_with_content(
+                    invalid.to_save(),
+                    invalid.content.clone(),
+                    invalid.behavior_preferences()
+                )
+                .is_err()
             );
             let result = dispatch_next(&mut game, confirm(accepted));
             assert_eq!(

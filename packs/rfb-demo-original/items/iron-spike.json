@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.iron-spike",
+  "nameKey": "item-demo-iron-spike-name",
+  "descriptionKey": "item-demo-iron-spike-description",
+  "glyph": "~",
+  "baseValue": 10,
+  "generationLevel": 1,
+  "weightTenthsPound": 20,
+  "maxStack": 100,
+  "rfbBaseKind": {
+    "sourceIndex": 700,
+    "tval": 5,
+    "sval": 0
+  },
+  "tags": [
+    "spike"
+  ]
+}

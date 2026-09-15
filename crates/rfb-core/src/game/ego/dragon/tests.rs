@@ -271,7 +271,7 @@ fn forced_dragon_bases_keep_properties_when_great_power_is_suppressed_and_round_
             game.items.push(item);
             assert!(game.equip_inventory_item(&id, None).is_some());
             assert_eq!(game.items[0].intrinsic_properties, properties);
-            let restored = Game::from_save(game.to_save()).unwrap();
+            let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             assert_eq!(restored.state_hash(), game.state_hash());
             assert_eq!(restored.rng, game.rng);
             assert_eq!(restored.items[0].intrinsic_properties, properties);
@@ -419,7 +419,9 @@ fn crafting_preserves_dragon_base_properties_without_any_base_generation_draws()
         );
         assert!(without_properties.items[0].intrinsic_properties == Default::default());
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash()
         );
     }

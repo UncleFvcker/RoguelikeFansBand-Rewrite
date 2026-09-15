@@ -119,6 +119,7 @@ fn captured_mount_falls_resets_bond_and_releases_as_a_new_pet() {
     );
     game.entities[0].controller_id = Some(game.player.id.clone());
     game.entities[0].experience = 42;
+    game.entities[0].custom_name = Some("追风".into());
     game.entities[0].hp = 1;
     game.riding_actor_id = Some("test.mount".to_owned());
     game.riding_bond = Some(RidingBond {
@@ -147,6 +148,13 @@ fn captured_mount_falls_resets_bond_and_releases_as_a_new_pet() {
         .as_ref()
         .expect("mount should be stored");
     assert_eq!(stored.experience, 42);
+    assert_eq!(stored.custom_name.as_deref(), Some("追风"));
+    assert_eq!(
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
+        game.state_hash()
+    );
     let old_entity_id = "test.mount";
     game.use_capture_ball(
         ball_index,
@@ -158,6 +166,7 @@ fn captured_mount_falls_resets_bond_and_releases_as_a_new_pet() {
     assert_eq!(game.entities.len(), 1);
     assert_ne!(game.entities[0].id, old_entity_id);
     assert_eq!(game.entities[0].experience, 42);
+    assert_eq!(game.entities[0].custom_name.as_deref(), Some("追风"));
     assert_eq!(
         game.entities[0].controller_id.as_deref(),
         Some(game.player.id.as_str())
@@ -172,6 +181,7 @@ fn blocked_release_keeps_the_ball_and_drop_uses_the_exact_hostility_roll() {
     clear_monsters(&mut game);
     let ball_index = equipped_capture_ball(&mut game);
     game.items[ball_index].captured_actor = Some(CapturedActor {
+        custom_name: None,
         kind_id: "demo.actor.horse".to_owned(),
         speed: 117,
         hp: 3,
@@ -218,6 +228,7 @@ fn drop_and_destruction_release_the_actor_before_finishing_the_item_lifecycle() 
     let ball_index = equipped_capture_ball(&mut base);
     base.items[ball_index].location = ItemLocation::Inventory;
     base.items[ball_index].captured_actor = Some(CapturedActor {
+        custom_name: None,
         kind_id: "demo.actor.horse".to_owned(),
         speed: 115,
         hp: 4,
@@ -268,6 +279,7 @@ fn captured_state_round_trips_projects_details_and_regenerates_on_schedule() {
     clear_monsters(&mut game);
     let ball_index = equipped_capture_ball(&mut game);
     game.items[ball_index].captured_actor = Some(CapturedActor {
+        custom_name: None,
         kind_id: "demo.actor.horse".to_owned(),
         speed: 118,
         hp: 50,
@@ -298,8 +310,12 @@ fn captured_state_round_trips_projects_details_and_regenerates_on_schedule() {
     assert_eq!(projected.use_target_spec.expect("target spec").range, 1);
 
     let expected_save = game.to_save();
-    let restored = Game::from_save_with_content(expected_save.clone(), game.content.clone())
-        .expect("captured actor should round-trip");
+    let restored = Game::from_save_with_content(
+        expected_save.clone(),
+        game.content.clone(),
+        Game::default_behavior_preferences(),
+    )
+    .expect("captured actor should round-trip");
     assert_eq!(restored.to_save(), expected_save);
     assert_eq!(restored.state_hash(), game.state_hash());
 
@@ -312,7 +328,11 @@ fn captured_state_round_trips_projects_details_and_regenerates_on_schedule() {
         .expect("capture ball should retain save state")
         .kind_id = "demo.actor.serpent-of-chaos".to_owned();
     assert!(matches!(
-        Game::from_save_with_content(invalid, game.content.clone()),
+        Game::from_save_with_content(
+            invalid,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        ),
         Err(CoreError::InvalidSave("captured actor state is invalid"))
     ));
 }

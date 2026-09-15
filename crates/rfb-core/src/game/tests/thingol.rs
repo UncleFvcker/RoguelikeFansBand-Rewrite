@@ -116,7 +116,7 @@ fn ordinary_thingol_keeps_source_properties_unique_identity_and_cooldown_after_s
         })
         .unwrap();
     game.rng = RfbRng::seeded(seed);
-    let mut saved = Game::from_save(game.to_save()).unwrap();
+    let mut saved = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         activate(&mut game, &id, Some(&pair())),
         activate(&mut saved, &id, Some(&pair()))
@@ -154,7 +154,8 @@ fn export_thingol_desktop_save() {
     let input = std::path::PathBuf::from(std::env::var("THINGOL_DESKTOP_INPUT").unwrap());
     let (header, payload) = rfb_save::decode(&std::fs::read(&input).unwrap()).unwrap();
     assert!(header.museum_binding.is_some());
-    let (mut game, id) = prepare_game(Game::from_save(payload).unwrap());
+    let (mut game, id) =
+        prepare_game(Game::from_save(payload, Game::default_behavior_preferences()).unwrap());
     game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
     game.items[2].location = ItemLocation::Ground(game.player.position);
     game.identify_item_instance("donor", ItemIdentificationRequest::new(true));
@@ -180,7 +181,9 @@ fn export_thingol_desktop_save() {
     game.reveal_current_visibility();
     assert_eq!(
         game.state_hash(),
-        Game::from_save(game.to_save()).unwrap().state_hash()
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash()
     );
     std::fs::write(input.with_file_name("prepared.hash"), game.state_hash()).unwrap();
     std::fs::write(
@@ -417,7 +420,7 @@ fn scroll_ego_and_random_artifact_recharge_use_real_device_energy_and_restore_th
             })
             .unwrap();
         game.rng = RfbRng::seeded(seed);
-        let mut saved = Game::from_save(game.to_save()).unwrap();
+        let mut saved = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let events = activate(&mut game, id, Some(&pair()));
         assert_eq!(events, activate(&mut saved, id, Some(&pair())));
         assert!(events.iter().any(

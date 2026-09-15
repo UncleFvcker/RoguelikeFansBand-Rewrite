@@ -26,6 +26,7 @@ export class RenderWorld {
   readonly #lights: CellLight[];
   readonly #entityKinds = new Map<string, string>();
   readonly #fuzzyEntityGlyphs = new Map<string, string>();
+  readonly #highlightedPets = new Set<string>();
   #actorKindIds: string[] = [];
   #itemKindIds: string[] = [];
   #playerId = "";
@@ -119,21 +120,23 @@ export class RenderWorld {
   ): void {
     this.#entityKinds.clear();
     this.#fuzzyEntityGlyphs.clear();
+    this.#highlightedPets.clear();
     this.#playerId = player.id;
     this.#entityKinds.set(player.id, player.kindId);
     for (const entity of entities) {
+      if (entity.highlightMap) this.#highlightedPets.add(entity.id);
       this.#entityKinds.set(entity.id, entity.kindId);
       if (entity.kindId === FUZZY_MONSTER_KIND_ID) {
         this.#fuzzyEntityGlyphs.set(entity.id, entity.glyph);
       }
     }
-    for (const item of items) this.#entityKinds.set(item.id, item.kindId);
+    for (const item of items) this.#entityKinds.set(item.id, item.visual.id);
     for (const pile of goldPiles) this.#entityKinds.set(pile.id, goldVisualId(pile.appearance));
     this.#actorKindIds = [...new Set([player.kindId, ...entities.map((entity) => entity.kindId)])]
       .sort();
     this.#itemKindIds = [
       ...new Set([
-        ...items.map((item) => item.kindId),
+        ...items.map((item) => item.visual.id),
         ...goldPiles.map((pile) => goldVisualId(pile.appearance)),
       ]),
     ].sort();
@@ -207,6 +210,7 @@ export class RenderWorld {
               ...(!this.#hallucinating && this.#fuzzyEntityGlyphs.has(cell.actorId)
                 ? { actorGlyph: this.#fuzzyEntityGlyphs.get(cell.actorId) }
                 : {}),
+              highlightPet: !this.#hallucinating && occupantsVisible && this.#highlightedPets.has(cell.actorId),
             }
           : {}),
         visibility,

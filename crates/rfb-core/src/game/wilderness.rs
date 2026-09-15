@@ -900,18 +900,6 @@ impl Game {
         })
     }
 
-    pub(super) fn player_has_following_pet(&self) -> bool {
-        self.entities.iter().any(|actor| {
-            actor.hp > 0
-                && self.riding_actor_id.as_deref() != Some(actor.id.as_str())
-                && (actor.controller_id.as_deref() == Some(self.player.id.as_str())
-                    || actor
-                        .summon
-                        .as_ref()
-                        .is_some_and(|summon| summon.owner_id == self.player.id))
-        })
-    }
-
     pub(super) fn recall_is_active(&self) -> bool {
         self.recall
             .as_ref()
@@ -1380,12 +1368,25 @@ impl Game {
         arrival: Option<Position>,
         ambush: bool,
     ) -> Result<(), CoreError> {
+        // A destination may have no legal space for a particular pet (e.g. an
+        // aquatic pet on dry land). Keep the original party and floor on failure.
+        let mut destination = self.clone();
+        destination.activate_wilderness_position_with_followers(arrival, ambush)?;
+        *self = destination;
+        Ok(())
+    }
+
+    fn activate_wilderness_position_with_followers(
+        &mut self,
+        arrival: Option<Position>,
+        ambush: bool,
+    ) -> Result<(), CoreError> {
         let position = self
             .wilderness_position
             .expect("wilderness position must remain available");
         let destination_town = self.town_at_wilderness_position(position).cloned();
 
-        let (active_floor, global_items, riding_actor) = self.take_active_wilderness_floor();
+        let (active_floor, global_items, followers) = self.take_active_wilderness_floor();
         if self.town_for_floor(&active_floor.id).is_some()
             && self
                 .stored_floors
@@ -1416,21 +1417,25 @@ impl Game {
         let floor =
             self.generate_local_wilderness_floor(position, arrival.or(town_arrival), ambush);
         self.activate_floor(floor, global_items);
-        self.restore_riding_actor(riding_actor);
         self.load_visible_town_states()?;
+        self.restore_wilderness_followers(followers)?;
         self.spawn_visible_dungeon_entrance_guardians();
         self.populate_local_wilderness(position, ambush);
         Ok(())
     }
 
-    fn take_active_wilderness_floor(&mut self) -> (FloorState, Vec<ItemInstance>, Option<Actor>) {
-        let riding_actor = self.riding_actor_id.as_deref().and_then(|mount_id| {
-            self.entities
-                .iter()
-                .position(|actor| actor.id == mount_id)
-                .map(|index| self.entities.remove(index))
-        });
-        let riding_actor_id = riding_actor.as_ref().map(|actor| actor.id.as_str());
+    fn take_active_wilderness_floor(&mut self) -> (FloorState, Vec<ItemInstance>, Vec<Actor>) {
+        let (followers, floor_entities): (Vec<_>, Vec<_>) = std::mem::take(&mut self.entities)
+            .into_iter()
+            .partition(|actor| {
+                actor.hp > 0
+                    && (self.riding_actor_id.as_deref() == Some(actor.id.as_str())
+                        || self.actor_is_player_aligned(actor))
+            });
+        let follower_ids = followers
+            .iter()
+            .map(|actor| actor.id.as_str())
+            .collect::<BTreeSet<_>>();
         let (floor_items, global_items): (Vec<_>, Vec<_>) = std::mem::take(&mut self.items)
             .into_iter()
             .partition(|item| {
@@ -1438,7 +1443,7 @@ impl Game {
                     || matches!(
                         &item.location,
                         ItemLocation::CarriedBy { actor_id }
-                            if Some(actor_id.as_str()) != riding_actor_id
+                        if !follower_ids.contains(actor_id.as_str())
                     )
             });
         (
@@ -1453,7 +1458,7 @@ impl Game {
                 daylight_suppressed: std::mem::take(&mut self.daylight_suppressed),
                 vault_cells: std::mem::take(&mut self.vault_cells),
                 player_position: self.player.position,
-                entities: std::mem::take(&mut self.entities),
+                entities: floor_entities,
                 items: floor_items,
                 gold_piles: std::mem::take(&mut self.gold_piles),
                 explored: std::mem::take(&mut self.explored),
@@ -1463,16 +1468,36 @@ impl Game {
                 regions: std::mem::take(&mut self.floor_regions),
             },
             global_items,
-            riding_actor,
+            followers,
         )
     }
 
-    fn restore_riding_actor(&mut self, riding_actor: Option<Actor>) {
-        if let Some(mut riding_actor) = riding_actor {
-            riding_actor.position = self.player.position;
-            self.entities.push(riding_actor);
-            self.entities.sort_by(|left, right| left.id.cmp(&right.id));
+    fn restore_wilderness_followers(&mut self, followers: Vec<Actor>) -> Result<(), CoreError> {
+        if followers.is_empty() {
+            return Ok(());
         }
+        let mut positions =
+            self.open_positions_around_matching(self.player.position, u8::MAX, |_| true);
+        for mut actor in followers {
+            actor.position = if self.riding_actor_id.as_deref() == Some(actor.id.as_str()) {
+                self.player.position
+            } else {
+                let index = positions
+                    .iter()
+                    .position(|position| {
+                        self.actor_kind_can_enter_position(&actor.kind_id, *position)
+                    })
+                    .ok_or(CoreError::WorldMapTransitionUnavailable)?;
+                positions.remove(index)
+            };
+            self.entities.push(actor);
+        }
+        self.entities.sort_by(|left, right| left.id.cmp(&right.id));
+        self.summon_command.target_actor_id = None;
+        if self.summon_command.mode == SummonCommandModeDto::Guard {
+            self.summon_command.guard_position = Some(self.player.position);
+        }
+        Ok(())
     }
 
     fn town_template_dimensions(&self, town_id: &str) -> (u16, u16) {
@@ -1610,6 +1635,13 @@ impl Game {
     }
 
     pub(super) fn initialize_continuous_wilderness_surface(&mut self) -> Result<(), CoreError> {
+        let mut destination = self.clone();
+        destination.initialize_continuous_wilderness_surface_with_followers()?;
+        *self = destination;
+        Ok(())
+    }
+
+    fn initialize_continuous_wilderness_surface_with_followers(&mut self) -> Result<(), CoreError> {
         let Some(world_position) = self.wilderness_position else {
             return Ok(());
         };
@@ -1621,7 +1653,7 @@ impl Game {
             .ok_or(CoreError::InvalidSave(
                 "embedded town position is unavailable",
             ))?;
-        let (town_floor, global_items, riding_actor) = self.take_active_wilderness_floor();
+        let (town_floor, global_items, followers) = self.take_active_wilderness_floor();
         if self
             .stored_floors
             .insert(town_floor.id.clone(), town_floor)
@@ -1632,13 +1664,20 @@ impl Game {
         let wilderness =
             self.generate_local_wilderness_floor(world_position, Some(player_position), false);
         self.activate_floor(wilderness, global_items);
-        self.restore_riding_actor(riding_actor);
         self.load_visible_town_states()?;
+        self.restore_wilderness_followers(followers)?;
         self.spawn_visible_dungeon_entrance_guardians();
         Ok(())
     }
 
     pub(super) fn activate_embedded_town_floor(&mut self) -> Result<(), CoreError> {
+        let mut destination = self.clone();
+        destination.activate_embedded_town_floor_with_followers()?;
+        *self = destination;
+        Ok(())
+    }
+
+    fn activate_embedded_town_floor_with_followers(&mut self) -> Result<(), CoreError> {
         let town = self
             .current_town()
             .filter(|_| self.is_wilderness_floor())
@@ -1651,9 +1690,9 @@ impl Game {
                 .ok_or(CoreError::InvalidSave(
                     "embedded town floor state is missing",
                 ))?;
-        let (_, global_items, riding_actor) = self.take_active_wilderness_floor();
+        let (_, global_items, followers) = self.take_active_wilderness_floor();
         self.activate_floor(town_floor, global_items);
-        self.restore_riding_actor(riding_actor);
+        self.restore_wilderness_followers(followers)?;
         Ok(())
     }
 
@@ -3196,7 +3235,6 @@ pub(super) fn prepare_random_entries_for_test(game: &mut Game, encounter_id: &st
     dispatch_next(
         game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -3532,8 +3570,12 @@ mod tests {
                 assert_eq!(game.glow[index], cell.glow);
                 assert!(!cell.mark || game.explored[index]);
             }
-            let restored =
-                Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+            let restored = Game::from_save_with_content(
+                game.to_save(),
+                game.content.clone(),
+                game.behavior_preferences(),
+            )
+            .unwrap();
             assert_eq!(restored.floor_connections, game.floor_connections);
             assert_eq!(restored.state_hash(), game.state_hash());
             let expected_dungeon = map.dungeon_id.clone();
@@ -3614,7 +3656,12 @@ mod tests {
             game.items.iter().find(|candidate| candidate.id == item.id),
             Some(&shifted_item)
         );
-        game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        game = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(
             game.items.iter().find(|candidate| candidate.id == item.id),
             Some(&shifted_item)
@@ -3628,8 +3675,12 @@ mod tests {
         // Ordinary wilderness ground items follow the existing off-view crop policy.
         assert!(game.items.iter().all(|candidate| candidate.id != item.id));
         game.world_tick += WILDERNESS_DAY_TICKS / 2;
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         for _ in 0..2 {
             scroll_for_encounter_test(&mut game, false);
             scroll_for_encounter_test(&mut restored, false);
@@ -3661,15 +3712,36 @@ mod tests {
         let before = naked.to_save();
         assert!(naked.traverse_stairs(false).unwrap().is_none());
         assert_eq!(naked.to_save(), before);
-        assert!(Game::from_save_with_content(before, game.content.clone()).is_err());
+        assert!(
+            Game::from_save_with_content(
+                before,
+                game.content.clone(),
+                Game::default_behavior_preferences()
+            )
+            .is_err()
+        );
         let mut invalid = game.to_save();
         invalid.wilderness_chunks.clear();
-        assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+        assert!(
+            Game::from_save_with_content(
+                invalid,
+                game.content.clone(),
+                Game::default_behavior_preferences()
+            )
+            .is_err()
+        );
         let mut invalid = game.to_save();
         invalid
             .wilderness_chunks
             .push(invalid.wilderness_chunks[0].clone());
-        assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+        assert!(
+            Game::from_save_with_content(
+                invalid,
+                game.content.clone(),
+                Game::default_behavior_preferences()
+            )
+            .is_err()
+        );
         let mut invalid = game.to_save();
         invalid.floor_connections[0]
             .wilderness_entrance
@@ -3677,11 +3749,25 @@ mod tests {
             .unwrap()
             .placement
             .transform = 8;
-        assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+        assert!(
+            Game::from_save_with_content(
+                invalid,
+                game.content.clone(),
+                Game::default_behavior_preferences()
+            )
+            .is_err()
+        );
         let mut invalid = game.to_save();
         invalid.floor_connections[0].target_floor_id =
             Some("demo.floor.warrens-depth-1".to_owned());
-        assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
+        assert!(
+            Game::from_save_with_content(
+                invalid,
+                game.content.clone(),
+                Game::default_behavior_preferences()
+            )
+            .is_err()
+        );
     }
 
     #[test]
@@ -3694,7 +3780,6 @@ mod tests {
         dispatch_next(
             &mut game,
             GameCommand::EnterWorldMap {
-                leave_pets: false,
                 cancel_recall: false,
             },
         );
@@ -3749,7 +3834,7 @@ mod tests {
         game.player.position = Position { x: 131, y: 33 };
         game.scroll_wilderness_for_player_entry(Position { x: 132, y: 33 }, &mut Vec::new())
             .unwrap();
-        let mut game = Game::from_save(game.to_save()).unwrap();
+        let mut game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         game.player.position = Position { x: 66, y: 33 };
         game.scroll_wilderness_for_player_entry(Position { x: 65, y: 33 }, &mut Vec::new())
             .unwrap();
@@ -3760,7 +3845,6 @@ mod tests {
         dispatch_next(
             &mut game,
             GameCommand::EnterWorldMap {
-                leave_pets: false,
                 cancel_recall: false,
             },
         );
@@ -3769,7 +3853,6 @@ mod tests {
         dispatch_next(
             &mut game,
             GameCommand::EnterWorldMap {
-                leave_pets: false,
                 cancel_recall: false,
             },
         );
@@ -3782,7 +3865,9 @@ mod tests {
             "demo.terrain.inn-entrance"
         );
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash()
         );
     }
@@ -4063,7 +4148,9 @@ mod tests {
             }
             assert_eq!(inherited, 8487);
             assert_eq!(
-                Game::from_save(game.to_save()).unwrap().state_hash(),
+                Game::from_save(game.to_save(), game.behavior_preferences())
+                    .unwrap()
+                    .state_hash(),
                 game.state_hash()
             );
         }
@@ -4132,7 +4219,7 @@ mod tests {
                 .iter()
                 .any(|item| item.id == item_id && item.location == ItemLocation::Ground(inherited))
         );
-        game = Game::from_save(game.to_save()).unwrap();
+        game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         game.player.position = Position { x: 66, y: 33 };
         game.scroll_wilderness_for_player_entry(Position { x: 65, y: 33 }, &mut Vec::new())
             .unwrap();
@@ -4143,7 +4230,6 @@ mod tests {
             dispatch_next(
                 &mut game,
                 GameCommand::EnterWorldMap {
-                    leave_pets: false,
                     cancel_recall: false,
                 },
             );
@@ -4152,13 +4238,15 @@ mod tests {
         }
         assert_restored(&game);
         game.teleport_to_town("demo.town.anambar").unwrap();
-        game = Game::from_save(game.to_save()).unwrap();
+        game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         game.teleport_to_town("demo.town.outpost").unwrap();
         assert_eq!(game.player.position, Position { x: 124, y: 35 });
         assert_restored(&game);
         game.reveal_current_visibility();
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash()
         );
     }
@@ -4329,7 +4417,8 @@ mod tests {
         );
         assert!(!backing.gold_piles.iter().any(|pile| pile.id == gold_id));
 
-        let restored = Game::from_save(game.to_save()).expect("town surface state should reload");
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+            .expect("town surface state should reload");
         assert_eq!(restored.state_hash(), game.state_hash());
     }
 

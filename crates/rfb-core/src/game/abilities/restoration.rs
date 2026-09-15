@@ -141,6 +141,7 @@ impl Game {
         let converted = match ability.effect {
             AbilityEffectDefinition::HealthToMana => {
                 // DAMAGE_USELIFE bypasses ordinary defenses, but take_hit still applies Transcendence.
+                let searching = self.searching;
                 let damage = resolve_damage(
                     DamagePacket::new(level as i32, DamageType::Physical),
                     ResistanceLevel::Normal,
@@ -149,6 +150,8 @@ impl Game {
                     .apply_final_player_damage(damage, FatalityPolicy::BelowZero)
                     .damage
                     .applied;
+                // take_hit(DAMAGE_USELIFE) does not disturb the search action.
+                self.searching = searching && !self.player_is_dead();
                 let gain = damage as u32 / 5;
                 let pool = self
                     .resources

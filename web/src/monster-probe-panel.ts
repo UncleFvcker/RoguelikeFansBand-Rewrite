@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+import type { AppState } from "./app-state";
 import type { Localization, MessageKey } from "./localization";
 import type {
   DamageTypeDto,
@@ -16,6 +17,7 @@ interface MonsterProbeDom {
 }
 
 export class MonsterProbePanel {
+  readonly #state: AppState;
   readonly #document: Document;
   readonly #window: Window;
   readonly #localization: Localization;
@@ -28,6 +30,7 @@ export class MonsterProbePanel {
   #installed = false;
 
   constructor(options: {
+    state: AppState;
     document: Document;
     window: Window;
     localization: Localization;
@@ -35,6 +38,7 @@ export class MonsterProbePanel {
     damageTypeName: (damageType: DamageTypeDto) => string;
     statusName: (statusId: string) => string;
   }) {
+    this.#state = options.state;
     this.#document = options.document;
     this.#window = options.window;
     this.#localization = options.localization;
@@ -129,7 +133,7 @@ export class MonsterProbePanel {
       button.tabIndex = index === this.#selectedIndex ? 0 : -1;
       const glyph = this.#document.createElement("span");
       glyph.className = "monster-probe-glyph";
-      glyph.textContent = monster.glyph;
+      this.#state.paintVisual(glyph, monster.kindId, monster.glyph);
       const label = this.#document.createElement("span");
       label.textContent = this.#contentName(monster.kindId);
       const hp = this.#document.createElement("span");

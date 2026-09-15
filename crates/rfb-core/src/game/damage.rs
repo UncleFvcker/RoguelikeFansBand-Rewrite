@@ -93,7 +93,10 @@ impl Game {
         fatality_policy: FatalityPolicy,
     ) -> DamageApplicationPlan {
         if damage.applied > 0 {
+            self.searching = false;
             self.fishing_direction = None;
+            self.running = None;
+            self.auto_explore = None;
         }
         let transcendence = self
             .player

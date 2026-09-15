@@ -4,6 +4,21 @@ use super::*;
 
 const HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-death";
 
+#[test]
+fn single_step_rest_matches_pet_upkeep_and_rng() {
+    let mut game = high_mage_game(4);
+    game.player.hp = 1;
+    game.resources
+        .get_mut("demo.resource.mana")
+        .unwrap()
+        .current = 2;
+    for ordinal in 0..5 {
+        add_actor(&mut game, "demo.actor.coatl", ordinal, true);
+    }
+    let final_game = super::support::assert_rest_batch_matches_steps(game, 10);
+    assert!(final_game.pet_upkeep_dto().dismissal_required);
+}
+
 fn high_mage_game(seed: u64) -> Game {
     let mut game =
         Game::new_with_build(seed, HIGH_MAGE_BUILD_ID).expect("High-Mage build should create");
@@ -49,6 +64,7 @@ fn upkeep_uses_the_class_divisor_unique_cost_and_strict_control() {
         "ordinary friendly actors do not count"
     );
     game.entities[0].summon = Some(SummonIdentity {
+        owner_dependent: false,
         owner_id: game.player.id.clone(),
         source_ability_id: "test.ability.summon".to_owned(),
         remaining_turns: 5,

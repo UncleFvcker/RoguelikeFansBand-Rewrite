@@ -24,7 +24,6 @@ test("the application DOM registry is immutable and preserves stable element IDs
   assert.equal(dom.inventoryInscription.id, "inventory-inscription");
   assert.equal(dom.inventoryInscribe.id, "inventory-inscribe");
   assert.equal(dom.inventoryDestroy.id, "inventory-destroy");
-  assert.equal(dom.nativeSaveList.id, "native-save-list");
   assert.equal(dom.dungeonInfoName.id, "dungeon-info-name");
   assert.equal(dom.dungeonInfoDepth.id, "dungeon-info-depth");
   assert.equal(dom.dungeonInfoBoss.id, "dungeon-info-boss");
@@ -34,6 +33,8 @@ test("the application DOM registry is immutable and preserves stable element IDs
   assert.equal(dom.resultExit.id, "result-exit");
   assert.equal(dom.lookModeToggle.id, "look-mode-toggle");
   assert.equal(dom.traverseStairs.id, "traverse-stairs");
+  assert.equal(dom.autoExplore.id, "auto-explore");
+  assert.equal(dom.nearestUnknownItem.id, "nearest-unknown-item");
   assert.equal(dom.combatContext.id, "combat-context");
   assert.equal(dom.combatSummaryList.id, "combat-summary-list");
   assert.equal(dom.healthMeterFill.id, "health-meter-fill");
@@ -45,9 +46,6 @@ test("the application DOM registry is immutable and preserves stable element IDs
   assert.equal(dom.mutationList.id, "mutation-list");
   assert.equal(dom.characterProficiencyTables.id, "character-proficiency-tables");
   assert.equal(dom.materialList.id, "material-list");
-  assert.equal(dom.summonCommandButtons["keep-distance"].id, "summon-command-keep-distance");
-  assert.equal(dom.dismissPets.id, "dismiss-pets");
-  assert.equal(dom.petList.id, "pet-list");
   assert.equal(dom.inventoryUseOnMount.id, "inventory-use-on-mount");
   assert.equal(dom.inventoryAbsorb.id, "inventory-absorb");
   assert.equal(dom.inventoryRead.id, "inventory-read");
@@ -59,7 +57,6 @@ test("the application DOM registry is immutable and preserves stable element IDs
     assert.equal(html.split(` id="${id}"`).length - 1, 1, `unique DOM binding: ${id}`);
   }
   assert.equal(Object.isFrozen(dom), true);
-  assert.equal(Object.isFrozen(dom.summonCommandButtons), true);
 });
 
 test("the application DOM registry fails fast when a required element is missing", () => {

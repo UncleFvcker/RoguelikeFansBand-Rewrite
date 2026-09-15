@@ -109,7 +109,7 @@ fn real_value_ignores_knowledge_and_round_trips_without_rng() {
         Some(value)
     );
     assert_eq!(item, *game.items.last().unwrap());
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let saved_item = restored
         .items
         .iter()

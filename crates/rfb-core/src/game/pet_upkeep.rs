@@ -230,9 +230,12 @@ impl Game {
         {
             return false;
         }
-        // Current player-controlled actors have no monster parent identity, so
-        // they follow RFB's parent_m_idx == 0 branch.
-        if self.rng.bounded(2) == 0 {
+        if !self.entities[index]
+            .summon
+            .as_ref()
+            .is_some_and(|summon| summon.owner_dependent)
+            && self.rng.bounded(2) == 0
+        {
             return false;
         }
 
@@ -272,7 +275,7 @@ impl Game {
         let removed = self.entities.remove(index);
         self.clear_duelist_challenge_for(&removed.id);
         if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
-            self.riding_actor_id = None;
+            self.clear_riding_state();
         }
         self.clear_riding_bond_for(&removed.id);
         let carried_item_ids = self

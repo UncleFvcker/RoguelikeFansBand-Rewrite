@@ -144,7 +144,7 @@ impl Game {
                 .any(|actor| actor.position == destination)
         {
             return self
-                .enter_player_position(destination, false, events, changed, removed_entities)
+                .enter_player_position(destination, false, false, events, changed, removed_entities)
                 .map(|step| step.map_translation);
         }
         Ok(None)

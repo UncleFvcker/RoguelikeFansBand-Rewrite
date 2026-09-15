@@ -5,10 +5,35 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  ObjectListPanel,
   buildObjectListEntries,
   nextEntryStartingWith,
   objectListMovementForKey,
 } from "./object-list.ts";
+
+test("object-list control keys ignore modifiers, composition and repeats before changing the dialog", () => {
+  const elements = new Map();
+  const document = { getElementById(id) {
+    if (!elements.has(id)) elements.set(id, Object.assign(new EventTarget(), { open: true, close() { this.open = false; } }));
+    return elements.get(id);
+  } };
+  const panel = new ObjectListPanel({ document, window: {}, state: {}, localization: {},
+    contentName() {}, visibleItemName() {}, onTravel() { assert.fail("unexpected travel"); }, onCommand() { assert.fail("unexpected command"); },
+  });
+  panel.install();
+  const dialog = document.getElementById("object-list-dialog");
+  for (const key of ["q", "s", "J", "(", "`", "Escape", "ArrowDown"]) {
+    for (const extra of [{ ctrlKey: true }, { metaKey: true }, { altKey: true }, { isComposing: true }, { repeat: true }]) {
+      const event = Object.assign(new Event("keydown", { cancelable: true }), { key, ...extra });
+      dialog.dispatchEvent(event);
+      assert.equal(event.defaultPrevented, false);
+      assert.equal(dialog.open, true);
+    }
+  }
+  dialog.dispatchEvent(Object.assign(new Event("keydown", { cancelable: true }), { key: "Escape" }));
+  assert.equal(dialog.open, false);
+  panel.dispose();
+});
 
 const visibility = new Map([
   ["2,1", "remembered"],
@@ -54,7 +79,7 @@ function projection(includeStairs = false, floorId = "demo.floor.warrens-depth-1
     items: [
       {
         id: "ration.1",
-        kindId: "demo.item.ration",
+        kindId: "demo.item.ration", visual: { id: "demo.item.ration", glyph: "," },
         displayNameKey: "item-ration",
         position: { x: 6, y: 1 },
         quantity: 2,

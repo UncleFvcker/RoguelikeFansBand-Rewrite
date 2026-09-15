@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -212,7 +213,8 @@ async function runScenario(driver) {
   const expected = await loadExpectedIdentity();
   const report = { identity: expected, checks: [] };
   await driver.waitFor(`return document.documentElement.dataset.appMode === "title"`, "title", 60_000);
-  await driver.execute(`localStorage.clear(); localStorage.setItem("rfb.locale", "zh-CN"); setTimeout(() => location.reload(), 250); return true;`);
+  await setPreferences(driver, { locale: "zh-CN" });
+  await driver.execute(`localStorage.clear();  setTimeout(() => location.reload(), 250); return true;`);
   await driver.waitFor(`return performance.getEntriesByType("navigation")[0]?.type === "reload" && document.documentElement.dataset.appMode === "title"`, "clean title", 60_000);
 
   async function start(build, seed) {
@@ -314,7 +316,7 @@ async function runScenario(driver) {
     ["#tileset-preset", "image", "tilesetId", "rfb.tileset.pixel-28"],
     ["#tileset-preset", "ascii", "tilesetId", "rfb.tileset.ascii-default"],
   ]) {
-    await driver.execute(`const input = document.querySelector(arguments[0]); input.value = arguments[1]; input.dispatchEvent(new Event("change", { bubbles: true })); return true;`, [selector, value]);
+    await setPreferences(driver, { [{ "#camera-mode": "cameraMode", "#zoom-level": "zoom", "#tileset-preset": "tilesetPreset" }[selector]]: value });
     await driver.waitFor(`return document.querySelector("#map-host").dataset[arguments[0]] === arguments[1]`, selector, 10_000, [field, projected]);
     assert.equal((await state()).hash, menuHash);
     assert.equal(await driver.execute(`return window.__acceptanceCanvas === document.querySelector("#map-host canvas");`), true);
@@ -404,7 +406,8 @@ async function runRaceScenario(driver, raceId) {
   };`);
   const afterTurn = turn => driver.waitFor(`return parseInt(document.querySelector("#turn-value")?.textContent, 10) > arguments[0]`, "race action committed", 10_000, [turn]);
   await driver.waitFor(`return document.documentElement.dataset.appMode === "title"`, "race title", 60_000);
-  await driver.execute(`localStorage.setItem("rfb.locale", "zh-CN"); setTimeout(() => location.reload(), 100); return true;`);
+  await setPreferences(driver, { locale: "zh-CN" });
+  await driver.execute(` setTimeout(() => location.reload(), 100); return true;`);
   await driver.waitFor(`return performance.getEntriesByType("navigation")[0]?.type === "reload" && document.documentElement.dataset.appMode === "title"`, "Chinese title", 60_000);
   await mkdir(artifactDirectory, { recursive: true });
   for (const build of builds) {
@@ -626,7 +629,8 @@ async function runLifeForceScenario(driver) {
   };`);
   const afterTurn = turn => driver.waitFor(`return parseInt(document.querySelector("#turn-value").textContent, 10) > arguments[0]`, "life force action", 10_000, [turn]);
   await driver.waitFor(`return document.documentElement.dataset.appMode === "title"`, "life force title", 60_000);
-  await driver.execute(`localStorage.setItem("rfb.locale", "zh-CN"); localStorage.setItem("rfb.input-preset", "numpad"); setTimeout(() => location.reload(), 100); return true;`);
+  await setPreferences(driver, { locale: "zh-CN", inputPreset: "numpad" });
+  await driver.execute(`  setTimeout(() => location.reload(), 100); return true;`);
   await driver.waitFor(`return performance.getEntriesByType("navigation")[0]?.type === "reload" && document.documentElement.dataset.appMode === "title"`, "Chinese title", 60_000);
   await mkdir(artifactDirectory, { recursive: true });
   for (const [build, raceId, targetName] of [

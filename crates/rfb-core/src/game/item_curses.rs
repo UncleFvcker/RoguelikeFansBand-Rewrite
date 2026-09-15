@@ -283,6 +283,7 @@ mod tests {
             "demo.build.warrior",
             "demo.race.rfb-human",
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .expect("Human warrior should create");
         let mut form = crate::game::monster_combat::melee_status(

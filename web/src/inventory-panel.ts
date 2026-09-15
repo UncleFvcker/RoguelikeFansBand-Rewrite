@@ -3,6 +3,8 @@
 import type { AppDom } from "./app-dom";
 import type { AppState, TargetingIntent } from "./app-state";
 import type { Localization, MessageKey } from "./localization";
+import { originalCommandKey, type CommandShortcut, type ItemShortcut } from "./command-shortcuts.ts";
+import { itemSelectionLabels, itemSelectionConfirmations } from "./item-selection-labels.ts";
 import type {
   BodySlotDto,
   EquipmentBonusesDto,
@@ -10,6 +12,7 @@ import type {
   EquipmentPassiveDto,
   GameCommand,
   InventoryItemDto,
+  ItemDto,
   ItemDestructionElementDto,
   ItemCurseSeverityDto,
   ItemEnchantmentsDto,
@@ -80,7 +83,6 @@ export class InventoryPanel {
     spec: TargetSpecDto | null | undefined,
     intent: TargetingIntent,
   ) => void;
-  readonly #updateCampaignAction: () => void;
   readonly #announce: (
     key: MessageKey,
     args: Record<string, string | number> | undefined,
@@ -92,6 +94,9 @@ export class InventoryPanel {
   #installed = false;
   #detailItemId: string | undefined;
   #pendingAction: { kind: "drop" | "inscribe" | "destroy"; itemId: string } | undefined;
+  #closeItemSelection: (() => void) | undefined;
+  #selectionSnapshot: AppState["status"];
+  #actionSnapshot: AppState["status"];
 
   constructor(options: {
     dom: InventoryDom;
@@ -104,7 +109,6 @@ export class InventoryPanel {
       spec: TargetSpecDto | null | undefined,
       intent: TargetingIntent,
     ) => void;
-    updateCampaignAction: () => void;
     announce: (
       key: MessageKey,
       args: Record<string, string | number> | undefined,
@@ -121,7 +125,6 @@ export class InventoryPanel {
     this.#dispatch = options.dispatch;
     this.#onInventoryInteraction = options.onInventoryInteraction ?? (() => undefined);
     this.#startTargeting = options.startTargeting;
-    this.#updateCampaignAction = options.updateCampaignAction;
     this.#announce = options.announce;
     this.#itemCurseSeverityName = options.itemCurseSeverityName;
   }
@@ -152,6 +155,7 @@ export class InventoryPanel {
 
   dispose(): void {
     if (!this.#installed) return;
+    this.reset();
     this.#installed = false;
     this.#dom.inventoryDetailClose.removeEventListener("click", this.#closeDetail);
     this.#dom.inventoryDetailDialog.removeEventListener("close", this.#handleDetailClosed);
@@ -178,6 +182,8 @@ export class InventoryPanel {
   }
 
   render(inventory: InventoryItemDto[], equipment: EquipmentItemDto[]): void {
+    if (this.#selectionSnapshot !== this.#state.status) this.#closeItemSelection?.();
+    if (this.#actionSnapshot !== this.#state.status) this.#closeAction();
     this.#state.inventory = inventory.map((item) => ({ ...item }));
     this.#state.equipment = equipment.map((item) => ({ ...item }));
     const stacks = this.#localization.format("inventory-stack-count", {
@@ -216,7 +222,6 @@ export class InventoryPanel {
   }
 
   updateActions(): void {
-    this.#updateCampaignAction();
     const worldMap = this.#state.worldMap;
     const selected = this.#selectedItems();
     this.#dom.inventorySelectionCount.textContent = this.#localization.format(
@@ -280,16 +285,184 @@ export class InventoryPanel {
     onSelect: (itemId: string) => Promise<void>,
     onCancel?: () => Promise<void>,
     allowedItemIds?: readonly string[],
+    command?: CommandShortcut,
   ): void {
     const candidates = itemTargetCandidates(
       this.#state,
       excludedItemId,
       (displayNameKey, kindId, artifactName) => this.#formatter.visibleItemName(displayNameKey, kindId, artifactName),
     );
-    this.#selectItemTargetFrom(candidates.filter(candidate => !allowedItemIds || allowedItemIds.includes(candidate.id)), onSelect, onCancel);
+    this.#selectItemTargetFrom(candidates.filter(candidate => !allowedItemIds || allowedItemIds.includes(candidate.id)), onSelect, onCancel, "item-target-title", command);
+  }
+
+  swapRings(): void {
+    if (this.#state.busy || this.#state.commandBlocked || this.#state.worldMap) return;
+    const slots = this.#state.bodySlots.filter(slot => slot.slotType === "ring");
+    if (!this.#state.equipment.some(item => slots.some(slot => slot.id === item.slotId))) {
+      this.#announce("message-ring-swap-empty", undefined, "system"); return;
+    }
+    if (slots.length < 2) {
+      this.#announce("item-ring-swap-unavailable", undefined, "system"); return;
+    }
+    const swap = (firstSlotId: string, secondSlotId: string) =>
+      this.#dispatch({ type: "swap-rings", firstSlotId, secondSlotId });
+    if (slots.length === 2) { void swap(slots[0]!.id, slots[1]!.id); return; }
+    const candidates = slots.map((slot, index) => ({
+      id: slot.id,
+      label: this.#localization.format("equipment-slot-ordinal", {
+        slot: this.#formatter.equipmentSlotName("ring"), ordinal: index + 1,
+      }),
+    }));
+    this.#selectEquipmentSlotFrom(candidates, async first => {
+      this.#selectEquipmentSlotFrom(candidates.filter(slot => slot.id !== first),
+        second => swap(first, second), "ring-swap-second-slot");
+    }, "ring-swap-first-slot");
+  }
+
+  reset(): void {
+    this.#closeItemSelection?.();
+    this.#closeAction();
+    this.#closeDetail();
+    this.#closeMore();
+    this.#state.selectedInventoryIds.clear();
+  }
+
+  selectItemTargets(excludedItemId: string, onSelect: (ids: string[]) => Promise<void>, onCancel: () => Promise<void>, command: CommandShortcut, multiple: boolean): () => void {
+    const selected: string[] = [];
+    let close: (() => void) | undefined;
+    const next = () => {
+      const candidates = itemTargetCandidates(this.#state, excludedItemId,
+        (key, kind, name) => this.#formatter.visibleItemName(key, kind, name)).filter(item => !selected.includes(item.id));
+      if (candidates.length === 0 && selected.length > 0) { void onSelect(selected); return; }
+      this.#selectItemTargetFrom(candidates, async id => {
+        selected.push(id);
+        if (multiple) next(); else await onSelect(selected);
+      }, onCancel, "item-target-title", command,
+      multiple && selected.length > 0 ? () => onSelect(selected) : undefined);
+      close = this.#closeItemSelection;
+    };
+    next();
+    return () => close?.();
+  }
+
+  confirmItemChoice(itemId: string, command?: CommandShortcut): boolean {
+    if (this.#state.busy || (command !== "inspect" && (this.#state.commandBlocked || this.#state.worldMap))) return false;
+    const snapshot = this.#state.status;
+    const item = [...this.#state.inventory, ...this.#state.equipment, ...(snapshot?.items ?? []),
+      ...(snapshot?.player.magicEater?.slots.flatMap(slot => slot.item ? [slot.item] : []) ?? []),
+      ...(snapshot?.player.magicEater?.deviceCommands.flatMap(entry => entry.items) ?? [])]
+      .find(item => item.id === itemId);
+    if (!item) return false;
+    const confirmations = itemSelectionConfirmations(item.inscription, command ? originalCommandKey(command) : undefined);
+    for (let index = 0; index < confirmations; index++) {
+      if (!this.#dom.inventoryList.ownerDocument.defaultView?.confirm(this.#localization.format("item-selection-inscription-confirm", {
+        name: this.#formatter.visibleItemName(item.displayNameKey, item.kindId, item.artifactName),
+      }))) return false;
+    }
+    return snapshot === this.#state.status;
+  }
+
+  #confirmSelected(command?: CommandShortcut): boolean {
+    const selected = this.#selectedItems();
+    return selected.length > 0 && selected.every(item => this.confirmItemChoice(item.id, command));
+  }
+
+  confirmRepeatedCommand(command: GameCommand): boolean {
+    let ids: string[] = [];
+    let shortcut: CommandShortcut | undefined;
+    switch (command.type) {
+      case "drop": ids = command.itemIds; shortcut = "drop"; break;
+      case "drop-quantity": ids = [command.itemId]; shortcut = "drop"; break;
+      case "equip": ids = [command.itemId]; shortcut = "equip"; break;
+      case "unequip": {
+        const item = this.#state.equipment.find(item => item.slotId === command.slotId);
+        if (!item) return false;
+        ids = [item.id]; shortcut = "unequip"; break;
+      }
+      case "destroy-item": ids = [command.itemId]; shortcut = "destroy"; break;
+      case "inscribe-item": ids = [command.itemId]; shortcut = command.inscription ? "inscribe" : "uninscribe"; break;
+      case "throw": ids = [command.itemId]; shortcut = "throw"; break;
+      case "refuel-light": ids = [command.targetItemId, command.sourceItemId]; shortcut = "refuel"; break;
+      case "use-item": case "use-item-by-glyph": case "use-item-for-recharge":
+        ids = [command.itemId]; shortcut = this.#itemUseCommand(command.itemId);
+        if (command.type === "use-item-for-recharge") ids.push(command.sourceItemId, command.targetItemId);
+        break;
+      case "use-absorbed-device": ids = [command.itemId]; shortcut = "cast";
+        ids.push(...command.targets.flatMap(target => "itemId" in target ? [target.itemId] : [])); break;
+      case "absorb-device": ids = [command.itemId]; shortcut = "power"; break;
+      case "appraise": ids = [command.itemId]; shortcut = "inspect"; break;
+      case "open-chest": case "disarm-chest": ids = [command.itemId]; shortcut = command.type === "open-chest" ? "open" : "disarm"; break;
+      case "study-ability": case "study-prayer": ids = [command.bookItemId]; shortcut = "study"; break;
+      case "cast-ability": {
+        const ability = this.#state.status?.player.abilities?.find(ability => ability.id === command.abilityId);
+        if (!ability) return false;
+        shortcut = ability.source === "learned" ? "cast" : "power";
+        if (ability.bookItemId) ids.push(ability.bookItemId);
+        break;
+      }
+      default: return true;
+    }
+    if ("target" in command && command.target && "itemId" in command.target) ids.push(command.target.itemId);
+    return [...new Set(ids)].every(id => this.confirmItemChoice(id, shortcut));
+  }
+
+  openCommand(command: ItemShortcut, count?: number): void {
+    if (this.#state.busy || this.#state.commandBlocked || this.#state.worldMap) return;
+    const inventory = this.#state.inventory;
+    const equipment = this.#state.equipment;
+    const candidates: Array<InventoryItemDto | EquipmentItemDto> =
+      command === "unequip" ? equipment :
+      command === "inspect" || command === "throw" || command === "activate" ? [...inventory, ...equipment] :
+      command === "refuel" ? equipment : inventory;
+    const eligible = candidates.filter(item => {
+      if (command === "equip") return "equipmentSlot" in item && Boolean(item.equipmentSlot);
+      if (command === "activate") return Boolean(item.activation) && item.usable;
+      if (command === "throw") return Boolean(item.throwTargetSpec);
+      if (command === "refuel") return Boolean(this.#refuelSourceForTarget(item.id));
+      if (command === "uninscribe") return Boolean(item.inscription);
+      if (["food", "potion", "scroll", "wand", "staff", "rod"].includes(command)) {
+        return "useCategory" in item && item.useCategory === command && item.usable;
+      }
+      return true;
+    });
+    this.#selectItemTargetFrom(eligible.map(item => ({ id: item.id, label: this.#itemName(item) })), async itemId => {
+      if (this.#state.busy || this.#state.commandBlocked) return;
+      const item = [...this.#state.inventory, ...this.#state.equipment].find(item => item.id === itemId);
+      if (!item) return;
+      if (command === "inspect") { this.#showDetail(itemId); return; }
+      if (command === "unequip" && "slotId" in item) { await this.#unequipItem(item.slotId); return; }
+      if (command === "refuel") { this.#refuelItem(itemId); return; }
+      if (command === "throw") { this.#startTargeting(item.throwTargetSpec, { type: "throw", itemId }); return; }
+      if (command === "uninscribe") { await this.#dispatch({ type: "inscribe-item", itemId, inscription: null }); return; }
+      if (command === "activate" && "slotId" in item) { this.#activateEquippedItem(item); return; }
+      this.#state.selectedInventoryIds.clear();
+      this.#state.selectedInventoryIds.add(itemId);
+      this.updateActions();
+      if (command === "equip") await this.#equipSelectedItem();
+      else if (command === "drop" && count !== undefined) {
+        this.#dom.inventoryDropQuantity.value = String(Math.min(count, item.quantity));
+        await this.#dropSelectedItems();
+      }
+      else if (command === "drop") this.#startDrop();
+      else if (command === "destroy" && count !== undefined) {
+        this.#dom.inventoryDropQuantity.value = String(Math.min(count, item.quantity));
+        await this.#destroySelectedItem();
+      }
+      else if (command === "destroy") this.#openAction("destroy");
+      else if (command === "inscribe") this.#openAction("inscribe");
+      else await this.#useSelectedItem(command);
+    }, undefined, `shortcut-${command}`, command);
+  }
+
+  selectChest(command: "open-chest" | "disarm-chest", items: readonly ItemDto[], dispatch = this.#dispatch): void {
+    this.#selectItemTargetFrom(items.map(item => ({ id: item.id, label: this.#formatter.visibleItemName(item.displayNameKey, item.kindId, item.artifactName) })),
+      itemId => dispatch({ type: command, itemId }), undefined, "item-target-title", command === "open-chest" ? "open" : "disarm");
   }
 
   readonly #handleUse = (): void => {
+    const selected = this.#selectedItems();
+    const source = selectedRechargingItems(selected)?.item ?? selected[0];
+    if (!source || !this.#confirmSelected(this.#itemUseCommand(source.id))) return;
     void this.#useSelectedItem();
   };
 
@@ -303,7 +476,7 @@ export class InventoryPanel {
     this.#closeMore();
     if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
     this.#onInventoryInteraction();
-    this.#selectItemTargetFrom(this.#readableItems(), itemId => this.#dispatch({ type: "use-item", itemId }));
+    this.#selectItemTargetFrom(this.#readableItems(), itemId => this.#dispatch({ type: "use-item", itemId }), undefined, "item-target-title", "scroll");
   };
 
   readonly #handleAbsorb = (): void => {
@@ -316,24 +489,32 @@ export class InventoryPanel {
         (displayNameKey, kindId, artifactName) => this.#formatter.visibleItemName(displayNameKey, kindId, artifactName),
       ),
       (itemId) => this.#dispatch({ type: "absorb-device", itemId }),
+      undefined, "item-target-title", "power",
     );
   };
 
   readonly #handleUseOnMount = (): void => {
     this.#closeMore();
+    if (!this.#confirmSelected("potion")) return;
     void this.#useSelectedItemOnMount();
   };
 
   readonly #handleAppraise = (): void => {
     this.#closeMore();
+    if (!this.#confirmSelected("inspect")) return;
     void this.#appraiseSelectedItem();
   };
 
   readonly #handleEquip = (): void => {
+    if (!this.#confirmSelected("equip")) return;
     void this.#equipSelectedItem();
   };
 
   readonly #handleDrop = (): void => {
+    if (this.#confirmSelected("drop")) this.#startDrop();
+  };
+
+  #startDrop(): void {
     if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
     const selected = this.#selectedItems();
     if (selected.length === 1 && selected[0]!.quantity > 1) {
@@ -342,14 +523,14 @@ export class InventoryPanel {
       this.#dom.inventoryDropQuantity.value = "1";
       void this.#dropSelectedItems();
     }
-  };
+  }
 
   readonly #handleInscribe = (): void => {
-    this.#openAction("inscribe");
+    if (this.#confirmSelected("inscribe")) this.#openAction("inscribe");
   };
 
   readonly #handleDestroy = (): void => {
-    this.#openAction("destroy");
+    if (this.#confirmSelected("destroy")) this.#openAction("destroy");
   };
 
   readonly #openMore = (): void => {
@@ -368,6 +549,7 @@ export class InventoryPanel {
     const item = selected[0];
     if (this.#state.busy || this.#state.playerDead || this.#state.worldMap || selected.length !== 1 || !item) return;
     this.#pendingAction = { kind, itemId: item.id };
+    this.#actionSnapshot = this.#state.status;
     const title = this.#localization.format(`action-inventory-${kind}`);
     this.#dom.inventoryActionTitle.textContent = title;
     this.#dom.inventoryActionConfirm.textContent = title;
@@ -394,6 +576,7 @@ export class InventoryPanel {
     event.preventDefault();
     this.updateActions();
     const pending = this.#pendingAction;
+    if (this.#actionSnapshot !== this.#state.status) { this.#closeAction(); return; }
     if (!pending || !this.#dom.inventoryActionDialog.open || this.#dom.inventoryActionConfirm.disabled) return;
     if (pending.kind === "drop") void this.#dropSelectedItems();
     else if (pending.kind === "inscribe") void this.#inscribeSelectedItem();
@@ -461,10 +644,12 @@ export class InventoryPanel {
       });
       const status = document.createElement("span");
       status.className = "inventory-item-status";
-      status.textContent = this.#briefStatus(item);
+      status.textContent = [this.#briefStatus(item), this.#state.display.showDiscounts && item.discountPercent > 0
+        ? this.#localization.format("display-item-discount", { percent: item.discountPercent }) : ""].filter(Boolean).join(" · ");
       status.title = status.textContent;
       const weight = document.createElement("span");
       weight.className = "inventory-item-weight";
+      weight.hidden = !this.#state.display.showWeights;
       weight.textContent = this.#localization.format("inventory-item-weight", {
         weight: formatTenthsPound(item.weightTenthsPound * item.quantity),
       });
@@ -522,10 +707,13 @@ export class InventoryPanel {
       const slotTag = document.createElement("span");
       slotTag.className = "equipment-slot";
       slotTag.textContent = slotLabel;
+      slotTag.hidden = !this.#state.display.describeSlots && !!item;
       const name = document.createElement("span");
       name.className = "equipment-slot-name";
-      name.textContent = item ? this.#itemName(item) : this.#localization.format("equipment-slot-vacant");
+      name.textContent = item ? this.#itemName(item) + (this.#state.display.showDiscounts && item.discountPercent > 0
+        ? " · " + this.#localization.format("display-item-discount", { percent: item.discountPercent }) : "") : this.#localization.format("equipment-slot-vacant");
       slotButton.title = this.#localization.format("equipment-slot-summary", { slot: slotLabel, name: name.textContent });
+      slotButton.setAttribute("aria-label", slotButton.title);
       slotButton.append(slotTag, this.#itemGlyph(item), name);
       slotButton.addEventListener("click", () => {
         const current = this.#state.equipment.find((entry) => entry.slotId === slot.id);
@@ -543,8 +731,9 @@ export class InventoryPanel {
   #itemGlyph(item?: InventoryItemDto | EquipmentItemDto): HTMLElement {
     const glyph = this.#dom.inventoryList.ownerDocument.createElement("span");
     glyph.className = "inventory-item-glyph";
+    glyph.hidden = !this.#state.display.showItemIcons;
     glyph.setAttribute("aria-hidden", "true");
-    if (item) glyph.textContent = this.#state.contentGlyphs.get(item.kindId) ?? "?";
+    if (item) this.#state.paintVisual(glyph, item.visual.id, item.visual.glyph);
     return glyph;
   }
 
@@ -571,10 +760,19 @@ export class InventoryPanel {
         !currentSlot || !currentItem || !itemFitsBodySlot(currentItem, currentSlot) ||
         this.#state.equipment.some((entry) => entry.slotId === slotId)) return;
       await this.#dispatch({ type: "equip", itemId, slotId });
-    });
+    }, undefined, "item-target-title", "equip");
   }
 
   openDetail(itemId: string): void {
+    const owned = [...this.#state.inventory, ...this.#state.equipment,
+      ...(this.#state.status?.player.magicEater?.slots.flatMap(slot => slot.item ? [slot.item] : []) ?? []),
+      ...(this.#state.status?.player.magicEater?.deviceCommands.flatMap(command => command.items) ?? [])]
+      .some(item => item.id === itemId);
+    if (owned && !this.confirmItemChoice(itemId, "inspect")) return;
+    this.#showDetail(itemId);
+  }
+
+  #showDetail(itemId: string): void {
     this.#detailItemId = itemId;
     this.#renderDetail();
     if (this.#detailItemId && !this.#dom.inventoryDetailDialog.open) {
@@ -613,12 +811,39 @@ export class InventoryPanel {
       button.disabled = this.#state.busy || this.#state.playerDead || this.#state.worldMap;
       button.addEventListener("click", () => {
         if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+        if (!this.confirmItemChoice(item.id, "throw")) return;
         this.#closeDetail();
         this.#startTargeting(item.throwTargetSpec, { type: "throw", itemId: item.id });
       });
       this.#dom.inventoryDetailActions.append(button);
     }
     body.scrollTop = scrollTop;
+  }
+
+  #activateEquippedItem(item: EquipmentItemDto): void {
+    if (this.#state.busy || this.#state.playerDead || this.#state.worldMap || item.useUnavailableReason || (item.activation && !item.usable)) return;
+    if (item.requiresRechargeTargets) {
+      this.#closeDetail();
+      this.#selectRechargeSource(item.id, true);
+    } else if (item.useTargetSpec?.modes.includes("self")) {
+      void this.#dispatch({ type: "use-item", itemId: item.id, target: { type: "self" } });
+    } else if (item.useTargetSpec) {
+      this.#closeDetail();
+      this.#startTargeting(item.useTargetSpec, { type: "item", itemId: item.id });
+    } else {
+      void this.#dispatch({ type: "use-item", itemId: item.id });
+    }
+  }
+
+  #refuelItem(itemId: string): void {
+    if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+    const sources = this.#refuelSourcesForTarget(itemId);
+    const refuel = (sourceItemId: string) => this.#dispatch({ type: "refuel-light", targetItemId: itemId, sourceItemId });
+    if (sources.length === 1) {
+      if (this.confirmItemChoice(sources[0]!.id, "refuel")) void refuel(sources[0]!.id);
+    } else {
+      this.#selectItemTargetFrom(sources.map(item => ({ id: item.id, label: this.#itemName(item) })), refuel, undefined, "item-target-title", "refuel");
+    }
   }
 
   #appendEquipmentActions(container: HTMLElement, item: EquipmentItemDto): void {
@@ -632,20 +857,7 @@ export class InventoryPanel {
       activate.dataset.activationItemId = item.id;
       activate.textContent = this.#localization.format("action-equipment-activate");
       activate.disabled = this.#state.busy || Boolean(item.useUnavailableReason) || (Boolean(item.activation) && !item.usable);
-      activate.addEventListener("click", () => {
-        if (this.#state.busy || this.#state.playerDead || this.#state.worldMap || item.useUnavailableReason || (item.activation && !item.usable)) return;
-        if (item.requiresRechargeTargets) {
-          this.#closeDetail();
-          this.#selectRechargeSource(item.id, true);
-        } else if (item.useTargetSpec?.modes.includes("self")) {
-          void this.#dispatch({ type: "use-item", itemId: item.id, target: { type: "self" } });
-        } else if (item.useTargetSpec) {
-          this.#closeDetail();
-          this.#startTargeting(item.useTargetSpec, { type: "item", itemId: item.id });
-        } else {
-          void this.#dispatch({ type: "use-item", itemId: item.id });
-        }
-      });
+      activate.addEventListener("click", () => { if (this.confirmItemChoice(item.id, "activate")) this.#activateEquippedItem(item); });
       row.append(activate);
     }
     if (item.fuel && item.fuel.kind !== "oil" && item.fuel.current < item.fuel.maximum) {
@@ -655,23 +867,14 @@ export class InventoryPanel {
       refuel.dataset.refuelTargetId = item.id;
       refuel.textContent = this.#localization.format("action-equipment-refuel");
       refuel.disabled = this.#refuelSourceForTarget(item.id) === undefined;
-      refuel.addEventListener("click", () => {
-        if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
-        const source = this.#refuelSourceForTarget(item.id);
-        if (!source) return;
-        void this.#dispatch({
-          type: "refuel-light",
-          targetItemId: item.id,
-          sourceItemId: source.id,
-        });
-      });
+      refuel.addEventListener("click", () => { if (this.confirmItemChoice(item.id, "refuel")) this.#refuelItem(item.id); });
       row.append(refuel);
     }
     const unequip = document.createElement("button");
     unequip.type = "button";
     unequip.textContent = this.#localization.format("action-equipment-unequip");
     unequip.disabled = this.#state.busy;
-    unequip.addEventListener("click", () => void this.#unequipItem(item.slotId));
+    unequip.addEventListener("click", () => { if (this.confirmItemChoice(item.id, "unequip")) void this.#unequipItem(item.slotId); });
     row.append(unequip);
     container.append(row);
   }
@@ -690,6 +893,8 @@ export class InventoryPanel {
       weight: formatTenthsPound(item.weightTenthsPound * item.quantity),
     }));
     this.#appendInscription(container, item.inscription);
+    if (this.#state.display.showOrigins) this.#appendDetail(container, "item-origin", this.#localization.format("display-item-origin", { origin: this.#localization.format("item-origin-" + (item.originKind ?? "unknown")) }));
+    if (item.discountPercent > 0) this.#appendDetail(container, "item-discount", this.#localization.format("display-item-discount", { percent: item.discountPercent }));
     const slotType = "slotId" in item
       ? this.#state.bodySlots.find((slot) => slot.id === item.slotId)?.slotType ?? item.slotId
       : item.equipmentSlot;
@@ -747,9 +952,13 @@ export class InventoryPanel {
   }
 
   #refuelSourceForTarget(targetItemId: string): InventoryItemDto | undefined {
+    return this.#refuelSourcesForTarget(targetItemId)[0];
+  }
+
+  #refuelSourcesForTarget(targetItemId: string): InventoryItemDto[] {
     const target = this.#state.equipment.find((item) => item.id === targetItemId);
-    if (!target?.fuel || target.fuel.current >= target.fuel.maximum) return undefined;
-    return this.#state.inventory.find((item) => {
+    if (!target?.fuel || target.fuel.current >= target.fuel.maximum) return [];
+    return this.#state.inventory.filter((item) => {
       if (!item.fuel || item.fuel.current === 0) return false;
       return target.fuel?.kind === "torch"
         ? item.fuel.kind === "torch"
@@ -767,7 +976,7 @@ export class InventoryPanel {
       captured.className = "capture-ball-status";
       captured.textContent = item.capturedActor
         ? this.#localization.format("capture-ball-contained", {
-            actor: this.#localization.format(item.capturedActor.nameKey as MessageKey),
+            actor: item.capturedActor.customName ?? this.#localization.format(item.capturedActor.nameKey as MessageKey),
             hp: item.capturedActor.hp,
             maximum: item.capturedActor.maxHp,
             experience: item.capturedActor.experience,
@@ -809,7 +1018,7 @@ export class InventoryPanel {
     return item.capturedActor
       ? this.#localization.format("capture-ball-name-contained", {
           ball,
-          actor: this.#localization.format(item.capturedActor.nameKey as MessageKey),
+          actor: item.capturedActor.customName ?? this.#localization.format(item.capturedActor.nameKey as MessageKey),
         })
       : ball;
   }
@@ -859,19 +1068,21 @@ export class InventoryPanel {
     await this.#dispatch({ type: "appraise", itemId: selected[0].id });
   }
 
-  async #useSelectedItem(): Promise<void> {
+  async #useSelectedItem(shortcut?: ItemShortcut): Promise<void> {
     const selected = this.#selectedItems();
     if (this.#state.busy) return;
     const recharge = selectedRechargingItems(selected);
     if (recharge) {
       this.#selectRechargeTarget(recharge.item.id, recharge.source.id,
-        recharge.item.activation ? () => this.#dispatch({ type: "use-item", itemId: recharge.item.id }) : undefined);
+        recharge.item.activation ? () => this.#dispatch({ type: "use-item", itemId: recharge.item.id }) : undefined,
+        shortcut ?? this.#itemUseCommand(recharge.item.id));
       return;
     }
     if (selected.length !== 1 || !selected[0]?.usable) return;
     const item = selected[0];
+    const command = shortcut ?? this.#itemUseCommand(item.id);
     if (item.requiresRechargeTargets) {
-      this.#selectRechargeSource(item.id, Boolean(item.activation));
+      this.#selectRechargeSource(item.id, Boolean(item.activation), command);
       return;
     }
     if (item.mundanityTargets) {
@@ -881,7 +1092,7 @@ export class InventoryPanel {
         if (option.confirmationKey && !this.#dom.inventoryList.ownerDocument.defaultView?.confirm(
           this.#localization.format(option.confirmationKey as MessageKey))) return;
         await this.#dispatch({ type: "use-item", itemId: item.id, target: option.target });
-      }, undefined, item.mundanityTargets.map(option => option.itemId));
+      }, undefined, item.mundanityTargets.map(option => option.itemId), command);
       return;
     }
     if (item.artifactCreationTargets) {
@@ -899,7 +1110,7 @@ export class InventoryPanel {
         const name = view?.prompt(this.#localization.format("inventory-artifact-creation-name"), "") || undefined;
         await this.#dispatch({ type: "use-item", itemId: item.id,
           target: { type: "artifact-creation-item", itemId: targetItemId, quantity: target.quantity, ...(name ? { name } : {}) } });
-      });
+      }, undefined, "item-target-title", command);
       return;
     }
     if (item.requiresCraftingTarget) {
@@ -916,7 +1127,7 @@ export class InventoryPanel {
           )) return;
         await this.#dispatch({ type: "use-item", itemId: item.id,
           target: { type: "crafting-item", itemId: targetItemId, quantity: target.quantity } });
-      });
+      }, undefined, undefined, command);
       return;
     }
     if (item.requiresTargetGlyph) {
@@ -937,6 +1148,7 @@ export class InventoryPanel {
           target: { type: "item", itemId },
         }),
         () => this.#dispatch({ type: "use-item", itemId: item.id }),
+        undefined, command,
       );
       return;
     }
@@ -1007,17 +1219,23 @@ export class InventoryPanel {
     return this.#state.inventory.filter((item) => this.#state.selectedInventoryIds.has(item.id));
   }
 
-  #selectRechargeSource(itemId: string, activation: boolean): void {
+  #itemUseCommand(itemId: string): ItemShortcut | undefined {
+    const item = [...this.#state.inventory, ...this.#state.equipment].find(item => item.id === itemId);
+    if (item && "useCategory" in item && item.useCategory) return item.useCategory;
+    return item?.activation ? "activate" : undefined;
+  }
+
+  #selectRechargeSource(itemId: string, activation: boolean, command = this.#itemUseCommand(itemId)): void {
     const onCancel = activation ? () => this.#dispatch({ type: "use-item", itemId }) : undefined;
     const candidates = [...this.#state.inventory, ...(this.#state.status?.items ?? [])]
       .filter(item => item.id !== itemId && item.canSupplyRecharge)
       .map(item => ({ id: item.id, label: this.#formatter.visibleItemName(item.displayNameKey, item.kindId, item.artifactName) }));
     this.#selectItemTargetFrom(candidates, async sourceItemId => {
-      this.#selectRechargeTarget(itemId, sourceItemId, onCancel);
-    }, onCancel, "inventory-recharge-source-title");
+      this.#selectRechargeTarget(itemId, sourceItemId, onCancel, command);
+    }, onCancel, "inventory-recharge-source-title", command);
   }
 
-  #selectRechargeTarget(itemId: string, sourceItemId: string, onCancel?: () => Promise<void>): void {
+  #selectRechargeTarget(itemId: string, sourceItemId: string, onCancel?: () => Promise<void>, command = this.#itemUseCommand(itemId)): void {
     const candidates = [...this.#state.inventory, ...(this.#state.status?.items ?? [])]
       .filter(
         (item) => item.id !== itemId && item.id !== sourceItemId && item.canReceiveRecharge,
@@ -1032,7 +1250,7 @@ export class InventoryPanel {
         itemId,
         sourceItemId,
         targetItemId,
-      }), onCancel, "inventory-recharge-target-title",
+      }), onCancel, "inventory-recharge-target-title", command,
     );
   }
 
@@ -1041,15 +1259,27 @@ export class InventoryPanel {
     onSelect: (itemId: string) => Promise<void>,
     onCancel?: () => Promise<void>,
     titleKey: MessageKey = "item-target-title",
+    command?: CommandShortcut,
+    onFinish?: () => Promise<void>,
   ): void {
-    if (candidates.length === 0) {
-      this.#announce("message-target-mode-unavailable", undefined, "system");
+    this.#closeItemSelection?.();
+    const snapshot = this.#state.status;
+    this.#selectionSnapshot = snapshot;
+    const commandKey = command ? originalCommandKey(command) : undefined;
+    const items = [...this.#state.inventory, ...this.#state.equipment, ...(snapshot?.items ?? [])];
+    const entries = candidates.map(candidate => ({ ...candidate, source: itemSelectionSource(this.#state, candidate.id),
+      inscription: items.find(item => item.id === candidate.id)?.inscription }));
+    const sources: ItemSelectionSource[] = ["pack", "equipment", "quiver", "floor"];
+    const tabs = sources.map(source => ({ source, entries: entries.filter(entry => entry.source === source), page: 0 }))
+      .filter(tab => tab.entries.length > 0);
+    if (tabs.length === 0) {
+      this.#announce("message-item-selection-empty", undefined, "system");
       void onCancel?.();
       return;
     }
     const document = this.#dom.inventoryList.ownerDocument;
     const dialog = document.createElement("dialog");
-    dialog.className = "item-target-dialog";
+    dialog.className = "item-target-dialog item-selection-dialog";
     const form = document.createElement("form");
     form.method = "dialog";
     const title = document.createElement("h2");
@@ -1058,12 +1288,9 @@ export class InventoryPanel {
     const labelText = document.createElement("span");
     labelText.textContent = this.#localization.format("item-target-label");
     const select = document.createElement("select");
-    for (const candidate of candidates) {
-      const option = document.createElement("option");
-      option.value = candidate.id;
-      option.textContent = candidate.label;
-      select.append(option);
-    }
+    let activeTab = tabs[0]!;
+    let ignoreInscriptions = false;
+    let labels: string[] = [];
     label.append(labelText, select);
     const actions = document.createElement("div");
     actions.className = "item-target-actions";
@@ -1076,18 +1303,194 @@ export class InventoryPanel {
     confirm.textContent = this.#localization.format("action-item-target-confirm");
     actions.append(cancel, confirm);
     form.append(title, label, actions);
-    let selected = false;
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
+    const pages = document.createElement("div");
+    pages.className = "item-selection-pages";
+    const previous = document.createElement("button");
+    previous.type = "button";
+    previous.textContent = this.#localization.format("item-selection-page-previous");
+    const next = document.createElement("button");
+    next.type = "button";
+    next.textContent = this.#localization.format("item-selection-page-next");
+    const pageLabel = document.createElement("span");
+    pageLabel.setAttribute("aria-live", "polite");
+    pages.append(previous, pageLabel, next);
+    const help = document.createElement("p");
+    help.textContent = this.#localization.format("item-selection-key-help");
+    const details = document.createElement("div");
+    details.className = "item-selection-details";
+    details.setAttribute("aria-live", "polite");
+    details.hidden = true;
+    form.append(pages, help, details);
+    const sourceControls = document.createElement("div");
+    sourceControls.className = "item-selection-sources";
+    sourceControls.setAttribute("role", "group");
+    sourceControls.setAttribute("aria-label", this.#localization.format("item-selection-sources"));
+    const sourceButtons = tabs.map(tab => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.source = tab.source;
+      button.textContent = this.#localization.format(`item-selection-source-${tab.source}`);
+      button.addEventListener("click", () => selectSource(tab.source));
+      sourceControls.append(button);
+      return button;
+    });
+    form.append(sourceControls);
+    const inscriptionToggle = document.createElement("button");
+    inscriptionToggle.type = "button";
+    inscriptionToggle.textContent = this.#localization.format("item-selection-ignore-inscriptions");
+    inscriptionToggle.addEventListener("click", () => toggleInscriptions());
+    form.append(inscriptionToggle);
+    if (onFinish) {
+      const done = document.createElement("button");
+      done.type = "button";
+      done.textContent = this.#localization.format("item-selection-finish");
+      done.addEventListener("click", () => {
+        if (!dialog.open || this.#state.busy || this.#state.commandBlocked || snapshot !== this.#state.status) return;
+        selected = true; dialog.close(); void onFinish();
+      });
+      form.append(done);
+    }
+    const visibleEntries = () => activeTab.entries.slice(activeTab.page * 26, (activeTab.page + 1) * 26);
+    const renderPage = () => {
+      select.replaceChildren();
+      labels = itemSelectionLabels(visibleEntries().map(entry => entry.inscription), commandKey, ignoreInscriptions);
+      visibleEntries().forEach((candidate, index) => {
+        const option = document.createElement("option");
+        option.value = candidate.id;
+        option.textContent = `${labels[index]}) ${candidate.label}`;
+        if (candidate.source) option.dataset.source = candidate.source;
+        select.append(option);
+      });
+      select.size = Math.min(10, visibleEntries().length);
+      select.value = activeTab.entries[activeTab.page * 26]!.id;
+      const pageCount = Math.ceil(activeTab.entries.length / 26);
+      pages.hidden = pageCount === 1;
+      pageLabel.textContent = this.#localization.format("item-selection-page", { page: activeTab.page + 1, pages: pageCount });
+      sourceButtons.forEach((button, index) => button.setAttribute("aria-pressed", String(tabs[index] === activeTab)));
+      inscriptionToggle.setAttribute("aria-pressed", String(ignoreInscriptions));
+      details.hidden = true;
+    };
+    const toggleInscriptions = () => {
+      if (this.#state.busy || !dialog.open) return;
+      ignoreInscriptions = !ignoreInscriptions;
       const itemId = select.value;
+      renderPage();
+      select.value = itemId;
+      select.focus();
+    };
+    const selectSource = (source: ItemSelectionSource) => {
+      if (this.#state.busy || this.#state.commandBlocked || this.#state.worldMap || !dialog.open) return;
+      const tab = tabs.find(tab => tab.source === source);
+      if (!tab) return;
+      activeTab = tab;
+      renderPage(); select.focus();
+    };
+    const turnPage = (step: number) => {
+      if (this.#state.busy || !dialog.open) return;
+      const pageCount = Math.ceil(activeTab.entries.length / 26);
+      activeTab.page = (activeTab.page + step + pageCount) % pageCount;
+      renderPage(); select.focus();
+    };
+    previous.addEventListener("click", () => turnPage(-1));
+    next.addEventListener("click", () => turnPage(1));
+    let selected = false;
+    let closed = false;
+    const currentCandidate = (itemId: string) => {
+      if (closed || !dialog.open || this.#state.busy || this.#state.commandBlocked || this.#state.worldMap) return undefined;
+      const candidate = visibleEntries().find(entry => entry.id === itemId);
+      if (!candidate || !candidate.source || this.#state.status !== snapshot || itemSelectionSource(this.#state, itemId) !== candidate.source) {
+        this.#announce("message-item-selection-stale", undefined, "system");
+        return undefined;
+      }
+      return candidate;
+    };
+    const choose = (itemId: string) => {
+      const candidate = currentCandidate(itemId);
+      if (!candidate) return;
+      if (!this.confirmItemChoice(itemId, command) || !currentCandidate(itemId)) return;
       selected = true;
       dialog.close();
-      void onSelect(itemId);
+      void onSelect(candidate.id);
+    };
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      choose(select.value);
     });
+    dialog.addEventListener("keydown", event => {
+      if (event.isComposing || event.metaKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.isContentEditable || target?.tagName === "INPUT" || target?.tagName === "TEXTAREA") return;
+      if (event.ctrlKey) {
+        const shortcuts: Partial<Record<string, ItemSelectionSource>> = { p: "pack", e: "equipment", q: "quiver", f: "floor" };
+        const source = shortcuts[event.key.toLowerCase()];
+        if (source) {
+          event.preventDefault(); event.stopImmediatePropagation();
+          if (!event.repeat) selectSource(source);
+        }
+        return;
+      }
+      if (event.repeat && (/^[a-z0-9]$/i.test(event.key) || ["Enter", "Escape", "PageDown", "PageUp", " ", "/", "\\", "-", "@"].includes(event.key))) {
+        event.preventDefault(); event.stopImmediatePropagation(); return;
+      }
+      const exactLabel = labels.indexOf(event.key);
+      if (exactLabel >= 0) {
+        event.preventDefault(); event.stopImmediatePropagation();
+        choose(visibleEntries()[exactLabel]!.id); return;
+      }
+      if (event.key === "@") {
+        event.preventDefault(); event.stopImmediatePropagation(); toggleInscriptions(); return;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault(); event.stopImmediatePropagation(); dialog.close(); return;
+      }
+      if (event.key === "/" || event.key === "\\") {
+        event.preventDefault(); event.stopImmediatePropagation();
+        const index = (tabs.indexOf(activeTab) + (event.key === "/" ? 1 : -1) + tabs.length) % tabs.length;
+        selectSource(tabs[index]!.source); return;
+      }
+      if (event.key === "-") {
+        event.preventDefault(); event.stopImmediatePropagation();
+        selectSource("floor");
+        if (activeTab.source === "floor" && activeTab.entries.length === 1 && titleKey !== "shortcut-inscribe" && titleKey !== "shortcut-uninscribe") {
+          choose(activeTab.entries[0]!.id);
+        }
+        return;
+      }
+      if (["PageDown", "PageUp", "3", "9"].includes(event.key) || (event.key === " " && target?.tagName !== "BUTTON")) {
+        event.preventDefault(); event.stopImmediatePropagation();
+        turnPage(event.key === "PageUp" || event.key === "9" ? -1 : 1); return;
+      }
+      if (event.key === "Enter" && target?.tagName !== "BUTTON") {
+        event.preventDefault(); event.stopImmediatePropagation(); choose(select.value); return;
+      }
+      if (!/^[a-z0-9]$/i.test(event.key)) return;
+      event.preventDefault(); event.stopImmediatePropagation();
+      if (!/^[A-Z]$/.test(event.key)) return;
+      const entry = visibleEntries()[labels.indexOf(event.key.toLowerCase())];
+      if (!entry) return;
+      const candidate = currentCandidate(entry.id);
+      if (!candidate) return;
+      select.value = candidate.id;
+      const item = [...this.#state.inventory, ...this.#state.equipment, ...(this.#state.status?.items ?? [])].find(item => item.id === candidate.id);
+      if (!item) return;
+      details.replaceChildren();
+      const heading = document.createElement("h3");
+      heading.textContent = candidate.label;
+      details.append(heading);
+      if ("identification" in item) this.#appendItemDetails(details, item);
+      else this.#appendInscription(details, item.inscription);
+      details.hidden = false;
+    }, true);
+    const closeSilently = () => { selected = true; dialog.close(); };
+    this.#closeItemSelection = closeSilently;
     dialog.addEventListener("close", () => {
+      if (closed) return;
+      closed = true;
       dialog.remove();
-      if (!selected) void onCancel?.();
+      if (this.#closeItemSelection === closeSilently) this.#closeItemSelection = undefined;
+      if (!selected && this.#state.status === snapshot) void onCancel?.();
     }, { once: true });
+    renderPage();
     dialog.append(form);
     document.body.append(dialog);
     dialog.showModal();
@@ -1097,7 +1500,11 @@ export class InventoryPanel {
   #selectEquipmentSlotFrom(
     candidates: Array<{ id: string; label: string }>,
     onSelect: (slotId: string) => Promise<void>,
+    titleKey: MessageKey = "equipment-slot-target-title",
   ): void {
+    this.#closeItemSelection?.();
+    const snapshot = this.#state.status;
+    this.#selectionSnapshot = snapshot;
     if (candidates.length === 0) {
       this.#announce("message-target-mode-unavailable", undefined, "system");
       return;
@@ -1108,7 +1515,7 @@ export class InventoryPanel {
     const form = document.createElement("form");
     form.method = "dialog";
     const title = document.createElement("h2");
-    title.textContent = this.#localization.format("equipment-slot-target-title");
+    title.textContent = this.#localization.format(titleKey);
     const label = document.createElement("label");
     const labelText = document.createElement("span");
     labelText.textContent = this.#localization.format("equipment-slot-target-label");
@@ -1134,10 +1541,16 @@ export class InventoryPanel {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       const slotId = select.value;
+      if (!dialog.open || this.#state.busy || this.#state.commandBlocked || snapshot !== this.#state.status || !candidates.some(slot => slot.id === slotId)) return;
       dialog.close();
       void onSelect(slotId);
     });
-    dialog.addEventListener("close", () => dialog.remove(), { once: true });
+    const close = () => dialog.close();
+    this.#closeItemSelection = close;
+    dialog.addEventListener("close", () => {
+      dialog.remove();
+      if (this.#closeItemSelection === close) this.#closeItemSelection = undefined;
+    }, { once: true });
     dialog.append(form);
     document.body.append(dialog);
     dialog.showModal();
@@ -1145,6 +1558,9 @@ export class InventoryPanel {
   }
 
   #selectGlyphTarget(onSelect: (glyph: string) => Promise<void>): void {
+    this.#closeItemSelection?.();
+    const snapshot = this.#state.status;
+    this.#selectionSnapshot = snapshot;
     const document = this.#dom.inventoryList.ownerDocument;
     const dialog = document.createElement("dialog");
     dialog.className = "item-target-dialog";
@@ -1174,6 +1590,7 @@ export class InventoryPanel {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       const characters = [...input.value];
+      if (!dialog.open || this.#state.busy || this.#state.commandBlocked || snapshot !== this.#state.status) return;
       if (characters.length !== 1 || /\p{Cc}/u.test(characters[0] ?? "")) {
         input.setCustomValidity(this.#localization.format("item-use-glyph-invalid"));
         input.reportValidity();
@@ -1183,7 +1600,12 @@ export class InventoryPanel {
       dialog.close();
       void onSelect(characters[0] ?? "");
     });
-    dialog.addEventListener("close", () => dialog.remove(), { once: true });
+    const close = () => dialog.close();
+    this.#closeItemSelection = close;
+    dialog.addEventListener("close", () => {
+      dialog.remove();
+      if (this.#closeItemSelection === close) this.#closeItemSelection = undefined;
+    }, { once: true });
     dialog.append(form);
     document.body.append(dialog);
     dialog.showModal();
@@ -1440,6 +1862,21 @@ export function selectedRechargingItems(
     (candidate) => candidate.id !== item?.id && candidate.canSupplyRecharge,
   );
   return item && source ? { item, source } : undefined;
+}
+
+export type ItemSelectionSource = "pack" | "equipment" | "quiver" | "floor";
+
+// Source classification does not grant selection eligibility; each caller keeps its filter.
+export function itemSelectionSource(
+  state: Pick<AppState, "inventory" | "equipment" | "status">,
+  itemId: string,
+): ItemSelectionSource | undefined {
+  if (state.inventory.some(item => item.id === itemId)) {
+    return state.status?.player.quiverItemIds?.includes(itemId) ? "quiver" : "pack";
+  }
+  if (state.equipment.some(item => item.id === itemId)) return "equipment";
+  if (state.status?.items.some(item => item.id === itemId)) return "floor";
+  return undefined;
 }
 
 export function itemTargetCandidates(

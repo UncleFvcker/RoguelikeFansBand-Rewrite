@@ -46,7 +46,8 @@ fn every_build_claims_and_uses_the_source_thieves_and_orc_rewards() {
             ("anambar-orc-camp", "demo.item.frost-ball-wand"),
         ] {
             let (mut game, task, facility, id) = reward_ready(925, &build, slug);
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             assert_eq!(
                 game.claim_task_reward(&facility, &task),
                 restored.claim_task_reward(&facility, &task)
@@ -79,7 +80,7 @@ fn every_build_claims_and_uses_the_source_thieves_and_orc_rewards() {
                 .unwrap();
                 assert!(charges(&game, &id) < before);
             }
-            Game::from_save(game.to_save()).unwrap();
+            Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             let before = game.to_save();
             assert_eq!(
                 game.claim_task_reward(&facility, &task),
@@ -122,7 +123,7 @@ fn castle_choice_is_one_to_four_durable_and_duplicate_replacement_is_atomic() {
         let original = game.clone();
         let mut advanced = game.clone();
         advanced.rng.bounded(12345);
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         game.claim_task_reward(&facility, &task).unwrap();
         restored.claim_task_reward(&facility, &task).unwrap();
         assert_eq!(game.to_save(), restored.to_save());
@@ -158,7 +159,8 @@ fn castle_choice_is_one_to_four_durable_and_duplicate_replacement_is_atomic() {
                 Err("inventory-full")
             );
             assert_eq!(full.to_save(), before);
-            let mut restored = Game::from_save(duplicate.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(duplicate.to_save(), duplicate.behavior_preferences()).unwrap();
             for run in [&mut duplicate, &mut restored] {
                 run.claim_task_reward(&facility, &task).unwrap();
                 let item = run.items.iter().find(|item| item.id == id).unwrap();
@@ -175,7 +177,7 @@ fn castle_choice_is_one_to_four_durable_and_duplicate_replacement_is_atomic() {
                     run.claim_task_reward(&facility, &task),
                     Err("reward-unavailable")
                 );
-                Game::from_save(run.to_save()).unwrap();
+                Game::from_save(run.to_save(), run.behavior_preferences()).unwrap();
             }
             assert_eq!(duplicate.to_save(), restored.to_save());
         }
@@ -304,7 +306,7 @@ fn fixed_rewards_generate_equip_activate_and_resume_source_cooldowns() {
             }
         }
         successful_device_seed(&mut game);
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let events = use_item(&mut game, &id);
         assert_eq!(events, use_item(&mut restored, &id));
         assert_eq!(game.to_save(), restored.to_save());
@@ -399,7 +401,8 @@ fn fixed_rewards_generate_equip_activate_and_resume_source_cooldowns() {
                 .remaining_ticks = 1000;
             game.minor_slow = 1;
             successful_device_seed(&mut game);
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             assert_eq!(use_item(&mut game, &id), use_item(&mut restored, &id));
             assert_eq!(game.to_save(), restored.to_save());
             assert_eq!(
@@ -420,7 +423,7 @@ fn fixed_rewards_generate_equip_activate_and_resume_source_cooldowns() {
                 Some(kind.clone())
             );
         }
-        Game::from_save(game.to_save()).unwrap();
+        Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     }
 }
 
@@ -449,7 +452,8 @@ fn every_build_pays_the_member_identification_price_and_restores_the_purchase() 
             );
             assert_eq!(game.to_save(), before);
             game.gold = cost;
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             for run in [&mut game, &mut restored] {
                 run.identify_all_at_facility(&facility).unwrap();
                 assert_eq!(run.gold, 0);
@@ -521,6 +525,6 @@ fn realm_change_updates_book_inscriptions_and_realm_services_but_keeps_class_mem
             role
         );
     }
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.to_save(), game.to_save());
 }

@@ -198,13 +198,21 @@ fn monster_anger_increases_cast_frequency_resets_on_cast_and_round_trips() {
 
     game.entities[0].anger = 37;
     let saved = game.to_save();
-    let restored = Game::from_save_with_content(saved.clone(), game.content.clone())
-        .expect("monster anger should round trip");
+    let restored = Game::from_save_with_content(
+        saved.clone(),
+        game.content.clone(),
+        Game::default_behavior_preferences(),
+    )
+    .expect("monster anger should round trip");
     assert_eq!(restored.entities[0].anger, 37);
     let mut invalid = saved;
     invalid.entities[0].anger = 101;
     assert!(matches!(
-        Game::from_save_with_content(invalid, game.content.clone()),
+        Game::from_save_with_content(
+            invalid,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        ),
         Err(CoreError::InvalidSave("entity anger is invalid"))
     ));
 }
@@ -334,6 +342,7 @@ fn cult_of_personality_can_turn_a_hostile_summon_into_a_pet() {
     );
     assert!(game.actor_is_player_side(&converted));
     converted.summon = Some(SummonIdentity {
+        owner_dependent: false,
         owner_id: "test.cult-owner".to_owned(),
         source_ability_id: "rfb-legacy.ability.summon-animal-l37-1d3-1".to_owned(),
         remaining_turns: 100,
@@ -341,8 +350,12 @@ fn cult_of_personality_can_turn_a_hostile_summon_into_a_pet() {
     let mut persisted = m6_game("rfb.mutation.cult-of-personality", "demo.build.warrior");
     clear_monsters(&mut persisted);
     persisted.entities.push(converted);
-    let restored = Game::from_save_with_content(persisted.to_save(), persisted.content.clone())
-        .expect("Cult friendliness should round trip");
+    let restored = Game::from_save_with_content(
+        persisted.to_save(),
+        persisted.content.clone(),
+        persisted.behavior_preferences(),
+    )
+    .expect("Cult friendliness should round trip");
     assert!(restored.entities.last().unwrap().friendly);
     assert_eq!(
         restored.entities.last().unwrap().controller_id.as_deref(),
@@ -788,7 +801,8 @@ fn chaos_gift_assigns_and_persists_one_authoritative_patron() {
             .is_some_and(|patron| patron.id == patron_id)
     );
 
-    let restored = Game::from_save(game.to_save()).expect("chaos patron should reload");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("chaos patron should reload");
     assert_eq!(
         restored.chaos_patron_id.as_deref(),
         Some(patron_id.as_str())
@@ -1065,7 +1079,8 @@ fn m4f_c_easy_tiring_accumulates_and_recovers_shared_minor_slow() {
 
     game.minor_slow = 2;
     game.minor_slow_energy = 41;
-    let restored = Game::from_save(game.to_save()).expect("fatigue should reload");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("fatigue should reload");
     assert_eq!(restored.minor_slow, 2);
     assert_eq!(restored.minor_slow_energy, 41);
     assert_eq!(restored.state_hash(), game.state_hash());
@@ -1252,7 +1267,8 @@ fn m6_a_speed_flux_minor_slow_round_trips_and_feeds_speed() {
 
     assert_eq!(game.minor_slow, 10);
     assert_eq!(game.snapshot().player.speed, speed_before - 10);
-    let restored = Game::from_save(game.to_save()).expect("minor slow should reload");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("minor slow should reload");
     assert_eq!(restored.minor_slow, 10);
     assert_eq!(restored.state_hash(), game.state_hash());
 }
@@ -1315,7 +1331,8 @@ fn m6_a_produce_mana_persists_its_prompt_then_resolves_a_directional_ball() {
             .map(|pending| pending.mutation_id.as_str()),
         Some("rfb.mutation.prod-mana")
     );
-    let restored = Game::from_save(game.to_save()).expect("pending direction should reload");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("pending direction should reload");
     assert_eq!(restored.state_hash(), game.state_hash());
 
     let mut events = Vec::new();
@@ -1420,7 +1437,8 @@ fn m6_b_shadow_walk_persists_then_only_regenerates_ordinary_procedural_dungeons(
     surface.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(12_000) == 0));
     process_m6(&mut surface);
     assert!((15..=35).contains(&surface.reality_change_ticks));
-    let restored = Game::from_save(surface.to_save()).expect("reality countdown should reload");
+    let restored = Game::from_save(surface.to_save(), surface.behavior_preferences())
+        .expect("reality countdown should reload");
     assert_eq!(restored.reality_change_ticks, surface.reality_change_ticks);
     assert_eq!(restored.state_hash(), surface.state_hash());
 

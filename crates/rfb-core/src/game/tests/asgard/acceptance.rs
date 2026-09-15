@@ -58,7 +58,7 @@ fn asgard_odin_remembers_more_than_six_real_spell_resistances_across_save() {
     assert!(game.entities[0].observed_player_resistances.len() > 6);
     game.reveal_current_visibility();
     let saved = game.to_save();
-    let restored = Game::from_save(saved.clone()).unwrap();
+    let restored = Game::from_save(saved.clone(), Game::default_behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         restored.entities[0].observed_player_resistances,
@@ -68,7 +68,7 @@ fn asgard_odin_remembers_more_than_six_real_spell_resistances_across_save() {
     let memory = &mut duplicate.entities[0].observed_player_resistances;
     memory.push(memory[0].clone());
     assert!(matches!(
-        Game::from_save(duplicate),
+        Game::from_save(duplicate, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave(
             "monster resistance memory is invalid"
         ))
@@ -76,7 +76,7 @@ fn asgard_odin_remembers_more_than_six_real_spell_resistances_across_save() {
     let mut controlled = saved;
     controlled.entities[0].controller_id = Some(game.player.id.clone());
     assert!(matches!(
-        Game::from_save(controlled),
+        Game::from_save(controlled, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("actor state is invalid"))
     ));
 }
@@ -193,7 +193,7 @@ fn asgard_prepared_full_source_guardians_route_rewards_return_and_recall_resume(
     // No guardian HP/definition changes and no assignment of conquest flags.
     let mut game = prepared();
     let arrival_hash = game.state_hash();
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), arrival_hash);
     assert_eq!(game.wilderness_position, Some(Position { x: 94, y: 11 }));
     assert_eq!(game.progress.level, 50);
@@ -222,7 +222,7 @@ fn asgard_prepared_full_source_guardians_route_rewards_return_and_recall_resume(
             &format!("demo.floor.asgard-depth-{depth}"),
         );
         if depth == 80 {
-            game = Game::from_save(game.to_save()).unwrap();
+            game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         }
     }
     battle(&mut game, ODIN, 90);
@@ -235,7 +235,7 @@ fn asgard_prepared_full_source_guardians_route_rewards_return_and_recall_resume(
         .clone();
     // Save immediately after Odin, then exercise the same route-clear used by
     // the desktop. It must preserve the actual avenger and its full HP.
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     game.debug_prepare_asgard_e2e("route", None).unwrap();
     let retained = game
         .entities
@@ -270,7 +270,7 @@ fn asgard_prepared_full_source_guardians_route_rewards_return_and_recall_resume(
             .iter()
             .any(|item| item.origin_kind == Some(rfb_protocol::ItemOriginKindDto::Acquire))
     );
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for depth in [86, 84, 82, 80, 76, 72, 68, 64] {
         stairs(
             &mut game,
@@ -296,7 +296,7 @@ fn asgard_prepared_full_source_guardians_route_rewards_return_and_recall_resume(
                 target: None,
             },
         );
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for current in [&mut game, &mut restored] {
             for _ in 0..40 {
                 if current.current_floor_id == expected {

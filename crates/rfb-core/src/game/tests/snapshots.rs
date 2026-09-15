@@ -3,6 +3,210 @@ use super::support::*;
 use super::*;
 
 #[test]
+fn visual_identity_changes_only_when_item_knowledge_changes() {
+    let mut game = Game::new(64);
+    let kind = game
+        .content
+        .item_definitions()
+        .find(|item| {
+            item.appearance_name_key.is_some()
+                && item.rfb_base_kind.is_some()
+                && !item.tags.iter().any(|tag| tag == "artifact")
+        })
+        .unwrap()
+        .id
+        .clone();
+    give_inventory_item(&mut game, "visual.first", &kind);
+    give_inventory_item(&mut game, "visual.second", &kind);
+    game.item_knowledge.remove(&kind);
+    game.reveal_current_visibility();
+    let visual = game
+        .inventory_item_dto(
+            game.items
+                .iter()
+                .find(|item| item.id == "visual.first")
+                .unwrap(),
+        )
+        .visual;
+    assert!(visual.id.starts_with("core.appearance."));
+    assert_eq!(
+        visual,
+        game.item_visual(
+            game.items
+                .iter()
+                .find(|item| item.id == "visual.second")
+                .unwrap()
+        )
+    );
+    let before = game.state_hash();
+    let catalog = game.player_dto().visual_catalog;
+    assert!(catalog.iter().any(|entry| entry.id == visual.id));
+    assert!(
+        catalog
+            .iter()
+            .filter(|entry| entry.id.starts_with("core.appearance."))
+            .all(|entry| entry.prf.is_none())
+    );
+    assert_eq!(game.state_hash(), before);
+    game.mark_item_aware(&kind);
+    assert_eq!(
+        game.item_visual(
+            game.items
+                .iter()
+                .find(|item| item.id == "visual.first")
+                .unwrap()
+        )
+        .id,
+        kind
+    );
+    let source = game.content.item(&kind).unwrap().rfb_base_kind.unwrap();
+    let expected = format!("K:{}:{}", source.tval, source.sval);
+    assert_eq!(
+        game.player_dto()
+            .visual_catalog
+            .iter()
+            .find(|entry| entry.id == kind)
+            .unwrap()
+            .prf
+            .as_deref(),
+        Some(expected.as_str())
+    );
+}
+
+#[test]
+fn visual_catalog_does_not_expose_an_unexamined_fixed_artifact() {
+    let mut game = Game::new(64);
+    let artifact = game
+        .content
+        .item_definitions()
+        .find(|item| {
+            item.tags.iter().any(|tag| tag == "artifact") && item.artifact_generation.is_some()
+        })
+        .unwrap();
+    let kind = artifact.id.clone();
+    let base = artifact
+        .artifact_generation
+        .as_ref()
+        .unwrap()
+        .base_item_kind_id
+        .clone();
+    give_inventory_item(&mut game, "visual.artifact", &kind);
+    give_inventory_item(&mut game, "visual.base", &base);
+    game.reveal_current_visibility();
+    let item = game
+        .items
+        .iter()
+        .find(|item| item.id == "visual.artifact")
+        .unwrap();
+    assert_eq!(
+        game.item_visual(item),
+        game.item_visual(
+            game.items
+                .iter()
+                .find(|item| item.id == "visual.base")
+                .unwrap()
+        )
+    );
+    assert!(
+        !game
+            .player_dto()
+            .visual_catalog
+            .iter()
+            .any(|entry| entry.id == kind)
+    );
+}
+
+#[test]
+fn display_projection_exposes_known_coverage_and_passage_without_changing_state() {
+    let mut game = Game::new(64);
+    let known = Position { x: 2, y: 2 };
+    let hidden = Position { x: 3, y: 2 };
+    replace_terrain(&mut game, known, "demo.terrain.floor");
+    replace_terrain(&mut game, hidden, "demo.terrain.floor");
+    let known_index = game.index(known).unwrap();
+    let hidden_index = game.index(hidden).unwrap();
+    game.explored[known_index] = true;
+    game.explored[hidden_index] = false;
+    game.detection_coverage.traps.clear();
+    game.detection_coverage.traps.extend([known, hidden]);
+    let before = game.state_hash();
+    let player = game.player_dto();
+    assert_eq!(player.trap_detected_grids, vec![known]);
+    assert_eq!(
+        player.speed_energy_per_tick,
+        crate::scheduler::energy_gain(player.speed)
+    );
+    assert!(game.cell_dto(known).known_projectile_passage);
+    assert!(!game.cell_dto(hidden).known_projectile_passage);
+    assert_eq!(game.state_hash(), before);
+    replace_terrain(&mut game, known, "demo.terrain.wall");
+    assert!(!game.cell_dto(known).known_projectile_passage);
+}
+
+#[test]
+fn newly_visible_grid_refreshes_the_known_passage_projection_in_updates() {
+    let mut game = Game::new(64);
+    choose_human_talent_if_pending(&mut game);
+    clear_monsters(&mut game);
+    let position = game.player.position;
+    replace_terrain(&mut game, position, "demo.terrain.floor");
+    let index = game.index(position).unwrap();
+    game.explored[index] = false;
+    let mut previous = game.visual_cells();
+    previous[index].visibility = rfb_protocol::VisibilityState::Hidden;
+    game.last_visual_cells = Some(previous);
+    assert!(!game.cell_dto(position).known_projectile_passage);
+    let update = dispatch_next(&mut game, GameCommand::Wait);
+    assert!(
+        update
+            .changed_cells
+            .iter()
+            .any(|cell| { cell.position == position && cell.known_projectile_passage })
+    );
+}
+
+#[test]
+fn item_command_categories_are_public_projection_and_survive_save_without_mutation() {
+    use rfb_protocol::ItemUseCategoryDto::*;
+    let mut game = Game::new(64);
+    for (tag, category) in [
+        ("food", Food),
+        ("potion", Potion),
+        ("scroll", Scroll),
+        ("wand", Wand),
+        ("staff", Staff),
+        ("rod", Rod),
+    ] {
+        let kind = game
+            .content
+            .item_definitions()
+            .find(|definition| definition.tags.iter().any(|value| value == tag))
+            .unwrap()
+            .id
+            .clone();
+        let id = format!("test.shortcut.{tag}");
+        give_inventory_item(&mut game, &id, &kind);
+        let before = game.state_hash();
+        let dto = game
+            .inventory_dto()
+            .into_iter()
+            .find(|item| item.id == id)
+            .unwrap();
+        assert_eq!(dto.use_category, Some(category));
+        assert_eq!(game.state_hash(), before);
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+        assert_eq!(
+            restored
+                .inventory_dto()
+                .into_iter()
+                .find(|item| item.id == id)
+                .unwrap(),
+            dto
+        );
+    }
+}
+
+#[test]
 fn ground_item_projection_requires_sight_or_detection_and_round_trips() {
     let mut game = Game::new(64);
     clear_monsters(&mut game);
@@ -111,7 +315,8 @@ fn ground_item_projection_requires_sight_or_detection_and_round_trips() {
     assert!(saved.item_property_knowledge.iter().any(|knowledge| {
         knowledge.item_id == "test.item.hidden-discovery" && knowledge.discovered
     }));
-    let restored = Game::from_save(saved).expect("discovered items should round-trip");
+    let restored = Game::from_save(saved, Game::default_behavior_preferences())
+        .expect("discovered items should round-trip");
     assert!(
         restored
             .snapshot()

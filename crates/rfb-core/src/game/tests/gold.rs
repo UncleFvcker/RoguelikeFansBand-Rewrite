@@ -24,7 +24,8 @@ fn warrens_floor_gold_is_seeded_walkable_and_persistent() {
                 && left.is_walkable(pile.position)
         }));
 
-        let restored = Game::from_save(left.to_save()).expect("floor gold should reload");
+        let restored = Game::from_save(left.to_save(), left.behavior_preferences())
+            .expect("floor gold should reload");
         assert_eq!(restored.gold_piles, left.gold_piles);
         assert_eq!(restored.state_hash(), left.state_hash());
     }
@@ -70,7 +71,7 @@ fn invalid_gold_state_and_allocator_are_rejected() {
     let mut excessive_wallet = game.to_save();
     excessive_wallet.player.gold = MAX_PLAYER_GOLD + 1;
     assert!(matches!(
-        Game::from_save(excessive_wallet),
+        Game::from_save(excessive_wallet, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("player gold balance is invalid"))
     ));
 
@@ -84,7 +85,7 @@ fn invalid_gold_state_and_allocator_are_rejected() {
     });
     zero_pile.next_gold_pile_serial = 2;
     assert!(matches!(
-        Game::from_save(zero_pile),
+        Game::from_save(zero_pile, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave("gold pile state is invalid"))
     ));
 
@@ -98,7 +99,7 @@ fn invalid_gold_state_and_allocator_are_rejected() {
     });
     stale_allocator.next_gold_pile_serial = 4;
     assert!(matches!(
-        Game::from_save(stale_allocator),
+        Game::from_save(stale_allocator, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave(
             "gold pile allocator is behind existing IDs"
         ))

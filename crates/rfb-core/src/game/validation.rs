@@ -34,10 +34,13 @@ impl Game {
             && !matches!(
                 action,
                 GameAction::Move { .. }
+                    | GameAction::EndCharacter
                     | GameAction::LeaveWorldMap
                     | GameAction::TravelWorld { .. }
                     | GameAction::ConfigureMogaminator { .. }
                     | GameAction::ConfigureTravel { .. }
+                    | GameAction::ConfigurePreferences { .. }
+                    | GameAction::ConfigureMogaminatorPreferences { .. }
                     | GameAction::ChooseRaceMutation { .. }
                     | GameAction::ChooseMaiaPath { .. }
                     | GameAction::InscribeItem { .. }
@@ -47,10 +50,7 @@ impl Game {
         {
             return Err(CoreError::WorldMapActionUnavailable);
         }
-        if let GameAction::EnterWorldMap {
-            leave_pets,
-            cancel_recall,
-        } = action
+        if let GameAction::EnterWorldMap { cancel_recall } = action
             && (self.map_scale != rfb_protocol::MapScaleDto::Local
                 || (self.current_town().is_none() && !self.is_wilderness_floor())
                 || self
@@ -59,7 +59,6 @@ impl Game {
                     .and_then(|world| world.wilderness.as_ref())
                     .is_none()
                 || self.wilderness_ambush_threat_remains()
-                || (self.player_has_following_pet() && !leave_pets)
                 || (self.recall_is_active() && !cancel_recall))
         {
             return Err(CoreError::WorldMapTransitionUnavailable);
@@ -909,6 +908,16 @@ impl Game {
                 "revealed terrain knowledge is invalid",
             ));
         }
+        if self
+            .summon_command
+            .target_actor_id
+            .as_deref()
+            .is_some_and(|id| !self.pet_target_exists(id))
+        {
+            return Err(CoreError::InvalidSave(
+                "pet target is not a living hostile actor",
+            ));
+        }
         match (self.summon_command.mode, self.summon_command.guard_position) {
             (SummonCommandModeDto::Guard, Some(position))
                 if self.index(position).is_some() && self.is_walkable(position) => {}
@@ -1012,6 +1021,11 @@ impl Game {
             }) {
                 return Err(CoreError::InvalidSave("riding state is invalid"));
             }
+        }
+        if self.riding_actor_id.is_none() && self.summon_command.riding_two_hands {
+            return Err(CoreError::InvalidSave(
+                "unmounted two-handed riding state is invalid",
+            ));
         }
         for (index, entity) in self.entities.iter().enumerate() {
             let is_mount = self.riding_actor_id.as_deref() == Some(entity.id.as_str());
@@ -1298,6 +1312,11 @@ impl Game {
             let mut floor_monster_ids = BTreeSet::new();
             for entity in &floor.entities {
                 self.validate_actor(entity, ActorRole::Monster)?;
+                if let Some(summon) = &entity.summon
+                    && !self.summon_identity_is_valid(entity, summon)
+                {
+                    return Err(CoreError::InvalidSave("stored summon state is invalid"));
+                }
                 let position = entity.position;
                 let passive_terrain = (position.x >= 0
                     && position.y >= 0
@@ -1673,7 +1692,16 @@ impl Game {
         }
         let campaign_victory_reached = self.campaign_victory_reached();
         match self.campaign_definition() {
-            None if self.campaign_state.status != CampaignStatusDto::Active => {
+            None if !matches!(
+                self.campaign_state.status,
+                CampaignStatusDto::Active | CampaignStatusDto::Abandoned
+            ) =>
+            {
+                return Err(CoreError::InvalidSave("campaign state is invalid"));
+            }
+            None if self.campaign_state.status == CampaignStatusDto::Abandoned
+                && self.campaign_state.final_score != Some(0) =>
+            {
                 return Err(CoreError::InvalidSave("campaign state is invalid"));
             }
             None => {}
@@ -1699,6 +1727,16 @@ impl Game {
                         return Err(CoreError::InvalidSave("campaign state is invalid"));
                     }
                 }
+                CampaignStatusDto::Abandoned => {
+                    if campaign_victory_reached
+                        || self.campaign_state.victory_turn.is_some()
+                        || self.campaign_state.retired_turn.is_some()
+                        || self.campaign_state.final_score
+                            != Some(self.campaign_score_at(self.turn))
+                    {
+                        return Err(CoreError::InvalidSave("campaign state is invalid"));
+                    }
+                }
                 CampaignStatusDto::Retired => {
                     let valid_turns = self
                         .campaign_state
@@ -1712,13 +1750,7 @@ impl Game {
                             .retired_turn
                             .is_some_and(|turn| score == self.campaign_score_at(turn))
                     });
-                    if !campaign_victory_reached
-                        || (self.current_floor_id != world.initial_floor_id
-                            && self.current_town().is_none())
-                        || self.current_dungeon_instance_id.is_some()
-                        || !valid_turns
-                        || !valid_score
-                    {
+                    if !campaign_victory_reached || !valid_turns || !valid_score {
                         return Err(CoreError::InvalidSave("campaign state is invalid"));
                     }
                 }
@@ -1912,6 +1944,13 @@ impl Game {
     }
 
     fn validate_actor(&self, actor: &Actor, expected_role: ActorRole) -> Result<(), CoreError> {
+        if actor
+            .custom_name
+            .as_deref()
+            .is_some_and(|name| !Self::pet_name_is_valid(name))
+        {
+            return Err(CoreError::InvalidSave("actor custom name is invalid"));
+        }
         let definition = self
             .content
             .actor(&actor.kind_id)
@@ -2022,10 +2061,7 @@ impl Game {
             || actor.anger > 100
             || (actor.anger > 0
                 && (expected_role != ActorRole::Monster || self.actor_is_player_side(actor)))
-            || (actor.friendly
-                && (expected_role != ActorRole::Monster
-                    || actor.summon.is_none()
-                    || !self.player_has_cult_of_personality()))
+            || (actor.friendly && (expected_role != ActorRole::Monster || actor.summon.is_none()))
             || runtime_definition.monster_casting.as_ref().map_or(
                 actor.casting_cooldown_remaining != 0,
                 |casting| {
@@ -2049,7 +2085,7 @@ impl Game {
         };
         valid_id(&summon.owner_id)
             && valid_id(&summon.source_ability_id)
-            && summon.remaining_turns > 0
+            && self.summon_owner_chain_is_valid(actor)
             && self
                 .content
                 .ability(&summon.source_ability_id)
@@ -2064,6 +2100,11 @@ impl Game {
                     ability
                 })
                 .is_some_and(|ability| {
+                    if summon.remaining_turns == 0 {
+                        return ability.effect.ordered_effects().iter().any(|effect| {
+                            matches!(effect, AbilityEffectDefinition::AnimateDead { actor_kind_id, .. } if actor_kind_id == &actor.kind_id)
+                        });
+                    }
                     if ability
                         .tags
                         .iter()

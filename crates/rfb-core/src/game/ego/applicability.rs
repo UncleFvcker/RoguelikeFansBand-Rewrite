@@ -129,7 +129,7 @@ fn real_warrior_gets_mage_and_dwarf_themed_equipment_then_equips_and_restores() 
         }
         assert_eq!(seen, BTreeSet::from([30, 32, 34, 45]));
         game.refresh_player_resource_maxima();
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for item in &game.items {
             assert_eq!(
                 restored.items.iter().find(|saved| saved.id == item.id),
@@ -195,6 +195,7 @@ fn real_tomte_bad_luck_hat_limits_speed_and_survives_equipping_and_save() {
         "demo.build.warrior",
         "rfb-legacy.race.tomte",
         "Tomte",
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     assert!(game.gain_mutation("rfb.mutation.bad-luck", &mut Vec::new()));
@@ -272,7 +273,7 @@ fn real_tomte_bad_luck_hat_limits_speed_and_survives_equipping_and_save() {
     assert!(game.equip_inventory_item(&id, None).is_some());
     assert!(game.player_derived_stats().speed.value > before_speed);
     game.refresh_player_resource_maxima();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for item in &game.items {
         assert_eq!(
             restored.items.iter().find(|saved| saved.id == item.id),

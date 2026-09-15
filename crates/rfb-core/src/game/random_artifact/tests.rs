@@ -293,7 +293,7 @@ fn random_artifact_factory_covers_slots_and_preserves_item_identity_and_save_int
         assert_eq!(item.quantity, 1);
         assert!(super::super::item_value::obj_value_real(&game.content, &item).is_some());
         game.items.push(item);
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         game.items.clear();
         seen.insert(slot);

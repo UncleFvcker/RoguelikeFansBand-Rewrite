@@ -7,11 +7,11 @@ message-replay-exported = Exported a diagnostic replay without save data or loca
 message-crash-diagnostic-created = Detected an abnormal run and automatically saved the redacted local diagnostic report “{ $file }”. The report is not uploaded automatically.
 message-crash-diagnostic-unavailable = Local crash diagnostics are unavailable (error code: { $code }); the game can continue.
 message-save-loaded = Save validation and loading succeeded.
-message-native-save-created = Created native save “{ $name }”.
+message-native-save-created = Saved “{ $name }”.
 message-native-save-overwritten = Safely overwrote native save “{ $name }”; the previous version was rotated into the backups.
 message-native-save-loaded = Loaded native save “{ $name }”.
 message-native-save-backup-loaded = The primary save was unavailable; loaded “{ $name }” from backup { $backup }.
-message-museum-character-recovered = This save predates a museum transfer. Restored the character's latest post-transfer checkpoint. Save this progress to a regular slot.
+message-museum-character-recovered = This character has a newer local record. Restored the latest progress, including completed museum transfers or the final outcome. Save this progress to a regular slot.
 museum-checkpoint-name = Museum transfer checkpoint: { $name }
 museum-checkpoint-details = Character progress after transfer: turn { $turn }. Load or save to another slot; this checkpoint cannot be overwritten or deleted.
 action-museum-refresh = Refresh collection
@@ -49,6 +49,7 @@ message-terrain-interaction-blocked-actor = A creature is blocking that interact
 message-terrain-interaction-blocked-item = An item is blocking that interaction.
 message-terrain-secret-discovered = You discover a concealed door.
 message-terrain-search-empty = You search the nearby area but find nothing new.
+message-terrain-alter-empty = You attack the empty air.
 message-door-opened = You open the door.
 message-door-unlocked = You unlock the door.
 message-door-unlock-failed = The lock resists your attempt.
@@ -771,3 +772,25 @@ chest-alarm = An alarm sounds!
 chest-scatter = The chest's treasure scatters across the floor!
 chest-summon = You are enveloped in a cloud of smoke!
 asgard-avenger-summoned = Vidarr steps forth to avenge his father!
+
+message-door-spiked = You jam the door with a spike.
+message-door-spike-unavailable = You see nothing there to spike.
+message-door-spike-missing = You have no spikes!
+message-door-spike-monster-blocked = There is a monster in the way!
+item-rings-swapped = You deftly switch your ring fingers.
+item-ring-swap-unavailable = You cannot switch your ring fingers!
+item-ring-swap-cursed = A dark curse prevents you from switching your ring fingers!
+
+pet-command-unavailable = That target is not available for this pet command.
+
+pet-option-changed = Pet settings updated.
+pet-name-changed = Pet named “{ $name }”.
+pet-name-cleared = Pet name cleared.
+pet-name-invalid = Use up to 16 characters, without control characters or leading/trailing whitespace.
+pet-named-dismissed = You dismissed “{ $name }”.
+riding-control-unavailable = You cannot direct your mount without a hand on the reins.
+riding-direction-changed = Your mount changed the direction of your action.
+riding-moved = Your mount moved on its own, carrying you along.
+rest-stop-displaced = position changed
+
+message-campaign-abandoned = You abandon this adventure with a final score of { $score }.

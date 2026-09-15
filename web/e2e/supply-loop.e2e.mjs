@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -95,9 +96,9 @@ async function runSupplyLoop(driver) {
     "title session shell",
     60_000,
   );
+  await setPreferences(driver, { locale: "zh-CN" });
   await driver.execute(`
     localStorage.clear();
-    localStorage.setItem("rfb.locale", "zh-CN");
     setTimeout(() => window.location.reload(), 250);
     return true;
   `);
@@ -323,8 +324,7 @@ async function runSupplyLoop(driver) {
   await click(driver, "#shop-close");
   await walkTo(driver,state=>state.cells.find(cell=>cell.terrainId==="demo.terrain.stairs-down").position);
   const entrance = (await snapshot(driver)).player.position;
-  await driver.execute(`const mode = document.querySelector("#camera-mode"); mode.value = "full-map";
-    mode.dispatchEvent(new Event("change", {bubbles:true})); return true;`);
+  await setPreferences(driver, { cameraMode: "full-map" });
   await driver.waitFor('return document.querySelector("#map-host").dataset.cameraMode === "full-map"',"full-map camera");
   const fullMapCamera = await driver.execute(`
     const host = document.querySelector("#map-host");

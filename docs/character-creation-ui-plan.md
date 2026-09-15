@@ -2,6 +2,33 @@
 
 状态：第一、二步已实施并通过聚焦桌面验收；第三、四步尚未实施。
 
+全局偏好 O1 后续调整已将出生／本局规则的入口归属移交本文。下节是新增的归属规格，尚未实现；不改写上述已有 UI 验收结论，也不表示原版出生模式已全部可用。
+
+## 本局规则的归属
+
+依据用户对 [O1 选项范围](global-preferences-audit.md#移出全局偏好的归属)的调整，出生、挑战、世界／神器生成和神系选择归创建角色，不进入全局偏好。原版来源仍为 `master@a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 的 `src/tables.c::option_info` 与 O1 已记录的消费者。
+
+入口安排：在创角面板的本局规则区域组织已实现的模式与必要选择，概览显示本次有效规则。下表是职责分组，不要求每组成为标签页，也不要求每个原版布尔项成为独立控件。没有实际 Core 消费者的模式不开放空控件；沿用现行规则时无需让玩家再次选择。
+
+| 原版条目 | 接收位置／处理 |
+| --- | --- |
+| `ironman_shops`、`ironman_downward`、`ironman_nightmare`、`thrall_mode`、`melee_challenge`、`no_melee_challenge`、`no_selling`、`comp_mode` | 本局挑战／模式；实现后在创角选择，说明约束及实际成绩影响，互斥关系由 Core 校验 |
+| `no_wilderness`、`ironman_empty_levels`、`wacky_rooms`、`always_small_levels`、`increase_density`、`no_big_dungeons`、`even_proportions` | 本局世界生成；若有可选模式，在创角集中选择，不在游戏途中修改生成条件 |
+| `preserve_mode`、`random_artifacts`、`no_artifacts`、`no_egos`、`reduce_uniques` | 本局物品／唯一怪物生成规则；包括对应百分比参数，优先用明确模式表达，不平铺重复布尔项 |
+| `single_pantheon`、`guaranteed_pantheon` 及数量／编号 | 本局神系；与已有创角／世界资格整合，不保存全局神系覆盖 |
+| `easy_id`、`easy_lore`、`easy_damage`、`power_tele`、`easy_thalos`、`never_forget`、`empty_lore` | 本局简易规则与初始知识策略；须先明确实际规则和成绩约束再开放。`empty_lore` 不授权清空全局馆藏／成绩或其他角色知识 |
+| `smart_learn`、`smart_cheat`、`enable_virtues`、`no_wanted_points`、`allow_friendly_monster`、`allow_hostile_monster`、`allow_pets`、`quest_unique`、`no_chris`、`no_scrambling` | 归当前角色／世界的 Core 规则；默认沿用现行机制，只有确有可选游戏模式才在创角表达。`smart_cheat` 描述怪物 AI，不是玩家作弊开关 |
+| `allow_spoilers`、`allow_debug_opts`、六项 `cheat_*`、`dangerous_attack_no_lore` | 归开发工具／剧透调试能力，不进入普通创角或全局偏好；不借此放宽成绩资格或终态保护 |
+| `view_perma_grids`、`view_torch_grids`、`stack_force_notes`、`stack_force_costs` | 归固定 Core 地图知识／物品规则；不新增创角选项，实际知识和物品结果继续保存在角色中 |
+
+数据与实施边界：
+
+- 可选规则在创建时作为显式输入交给 Rust Game；有效规则成为当前角色／世界事实，与种子一起支撑确定性初始化和回放，创建后冻结。读档不读取本机偏好来覆盖它们。
+- 创角未提交的选择是当前创建会话草案；本次不新增全局“记住上次挑战模式”，不让新全局默认改变已有角色。
+- 成绩记录应依据实际生效规则处理资格；这里没有预先认定每个原版选项的计分后果，后续实现须按源消费者明确。
+- 本节承接归属，O2–O8 不因此承担全量出生规则移植。此前 UI 计划的四步保持原范围；本局规则的新增消费者、协议和界面需在对应实现批次一并完成，不能只增加前端菜单。
+- 本次仅修改规格，未运行编译或测试；全局偏好批次仍按用户要求在 O8 结束后统一验证。
+
 基准：Rewrite `main` 的 `1b4910bcf`。RFB 参考仓库为 `D:/codex/Frogcomposband/master`，通过 `git show master:src/py_birth.c` 读取；本次实际来源提交为 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。实施前重新确认工作树与入口，保留他人修改。
 
 ## 1. 目标与边界

@@ -114,6 +114,7 @@ mod capabilities;
 mod capture_ball;
 mod chaos_patron;
 mod chests;
+mod command_repeat;
 mod damage;
 mod death;
 mod ego;
@@ -142,11 +143,17 @@ mod monster_combat;
 mod monster_ecology;
 mod movement;
 mod museum;
+mod preferences;
 // M2 deliberately establishes this core transaction boundary before any item
 // effect is allowed to call it; Polymorph remains blocked until its own batch.
+mod discovery;
+mod map_intelligence;
 #[allow(dead_code)]
 mod mutations;
 mod persistence;
+mod pet_commands;
+mod pet_spells;
+mod pet_summoning;
 mod pet_upkeep;
 mod player_abilities;
 mod player_combat;
@@ -162,7 +169,10 @@ mod status_effects;
 mod tasks;
 mod terrain;
 pub(crate) mod town;
+mod visual_identity;
 pub use museum::SharedMuseum;
+mod auto_explore;
+mod running;
 mod trait_details;
 mod travel;
 mod turn;
@@ -237,7 +247,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 133;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 146;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -833,6 +843,7 @@ pub struct Game {
     world_travel_destination: Option<Position>,
     interface_locale: LocaleDto,
     travel_options: rfb_protocol::TravelOptionsDto,
+    operation_options: rfb_protocol::OperationOptionsDto,
     mogaminator: MogaminatorState,
     current_floor_id: String,
     current_dungeon_instance_id: Option<String>,
@@ -871,6 +882,7 @@ pub struct Game {
     maia_path: Option<rfb_protocol::MaiaPathDto>,
     gold_piles: Vec<GoldPile>,
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
+    discovery: rfb_protocol::DiscoverySaveDto,
     item_property_knowledge: BTreeMap<String, ItemPropertyKnowledgeState>,
     task_states: BTreeMap<String, TaskState>,
     bounty_state: bounty::BountyState,
@@ -889,6 +901,9 @@ pub struct Game {
     confusing_strike_ready: bool,
     sniper_concentration: u8,
     fishing_direction: Option<Direction>,
+    running: Option<rfb_protocol::RunningStateDto>,
+    auto_explore: Option<rfb_protocol::AutoExploreStateDto>,
+    searching: bool,
     probed_actor_kind_ids: BTreeSet<String>,
     minor_slow: u8,
     minor_slow_energy: u16,
@@ -937,18 +952,40 @@ impl Game {
                 received: envelope.command_seq,
             });
         }
-        if self.campaign_state.status == CampaignStatusDto::Retired {
+        if matches!(
+            self.campaign_state.status,
+            CampaignStatusDto::Retired | CampaignStatusDto::Abandoned
+        ) {
             return Err(CoreError::CampaignEnded);
         }
         if self.player_is_dead() {
             return Err(CoreError::PlayerDead);
         }
 
-        let mut action = GameAction::from(envelope.command);
+        let mut action = self.convenient_walk_action(GameAction::from(envelope.command));
+        if let GameAction::ConfigurePreferences { preferences } = &action {
+            Self::validate_behavior_preferences(preferences)?;
+        }
+        if let GameAction::ConfigureMogaminatorPreferences { preferences } = &action {
+            let mut behavior = self.behavior_preferences();
+            behavior.mogaminator = preferences.clone();
+            Self::validate_behavior_preferences(&behavior)?;
+        }
+        let configuring_preferences = matches!(
+            &action,
+            GameAction::ConfigurePreferences { .. }
+                | GameAction::ConfigureMogaminatorPreferences { .. }
+                | GameAction::ConfigureTravel { .. }
+                | GameAction::ConfigureMogaminator { .. }
+                | GameAction::SetInterfaceLocale { .. }
+        );
+        let repeat_kind = command_repeat::CommandRepeatKind::for_action(&action);
+        let repeat_hp_before = self.player.hp;
         let pending_race_mutation_choice = self.pending_race_mutation_choice();
         let race_mutation_choice_pending = pending_race_mutation_choice.is_some();
         let maia_choice = matches!(action, GameAction::ChooseMaiaPath { .. });
         if self.pending_maia_path_choice()
+            && !configuring_preferences
             && !maia_choice
             && !matches!(action, GameAction::SetInterfaceLocale { .. })
         {
@@ -958,6 +995,7 @@ impl Game {
             return Err(CoreError::MaiaPathChoiceUnavailable);
         }
         if self.pending_realm_change_book().is_some()
+            && !configuring_preferences
             && !maia_choice
             && !matches!(action, GameAction::ResolveRealmChange { .. })
         {
@@ -973,6 +1011,7 @@ impl Game {
             _ => {}
         }
         if self.duelist_prompt().is_some()
+            && !configuring_preferences
             && !(maia_choice
                 || matches!(
                     action,
@@ -987,6 +1026,7 @@ impl Game {
             self.validate_duelist_choice(choice)?;
         }
         if self.pending_mutation_direction.is_some()
+            && !configuring_preferences
             && !(maia_choice
                 || matches!(action, GameAction::ResolveMutationDirection { .. })
                 || (race_mutation_choice_pending
@@ -1000,6 +1040,7 @@ impl Game {
             return Err(CoreError::MutationDirectionUnavailable);
         }
         if self.pending_ability_direction.is_some()
+            && !configuring_preferences
             && !maia_choice
             && !matches!(
                 action,
@@ -1017,6 +1058,7 @@ impl Game {
             return Err(CoreError::AbilityDirectionUnavailable);
         }
         if self.casino.is_some()
+            && !configuring_preferences
             && !maia_choice
             && !matches!(
                 action,
@@ -1025,7 +1067,9 @@ impl Game {
         {
             return Err(CoreError::CasinoInProgress);
         }
-        if race_mutation_choice_pending && !matches!(action, GameAction::ChooseRaceMutation { .. })
+        if race_mutation_choice_pending
+            && !configuring_preferences
+            && !matches!(action, GameAction::ChooseRaceMutation { .. })
         {
             return Err(CoreError::RaceMutationChoiceRequired);
         }
@@ -1049,16 +1093,17 @@ impl Game {
         // Preflight choice commands before any time, cooldown or RNG mutation.
         let magic_absorption_advances_world = self.magic_absorption_action_time(&action)?;
         let absorbed_device_action = matches!(&action, GameAction::UseAbsorbedDevice { .. });
-        let configuring_travel = matches!(&action, GameAction::ConfigureTravel { .. });
-        let reevaluate_all_mogaminator_items = matches!(
+        let run_command = matches!(&action, GameAction::Run { .. } | GameAction::ContinueRun);
+        let cancelling_run = matches!(&action, GameAction::CancelRun);
+        let explore_command = matches!(
             &action,
-            GameAction::ConfigureMogaminator { .. } | GameAction::SetInterfaceLocale { .. }
+            GameAction::AutoExplore | GameAction::ContinueAutoExplore
         );
+        let cancelling_explore = matches!(&action, GameAction::CancelAutoExplore);
         let realm_change_action = matches!(
             &action,
             GameAction::BeginRealmChange { .. } | GameAction::ResolveRealmChange { .. }
         );
-        let configuring_mogaminator = matches!(&action, GameAction::ConfigureMogaminator { .. });
         let item_property_knowledge_before = self
             .mogaminator
             .enabled
@@ -1077,7 +1122,7 @@ impl Game {
         self.validate_runtime_invariants(&action)?;
         if magic_absorption_advances_world != Some(false)
             && !absorbed_device_action
-            && !configuring_travel
+            && !configuring_preferences
         {
             self.refresh_daily_bounty_target();
         }
@@ -1158,6 +1203,61 @@ impl Game {
                 .refuel_light_unavailable_reason(target_item_id, source_item_id)
                 .is_some()
         );
+        let ordinary_travel = matches!(&action, GameAction::TravelLocal { .. });
+        let selecting_unknown_item = matches!(&action, GameAction::FindNearestUnknownItem);
+        let mut unavailable_unknown_item = false;
+        if let GameAction::TravelUnknownItem {
+            object_id,
+            destination,
+        } = &action
+        {
+            if self.unknown_item_travel_target_is_valid(object_id, *destination) {
+                action = GameAction::TravelLocal {
+                    destination: *destination,
+                };
+            } else {
+                unavailable_unknown_item = true;
+                events.push(DomainEvent::UnknownItemTravelUnavailable {
+                    reason: "game-unknown-item-target-lost",
+                });
+            }
+        }
+        let explore_step = self.prepare_auto_explore(&action, &mut events);
+        let unavailable_explore = explore_command && explore_step.is_none();
+        let explore_pickup = matches!(
+            &explore_step,
+            Some(GameAction::PickUp | GameAction::AutoGet { .. })
+        );
+        let explore_ground_units = if explore_pickup {
+            self.auto_explore_ground_units()
+        } else {
+            0
+        };
+        if let Some(step) = explore_step {
+            action = step;
+        }
+        let mut run_direction = self.prepare_run(&action, &mut events);
+        if let Some(direction) = run_direction {
+            if !self.prepare_automatic_step(
+                direction,
+                &mut events,
+                &mut changed,
+                &mut removed_entities,
+            )? {
+                self.running = None;
+                run_direction = None;
+                events.push(DomainEvent::RunStopped {
+                    reason: "game-run-stopped-condition",
+                });
+            }
+        }
+        let unavailable_run = run_command && run_direction.is_none();
+        if let Some(direction) = run_direction {
+            action = GameAction::Move {
+                direction,
+                flip_pickup: false,
+            };
+        }
         let world_travel_direction = match &action {
             GameAction::TravelWorld { destination } => {
                 self.next_world_travel_direction(*destination)
@@ -1169,6 +1269,7 @@ impl Game {
         let local_travel_direction = match &action {
             GameAction::TravelLocal { destination } => self.prepare_local_travel(
                 *destination,
+                ordinary_travel,
                 &mut events,
                 &mut changed,
                 &mut removed_entities,
@@ -1187,18 +1288,32 @@ impl Game {
                     || self.duelist_charge_prompt(ability_id, target).is_some()
         );
         if let Some(direction) = local_travel_direction {
-            action = GameAction::Move { direction };
+            action = GameAction::Move {
+                direction,
+                flip_pickup: false,
+            };
         }
         let auto_get_target = match &action {
             GameAction::AutoGet { object_id } => self.mogaminator_auto_get_position(object_id),
             _ => None,
         };
-        if let Some(direction) = auto_get_target.and_then(|target| {
-            (target != self.player.position)
-                .then(|| self.next_local_travel_direction(target))
-                .flatten()
-        }) {
-            action = GameAction::Move { direction };
+        let auto_get_direction =
+            if let Some(target) = auto_get_target.filter(|p| *p != self.player.position) {
+                self.prepare_local_travel(
+                    target,
+                    false,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?
+            } else {
+                None
+            };
+        if let Some(direction) = auto_get_direction {
+            action = GameAction::Move {
+                direction,
+                flip_pickup: false,
+            };
         }
         let mut advances_world = magic_absorption_advances_world.unwrap_or(true)
             && !depleted_device_use
@@ -1209,10 +1324,17 @@ impl Game {
             && !unavailable_light_refuel
             && !unavailable_world_travel
             && !unavailable_local_travel
+            && !unavailable_run
+            && !cancelling_run
+            && !unavailable_explore
+            && !cancelling_explore
+            && !selecting_unknown_item
+            && !unavailable_unknown_item
             && !zero_time_unavailable_ability
             && !matches!(
                 &action,
                 GameAction::Retire
+                    | GameAction::EndCharacter
                     | GameAction::BeginRealmChange { .. }
                     | GameAction::ResolveRealmChange { .. }
                     | GameAction::ClearDuelistChallenge
@@ -1222,6 +1344,10 @@ impl Game {
                     | GameAction::ClaimTaskReward { .. }
                     | GameAction::DepositAtHome { .. }
                     | GameAction::DismissPets
+                    | GameAction::DismissPet { .. }
+                    | GameAction::SetPetTarget { .. }
+                    | GameAction::SetPetOption { .. }
+                    | GameAction::SetPetName { .. }
                     | GameAction::EnterWorldMap { .. }
                     | GameAction::IdentifyAtFacility { .. }
                     | GameAction::ResearchItemAtFacility { .. }
@@ -1247,13 +1373,17 @@ impl Game {
                     | GameAction::ConfigureMogaminator { .. }
                     | GameAction::AutoGet { .. }
                     | GameAction::PickUp
+                    | GameAction::SwapRings { .. }
                     | GameAction::ResolveMogaminatorQuery { .. }
                     | GameAction::ResolveMutationDirection { .. }
                     | GameAction::CancelAbilityDirection
+                    | GameAction::ToggleSearch
                     | GameAction::CancelFishing
                     | GameAction::InscribeItem { .. }
                     | GameAction::SetInterfaceLocale { .. }
                     | GameAction::ConfigureTravel { .. }
+                    | GameAction::ConfigurePreferences { .. }
+                    | GameAction::ConfigureMogaminatorPreferences { .. }
             );
         // Paralysis wastes any world-advancing action: the substituted idle
         // still spends the turn (energy, monster actions, status ticks) but
@@ -1262,6 +1392,24 @@ impl Game {
         if advances_world && self.player_has_status_kind(STATUS_PARALYSIS) {
             action = GameAction::ParalyzedIdle;
         }
+        if let GameAction::Alter { direction } = &action {
+            action = self.alter_action(*direction, &mut events);
+        }
+        let unavailable_spike = if let GameAction::SpikeDoor { direction } = &action {
+            match self.prepare_spike_action(*direction, &mut events) {
+                Some(prepared) => {
+                    action = prepared;
+                    false
+                }
+                None => {
+                    advances_world = false;
+                    true
+                }
+            }
+        } else {
+            false
+        };
+        let adjacent_attack = matches!(&action, GameAction::AttackAdjacent { .. });
         let projectile_action = matches!(
             &action,
             GameAction::Fire { .. } | GameAction::FireTarget { .. }
@@ -1324,12 +1472,28 @@ impl Game {
             || matches!(&action, GameAction::CastAbility { ability_id, .. }
                 if self.content.ability(ability_id).is_some_and(|ability|
                     matches!(ability.effect, AbilityEffectDefinition::SmashTrap)));
-        let recover_after_wait = matches!(&action, GameAction::Wait);
+        let stay_pickup = matches!(&action, GameAction::Stay);
+        let pickup_by_default = self.travel_options.always_pickup
+            != matches!(
+                &action,
+                GameAction::Move {
+                    flip_pickup: true,
+                    ..
+                }
+            );
+        let recover_after_wait = matches!(&action, GameAction::Wait | GameAction::Stay);
         let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
         let mut turn_advance = u32::from(
             magic_absorption_advances_world != Some(false)
-                && !configuring_travel
-                && !unavailable_local_travel,
+                && !configuring_preferences
+                && !unavailable_local_travel
+                && !unavailable_run
+                && !cancelling_run
+                && !unavailable_explore
+                && !cancelling_explore
+                && !selecting_unknown_item
+                && !unavailable_unknown_item
+                && !unavailable_spike,
         );
         let mut player_moved = false;
         let deferred_item_turn = matches!(
@@ -1362,7 +1526,7 @@ impl Game {
         {
             self.decrement_ability_cooldowns(1);
         }
-        if (advances_world || matches!(&action, GameAction::Rest { turns } if *turns > 0))
+        if (advances_world || matches!(&action, GameAction::Rest { turns, .. } if *turns > 0))
             && !deferred_item_turn
             && !deferred_spell_study
             && !item_projectile_action
@@ -1810,6 +1974,13 @@ impl Game {
                     events.push(DomainEvent::NoItemsDropped);
                 }
             }
+            GameAction::SwapRings {
+                first_slot_id,
+                second_slot_id,
+            } => {
+                turn_advance = 0;
+                self.swap_rings(&first_slot_id, &second_slot_id, &mut events);
+            }
             GameAction::Equip { item_id, slot_id } => {
                 if let Some((target_kind_id, slot_id, severity)) = self
                     .cursed_equipment_replaced_by(&item_id, slot_id.as_deref())
@@ -1963,6 +2134,17 @@ impl Game {
                     events.push(DomainEvent::MoveBlocked);
                 }
             }
+            GameAction::FindNearestUnknownItem => match self.nearest_unknown_item_target() {
+                Ok(target) => events.push(DomainEvent::UnknownItemTravelTarget { target }),
+                Err(reason) => events.push(DomainEvent::UnknownItemTravelUnavailable { reason }),
+            },
+            GameAction::TravelUnknownItem { .. } => {}
+            GameAction::Run { .. }
+            | GameAction::ContinueRun
+            | GameAction::CancelRun
+            | GameAction::AutoExplore
+            | GameAction::ContinueAutoExplore
+            | GameAction::CancelAutoExplore => {}
             GameAction::TravelLocal { .. } => {
                 if !matches!(
                     events.last(),
@@ -2124,6 +2306,10 @@ impl Game {
                     }
                 }
             }
+            GameAction::EndCharacter => {
+                turn_advance = 0;
+                events.push(self.end_character());
+            }
             GameAction::Retire => {
                 if let Some(score) = self.retire_campaign() {
                     events.push(DomainEvent::CampaignRetired { score });
@@ -2131,9 +2317,10 @@ impl Game {
                     events.push(DomainEvent::CampaignRetireUnavailable);
                 }
             }
-            GameAction::Rest { turns } => {
+            GameAction::Rest { turns, mode } => {
                 let resolution = self.resolve_player_rest(
                     turns,
+                    mode,
                     &mut events,
                     &mut changed,
                     &mut removed_entities,
@@ -2147,7 +2334,7 @@ impl Game {
                 } else {
                     self.decrement_ability_cooldowns(resolution.completed_turns);
                 }
-                turn_advance = u32::from(resolution.completed_turns).max(1);
+                turn_advance = u32::from(resolution.completed_turns);
                 if matches!(
                     resolution.stop_reason,
                     RestStopReasonDto::FullResources | RestStopReasonDto::TurnLimit
@@ -2157,7 +2344,13 @@ impl Game {
                     events.push(DomainEvent::RestInterrupted { resolution });
                 }
             }
-            GameAction::Wait => events.push(DomainEvent::Waited),
+            GameAction::Wait | GameAction::Stay => {
+                // cmd2.c do_cmd_stay uses MPE_STAYING | MPE_ENERGY_USE.
+                if self.searching {
+                    self.search_surroundings(&mut events, &mut changed);
+                }
+                events.push(DomainEvent::Waited);
+            }
             GameAction::CancelFishing => {
                 turn_advance = 0;
             }
@@ -2189,29 +2382,7 @@ impl Game {
                 }
             }
             GameAction::PickUp => {
-                let gold_pickup = self.pick_up_gold_at_player(None);
-                if let Some(gold) = gold_pickup {
-                    changed.insert(self.player.position);
-                    events.push(DomainEvent::GoldPickedUp {
-                        amount: gold.gained,
-                        balance: gold.balance,
-                    });
-                }
-                let mut picked_item = false;
-                let resolutions = self.apply_mogaminator_at_player()?;
-                picked_item |=
-                    self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
-                let nothing_to_pick_up = if self.mogaminator.pending_query.is_none() {
-                    let outcome = self.pick_up_at_player()?;
-                    let nothing = matches!(&outcome, PickUpOutcome::Nothing);
-                    picked_item |= self.record_pick_up_outcome(outcome, &mut events, &mut changed);
-                    nothing
-                } else {
-                    false
-                };
-                if nothing_to_pick_up && gold_pickup.is_none() && !picked_item {
-                    events.push(DomainEvent::NothingToPickUp);
-                }
+                self.pick_up_floor(true, true, &mut events, &mut changed)?;
             }
             GameAction::Unequip { slot_id } => {
                 if let Some((target_kind_id, severity)) = self
@@ -2246,7 +2417,7 @@ impl Game {
                     status_kind_id: STATUS_PARALYSIS.to_owned(),
                 });
             }
-            GameAction::Move { direction } => {
+            GameAction::Move { direction, .. } | GameAction::AttackAdjacent { direction } => {
                 if self.map_scale == MapScaleDto::World {
                     if !self.move_on_world_map(direction, &mut changed) {
                         events.push(DomainEvent::MoveBlocked);
@@ -2259,13 +2430,22 @@ impl Game {
                         }
                     }
                 } else {
-                    let step = self.resolve_local_player_step(
-                        direction,
-                        false,
-                        &mut events,
-                        &mut changed,
-                        &mut removed_entities,
-                    )?;
+                    let step = if adjacent_attack {
+                        self.resolve_adjacent_player_attack(
+                            direction,
+                            &mut events,
+                            &mut changed,
+                            &mut removed_entities,
+                        )?
+                    } else {
+                        self.resolve_local_player_step(
+                            direction,
+                            false,
+                            &mut events,
+                            &mut changed,
+                            &mut removed_entities,
+                        )?
+                    };
                     player_moved = step.moved;
                     map_translation = step.map_translation;
                     if let Some(melee) = step.melee {
@@ -2305,16 +2485,21 @@ impl Game {
                 None => events.push(DomainEvent::DoorOpenUnavailable),
             },
             GameAction::Search => {
-                let discovered = self.search_hidden_terrain();
-                let found_chest = self.search_chest_traps(&mut events, &mut changed);
-                if discovered.is_empty() && !found_chest {
+                if !self.search_surroundings(&mut events, &mut changed) {
                     events.push(DomainEvent::SearchFoundNothing);
-                } else {
-                    for position in discovered {
-                        changed.insert(position);
-                        events.push(DomainEvent::SecretTerrainDiscovered { position });
-                    }
                 }
+            }
+            GameAction::Alter { .. } => events.push(DomainEvent::AlterNothing),
+            GameAction::SpikeDoor { direction } => {
+                if !unavailable_spike {
+                    let position = self.spike_door(direction);
+                    changed.insert(position);
+                    events.push(DomainEvent::DoorSpiked { position });
+                }
+            }
+            GameAction::ToggleSearch => {
+                turn_advance = 0;
+                self.searching = !self.searching;
             }
             GameAction::SellToShop {
                 shop_id,
@@ -2341,26 +2526,32 @@ impl Game {
                 }),
             },
             GameAction::SetSummonCommand { mode } => {
-                self.summon_command = SummonCommandDto {
-                    mode,
-                    guard_position: (mode == SummonCommandModeDto::Guard)
-                        .then_some(self.player.position),
-                };
-                let affected_summons = self
-                    .entities
-                    .iter()
-                    .filter(|entity| entity.hp > 0 && self.actor_is_player_aligned(entity))
-                    .count()
-                    .try_into()
-                    .unwrap_or(u16::MAX);
-                events.push(DomainEvent::SummonCommandChanged {
-                    resolution: SummonCommandResolutionDto {
-                        command: self.summon_command.clone(),
-                        affected_summons,
-                    },
-                });
+                turn_advance = 0;
+                self.set_pet_mode(mode, &mut events);
+            }
+            GameAction::SetPetOption { option, enabled } => {
+                turn_advance = 0;
+                self.set_pet_option(option, enabled, &mut events, &mut changed);
+            }
+            GameAction::SetPetTarget { actor_id } => {
+                turn_advance = 0;
+                self.set_pet_target(actor_id, &mut events);
+            }
+            GameAction::SetPetName { actor_id, name } => {
+                turn_advance = 0;
+                self.set_pet_name(&actor_id, name, &mut events);
+            }
+            GameAction::DismissPet { actor_id } => {
+                turn_advance = 0;
+                self.dismiss_selected_pet(
+                    &actor_id,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                );
             }
             GameAction::DismissPets => {
+                turn_advance = 0;
                 let count = self.dismiss_controlled_pets(&mut changed, &mut removed_entities);
                 events.push(DomainEvent::PetsDismissed {
                     count,
@@ -2368,8 +2559,18 @@ impl Game {
                 });
             }
             GameAction::ConfigureTravel { options } => self.travel_options = options,
+            GameAction::ConfigurePreferences { preferences } => {
+                self.apply_behavior_preferences(preferences)?
+            }
+            GameAction::ConfigureMogaminatorPreferences { preferences } => {
+                let mut behavior = self.behavior_preferences();
+                behavior.mogaminator = preferences;
+                self.apply_behavior_preferences(behavior)?;
+            }
             GameAction::SetInterfaceLocale { locale } => {
                 self.interface_locale = locale;
+                self.mogaminator.pending_query = None;
+                self.mogaminator.dismissed_query_item_ids.clear();
             }
             GameAction::DisarmTrap { direction } => match self.disarm_trap(direction) {
                 Some(TrapDisarmOutcome::Succeeded { position }) => {
@@ -2458,8 +2659,14 @@ impl Game {
         // Do not trigger sensing, automatic consumers or visibility RNG while choosing.
         if magic_absorption_advances_world != Some(false)
             && (!absorbed_device_action || advances_world)
-            && !configuring_travel
+            && !configuring_preferences
             && !unavailable_local_travel
+            && !unavailable_run
+            && !cancelling_run
+            && !unavailable_explore
+            && !cancelling_explore
+            && !selecting_unknown_item
+            && !unavailable_unknown_item
         {
             self.process_chaos_patron_level_rewards(
                 &mut events,
@@ -2477,14 +2684,14 @@ impl Game {
             }
 
             self.apply_player_floor_item_knowledge();
-            if automatic_pickup_after_move
+            if (stay_pickup
+                || (automatic_pickup_after_move
+                    && self.player.position != player_position_before_command))
                 && map_scale_before_command == MapScaleDto::Local
                 && self.map_scale == MapScaleDto::Local
-                && self.player.position != player_position_before_command
                 && !self.player_is_dead()
             {
-                let resolutions = self.apply_mogaminator_at_player()?;
-                self.record_mogaminator_resolutions(resolutions, &mut events, &mut changed);
+                self.pick_up_floor(pickup_by_default, false, &mut events, &mut changed)?;
             }
 
             if self.player_has_status_kind(STATUS_UNDERSTANDING)
@@ -2499,20 +2706,16 @@ impl Game {
             // Realm confirmation already alters its selected book with destruction disabled.
             // Do not turn auto-identification into a second, destructive carried-item pass.
             if self.mogaminator.enabled && !realm_change_action {
-                let reevaluate_all = reevaluate_all_mogaminator_items
-                    && (!configuring_mogaminator || mogaminator_diagnostics.is_empty());
                 let item_ids = self
                     .items
                     .iter()
                     .filter(|item| item.location == ItemLocation::Inventory)
                     .filter(|item| {
-                        reevaluate_all
-                            || item_property_knowledge_before
-                                .as_ref()
-                                .is_some_and(|before| {
-                                    before.get(&item.id)
-                                        != self.item_property_knowledge.get(&item.id)
-                                })
+                        item_property_knowledge_before
+                            .as_ref()
+                            .is_some_and(|before| {
+                                before.get(&item.id) != self.item_property_knowledge.get(&item.id)
+                            })
                             || item_knowledge_before.as_ref().is_some_and(|before| {
                                 before.get(&item.kind_id) != self.item_knowledge.get(&item.kind_id)
                             })
@@ -2732,6 +2935,19 @@ impl Game {
             .map(|pile| pile.position)
             .collect::<Vec<_>>();
         self.reveal_current_visibility();
+        self.record_visible_discoveries();
+        if run_command {
+            self.finish_run_step(player_moved, map_translation, &mut events);
+        }
+        if explore_command {
+            self.finish_auto_explore_step(
+                player_moved,
+                map_translation,
+                explore_pickup,
+                explore_ground_units,
+                &mut events,
+            );
+        }
         changed.extend(newly_discovered_gold_positions);
         let current_dimensions = self.projected_dimensions();
         let current_visuals = self.visual_cells();
@@ -2752,7 +2968,38 @@ impl Game {
             current_visuals.clone()
         };
         self.last_visual_cells = Some(current_visuals);
+        // Newly known cells also need their knowledge-gated terrain projection refreshed.
+        if !map_projection_changed && self.map_scale == MapScaleDto::Local {
+            changed.extend(
+                changed_visual_cells
+                    .iter()
+                    .filter(|cell| {
+                        cell.visibility != rfb_protocol::VisibilityState::Hidden
+                            && self.index(cell.position).is_some_and(|index| {
+                                previous_visuals.get(index).is_some_and(|previous| {
+                                    previous.visibility == rfb_protocol::VisibilityState::Hidden
+                                })
+                            })
+                    })
+                    .map(|cell| cell.position),
+            );
+        }
+        if self.current_floor_id != floor_before_command
+            || self.map_scale != map_scale_before_command
+            || self
+                .summon_command
+                .target_actor_id
+                .as_deref()
+                .is_some_and(|id| !self.pet_target_exists(id))
+        {
+            self.summon_command.target_actor_id = None;
+        }
         let events = project_events(events);
+        let command_repeatable = self.current_floor_id == floor_before_command
+            && self.map_scale == map_scale_before_command
+            && self.player.hp >= repeat_hp_before
+            && turn_advance > 0
+            && repeat_kind.can_repeat(self, &events, player_moved);
         let changed_cells = if map_scale_changed || wilderness_local_projection_changed {
             self.projected_cells()
         } else {
@@ -2770,7 +3017,9 @@ impl Game {
         let world_map = self.map_scale == MapScaleDto::World;
 
         Ok(GameUpdate {
+            command_repeatable,
             travel_options: self.travel_options,
+            operation_options: self.operation_options,
             base_revision,
             revision: self.revision,
             turn: self.turn,
@@ -3165,6 +3414,7 @@ impl Game {
                     entity.controller_id = Some(spec.owner_id.to_owned());
                 } else {
                     entity.summon = Some(SummonIdentity {
+                        owner_dependent: false,
                         owner_id: spec.owner_id.to_owned(),
                         source_ability_id: spec.source_id.to_owned(),
                         remaining_turns: spec.duration_turns,
@@ -4037,6 +4287,15 @@ impl Game {
             .actor_runtime_definition(&self.entities[index])
             .is_some_and(|definition| definition.movement.never_moves);
         if self.entity_is_player_aligned(index) {
+            if self.resolve_monster_ability_with_changes(
+                index,
+                events,
+                changed,
+                removed_entities,
+                world_stopped,
+            )? {
+                return Ok(());
+            }
             if !never_moves
                 && self.resolve_original_random_movement(
                     index,
@@ -4242,134 +4501,6 @@ impl Game {
         }
     }
 
-    fn resolve_player_summon_action(
-        &mut self,
-        index: usize,
-        events: &mut Vec<DomainEvent>,
-        changed: &mut BTreeSet<Position>,
-        removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
-        let never_moves = self
-            .actor_runtime_definition(&self.entities[index])
-            .is_some_and(|definition| definition.movement.never_moves);
-        let targets = self.player_summon_hostile_targets(index);
-        let adjacent_target = targets.iter().find(|entity_id| {
-            self.monster_attempts_melee(index)
-                && self
-                    .entities
-                    .iter()
-                    .find(|entity| entity.id == **entity_id)
-                    .is_some_and(|target| adjacent(self.entities[index].position, target.position))
-        });
-        if never_moves {
-            if let Some(target_id) = adjacent_target {
-                self.resolve_player_summon_melee(
-                    index,
-                    target_id,
-                    events,
-                    changed,
-                    removed_entities,
-                )?;
-            }
-            return Ok(());
-        }
-        let owner_position = self.player.position;
-        let next_position = match self.summon_command.mode {
-            SummonCommandModeDto::Follow => {
-                if let Some(target_id) = adjacent_target {
-                    self.resolve_player_summon_melee(
-                        index,
-                        target_id,
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
-                    return Ok(());
-                }
-                if adjacent(self.entities[index].position, owner_position) {
-                    None
-                } else {
-                    self.next_monster_step_toward(index, owner_position, true)
-                }
-            }
-            SummonCommandModeDto::Attack => {
-                let Some(target_id) = targets.first() else {
-                    if adjacent(self.entities[index].position, owner_position) {
-                        return Ok(());
-                    }
-                    if let Some(next_position) =
-                        self.next_monster_step_toward(index, owner_position, true)
-                    {
-                        self.move_entity(index, next_position, events, changed, removed_entities)?;
-                    }
-                    return Ok(());
-                };
-                let target_position = self
-                    .entities
-                    .iter()
-                    .find(|entity| entity.id == *target_id)
-                    .expect("collected summon target must remain available")
-                    .position;
-                if self.monster_attempts_melee(index)
-                    && adjacent(self.entities[index].position, target_position)
-                {
-                    self.resolve_player_summon_melee(
-                        index,
-                        target_id,
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
-                    return Ok(());
-                }
-                self.next_monster_step_toward(index, target_position, true)
-            }
-            SummonCommandModeDto::KeepDistance => {
-                let distance = chebyshev_distance(self.entities[index].position, owner_position);
-                if distance < 3 {
-                    self.next_player_summon_step_away_from_owner(index)
-                } else if distance > 3 {
-                    self.next_monster_step_toward(index, owner_position, true)
-                } else if let Some(target_id) = adjacent_target {
-                    self.resolve_player_summon_melee(
-                        index,
-                        target_id,
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
-                    return Ok(());
-                } else {
-                    None
-                }
-            }
-            SummonCommandModeDto::Guard => {
-                if let Some(target_id) = adjacent_target {
-                    self.resolve_player_summon_melee(
-                        index,
-                        target_id,
-                        events,
-                        changed,
-                        removed_entities,
-                    )?;
-                    return Ok(());
-                }
-                let guard_position = self.summon_command.guard_position.unwrap_or(owner_position);
-                if self.entities[index].position == guard_position
-                    || adjacent(self.entities[index].position, guard_position)
-                {
-                    None
-                } else {
-                    self.next_monster_step_toward(index, guard_position, true)
-                }
-            }
-        };
-        if let Some(next_position) = next_position {
-            self.move_entity(index, next_position, events, changed, removed_entities)?;
-        }
-        Ok(())
-    }
-
     fn move_entity(
         &mut self,
         index: usize,
@@ -4380,6 +4511,15 @@ impl Game {
     ) -> Result<ActorStepOutcome, CoreError> {
         let old_position = self.entities[index].position;
         let moving_entity_id = self.entities[index].id.clone();
+        if self.riding_actor_id.as_deref() == Some(moving_entity_id.as_str())
+            && !self.riding_without_reins()
+            && !self.entities[index]
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_FEAR)
+        {
+            return Ok(ActorStepOutcome::Blocked);
+        }
         if let Some(target_index) = self
             .entities
             .iter()
@@ -4431,7 +4571,18 @@ impl Game {
         self.entities[index].position = next_position;
         changed.insert(old_position);
         changed.insert(next_position);
-        if !self.trigger_actor_trap(index, next_position, events, changed, removed_entities)? {
+        if self.riding_actor_id.as_deref() == Some(moving_entity_id.as_str()) {
+            // Mounted movement uses the player's entry effects exactly once;
+            // relocate_player also keeps the rider and mount on the same cell.
+            events.push(DomainEvent::RidingMoved);
+            events.extend(self.relocate_player(next_position, changed));
+        } else if !self.trigger_actor_trap(
+            index,
+            next_position,
+            events,
+            changed,
+            removed_entities,
+        )? {
             return Ok(ActorStepOutcome::Removed);
         }
         let Some(index) = self
@@ -4495,7 +4646,7 @@ impl Game {
                 .iter()
                 .position(|entity| entity.id == mount_id && entity.hp > 0)
             else {
-                self.riding_actor_id = None;
+                self.clear_riding_state();
                 self.clear_riding_bond_for(&mount_id);
                 events.push(DomainEvent::RidingUnavailable);
                 return;
@@ -4510,7 +4661,7 @@ impl Game {
                 return;
             }
             let target_kind_id = self.entities[mount_index].kind_id.clone();
-            self.riding_actor_id = None;
+            self.clear_riding_state();
             events.extend(self.relocate_player(target, changed));
             events.push(DomainEvent::RidingDismounted { target_kind_id });
             return;

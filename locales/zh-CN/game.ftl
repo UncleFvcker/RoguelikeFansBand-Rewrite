@@ -7,11 +7,11 @@ message-replay-exported = 已导出不包含存档和本地路径的诊断回放
 message-crash-diagnostic-created = 检测到异常运行，已在本机自动保存脱敏诊断报告“{ $file }”；报告不会自动上传。
 message-crash-diagnostic-unavailable = 本地崩溃诊断暂时不可用（错误代码：{ $code }）；游戏仍可继续。
 message-save-loaded = 存档校验与载入成功。
-message-native-save-created = 已创建原生存档“{ $name }”。
+message-native-save-created = 已保存“{ $name }”。
 message-native-save-overwritten = 已安全覆盖原生存档“{ $name }”，旧版本已轮换到备份。
 message-native-save-loaded = 已载入原生存档“{ $name }”。
 message-native-save-backup-loaded = 主存档不可用，已从第 { $backup } 份备份载入“{ $name }”。
-message-museum-character-recovered = 此存档早于一次馆藏转移，已恢复到该角色最近一次馆藏转移后的检查点。请另存当前进度。
+message-museum-character-recovered = 此角色已有较新的本机记录，已恢复最新进度，包括已完成的馆藏转移或最终结局。请另存当前进度。
 museum-checkpoint-name = 馆藏转移检查点：{ $name }
 museum-checkpoint-details = 转移后的角色进度：第 { $turn } 回合。可读取或另存，不能覆盖或删除此检查点。
 action-museum-refresh = 刷新馆藏
@@ -49,6 +49,7 @@ message-terrain-interaction-blocked-actor = 有生物阻挡了该交互。
 message-terrain-interaction-blocked-item = 有物品阻挡了该交互。
 message-terrain-secret-discovered = 你发现了一扇隐藏的门。
 message-terrain-search-empty = 你搜索了附近，但没有发现新东西。
+message-terrain-alter-empty = 你攻击了空气。
 message-door-opened = 你打开了门。
 message-door-unlocked = 你打开了门锁。
 message-door-unlock-failed = 门锁抵住了这次尝试。
@@ -756,3 +757,25 @@ chest-alarm = 警报响了！
 chest-scatter = 箱中的财宝散落到了四处！
 chest-summon = 你被一团烟雾吞没了！
 asgard-avenger-summoned = 维达尔站了出来，为他的父亲复仇！
+
+message-door-spiked = 你用铁蒺藜卡住了门。
+message-door-spike-unavailable = 你没看到那里有什么可以钉住的。
+message-door-spike-missing = 你没有铁蒺藜。
+message-door-spike-monster-blocked = 有怪物挡在路上！
+item-rings-swapped = 你敏捷地切换了戴戒指的手指。
+item-ring-swap-unavailable = 你无法切换戴戒指的手指！
+item-ring-swap-cursed = 一个黑暗的诅咒阻止了你切换戴戒指的手指！
+
+pet-command-unavailable = 无法对该目标执行宠物指令。
+
+pet-option-changed = 宠物设置已更新。
+pet-name-changed = 宠物已命名为「{ $name }」。
+pet-name-cleared = 宠物名称已清除。
+pet-name-invalid = 名称最多 16 个字符，不能包含控制字符或首尾空白。
+pet-named-dismissed = 你解散了「{ $name }」。
+riding-control-unavailable = 你没有用手控骑，无法指挥坐骑移动。
+riding-direction-changed = 坐骑改变了你的行动方向。
+riding-moved = 坐骑带着你自行移动。
+rest-stop-displaced = 位置发生变化
+
+message-campaign-abandoned = 你放弃了冒险，最终评分为 { $score }。

@@ -64,7 +64,6 @@ fn dark_cave_disaster_area_real_entries_all_depths_rewards_and_return() {
             dispatch_next(
                 &mut game,
                 GameCommand::EnterWorldMap {
-                    leave_pets: false,
                     cancel_recall: false,
                 },
             );
@@ -93,7 +92,6 @@ fn dark_cave_disaster_area_real_entries_all_depths_rewards_and_return() {
             dispatch_next(
                 &mut game,
                 GameCommand::EnterWorldMap {
-                    leave_pets: false,
                     cancel_recall: false,
                 },
             );
@@ -190,7 +188,12 @@ fn dark_cave_disaster_area_real_entries_all_depths_rewards_and_return() {
             reward.location = ItemLocation::Inventory;
             clear_monsters(&mut game);
             let hash = game.state_hash();
-            game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+            game = Game::from_save_with_content(
+                game.to_save(),
+                game.content.clone(),
+                game.behavior_preferences(),
+            )
+            .unwrap();
             assert_eq!(game.state_hash(), hash);
             // The terminal one-level stair joins parity branches. Ascending the
             // odd branch reaches every remaining floor and its near-root exit.
@@ -237,8 +240,20 @@ fn dark_cave_disaster_area_real_entries_all_depths_rewards_and_return() {
                 .unwrap();
             recall.dungeon_id = suppressed;
             recall.floor_id = suppressed_floor;
-            assert!(Game::from_save_with_content(invalid, game.content.clone()).is_err());
-            game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+            assert!(
+                Game::from_save_with_content(
+                    invalid,
+                    game.content.clone(),
+                    Game::default_behavior_preferences()
+                )
+                .is_err()
+            );
+            game = Game::from_save_with_content(
+                game.to_save(),
+                game.content.clone(),
+                game.behavior_preferences(),
+            )
+            .unwrap();
             game.start_recall(0);
             dispatch_next(&mut game, GameCommand::Wait);
             assert_eq!(game.current_floor_id, floor_id(bottom));
@@ -783,7 +798,12 @@ fn dark_cave_disaster_area_fixed_bosses_grant_fourth_book_once_across_restore() 
                 .location = ItemLocation::Inventory;
             clear_monsters(&mut game);
             let expected_hash = game.state_hash();
-            game = Game::from_save_with_content(game.to_save(), content.clone()).unwrap();
+            game = Game::from_save_with_content(
+                game.to_save(),
+                content.clone(),
+                Game::default_behavior_preferences(),
+            )
+            .unwrap();
             assert_eq!(game.state_hash(), expected_hash);
             let fame = game.fame;
             game.transition_floor("demo.floor.warrens-depth-8".to_owned(), None, None, false)
@@ -874,7 +894,6 @@ fn dark_cave_disaster_area_entrance_guardians_use_fixed_surface_instances() {
         dispatch_next(
             &mut game,
             GameCommand::EnterWorldMap {
-                leave_pets: false,
                 cancel_recall: false,
             },
         );
@@ -894,12 +913,16 @@ fn dark_cave_disaster_area_entrance_guardians_use_fixed_surface_instances() {
             MonsterPackBehaviorDto::GuardPosition
         );
         let hash = game.state_hash();
-        game = Game::from_save_with_content(game.to_save(), content.clone()).unwrap();
+        game = Game::from_save_with_content(
+            game.to_save(),
+            content.clone(),
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(game.state_hash(), hash);
         dispatch_next(
             &mut game,
             GameCommand::EnterWorldMap {
-                leave_pets: false,
                 cancel_recall: false,
             },
         );

@@ -58,6 +58,9 @@ type Feedback =
   | { readonly source: "event"; readonly event: GameEventDto; readonly kind: string };
 
 interface ShopSelection {
+  readonly visual: ShopStockItemDto["visual"];
+  readonly discountPercent: number;
+  readonly originKind: ShopStockItemDto["originKind"];
   readonly affixNameKeys?: ShopStockItemDto["affixNameKeys"];
   readonly quality?: ShopStockItemDto["quality"];
   readonly enchantments?: ShopStockItemDto["enchantments"];
@@ -483,7 +486,10 @@ export class ShopPanel {
           { quantity: selection.quantity },
         ),
       );
-      button.append(name, details, price, quantity);
+      const glyph = this.#span("inventory-item-glyph", "");
+      glyph.hidden = !this.#state.display.showItemIcons; glyph.setAttribute("aria-hidden", "true");
+      this.#state.paintVisual(glyph, selection.visual.id, selection.visual.glyph);
+      button.append(glyph, name, details, price, quantity);
       if (selection.unavailableReason) {
         const reason = this.#span(
           "shop-item-unavailable",
@@ -573,6 +579,9 @@ export class ShopPanel {
     if (!shop) return [];
     if (this.#mode === "buy") {
       return shop.stock.map((item) => ({
+        visual: item.visual,
+        discountPercent: item.discountPercent,
+        originKind: item.originKind,
         affixNameKeys: item.affixNameKeys,
         quality: item.quality,
         enchantments: item.enchantments,
@@ -602,11 +611,10 @@ export class ShopPanel {
   }
 
   #itemDetails(selection: ShopSelection): string {
-    const details = [
-      this.#localization.format("shop-item-weight", {
-        weight: formatTenthsPound(selection.weightTenthsPound),
-      }),
-    ];
+    const details: string[] = [];
+    if (this.#state.display.showWeights) details.push(this.#localization.format("shop-item-weight", { weight: formatTenthsPound(selection.weightTenthsPound) }));
+    if (this.#state.display.showDiscounts && selection.discountPercent > 0) details.push(this.#localization.format("display-item-discount", { percent: selection.discountPercent }));
+    if (this.#state.display.showOrigins) details.push(this.#localization.format("display-item-origin", { origin: this.#localization.format("item-origin-" + (selection.originKind ?? "unknown")) }));
     for (const key of selection.affixNameKeys ?? []) {
       details.push(this.#localization.format(key as MessageKey));
     }
@@ -639,7 +647,7 @@ export class ShopPanel {
     if (selection.capturedActor) {
       details.push(
         this.#localization.format("capture-ball-contained", {
-          actor: this.#localization.format(selection.capturedActor.nameKey as MessageKey),
+          actor: selection.capturedActor.customName ?? this.#localization.format(selection.capturedActor.nameKey as MessageKey),
           hp: selection.capturedActor.hp,
           maximum: selection.capturedActor.maxHp,
           experience: selection.capturedActor.experience,
@@ -654,7 +662,7 @@ export class ShopPanel {
     return selection.capturedActor
       ? this.#localization.format("capture-ball-name-contained", {
           ball,
-          actor: this.#localization.format(selection.capturedActor.nameKey as MessageKey),
+          actor: selection.capturedActor.customName ?? this.#localization.format(selection.capturedActor.nameKey as MessageKey),
         })
       : ball;
   }
@@ -749,6 +757,9 @@ export function equippedLightText(
 
 function sellSelection(item: InventoryItemDto, quote: ShopSellQuoteDto): ShopSelection {
   return {
+    visual: item.visual,
+    discountPercent: item.discountPercent,
+    originKind: item.originKind,
     id: item.id,
     kindId: item.kindId,
     displayNameKey: item.displayNameKey,

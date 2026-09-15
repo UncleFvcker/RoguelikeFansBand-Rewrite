@@ -35,7 +35,7 @@ fn i6_pickup_blends_metadata_through_partial_stacks_split_destroy_and_save() {
         Some(ItemOriginKindDto::PlayerMade)
     );
 
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     for current in [&mut game, &mut restored] {
         current
@@ -58,9 +58,9 @@ fn i6_pickup_blends_metadata_through_partial_stacks_split_destroy_and_save() {
     assert_eq!(game.items[0].quantity, maximum - 1);
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
     game.items[0].discount_percent = 50;
-    assert!(Game::from_save(game.to_save()).is_err());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_err());
 }
 
 #[test]
@@ -124,7 +124,7 @@ fn i6_generated_piles_merge_metadata_without_allocating_another_id() {
     assert_eq!(game.items[0].discount_percent, 99);
     assert_eq!(game.items[0].inscription.as_deref(), Some("keep"));
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     for current in [&mut game, &mut restored] {
         current
@@ -141,6 +141,7 @@ fn tomte_sensing_game(level: u16) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.high-elf",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     clear_monsters(&mut game);
@@ -456,7 +457,8 @@ fn tomte_sensing_precedes_mogaminator_pickup_and_preserves_stack_knowledge() {
         game.item_property_knowledge["ego-arrows"]
     );
     let save = game.to_save();
-    let mut restored = Game::from_save(save.clone()).expect("sensed split stacks should restore");
+    let mut restored = Game::from_save(save.clone(), game.behavior_preferences())
+        .expect("sensed split stacks should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.snapshot(), game.snapshot());
     game.pick_up_item_at_player(Some(&split)).unwrap();
@@ -489,7 +491,7 @@ fn tomte_sensing_precedes_mogaminator_pickup_and_preserves_stack_knowledge() {
         .unwrap();
     knowledge.identified = true;
     knowledge.known_affix_ids = vec!["demo.affix.frost-hunter".to_owned()];
-    assert!(Game::from_save(invalid).is_err());
+    assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
 }
 
 #[test]

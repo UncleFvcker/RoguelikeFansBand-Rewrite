@@ -77,8 +77,12 @@ fn c2_gae_bulg_ball_uses_los_falloff_and_saved_glow_except_in_darkness() {
             .unwrap();
         game.rng = RfbRng::seeded(seed);
         game.reveal_current_visibility();
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         let activate = |g: &mut Game| {
             let mut events = Vec::new();
             g.use_inventory_item(
@@ -117,7 +121,12 @@ fn c2_gae_bulg_ball_uses_los_falloff_and_saved_glow_except_in_darkness() {
         }
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
-        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.glow, game.glow);
     }
 }
@@ -177,7 +186,12 @@ fn dark_cave_generated_glow_light_cap_and_return_survive_save() {
     let position = game.player.position;
     assert!(!game.set_floor_glow_at(position, true));
     let hash = game.state_hash();
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), hash);
     assert_eq!(restored.player_light_radius(), Some(1));
     assert!(restored.glow.iter().all(|glow| !glow));
@@ -532,6 +546,7 @@ fn intrinsic_see_invisible_game(seed: u64) -> Game {
         RFB_WARRIOR_BUILD_ID,
         "rfb-legacy.race.high-elf",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal High-Elf game should create")
 }
@@ -793,7 +808,8 @@ fn equipped_light_spends_one_fuel_per_ten_ticks_and_reports_extinction() {
     assert!(update.events.iter().any(|event| {
         event.kind == "light.extinguished" && event.args["targetItem"] == "test.torch"
     }));
-    let restored = Game::from_save(game.to_save()).expect("spent light fuel should reload");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("spent light fuel should reload");
     assert_eq!(fuel(&restored, "test.torch").current, 0);
     assert_eq!(restored.to_save(), game.to_save());
     assert_eq!(restored.state_hash(), game.state_hash());
@@ -846,9 +862,17 @@ fn nightcap_reduces_carried_light_preserves_glow_and_senses_only_undead_after_sa
     );
     assert!(game.entity_is_visible_by_telepathy(&game.entities[0]));
     assert!(game.entity_is_fuzzy_to_player(&game.entities[0]));
+    game.entities[0].custom_name = Some("旧宠物".into());
+    let projected = game.entities_dto();
+    let fuzzy = projected
+        .iter()
+        .find(|actor| actor.id == "test.undead")
+        .unwrap();
+    assert!(fuzzy.custom_name.is_none());
+    assert!(!fuzzy.highlight_map && !fuzzy.highlight_list);
     assert!(!game.entity_is_visible_to_player(&game.entities[1]));
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.player_light_radius(), Some(1));
     assert!(
@@ -1056,7 +1080,8 @@ fn invisible_actors_are_hidden_until_detected_and_detection_round_trips() {
         cell.position == target && cell.actor_id.as_deref() == Some("test.invisible")
     }));
 
-    let restored = Game::from_save(game.to_save()).expect("invisible detection should reload");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("invisible detection should reload");
     assert!(restored.entities[0].visible_invisible);
     assert!(
         restored
@@ -1170,7 +1195,8 @@ fn room_glow_darkening_persists_in_stored_floor_save_and_state_hash() {
         .expect("deeper descent should transition");
     assert_eq!(stored_floor(&game, &floor_id).glow, glow_after);
 
-    let restored = Game::from_save(game.to_save()).expect("room glow should reload");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("room glow should reload");
     assert_eq!(stored_floor(&restored, &floor_id).glow, glow_after);
     assert_eq!(restored.state_hash(), game.state_hash());
 }
@@ -1207,7 +1233,8 @@ fn warrens_light_attempts_are_seeded_walkable_weighted_and_persistent() {
             saw_oil |= supply.kind_id == OIL_KIND_ID;
             saw_lantern |= supply.kind_id == LANTERN_KIND_ID;
         }
-        let restored = Game::from_save(left.to_save()).expect("generated light should reload");
+        let restored = Game::from_save(left.to_save(), left.behavior_preferences())
+            .expect("generated light should reload");
         assert_eq!(restored.state_hash(), left.state_hash());
     }
     assert!(saw_miss && saw_oil && saw_lantern);

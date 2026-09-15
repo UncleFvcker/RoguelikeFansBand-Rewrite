@@ -77,10 +77,42 @@ impl Game {
         let target = self.position_in_direction(direction);
         if !self.player_can_enter_position(target) {
             events.push(DomainEvent::MoveBlocked);
-        } else if let Some(index) = self
+        } else if self.entities.iter().any(|entity| entity.position == target) {
+            return self.resolve_adjacent_player_attack(
+                direction,
+                events,
+                changed,
+                removed_entities,
+            );
+        } else if self.riding_without_reins() {
+            events.push(DomainEvent::RidingControlUnavailable);
+        } else if !smash_trap && self.warn_player_of_hidden_trap(target, events, changed) {
+            // The ordinary step stops at a warning; smashing deliberately triggers the trap.
+        } else {
+            return self.enter_player_position(
+                target,
+                smash_trap,
+                true,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
+        Ok(PlayerStepOutcome::default())
+    }
+
+    pub(super) fn resolve_adjacent_player_attack(
+        &mut self,
+        direction: Direction,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<PlayerStepOutcome, CoreError> {
+        let target = self.position_in_direction(direction);
+        if let Some(index) = self
             .entities
             .iter()
-            .position(|entity| entity.position == target)
+            .position(|actor| actor.position == target)
         {
             changed.insert(target);
             if self.actor_is_player_side(&self.entities[index]) && !self.player_is_berserker() {
@@ -101,16 +133,6 @@ impl Game {
                     ..Default::default()
                 });
             }
-        } else if !smash_trap && self.warn_player_of_hidden_trap(target, events, changed) {
-            // The ordinary step stops at a warning; smashing deliberately triggers the trap.
-        } else {
-            return self.enter_player_position(
-                target,
-                smash_trap,
-                events,
-                changed,
-                removed_entities,
-            );
         }
         Ok(PlayerStepOutcome::default())
     }
@@ -119,6 +141,7 @@ impl Game {
         &mut self,
         target: Position,
         smash_trap: bool,
+        search_on_entry: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -161,6 +184,14 @@ impl Game {
         }
         if let Some(translation) = translation {
             self.populate_scrolled_wilderness(translation);
+        }
+        if search_on_entry
+            && self.searching
+            && !self.player_is_dead()
+            && self.current_floor_id == floor_id
+            && self.player.position == target
+        {
+            self.search_surroundings(events, changed);
         }
         Ok(PlayerStepOutcome {
             moved: true,
@@ -309,9 +340,11 @@ pub(super) fn actor_avoids_terrain_trap(
 fn actor_can_interact_with_terrain(
     actor: &rfb_content::ActorDefinition,
     terrain: &rfb_content::TerrainDefinition,
+    doors_allowed: bool,
 ) -> bool {
     terrain.tags.iter().any(|tag| tag == "warding-glyph")
-        || (terrain.monster_door_power.is_some()
+        || (doors_allowed
+            && terrain.monster_door_power.is_some()
             && ((actor.door_interaction.opens && terrain.open_to_terrain_id.is_some())
                 || (actor.door_interaction.bashes && terrain.bash_to_terrain_id.is_some())))
         || (actor.terrain_interaction.destroys_walls
@@ -438,7 +471,9 @@ impl Game {
         let Some(actor_definition) = self.actor_runtime_definition(&actor).cloned() else {
             return;
         };
-        if !actor_definition.terrain_interaction.picks_up_items {
+        if !actor_definition.terrain_interaction.picks_up_items
+            || (self.actor_is_player_aligned(&actor) && !self.summon_command.pickup_items)
+        {
             return;
         }
         let mut picked_up = self
@@ -484,7 +519,10 @@ impl Game {
         let Some(actor_definition) = self.actor_runtime_definition(&actor).cloned() else {
             return;
         };
-        if !actor_definition.terrain_interaction.destroys_items {
+        // melee2.c: pets only take items; they never use KILL_ITEM.
+        if self.actor_is_player_aligned(&actor)
+            || !actor_definition.terrain_interaction.destroys_items
+        {
             return;
         }
         if actor_definition.terrain_interaction.picks_up_items {
@@ -649,7 +687,11 @@ impl Game {
             .terrain(&self.terrain[terrain_index])
             .is_some_and(|terrain| {
                 actor_can_cross_terrain(actor, terrain)
-                    || actor_can_interact_with_terrain(actor, terrain)
+                    || actor_can_interact_with_terrain(
+                        actor,
+                        terrain,
+                        self.pet_door_interaction_allowed(index),
+                    )
             })
     }
 
@@ -1180,7 +1222,7 @@ impl Game {
             Direction::NorthWest,
         ];
         if !self.player_has_status_kind(STATUS_CONFUSION) {
-            return intended;
+            return self.riding_direction(intended, events);
         }
         if self.rng.bounded(4) == 0 {
             return intended;

@@ -157,8 +157,12 @@ fn five_native_targets_survive_act_use_resources_and_continue_saved_state() {
         );
         assert_eq!(game.player.position, EAST, "{race}");
         assert!(game.player.hp > 0, "{race}");
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.build.as_ref().unwrap().race_id, race);
         assert_eq!(restored.snapshot(), game.snapshot());
         assert_eq!(
@@ -187,7 +191,14 @@ fn vampire_birth_preserves_fourteen_class_kits_and_grants_only_usable_racial_sup
         "demo.build.cavalry",
         "demo.build.mindcrafter",
     ] {
-        let game = Game::new_with_build_race_and_name(83, build_id, VAMPIRE, "test").unwrap();
+        let game = Game::new_with_build_race_and_name(
+            83,
+            build_id,
+            VAMPIRE,
+            "test",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(game.world_tick, wilderness::WILDERNESS_NIGHT_START_TICK);
         assert!(!game.wilderness_is_daytime());
         assert!(
@@ -245,7 +256,12 @@ fn vampire_birth_preserves_fourteen_class_kits_and_grants_only_usable_racial_sup
             .unwrap();
         assert_eq!(bite.minimum_level, 2);
         assert!(!bite.can_cast);
-        let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.snapshot(), game.snapshot());
         assert_eq!(restored.state_hash(), game.state_hash());
     }
@@ -253,8 +269,14 @@ fn vampire_birth_preserves_fourteen_class_kits_and_grants_only_usable_racial_sup
 
 #[test]
 fn vampire_birth_scroll_can_create_daylight_shelter_and_continue_after_save() {
-    let mut game =
-        Game::new_with_build_race_and_name(83, "demo.build.warrior", VAMPIRE, "test").unwrap();
+    let mut game = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        VAMPIRE,
+        "test",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     clear_monsters(&mut game);
     game.player.position = START;
     replace_terrain(&mut game, START, "demo.terrain.floor");
@@ -286,7 +308,12 @@ fn vampire_birth_scroll_can_create_daylight_shelter_and_continue_after_save() {
     );
     assert!(game.daylight_suppressed[game.index(START).unwrap()]);
     assert!(!game.process_vampire_light_damage(&mut Vec::new()));
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(
         dispatch_next(&mut restored, GameCommand::Wait),
         dispatch_next(&mut game, GameCommand::Wait)
@@ -301,8 +328,14 @@ fn native_vampire_bite_spends_hp_without_sp_on_success_and_failure_after_save() 
         "demo.build.berserker",
         "demo.build.magic-eater",
     ] {
-        let mut template =
-            Game::new_with_build_race_and_name(83, build_id, VAMPIRE, "test").unwrap();
+        let mut template = Game::new_with_build_race_and_name(
+            83,
+            build_id,
+            VAMPIRE,
+            "test",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         clear_monsters(&mut template);
         template.player.position = START;
         replace_terrain(&mut template, START, "demo.terrain.floor");
@@ -333,8 +366,12 @@ fn native_vampire_bite_spends_hp_without_sp_on_success_and_failure_after_save() 
                 })
                 .expect("both native bite outcomes must be reachable");
             game.rng = RfbRng::seeded(seed);
-            let mut restored =
-                Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+            let mut restored = Game::from_save_with_content(
+                game.to_save(),
+                game.content.clone(),
+                game.behavior_preferences(),
+            )
+            .unwrap();
             let cast = |current: &mut Game| {
                 let mut events = Vec::new();
                 current
@@ -461,8 +498,12 @@ fn vampire_daytime_wait_burns_and_blocks_hp_recovery_while_shadow_allows_it() {
     exposed.apply_player_experience(exposed.experience_required_for_level(50), &mut Vec::new());
     exposed.player.hp = 20;
     exposed.world_tick = 19;
-    let mut sheltered =
-        Game::from_save_with_content(exposed.to_save(), exposed.content.clone()).unwrap();
+    let mut sheltered = Game::from_save_with_content(
+        exposed.to_save(),
+        exposed.content.clone(),
+        exposed.behavior_preferences(),
+    )
+    .unwrap();
     sheltered.set_floor_glow_at(START, false);
     let result = dispatch_next(&mut exposed, GameCommand::Wait);
     dispatch_next(&mut sheltered, GameCommand::Wait);
@@ -490,7 +531,12 @@ fn vampire_darkness_scroll_shelter_persists_until_relit_or_dawn() {
     assert_eq!(game.ambient_light(START, &game.collect_light_sources()), 0);
     assert!(!game.process_vampire_light_damage(&mut Vec::new()));
     assert_ne!(game.state_hash(), before);
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         dispatch_next(&mut restored, GameCommand::Wait),
@@ -505,7 +551,14 @@ fn vampire_darkness_scroll_shelter_persists_until_relit_or_dawn() {
     assert!(game.process_vampire_light_damage(&mut Vec::new()));
     let mut save = game.to_save();
     save.terrain.daylight_suppressed.pop();
-    assert!(Game::from_save_with_content(save, game.content.clone()).is_err());
+    assert!(
+        Game::from_save_with_content(
+            save,
+            game.content.clone(),
+            Game::default_behavior_preferences()
+        )
+        .is_err()
+    );
 }
 
 #[test]

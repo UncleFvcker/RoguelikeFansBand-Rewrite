@@ -182,6 +182,7 @@ pub(super) fn golem_game(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.golem",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Golem should create")
 }
@@ -192,6 +193,7 @@ pub(super) fn zombie_game(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.zombie",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Zombie should create")
 }
@@ -202,6 +204,7 @@ pub(super) fn skeleton_game(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.skeleton",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Skeleton should create")
 }
@@ -212,6 +215,7 @@ pub(super) fn wood_elf_game(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.wood-elf",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Wood-Elf should create")
 }
@@ -222,6 +226,7 @@ pub(super) fn sprite_game(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.sprite",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Sprite should create")
 }
@@ -232,6 +237,7 @@ pub(super) fn snotling_game(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.snotling",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Snotling should create")
 }
@@ -242,6 +248,7 @@ pub(super) fn boit_game(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.boit",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Boit should create")
 }
@@ -252,6 +259,7 @@ pub(super) fn einheri_game(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.einheri",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Einheri should create")
 }
@@ -262,6 +270,7 @@ pub(super) fn kutar_game(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.kutar",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Kutar should create")
 }
@@ -272,6 +281,7 @@ pub(super) fn amberite_game(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.amberite",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Amberite should create")
 }
@@ -282,6 +292,7 @@ pub(super) fn beastman_game(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.beastman",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Beastman should create")
 }
@@ -292,6 +303,7 @@ pub(super) fn ogre_game(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.ogre",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Ogre should create")
 }
@@ -529,6 +541,54 @@ pub(super) fn rest_resolution(update: &GameUpdate) -> &RestResolutionDto {
             _ => None,
         })
         .expect("rest resolution should exist")
+}
+
+pub(in crate::game) fn assert_rest_batch_matches_steps(initial: Game, budget: u16) -> Game {
+    let mut batch = initial.clone();
+    let mut steps = initial;
+    let update = dispatch_next(&mut batch, GameCommand::Rest { turns: budget });
+    let resolution = rest_resolution(&update);
+    let count = resolution.completed_turns;
+    for index in 0..count.max(1) {
+        let mut loaded = Game::from_save_with_content(
+            steps.to_save(),
+            steps.content.clone(),
+            steps.behavior_preferences(),
+        )
+        .expect("single-step rest checkpoint must load");
+        let step = dispatch_next(&mut steps, GameCommand::Rest { turns: 1 });
+        assert_eq!(
+            step,
+            dispatch_next(&mut loaded, GameCommand::Rest { turns: 1 })
+        );
+        assert_eq!(steps.state_hash(), loaded.state_hash());
+        if index + 1 < count {
+            assert_eq!(
+                rest_resolution(&step).stop_reason,
+                RestStopReasonDto::TurnLimit
+            );
+        } else {
+            assert_eq!(rest_resolution(&step).stop_reason, resolution.stop_reason);
+        }
+    }
+    let mut batch_save = batch.to_save();
+    batch_save.revision = steps.revision;
+    batch_save.last_command_seq = steps.last_command_seq;
+    let left = serde_json::to_value(batch_save).unwrap();
+    let right = serde_json::to_value(steps.to_save()).unwrap();
+    let differences: Vec<_> = left
+        .as_object()
+        .unwrap()
+        .iter()
+        .filter(|(key, value)| right.get(*key) != Some(*value))
+        .map(|(key, _)| key)
+        .collect();
+    assert!(
+        differences.is_empty(),
+        "rest state differences: {differences:?}"
+    );
+    assert_eq!(batch.rng, steps.rng);
+    steps
 }
 
 pub(in crate::game) fn clear_monsters(game: &mut Game) {

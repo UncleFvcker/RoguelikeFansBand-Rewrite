@@ -1125,6 +1125,7 @@ fn formal_kobold_poison_dart_is_a_fixed_level_poison_bolt_without_ammunition() {
         "demo.build.warrior",
         "rfb-legacy.race.kobold",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Kobold warrior should create");
     clear_monsters(&mut game);
@@ -1213,8 +1214,12 @@ fn formal_kobold_poison_dart_is_a_fixed_level_poison_bolt_without_ammunition() {
     assert_eq!(game.state_hash(), replay.state_hash());
     assert!(resistant.entities[0].hp > game.entities[0].hp);
     assert_eq!(resistant.next_item_instance_serial, serial_before);
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Kobold Poison Dart save should restore");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Kobold Poison Dart save should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -1240,6 +1245,7 @@ fn cyclops_throw_boulder_scales_stuns_and_round_trips_deterministically() {
         "demo.build.high-mage-death",
         "rfb-legacy.race.cyclops",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Cyclops High-Mage should create");
     clear_monsters(&mut game);
@@ -1350,8 +1356,12 @@ fn cyclops_throw_boulder_scales_stuns_and_round_trips_deterministically() {
     );
     assert_eq!(failed.entities[0].hp, 150);
 
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Cyclops boulder setup should reload");
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Cyclops boulder setup should reload");
     assert_eq!(restored.state_hash(), game.state_hash());
     game.debug_set_ability_casts_succeed(true);
     restored.debug_set_ability_casts_succeed(true);
@@ -1380,8 +1390,12 @@ fn cyclops_throw_boulder_scales_stuns_and_round_trips_deterministically() {
             if damage.raw == 54 && damage.applied == 54
     )));
 
-    let mut resistant = Game::from_save_with_content(failed.to_save(), failed.content.clone())
-        .expect("resistant boulder setup should reload");
+    let mut resistant = Game::from_save_with_content(
+        failed.to_save(),
+        failed.content.clone(),
+        failed.behavior_preferences(),
+    )
+    .expect("resistant boulder setup should reload");
     resistant.entities[0]
         .resistances
         .set(DamageType::Sound, ResistanceLevel::Resistant);
@@ -1400,6 +1414,7 @@ fn cyclops_throw_boulder_scales_stuns_and_round_trips_deterministically() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human Warrior should create");
     human.progress.level = 20;
@@ -1465,6 +1480,7 @@ fn klackon_acid_spit_and_speed_growth_follow_the_effective_race() {
         "demo.build.high-mage-death",
         "rfb-legacy.race.klackon",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Klackon High-Mage should create");
     clear_monsters(&mut game);
@@ -1631,8 +1647,12 @@ fn klackon_acid_spit_and_speed_growth_follow_the_effective_race() {
         }]
     ));
 
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Klackon acid-spit setup should reload");
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Klackon acid-spit setup should reload");
     game.debug_set_ability_casts_succeed(true);
     restored.debug_set_ability_casts_succeed(true);
     let mana_before = game.resources["demo.resource.mana"].current;
@@ -1656,6 +1676,7 @@ fn klackon_acid_spit_and_speed_growth_follow_the_effective_race() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human Warrior should create");
     human.progress.level = 20;
@@ -1720,6 +1741,7 @@ fn dark_elf_magic_missile_capacity_and_sight_follow_the_effective_race() {
         "demo.build.high-mage-death",
         "rfb-legacy.race.dark-elf",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Dark-Elf High-Mage should create");
     clear_monsters(&mut game);
@@ -1734,6 +1756,7 @@ fn dark_elf_magic_missile_capacity_and_sight_follow_the_effective_race() {
         "demo.build.high-mage-death",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human High-Mage should create")
     .resources["demo.resource.mana"]
@@ -1805,8 +1828,12 @@ fn dark_elf_magic_missile_capacity_and_sight_follow_the_effective_race() {
     );
     assert_eq!(failed.entities[0].hp, 150);
 
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Dark-Elf magic-missile setup should reload");
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Dark-Elf magic-missile setup should reload");
     game.debug_set_ability_casts_succeed(true);
     restored.debug_set_ability_casts_succeed(true);
     let events = cast_magic_missile(&mut game);
@@ -1844,6 +1871,7 @@ fn dark_elf_magic_missile_capacity_and_sight_follow_the_effective_race() {
         "demo.build.warrior",
         "rfb-legacy.race.dark-elf",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Dark-Elf Warrior should create");
     warrior.progress.level = 50;
@@ -1869,6 +1897,7 @@ fn dark_elf_magic_missile_capacity_and_sight_follow_the_effective_race() {
         "demo.build.high-mage-death",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human High-Mage should create");
     human.progress.level = 20;
@@ -1938,6 +1967,7 @@ fn mindflayer_mind_blast_sustains_and_senses_follow_the_effective_race() {
         "demo.build.high-mage-death",
         "rfb-legacy.race.mindflayer",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Mindflayer High-Mage should create");
     clear_monsters(&mut game);
@@ -2022,8 +2052,12 @@ fn mindflayer_mind_blast_sustains_and_senses_follow_the_effective_race() {
     );
     assert_eq!(failed.entities[0].hp, 150);
 
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Mindflayer mind-blast setup should reload");
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Mindflayer mind-blast setup should reload");
     game.debug_set_ability_casts_succeed(true);
     restored.debug_set_ability_casts_succeed(true);
     let events = cast_mind_blast(&mut game);
@@ -2064,6 +2098,7 @@ fn mindflayer_mind_blast_sustains_and_senses_follow_the_effective_race() {
         "demo.build.warrior",
         "rfb-legacy.race.mindflayer",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Mindflayer Warrior should create");
     warrior.progress.level = 50;
@@ -2088,6 +2123,7 @@ fn mindflayer_mind_blast_sustains_and_senses_follow_the_effective_race() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human Warrior should create");
     human.progress.level = 30;
@@ -2149,6 +2185,7 @@ fn imp_fire_upgrade_and_demon_traits_follow_the_effective_race() {
         "demo.build.high-mage-death",
         "rfb-legacy.race.imp",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Imp High-Mage should create");
     clear_monsters(&mut game);
@@ -2324,8 +2361,12 @@ fn imp_fire_upgrade_and_demon_traits_follow_the_effective_race() {
         }]
     ));
 
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Imp fire-ball setup should reload");
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Imp fire-ball setup should reload");
     game.debug_set_ability_casts_succeed(true);
     restored.debug_set_ability_casts_succeed(true);
     let mana_before = game.resources["demo.resource.mana"].current;
@@ -2364,6 +2405,7 @@ fn imp_fire_upgrade_and_demon_traits_follow_the_effective_race() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human Warrior should create");
     human.progress.level = 30;
@@ -2423,6 +2465,7 @@ fn draconian_breath_uses_current_hp_maturity_shape_and_deadly_upgrade() {
         "demo.build.high-mage-death",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human High-Mage should create");
     clear_monsters(&mut base);

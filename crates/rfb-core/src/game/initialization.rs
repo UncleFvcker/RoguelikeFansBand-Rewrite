@@ -270,15 +270,18 @@ impl Game {
         build_id: &str,
         race_id: &str,
         player_name: &str,
+        preferences: rfb_protocol::BehaviorPreferencesDto,
     ) -> Result<Self, CoreError> {
-        Self::from_content_internal(
+        let mut game = Self::from_content_internal(
             seed,
             load_built_in_content().expect("built-in content should decode"),
             DEFAULT_WORLD_ID,
             Some(build_id),
             Some(race_id),
             player_name,
-        )
+        )?;
+        game.apply_behavior_preferences(preferences)?;
+        Ok(game)
     }
 
     pub fn from_content(
@@ -608,6 +611,7 @@ impl Game {
             world_travel_destination: None,
             interface_locale: LocaleDto::ZhCn,
             travel_options: rfb_protocol::TravelOptionsDto::default(),
+            operation_options: rfb_protocol::OperationOptionsDto::default(),
             mogaminator,
             current_floor_id: initial_floor_id,
             current_dungeon_instance_id: None,
@@ -644,6 +648,7 @@ impl Game {
             maia_path: None,
             gold_piles: Vec::new(),
             item_knowledge: BTreeMap::new(),
+            discovery: rfb_protocol::DiscoverySaveDto::default(),
             item_property_knowledge: BTreeMap::new(),
             task_states,
             casino: None,
@@ -663,6 +668,9 @@ impl Game {
             confusing_strike_ready: false,
             sniper_concentration: 0,
             fishing_direction: None,
+            running: None,
+            auto_explore: None,
+            searching: false,
             probed_actor_kind_ids: BTreeSet::new(),
             minor_slow: 0,
             minor_slow_energy: 0,
@@ -737,6 +745,7 @@ impl Game {
         game.refresh_invisible_visibility(true, &BTreeMap::new());
         game.refresh_weird_mind_visibility(true, &BTreeMap::new());
         game.reveal_current_visibility();
+        game.record_visible_discoveries();
         Ok(game)
     }
 

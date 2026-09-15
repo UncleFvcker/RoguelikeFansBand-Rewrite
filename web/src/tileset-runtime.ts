@@ -2,6 +2,8 @@
 
 import { Assets, Rectangle, Texture } from "pixi.js";
 
+import type { EditableVisualDto } from "./protocol";
+import { defaultVisuals, visualOverride, type VisualPreferences } from "./visual-preferences.ts";
 import { GlyphAtlas } from "./glyph-atlas";
 import {
   parseTilesetManifest,
@@ -23,7 +25,11 @@ export class TilesetRuntime {
   readonly manifest: TilesetManifestV1;
   readonly warnings: readonly TilesetWarning[];
   readonly #contentGlyphs: Readonly<Record<string, string>>;
-  readonly #glyphAtlas: GlyphAtlas;
+  #glyphAtlas: GlyphAtlas;
+  #visuals = defaultVisuals();
+  #knownGlyphs: Record<string, string> = {};
+  #visualKey = "";
+  #renderGlyphs: Readonly<Record<string, string>>;
   readonly #imageAtlas: Texture | undefined;
   readonly #standaloneImages: Map<string, Texture>;
   readonly #imageFrames = new Map<string, Texture>();
@@ -39,6 +45,7 @@ export class TilesetRuntime {
   ) {
     this.manifest = manifest;
     this.#contentGlyphs = contentGlyphs;
+    this.#renderGlyphs = contentGlyphs;
     this.#glyphAtlas = glyphAtlas;
     this.#imageAtlas = imageAtlas;
     this.#standaloneImages = standaloneImages;
@@ -125,6 +132,30 @@ export class TilesetRuntime {
     );
   }
 
+  setVisuals(preferences: VisualPreferences, catalog: readonly EditableVisualDto[]): boolean {
+    preferences = { ...preferences, overrides: Object.fromEntries(catalog.map(v => [v.id, visualOverride(preferences, v)])) };
+    const knownGlyphs = Object.fromEntries(catalog.map(v => [v.id, v.glyph]));
+    const signature = JSON.stringify([preferences, knownGlyphs]);
+    if (signature === this.#visualKey) return false;
+    const atlas = new GlyphAtlas([
+      ...Object.values(this.#contentGlyphs), ...Object.values(knownGlyphs),
+      ...Object.values(this.manifest.mappings).flatMap(v => v.glyph ? [v.glyph] : []),
+      ...catalog.flatMap(v => preferences.overrides[v.id]?.glyph ? [preferences.overrides[v.id]!.glyph!] : []),
+    ], this.manifest.tileWidth, this.manifest.tileHeight, this.manifest.fallback.glyph);
+    const previous = this.#glyphAtlas;
+    this.#glyphAtlas = atlas; this.#visuals = preferences; this.#knownGlyphs = knownGlyphs;
+    this.#renderGlyphs = { ...this.#contentGlyphs, ...knownGlyphs };
+    this.#visualKey = signature; this.#visualCache.clear(); previous.destroy();
+    return true;
+  }
+
+  visualBase(id: string): { glyph: string; foreground: string; background?: string } {
+    const mapping = this.manifest.mappings[id];
+    return { glyph: mapping?.glyph ?? this.#knownGlyphs[id] ?? this.#contentGlyphs[id] ?? this.manifest.fallback.glyph,
+      foreground: mapping?.foreground ?? this.manifest.fallback.foreground,
+      background: mapping ? mapping.background : this.manifest.fallback.background };
+  }
+
   resolve(semanticId: string): RuntimeTileVisual {
     // Resolution is pure for the lifetime of a runtime instance, so each
     // semantic id only needs the manifest walk and colour parsing once.
@@ -152,8 +183,9 @@ export class TilesetRuntime {
     const visual = resolveTilesetVisual(
       this.manifest,
       semanticId,
-      this.#contentGlyphs,
+      this.#renderGlyphs,
       mapping?.image ? standaloneImage !== undefined : this.#imageAtlas !== undefined,
+      this.#visuals, Object.hasOwn(this.#knownGlyphs, semanticId),
     );
     if (visual.source === "image" && visual.image && standaloneImage) {
       return {

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 import type { AppState, TargetingIntent } from "./app-state";
 import type { Localization } from "./localization";
+import type { CommandShortcut } from "./command-shortcuts";
 import type { AbsorbedDeviceSlotDto, GameCommand, InventoryItemDto, TargetSpecDto } from "./protocol";
-import { itemTargetCandidates } from "./inventory-panel.ts";
 
 interface MagicEaterPanelOptions {
   document: Document;
@@ -11,11 +11,13 @@ interface MagicEaterPanelOptions {
   dispatch: (command: GameCommand) => Promise<void>;
   visibleItemName: (key: string, id: string, artifact?: string | null) => string;
   inspectItem: (id: string) => void;
-  selectItemTarget: (ids: string[], onSelect: (id: string) => Promise<void>) => void;
+  selectItemTarget: (ids: string[], onSelect: (id: string) => Promise<void>, onCancel?: () => Promise<void>, command?: CommandShortcut) => void;
+  selectItemTargets: (excluded: string, select: (ids: string[]) => Promise<void>, cancel: () => Promise<void>, command: CommandShortcut, multiple: boolean) => () => void;
+  confirmItemChoice: (id: string, command: CommandShortcut) => boolean;
   startTargeting: (spec: TargetSpecDto, intent: TargetingIntent) => void;
   beforeOpen: () => void;
-  exportSave: () => Promise<void>;
-  importSave: () => void;
+  saveGame: () => Promise<void>;
+  loadGame: () => void;
 }
 
 export class MagicEaterPanel {
@@ -29,6 +31,7 @@ export class MagicEaterPanel {
   #inscribing = false;
   #promptIdentity = "";
   #auxiliary: HTMLDialogElement | undefined;
+  #closeTargets: (() => void) | undefined;
 
   constructor(options: MagicEaterPanelOptions) {
     this.#options = options;
@@ -45,8 +48,8 @@ export class MagicEaterPanel {
     this.#element("confirm").addEventListener("click", () => {
       if (!options.state.busy && this.#pending?.replacement) void options.dispatch({ type: "resolve-magic-absorption", confirm: true, inheritInscription: this.#element<HTMLInputElement>("inherit").checked });
     });
-    this.#element("save").addEventListener("click", () => { if (!options.state.busy) void options.exportSave(); });
-    this.#element("load").addEventListener("click", () => { if (!options.state.busy) options.importSave(); });
+    this.#element("save").addEventListener("click", () => { if (!options.state.busy) void options.saveGame(); });
+    this.#element("load").addEventListener("click", () => { if (!options.state.busy) options.loadGame(); });
   }
 
   #element<T extends HTMLElement>(suffix: string): T { return this.#options.document.getElementById(`magic-eater-${suffix}`) as T; }
@@ -73,6 +76,13 @@ export class MagicEaterPanel {
     this.#ordinary = Boolean(this.#projection.deviceCommands.find(command => command.category === category)?.items.length);
     this.#deviceCommand = true; this.#swapSlot = undefined; this.#exchanging = false; this.#inscribing = false;
     this.render(); this.#show();
+    if (this.#ordinary) {
+      const items = this.#projection.deviceCommands.find(command => command.category === category)!.items.filter(item => item.usable);
+      this.#options.selectItemTarget(items.map(item => item.id), async id => {
+        const item = items.find(item => item.id === id);
+        if (item) this.#use(item, undefined, true);
+      }, undefined, category);
+    }
     return true;
   }
 
@@ -81,6 +91,7 @@ export class MagicEaterPanel {
   }
 
   reset(): void {
+    this.#closeTargets?.(); this.#closeTargets = undefined;
     const auxiliary = this.#auxiliary; this.#auxiliary = undefined; auxiliary?.close();
     if (this.#dialog.open) this.#dialog.close();
     this.#promptIdentity = ""; this.#swapSlot = undefined; this.#exchanging = false; this.#inscribing = false;
@@ -184,7 +195,7 @@ export class MagicEaterPanel {
     const { state } = this.#options;
     const ability = state.status?.player.abilities?.find(ability => ability.effects.some(effect => effect.type === "magic-eater-absorb"));
     if (state.busy || state.commandBlocked || !ability?.canCast) return;
-    this.#options.selectItemTarget(ability.itemTargets?.map(target => target.itemId) ?? [], id => this.#options.dispatch({ type: "cast-ability", abilityId: ability.id, target: { type: "item", itemId: id } }));
+    this.#options.selectItemTarget(ability.itemTargets?.map(target => target.itemId) ?? [], id => this.#options.dispatch({ type: "cast-ability", abilityId: ability.id, target: { type: "item", itemId: id } }), undefined, "power");
   }
 
   #cancel(): void {
@@ -195,8 +206,9 @@ export class MagicEaterPanel {
   }
 
   #key(event: KeyboardEvent): void {
+    if (event.defaultPrevented || event.repeat || event.isComposing) return;
     const target = event.target as HTMLElement;
-    if (this.#options.state.busy || ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName) || event.ctrlKey || event.altKey || event.metaKey || event.key === "Escape") return;
+    if (this.#options.state.busy || target.isContentEditable || ["INPUT", "SELECT", "TEXTAREA"].includes(target.tagName) || event.ctrlKey || event.altKey || event.metaKey || event.key === "Escape") return;
     const choice = [...this.#element("slots").querySelectorAll<HTMLButtonElement>("[data-label]")].find(button => button.dataset.label === event.key);
     if (choice) { event.preventDefault(); choice.click(); return; }
     if (this.#pending) return;
@@ -207,6 +219,7 @@ export class MagicEaterPanel {
   }
 
   #inscribe(item: InventoryItemDto): void {
+    if (!this.#options.confirmItemChoice(item.id, "inscribe")) return;
     const { document } = this.#options;
     const dialog = document.createElement("dialog"); dialog.className = "item-target-dialog";
     const form = document.createElement("form");
@@ -219,38 +232,31 @@ export class MagicEaterPanel {
     input.focus();
   }
 
-  #finishForm(dialog: HTMLDialogElement, form: HTMLFormElement, submit: () => void, cancel?: () => void): void {
+  #finishForm(dialog: HTMLDialogElement, form: HTMLFormElement, submit: () => void): void {
     const { document, state } = this.#options;
     dialog.classList.add("magic-eater-editor");
     const close = document.createElement("button"); close.type = "button"; close.textContent = this.#format("action-dialog-cancel"); close.addEventListener("click", () => dialog.close());
     const accept = document.createElement("button"); accept.type = "submit"; accept.textContent = this.#format("action-item-target-confirm");
-    form.append(close, accept); let accepted = false;
-    form.addEventListener("submit", event => { event.preventDefault(); if (state.busy) return; accepted = true; dialog.close(); submit(); });
+    form.append(close, accept);
+    const snapshot = state.status;
+    form.addEventListener("submit", event => { event.preventDefault(); if (!dialog.open || state.busy || snapshot !== state.status) return; dialog.close(); submit(); });
     dialog.addEventListener("cancel", event => { if (state.busy) event.preventDefault(); });
-    dialog.addEventListener("close", () => { dialog.remove(); const active = this.#auxiliary === dialog; if (active) this.#auxiliary = undefined; if (!accepted && active) cancel?.(); }, { once: true });
+    dialog.addEventListener("close", () => { dialog.remove(); if (this.#auxiliary === dialog) this.#auxiliary = undefined; }, { once: true });
     dialog.append(form); document.body.append(dialog); this.#auxiliary = dialog; dialog.showModal();
   }
 
-  #use(item: InventoryItemDto, slot?: AbsorbedDeviceSlotDto): void {
+  #use(item: InventoryItemDto, slot?: AbsorbedDeviceSlotDto, confirmed = false): void {
     if (this.#options.state.busy || this.#options.state.commandBlocked || !item.usable) return;
+    const category = slot?.category ?? item.useCategory ?? this.#category.value;
+    const command = slot && !this.#deviceCommand ? "cast" : category === "wand" ? "wand" : category === "staff" ? "staff" : "rod";
+    if (!confirmed && !this.#options.confirmItemChoice(item.id, command)) return;
     const spec = item.useTargetSpec;
     const send = (ids: string[]) => this.#options.dispatch(slot
       ? { type: "use-absorbed-device", itemId: item.id, targets: ids.map(itemId => ({ type: "item", itemId })) }
       : { type: "use-item", itemId: item.id, ...(ids[0] ? { target: { type: "item", itemId: ids[0] } } : {}) });
     if (spec?.modes.includes("item")) {
-      const { document, state, visibleItemName } = this.#options;
-      const dialog = document.createElement("dialog"); dialog.className = "item-target-dialog";
-      const form = document.createElement("form"); const label = document.createElement("label");
-      label.textContent = this.#format(slot?.allowsMultipleTargets ? "magic-eater-multiple-targets" : "item-target-label");
-      const select = document.createElement("select"); select.multiple = Boolean(slot?.allowsMultipleTargets);
-      for (const candidate of itemTargetCandidates(state, item.id, visibleItemName)) {
-        const option = document.createElement("option"); option.value = candidate.id; option.textContent = candidate.label; select.append(option);
-      }
-      let ordered: string[] = [];
-      select.addEventListener("change", () => { const ids = [...select.selectedOptions].map(option => option.value); ordered = [...ordered.filter(id => ids.includes(id)), ...ids.filter(id => !ordered.includes(id))]; });
-      label.append(select); form.append(label);
-      this.#finishForm(dialog, form, () => void send(select.multiple ? ordered : [select.value].filter(Boolean)), () => void send([]));
-      select.focus(); return;
+      this.#closeTargets = this.#options.selectItemTargets(item.id, send, () => send([]), command, Boolean(slot?.allowsMultipleTargets));
+      return;
     }
     if (spec && !spec.modes.includes("self")) {
       this.#dialog.close();

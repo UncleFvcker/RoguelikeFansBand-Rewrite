@@ -38,7 +38,7 @@ fn fast_stairs_preparation_preserves_birth_and_rng_then_uses_real_generation() {
     assert_eq!(ready.equipment, before.equipment);
     assert_eq!(ready.entities, before.entities);
     assert_eq!(game.rng, rng);
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
     super::support::dispatch_next(&mut game, GameCommand::TraverseStairs);
@@ -57,7 +57,7 @@ fn desktop_learning_and_tree_preparation_round_trip_a_real_dungeon() {
         game.debug_prepare_spell_learning_e2e(level).unwrap();
         choose_human_talent_if_pending(&mut game);
         assert_eq!(game.progress.level, level);
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
     }
@@ -144,7 +144,7 @@ fn four_births_have_source_equipment_books_and_no_early_magic() {
             .find(|item| item.kind_id == "demo.item.arrow")
             .unwrap();
         assert!((20..=40).contains(&arrows.quantity));
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
     }
@@ -232,10 +232,19 @@ fn proficiencies_virtues_and_race_births_follow_source() {
         "rfb-legacy.race.spectre",
         "rfb-legacy.race.draconian-red",
     ] {
-        let mut game = Game::new_with_build_race_and_name(925, BUILD, race, "Ranger").unwrap();
+        let mut game = Game::new_with_build_race_and_name(
+            925,
+            BUILD,
+            race,
+            "Ranger",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(game.active_casting_realm_profiles().len(), 2);
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash()
         );
         if race == "rfb-legacy.race.draconian-red" {

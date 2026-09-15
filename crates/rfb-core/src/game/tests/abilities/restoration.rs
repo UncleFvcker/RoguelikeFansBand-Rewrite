@@ -4,6 +4,149 @@ use super::*;
 use crate::effect::STATUS_KUTAR_EXPAND;
 
 #[test]
+fn complete_rest_waits_for_rfb_ailments_while_resource_rest_does_not() {
+    for status in [
+        STATUS_BLINDNESS,
+        STATUS_CONFUSION,
+        STATUS_POISON,
+        STATUS_FEAR,
+        STATUS_STUN,
+        STATUS_BLEEDING,
+        STATUS_SLOW,
+        STATUS_PARALYSIS,
+        STATUS_HALLUCINATION,
+    ] {
+        let mut game = test_caster_game(0);
+        clear_monsters(&mut game);
+        game.player.hp = game.effective_player_max_hp();
+        for pool in game.resources.values_mut() {
+            pool.current = pool.maximum;
+        }
+        game.player
+            .statuses
+            .push(monster_combat::melee_status(status, 100, "test.rest-mode").status);
+        let clock = game.world_tick;
+        let draws = game.rng_draw_counter();
+        let update = dispatch_next(&mut game, GameCommand::RestUntilResources { turns: 1 });
+        assert_eq!(rest_resolution(&update).completed_turns, 0, "{status}");
+        assert_eq!(
+            rest_resolution(&update).stop_reason,
+            RestStopReasonDto::FullResources
+        );
+        assert_eq!((game.world_tick, game.rng_draw_counter()), (clock, draws));
+        assert!(game.player_has_status_kind(status));
+        let update = dispatch_next(&mut game, GameCommand::Rest { turns: 1 });
+        assert_eq!(rest_resolution(&update).completed_turns, 1, "{status}");
+    }
+}
+
+#[test]
+fn complete_rest_finishes_after_ailments_without_waiting_for_buffs_and_matches_steps() {
+    let mut game = test_caster_game(0);
+    clear_monsters(&mut game);
+    game.player.hp = game.effective_player_max_hp();
+    for pool in game.resources.values_mut() {
+        pool.current = pool.maximum;
+    }
+    for (status, duration) in [(STATUS_FEAR, 30), (STATUS_HASTE, 1000)] {
+        game.player
+            .statuses
+            .push(monster_combat::melee_status(status, duration, "test.rest-mode").status);
+    }
+    let game = assert_rest_batch_matches_steps(game, 100);
+    assert!(!game.player_has_status_kind(STATUS_FEAR));
+    assert!(game.player_has_status_kind(STATUS_HASTE));
+}
+
+#[test]
+fn resource_rest_recovers_hp_and_mana_without_waiting_for_fear() {
+    let mut game = test_caster_game(0);
+    clear_monsters(&mut game);
+    game.player.hp = game.effective_player_max_hp() - 1;
+    for pool in game.resources.values_mut() {
+        pool.current = pool.maximum.saturating_sub(1);
+    }
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_FEAR, 1000, "test.rest-mode").status);
+    let update = dispatch_next(&mut game, GameCommand::RestUntilResources { turns: 100 });
+    assert_eq!(
+        rest_resolution(&update).stop_reason,
+        RestStopReasonDto::FullResources
+    );
+    assert!(rest_resolution(&update).completed_turns > 0);
+    assert_eq!(game.player.hp, game.effective_player_max_hp());
+    assert!(
+        game.resources
+            .values()
+            .all(|pool| pool.current == pool.maximum)
+    );
+    assert!(game.player_has_status_kind(STATUS_FEAR));
+}
+
+#[test]
+fn complete_rest_includes_minor_slow_and_reality_countdown() {
+    for reality in [false, true] {
+        let mut game = test_caster_game(0);
+        clear_monsters(&mut game);
+        game.player.hp = game.effective_player_max_hp();
+        for pool in game.resources.values_mut() {
+            pool.current = pool.maximum;
+        }
+        if reality {
+            game.reality_change_ticks = 30;
+        } else {
+            game.minor_slow = 10;
+        }
+        let update = dispatch_next(&mut game, GameCommand::RestUntilResources { turns: 1 });
+        assert_eq!(rest_resolution(&update).completed_turns, 0);
+        let update = dispatch_next(&mut game, GameCommand::Rest { turns: 1 });
+        assert_eq!(rest_resolution(&update).completed_turns, 1);
+        assert_eq!(
+            rest_resolution(&update).stop_reason,
+            RestStopReasonDto::TurnLimit
+        );
+    }
+}
+
+#[test]
+fn single_step_rest_matches_batch_resources_clocks_statuses_and_rng() {
+    let mut initial = test_caster_game(0);
+    clear_monsters(&mut initial);
+    initial.player.hp -= 3;
+    initial
+        .resources
+        .get_mut("demo.resource.mana")
+        .unwrap()
+        .current = 1;
+    initial.world_tick = 40;
+    initial.nutrition = 9_000;
+    initial
+        .player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_HASTE, 15, "test.rest").status);
+    let final_game = assert_rest_batch_matches_steps(initial, 100);
+    assert!(final_game.nutrition < 9_000);
+}
+
+#[test]
+fn single_step_rest_waits_for_recall_at_full_hp_and_preserves_rng() {
+    let mut game = Game::new_with_build(478, "demo.build.warrior").unwrap();
+    choose_human_talent_if_pending(&mut game);
+    descend_one_floor(&mut game);
+    clear_monsters(&mut game);
+    game.player.hp = game.effective_player_max_hp();
+    game.start_recall(3);
+    let floor = game.current_floor_id.clone();
+    let resources = dispatch_next(&mut game, GameCommand::RestUntilResources { turns: 20 });
+    assert_eq!(rest_resolution(&resources).completed_turns, 0);
+    assert!(game.recall_is_active());
+    let final_game = assert_rest_batch_matches_steps(game, 20);
+    assert_ne!(final_game.current_floor_id, floor);
+    assert!(!final_game.recall_is_active());
+}
+
+#[test]
 fn berserk_and_battle_frenzy_roll_independent_durations_and_round_trip() {
     let mut left = prepare_death_caster(41, 40, "demo.ability.death-berserk");
     let mut right = left.clone();
@@ -50,9 +193,13 @@ fn berserk_and_battle_frenzy_roll_independent_durations_and_round_trip() {
         .expect("test caster should keep Mana")
         .maximum = level_one_mana;
     assert_eq!(
-        Game::from_save_with_content(left.to_save(), left.content.clone())
-            .expect("Berserk should reload")
-            .state_hash(),
+        Game::from_save_with_content(
+            left.to_save(),
+            left.content.clone(),
+            left.behavior_preferences()
+        )
+        .expect("Berserk should reload")
+        .state_hash(),
         left.state_hash()
     );
 
@@ -135,6 +282,7 @@ fn waiting_and_resting_recover_mana_until_the_pool_is_full() {
     assert_eq!(game.rng_draw_counter(), initial_draws);
 
     let world_tick = game.world_tick;
+    let turn = game.turn;
     let full = dispatch_next(&mut game, GameCommand::Rest { turns: 100 });
     let full_resolution = rest_resolution(&full);
     assert_eq!(full_resolution.completed_turns, 0);
@@ -144,10 +292,18 @@ fn waiting_and_resting_recover_mana_until_the_pool_is_full() {
     );
     assert!(full_resolution.resource_recoveries.is_empty());
     assert_eq!(game.world_tick, world_tick);
+    assert_eq!(
+        game.turn, turn,
+        "zero completed rest rounds must not advance turn"
+    );
     assert_eq!(game.rng_draw_counter(), initial_draws);
 
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("recovered mana should reload");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("recovered mana should reload");
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -265,8 +421,12 @@ fn formal_snotling_devours_flesh_while_confused_and_round_trips() {
         125,
     );
     assert_eq!(game.state_hash(), replay.state_hash());
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Devour Flesh result should restore");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Devour Flesh result should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -402,8 +562,12 @@ fn formal_boit_vomits_poison_while_afraid_or_confused_and_pays_empty_stomach_ene
                 }]
             )
     )));
-    let restored = Game::from_save_with_content(empty.to_save(), empty.content.clone())
-        .expect("Vomit result should restore");
+    let restored = Game::from_save_with_content(
+        empty.to_save(),
+        empty.content.clone(),
+        empty.behavior_preferences(),
+    )
+    .expect("Vomit result should restore");
     assert_eq!(restored.state_hash(), empty.state_hash());
 
     let mut action = boit_game(403);
@@ -486,8 +650,12 @@ fn formal_einheri_halves_shared_healing_but_keeps_full_natural_regeneration() {
         assert!(cast.player_has_status_kind(STATUS_BERSERK));
     }
     assert_eq!(game.state_hash(), replay.state_hash());
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Einheri result should restore");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Einheri result should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
 
     let mut temporary = Game::new_with_build_race_and_name(
@@ -495,6 +663,7 @@ fn formal_einheri_halves_shared_healing_but_keeps_full_natural_regeneration() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal Human should create");
     temporary.player.hp = temporary.effective_player_max_hp() - 30;
@@ -543,6 +712,7 @@ fn snotling_mushroom_boost_follows_the_effective_race() {
     formal.progress.level = 20;
     formal.progress.max_level = 20;
     let mut replay = formal.clone();
+    let tick_before = formal.world_tick;
     use_mushroom(&mut formal, "test.item.snotling-mushroom");
     use_mushroom(&mut replay, "test.item.snotling-mushroom");
     assert_eq!(replay.state_hash(), formal.state_hash());
@@ -563,7 +733,10 @@ fn snotling_mushroom_boost_follows_the_effective_race() {
         .map(|status| status.remaining_ticks)
         .collect::<BTreeSet<_>>();
     assert_eq!(durations.len(), 1);
-    assert!((211..=401).contains(durations.first().expect("shared duration")));
+    let initial_duration =
+        durations.first().expect("shared duration") + formal.world_tick - tick_before;
+    assert!((220..=410).contains(&initial_duration));
+    assert_eq!(initial_duration % 10, 0);
 
     let mut persisted = snotling_game(399);
     clear_monsters(&mut persisted);
@@ -582,8 +755,12 @@ fn snotling_mushroom_boost_follows_the_effective_race() {
             &mut Vec::new(),
         )
         .expect("Snotling mushroom should resolve before the action tick");
-    let restored = Game::from_save_with_content(persisted.to_save(), persisted.content.clone())
-        .expect("Snotling mushroom boost should restore");
+    let restored = Game::from_save_with_content(
+        persisted.to_save(),
+        persisted.content.clone(),
+        persisted.behavior_preferences(),
+    )
+    .expect("Snotling mushroom boost should restore");
     assert_eq!(restored.state_hash(), persisted.state_hash());
 
     let mut temporary =
@@ -745,8 +922,12 @@ fn formal_kutar_expansion_fixes_saving_throw_and_adds_thirty_five_armor() {
     assert_eq!(game.player.hp, hp_before - 15);
     assert_eq!(game.state_hash(), replay.state_hash());
 
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("Kutar expansion should restore");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("Kutar expansion should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         restored.player_derived_stats().armor_class.value,
@@ -882,6 +1063,7 @@ fn undead_restore_life_shares_unlock_payment_and_vitality_rules() {
             "demo.build.warrior",
             race_id,
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .expect("undead character should create");
         clear_monsters(&mut game);
@@ -1000,6 +1182,7 @@ fn formal_half_troll_regeneration_and_berserk_follow_the_effective_race() {
         "demo.build.high-mage-death",
         "rfb-legacy.race.half-troll",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Half-Troll High-Mage should create");
     clear_monsters(&mut game);
@@ -1060,6 +1243,7 @@ fn formal_half_troll_regeneration_and_berserk_follow_the_effective_race() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human Warrior should create");
     human.progress.level = 10;
@@ -1101,6 +1285,7 @@ fn racial_berserk_pays_hp_obeys_fear_and_never_shortens_a_stronger_rage() {
         "demo.build.warrior",
         "rfb-legacy.race.barbarian",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Barbarian warrior should create");
     game.progress.level = 8;
@@ -1183,6 +1368,7 @@ fn formal_barbarian_berserk_spills_sp_into_hp_pays_on_failure_and_rejects_zero_b
             "demo.build.high-mage-death",
             "rfb-legacy.race.barbarian",
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .expect("Barbarian High-Mage should create");
         game.progress.level = 8;
@@ -1334,8 +1520,12 @@ fn vampiric_transformation_overlays_race_but_preserves_body_slots() {
         .find(|skill| skill.id == "demo.skill.melee")
         .expect("base melee skill should be projected");
     assert!(transformed_melee.base > base_melee.base);
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("temporary race should reload");
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("temporary race should reload");
     assert_eq!(restored.snapshot(), game.snapshot());
     assert_eq!(restored.body_slots, body_slots);
 }

@@ -100,7 +100,8 @@ fn natural_utility_devices_preserve_instances_and_replay_after_save() {
                     game.inventory_item_dto(game.items.iter().find(|item| item.id == id).unwrap());
                 assert!(dto.activation.is_some() && dto.charges.is_some());
                 game.reveal_current_visibility();
-                let mut restored = Game::from_save(game.to_save()).unwrap();
+                let mut restored =
+                    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 assert_eq!(restored.state_hash(), game.state_hash());
                 assert_eq!(restored.rng, game.rng);
                 assert_eq!(
@@ -189,7 +190,7 @@ fn source_device_detection_failure_empty_result_and_recovery_keep_instance_knowl
             game.process_inventory_device_recovery(&mut Vec::new());
         }
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         for tick in 11..=110 {
             game.world_tick = tick;
@@ -205,10 +206,10 @@ fn source_device_detection_failure_empty_result_and_recovery_keep_instance_knowl
         assert_eq!(game.rng, restored.rng);
         let mut invalid = game.clone();
         invalid.items[0].activation.as_mut().unwrap().cost = 1001;
-        assert!(Game::from_save(invalid.to_save()).is_err());
+        assert!(Game::from_save(invalid.to_save(), invalid.behavior_preferences()).is_err());
         invalid = game.clone();
         invalid.items[0].charges.as_mut().unwrap().maximum = 1001;
-        assert!(Game::from_save(invalid.to_save()).is_err());
+        assert!(Game::from_save(invalid.to_save(), invalid.behavior_preferences()).is_err());
         return;
     }
     panic!("source detection did not succeed");
@@ -270,7 +271,8 @@ fn source_identification_cancel_refunds_time_after_successful_check_and_berserke
                 used.items[0].charges.unwrap().current,
                 charges.unwrap().current - cost
             );
-            let mut restored = Game::from_save(used.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(used.to_save(), used.behavior_preferences()).unwrap();
             assert_eq!(restored.state_hash(), used.state_hash());
             assert_eq!(restored.rng.bounded(1000), used.rng.bounded(1000));
         } else {

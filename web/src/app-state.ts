@@ -17,6 +17,7 @@ export type ConnectionState = "starting" | "ready" | "error";
 export type ApplicationMode = "title" | "starting-session" | "playing";
 
 export type TargetingIntent =
+  | { type: "select-target" }
   | { type: "look" }
   | { type: "local-travel" }
   | { type: "projectile" }
@@ -27,7 +28,22 @@ export type TargetingIntent =
   | { type: "item"; itemId: string }
   | { type: "absorbed-device"; itemId: string };
 
+import { defaultVisuals, visualStyle, visualOverride } from "./visual-preferences.ts";
+import { DEFAULT_DISPLAY } from "./display-preferences.ts";
+
 export class AppState {
+  visuals = defaultVisuals();
+  visualGlyph(id: string, glyph = this.contentGlyphs.get(id) ?? "?"): string {
+    const visual = this.status?.player.visualCatalog.find(visual => visual.id === id);
+    return visual ? visualOverride(this.visuals, visual).glyph ?? glyph : glyph;
+  }
+  paintVisual(element: HTMLElement, id: string, glyph = this.contentGlyphs.get(id) ?? "?"): void {
+    const style = visualStyle(this.visuals, id, { glyph, foreground: "#ffffff" },
+      this.status?.player.visualCatalog.some(visual => visual.id === id) === true,
+      this.status?.player.visualCatalog.find(visual => visual.id === id));
+    element.textContent = style.glyph; element.style.color = style.foreground; element.style.backgroundColor = style.background ?? "";
+  }
+  display = { ...DEFAULT_DISPLAY };
   busy = false;
   playerDead = false;
   campaignEnded = false;

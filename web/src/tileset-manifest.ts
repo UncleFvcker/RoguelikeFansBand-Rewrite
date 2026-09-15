@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { visualStyle, type VisualPreferences } from "./visual-preferences.ts";
 
 export const TILESET_SCHEMA =
   "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/tileset-v1.schema.json";
@@ -120,17 +121,26 @@ export function resolveTilesetVisual(
   semanticId: string,
   contentGlyphs: Readonly<Record<string, string>>,
   imageAvailable: boolean,
+  preferences?: VisualPreferences,
+  known = false,
 ): ResolvedTilesetVisual {
   const mapping = manifest.mappings[semanticId];
   const tile = manifest.mode === "image" && imageAvailable ? mapping?.tile : undefined;
   const image = manifest.mode === "image" && imageAvailable ? mapping?.image : undefined;
-  const glyph = mapping?.glyph ?? contentGlyphs[semanticId] ?? manifest.fallback.glyph;
-  const foreground = parseColor(mapping?.foreground ?? manifest.fallback.foreground);
-  const background = mapping?.background
+  let glyph = mapping?.glyph ?? contentGlyphs[semanticId] ?? manifest.fallback.glyph;
+  let foreground = parseColor(mapping?.foreground ?? manifest.fallback.foreground);
+  let background = mapping?.background
     ? parseColor(mapping.background)
     : mapping
       ? undefined
       : parseColor(manifest.fallback.background);
+  if (preferences && !tile && !image) {
+    const style = visualStyle(preferences, semanticId, { glyph,
+      foreground: mapping?.foreground ?? manifest.fallback.foreground,
+      background: mapping ? mapping.background : manifest.fallback.background }, known);
+    glyph = style.glyph; foreground = parseColor(style.foreground);
+    background = style.background === undefined ? undefined : parseColor(style.background);
+  }
   return {
     semanticId,
     source: tile || image ? "image" : "glyph",

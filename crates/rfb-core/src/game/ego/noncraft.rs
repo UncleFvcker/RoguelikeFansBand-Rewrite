@@ -327,7 +327,7 @@ mod tests {
         assert!((-10..=-2).contains(&item.enchantments.to_damage));
         assert_eq!(item.enchantments.to_armor, 0);
         assert_eq!(game.item_melee_profile(item).unwrap().damage.dice, 0);
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(
             restored
                 .items
@@ -396,7 +396,7 @@ mod tests {
             )
             .is_some()
         );
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.items.last().unwrap(), game.items.last().unwrap());
     }
 

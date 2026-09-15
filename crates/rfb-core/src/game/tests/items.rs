@@ -87,7 +87,7 @@ fn i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save() {
         "missing ordinary bases: {remaining:?}"
     );
     game.reveal_current_visibility();
-    let unknown = Game::from_save(game.to_save()).unwrap();
+    let unknown = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(unknown.state_hash(), game.state_hash());
     assert_eq!(unknown.rng, game.rng);
     for (slug, dice, sides, weight, digger) in cases {
@@ -140,7 +140,8 @@ fn i1_a_ordinary_weapons_and_diggers_generate_and_act_after_save() {
             .expect("generated equipment must perform its actual action");
         equipped.rng = RfbRng::seeded(seed);
         equipped.reveal_current_visibility();
-        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        let mut restored =
+            Game::from_save(equipped.to_save(), equipped.behavior_preferences()).unwrap();
         assert_eq!(act(&mut restored, digger), act(&mut equipped, digger));
         if digger {
             assert_ne!(equipped.terrain[wall_index], "demo.terrain.magma-vein");
@@ -237,7 +238,7 @@ fn i1_d_swimsuit_generates_aggravates_and_keeps_its_value_after_save() {
             .is_some_and(|knowledge| knowledge.appraised)
     );
     game.reveal_current_visibility();
-    let unknown = Game::from_save(game.to_save()).unwrap();
+    let unknown = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(unknown.state_hash(), game.state_hash());
     assert_eq!(unknown.rng, game.rng);
     let rng = game.rng.clone();
@@ -271,7 +272,7 @@ fn i1_d_swimsuit_generates_aggravates_and_keeps_its_value_after_save() {
     );
     game.apply_actor_melee_status(0, STATUS_SLEEP, 500, "test.i1-d-sleep");
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(restored.player_aggravates_monsters());
     let mut events = Vec::new();
@@ -332,7 +333,9 @@ fn i1_d_swimsuit_generates_aggravates_and_keeps_its_value_after_save() {
     );
     restored.reveal_current_visibility();
     assert_eq!(
-        Game::from_save(restored.to_save()).unwrap().state_hash(),
+        Game::from_save(restored.to_save(), restored.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         restored.state_hash()
     );
 }
@@ -499,7 +502,7 @@ fn c2_thrown_artifact_finds_land_beyond_local_drop_radius() {
     game.player.position = position;
     game.pick_up_item_at_player(Some(&id)).unwrap();
     game.reveal_current_visibility();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -735,7 +738,8 @@ fn c2_following_artifacts_generate_equip_throw_and_activate_with_saved_cooldowns
                 .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
                 .unwrap();
             game.rng = RfbRng::seeded(seed);
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             let hp = game.entities[0].hp;
             let events = activate(&mut game, Some(&target));
             assert_eq!(activate(&mut restored, Some(&target)), events);
@@ -757,7 +761,8 @@ fn c2_following_artifacts_generate_equip_throw_and_activate_with_saved_cooldowns
                     0
                 );
             }
-            restored = Game::from_save(restored.to_save()).unwrap();
+            restored =
+                Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
             for g in [&mut game, &mut restored] {
                 g.world_tick = start + cooldown;
                 g.process_inventory_device_recovery(&mut Vec::new());
@@ -780,7 +785,7 @@ fn c2_following_artifacts_generate_equip_throw_and_activate_with_saved_cooldowns
             .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
             .unwrap();
         game.rng = RfbRng::seeded(seed);
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let events = c2_throw(&mut game, &id);
         assert_eq!(c2_throw(&mut restored, &id), events);
         assert!(events.iter().any(|event| if slug == "excalipur" {
@@ -895,7 +900,8 @@ fn c2_grimtooth_generates_equips_throws_and_preserves_unknown_instance_after_sav
                 let raw = (dice * if immune { 10 } else { 24 } / 10 * multiplier / 100 + 5)
                     * throw_multiplier
                     / 100;
-                let mut restored = Game::from_save(trial.to_save()).unwrap();
+                let mut restored =
+                    Game::from_save(trial.to_save(), trial.behavior_preferences()).unwrap();
                 let events = c2_throw(&mut trial, &id);
                 assert_eq!(c2_throw(&mut restored, &id), events);
                 assert!(events.iter().any(|event| matches!(event, DomainEvent::ItemThrowHit { damage, .. } if damage.raw == raw && damage.applied == raw)), "{critical}/{immune}/{asleep}: {events:?}");
@@ -920,7 +926,8 @@ fn c2_grimtooth_generates_equips_throws_and_preserves_unknown_instance_after_sav
                         .is_some_and(|knowledge| knowledge.appraised)
                 );
                 restored.reveal_current_visibility();
-                let saved = Game::from_save(restored.to_save()).unwrap();
+                let saved =
+                    Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
                 assert_eq!(saved.state_hash(), restored.state_hash());
                 assert!(saved.generated_artifact_ids.contains("demo.item.grimtooth"));
             }
@@ -1015,7 +1022,7 @@ fn c1_boromir_generates_equips_scares_and_restores_cooldown_and_rng() {
             .is_some_and(|k| k.appraised)
     );
     game.reveal_current_visibility();
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
     give_inventory_item(&mut game, "test.c1-bow", "demo.item.short-bow");
     game.equip_inventory_item("test.c1-bow", None).unwrap();
@@ -1087,7 +1094,7 @@ fn c1_boromir_generates_equips_scares_and_restores_cooldown_and_rng() {
         game.process_inventory_device_recovery(&mut Vec::new());
     }
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.entities, game.entities);
     for g in [&mut game, &mut restored] {
@@ -1206,7 +1213,7 @@ fn c1_group_artifacts_follow_ordinary_bases_and_activate_after_save() {
         game.pick_up_item_at_player(Some(&id)).unwrap();
     }
     game.reveal_current_visibility();
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     game.player.position = Position { x: 10, y: 10 };
     for x in 10..=13 {
         replace_terrain(&mut game, Position { x, y: 10 }, "demo.terrain.floor");
@@ -1278,7 +1285,7 @@ fn c1_group_artifacts_follow_ordinary_bases_and_activate_after_save() {
             game.process_inventory_device_recovery(&mut Vec::new());
         }
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         for g in [&mut game, &mut restored] {
             for tick in start + cooldown / 2 + 1..start + cooldown {
@@ -1415,7 +1422,7 @@ fn c1_tuber_spends_ammunition_but_cannot_hit_source_birds_and_resumes_same_shot(
         .expect("Tuber can hit other source glyphs");
     game.rng = RfbRng::seeded(seed);
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(shoot(&mut restored), shoot(&mut game));
     assert_eq!(game.rng, restored.rng);
     assert_eq!(game.state_hash(), restored.state_hash());
@@ -1506,7 +1513,7 @@ fn b7_avavir_recall_counts_down_returns_and_cancels_without_teleporting() {
             .unwrap();
     }
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     for _ in 0..delay - delay / 2 {
         let mut a = Vec::new();
@@ -1559,7 +1566,7 @@ fn b7_avavir_recall_counts_down_returns_and_cancels_without_teleporting() {
         game.process_inventory_device_recovery(&mut Vec::new());
     }
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         restored
             .items
@@ -1717,7 +1724,7 @@ fn b7_eonwe_genocide_preserves_range_protection_fatigue_and_learned_immunity() {
     let success = success.unwrap();
     game.rng = RfbRng::seeded(success);
     game.reveal_current_visibility();
-    let mut replay = Game::from_save(game.to_save()).unwrap();
+    let mut replay = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let events = activate(&mut game, &id);
     assert_eq!(activate(&mut replay, &id), events);
     assert_eq!(game.state_hash(), replay.state_hash());
@@ -1800,7 +1807,8 @@ fn b7_eonwe_genocide_preserves_range_protection_fatigue_and_learned_immunity() {
         resistant.process_inventory_device_recovery(&mut Vec::new());
     }
     resistant.reveal_current_visibility();
-    let mut restored = Game::from_save(resistant.to_save()).unwrap();
+    let mut restored =
+        Game::from_save(resistant.to_save(), resistant.behavior_preferences()).unwrap();
     assert!(restored.entities[0].no_genocide);
     assert_eq!(restored.state_hash(), resistant.state_hash());
     for tick in 5001..10000 {
@@ -1827,7 +1835,8 @@ fn b7_eonwe_genocide_preserves_range_protection_fatigue_and_learned_immunity() {
         })
         .unwrap();
     restored.rng = RfbRng::seeded(seed);
-    let mut continued = Game::from_save(restored.to_save()).unwrap();
+    let mut continued =
+        Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
     assert_eq!(activate(&mut restored, &id), activate(&mut continued, &id));
     assert_eq!(
         restored.entities.len(),
@@ -1934,7 +1943,7 @@ fn b6_body_armor_generates_equips_and_preserves_negative_properties_after_save()
         "B6 items never generated: {remaining:?}"
     );
     game.reveal_current_visibility();
-    let unknown = Game::from_save(game.to_save()).unwrap();
+    let unknown = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(unknown.state_hash(), game.state_hash());
     for (slug, defense, weight, hit) in cases {
         let mut equipped = unknown.clone();
@@ -1996,7 +2005,8 @@ fn b6_body_armor_generates_equips_and_preserves_negative_properties_after_save()
         }
         equipped.refresh_player_resource_maxima();
         equipped.reveal_current_visibility();
-        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        let mut restored =
+            Game::from_save(equipped.to_save(), equipped.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), equipped.state_hash());
         assert_eq!(restored.items[0], equipped.items[0]);
         assert_eq!(
@@ -2088,7 +2098,7 @@ fn b6_morlok_spell_power_and_intrinsic_curses_survive_dispelling_until_unequippe
         Position { x: 12, y: 10 },
     );
     game.reveal_current_visibility();
-    let mut powered = Game::from_save(game.to_save()).unwrap();
+    let mut powered = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(powered.state_hash(), game.state_hash());
     powered.debug_ability_casts_succeed = true;
     let mut unpowered = powered.clone();
@@ -2209,7 +2219,7 @@ fn b6_soulkeeper_heals_1000_only_cures_bleeding_and_restores_cooldown() {
         game.process_inventory_device_recovery(&mut Vec::new());
     }
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.items[0].device_recovery_progress, 4440);
     for tick in 4441..8880 {
@@ -2223,7 +2233,8 @@ fn b6_soulkeeper_heals_1000_only_cures_bleeding_and_restores_cooldown() {
     assert_eq!(restored.items[0].device_recovery_progress, 0);
     restored.rng = RfbRng::seeded(success);
     restored.reveal_current_visibility();
-    let mut continued = Game::from_save(restored.to_save()).unwrap();
+    let mut continued =
+        Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
     assert_eq!(activate(&mut continued, &id), activate(&mut restored, &id));
     assert_eq!(continued.state_hash(), restored.state_hash());
     assert_eq!(continued.rng, restored.rng);
@@ -2298,7 +2309,7 @@ fn b5_gloves_and_shields_generate_equip_and_preserve_combat_bonuses_after_save()
         "B5 items never generated: {remaining:?}"
     );
     game.reveal_current_visibility();
-    let unknown = Game::from_save(game.to_save()).unwrap();
+    let unknown = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(unknown.state_hash(), game.state_hash());
     assert_eq!(unknown.rng, game.rng);
     for (slug, defense, weight, hit, damage) in cases {
@@ -2370,7 +2381,8 @@ fn b5_gloves_and_shields_generate_equip_and_preserve_combat_bonuses_after_save()
         }
         equipped.refresh_player_resource_maxima();
         equipped.reveal_current_visibility();
-        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        let mut restored =
+            Game::from_save(equipped.to_save(), equipped.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), equipped.state_hash());
         assert_eq!(restored.items[0].intrinsic_properties, intrinsic);
         assert_eq!(
@@ -2588,7 +2600,7 @@ fn b5_arrow_and_curing_activations_preserve_effect_boundaries_and_cooldowns() {
             game.process_inventory_device_recovery(&mut Vec::new());
         }
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(
             u32::from(restored.items[0].device_recovery_progress),
@@ -2613,7 +2625,8 @@ fn b5_arrow_and_curing_activations_preserve_effect_boundaries_and_cooldowns() {
         }
         restored.rng = RfbRng::seeded(success);
         restored.reveal_current_visibility();
-        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        let mut continued =
+            Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
         assert_eq!(
             activate(&mut restored, &id, Some(&target)),
             activate(&mut continued, &id, Some(&target))
@@ -2777,7 +2790,7 @@ fn b4_headgear_activations_respect_targets_healing_and_saved_recovery() {
             game.process_inventory_device_recovery(&mut Vec::new());
         }
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(
             u32::from(restored.items[0].device_recovery_progress),
@@ -2794,7 +2807,8 @@ fn b4_headgear_activations_respect_targets_healing_and_saved_recovery() {
         assert_eq!(restored.items[0].device_recovery_progress, 0);
         restored.rng = RfbRng::seeded(success);
         restored.reveal_current_visibility();
-        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        let mut continued =
+            Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
         assert_eq!(activate(&mut restored, &id), activate(&mut continued, &id));
         assert_eq!(continued.state_hash(), restored.state_hash());
         assert_eq!(continued.rng, restored.rng);
@@ -2916,7 +2930,7 @@ fn b4_headgear_generates_equips_and_preserves_source_properties_after_save() {
         "B4 items never generated: {remaining:?}"
     );
     game.reveal_current_visibility();
-    let unknown = Game::from_save(game.to_save()).unwrap();
+    let unknown = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(unknown.state_hash(), game.state_hash());
     assert_eq!(unknown.rng, game.rng);
     for (slug, defense, weight) in cases {
@@ -3051,7 +3065,8 @@ fn b4_headgear_generates_equips_and_preserves_source_properties_after_save() {
         }
         equipped.refresh_player_resource_maxima();
         equipped.reveal_current_visibility();
-        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        let mut restored =
+            Game::from_save(equipped.to_save(), equipped.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), equipped.state_hash());
         assert_eq!(restored.items[0].rolled_affixes, rolled);
         assert_eq!(restored.items[0].intrinsic_properties, intrinsic);
@@ -3204,7 +3219,7 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
         );
     }
     game.reveal_current_visibility();
-    let unknown = Game::from_save(game.to_save()).unwrap();
+    let unknown = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(unknown.state_hash(), game.state_hash());
     assert_eq!(unknown.rng, game.rng);
     for (slug, defense, stealth) in [
@@ -3299,7 +3314,8 @@ fn b3_shadow_cloaks_generate_equip_and_preserve_rolls_after_save() {
         }
         equipped.refresh_player_resource_maxima();
         equipped.reveal_current_visibility();
-        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        let mut restored =
+            Game::from_save(equipped.to_save(), equipped.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), equipped.state_hash());
         assert_eq!(restored.items[0].rolled_affixes, rolled);
         assert_eq!(
@@ -3422,7 +3438,7 @@ fn b3_luthien_restores_experience_and_150_life_force_with_saved_cooldown() {
         game.process_inventory_device_recovery(&mut Vec::new());
     }
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.items[0].device_recovery_progress, 2250);
     assert_eq!(restored.items[0].rolled_affixes, rolled);
@@ -3438,7 +3454,8 @@ fn b3_luthien_restores_experience_and_150_life_force_with_saved_cooldown() {
     restored.progress.life_force = 950;
     restored.rng = RfbRng::seeded(success);
     restored.reveal_current_visibility();
-    let mut continued = Game::from_save(restored.to_save()).unwrap();
+    let mut continued =
+        Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
     assert_eq!(activate(&mut restored, &id), activate(&mut continued, &id));
     assert_eq!(
         (restored.progress.experience, restored.progress.life_force),
@@ -3573,7 +3590,7 @@ fn b1_b2_weapons_generate_equip_fight_and_preserve_source_properties_after_save(
     }
     assert!(remaining.is_empty());
     game.reveal_current_visibility();
-    let unknown = Game::from_save(game.to_save()).unwrap();
+    let unknown = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(unknown.state_hash(), game.state_hash());
     assert_eq!(unknown.rng, game.rng);
     for (slug, base, dice, sides, hit, damage, weight, defense) in cases {
@@ -3738,7 +3755,8 @@ fn b1_b2_weapons_generate_equip_fight_and_preserve_source_properties_after_save(
         }
         equipped.refresh_player_resource_maxima();
         equipped.reveal_current_visibility();
-        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        let mut restored =
+            Game::from_save(equipped.to_save(), equipped.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), equipped.state_hash());
         let next = equipped
             .generate_loot_instances(&context, ItemLocation::Inventory)
@@ -3828,7 +3846,8 @@ fn b1_b2_weapons_generate_equip_fight_and_preserve_source_properties_after_save(
                 .expect("generated B1/B2 artifact must land a real attack");
             combat.rng = RfbRng::seeded(seed);
             combat.reveal_current_visibility();
-            let mut replay = Game::from_save(combat.to_save()).unwrap();
+            let mut replay =
+                Game::from_save(combat.to_save(), combat.behavior_preferences()).unwrap();
             assert_eq!(strike(&mut replay), strike(&mut combat));
             assert!(combat.entities.is_empty());
             assert_eq!(replay.state_hash(), combat.state_hash());
@@ -3876,7 +3895,7 @@ fn b2_heavy_artifacts_preserve_riding_drain_and_teleport_boundaries() {
         );
         game.refresh_player_resource_maxima();
         game.reveal_current_visibility();
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(
             restored
@@ -3894,7 +3913,7 @@ fn b2_heavy_artifacts_preserve_riding_drain_and_teleport_boundaries() {
     base.equip_inventory_item(&id, Some("right-hand")).unwrap();
     base.refresh_player_resource_maxima();
     base.reveal_current_visibility();
-    let mut restored = Game::from_save(base.to_save()).unwrap();
+    let mut restored = Game::from_save(base.to_save(), base.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), base.state_hash());
     let before = restored.player.position;
     let rng = restored.rng.clone();
@@ -4129,7 +4148,7 @@ fn heavy_base_artifacts_generate_with_source_overrides_and_saved_random_properti
         );
     }
     game.reveal_current_visibility();
-    let unknown = Game::from_save(game.to_save()).unwrap();
+    let unknown = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(unknown.state_hash(), game.state_hash());
     assert_eq!(unknown.rng, game.rng);
     for (slug, base, defense, weight, hit, damage) in cases {
@@ -4283,7 +4302,8 @@ fn heavy_base_artifacts_generate_with_source_overrides_and_saved_random_properti
         );
         equipped.refresh_player_resource_maxima();
         equipped.reveal_current_visibility();
-        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        let mut restored =
+            Game::from_save(equipped.to_save(), equipped.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), equipped.state_hash());
         assert_eq!(
             restored
@@ -4388,7 +4408,7 @@ fn ready_armor_group_generates_equips_and_preserves_consumers_after_save() {
         );
     }
     game.reveal_current_visibility();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
     game = restored;
@@ -4500,7 +4520,7 @@ fn ready_armor_group_generates_equips_and_preserves_consumers_after_save() {
         }
         game.refresh_player_resource_maxima();
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(
             restored.player_derived_stats().armor_class,
@@ -4516,7 +4536,7 @@ fn ready_armor_group_generates_equips_and_preserves_consumers_after_save() {
             Some(kind)
         );
         // Replay from the same saved state, before the extra uniqueness query.
-        let mut replay = Game::from_save(game.to_save()).unwrap();
+        let mut replay = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(
             replay
                 .generate_loot_instances(&context, ItemLocation::Inventory)
@@ -4558,9 +4578,9 @@ fn ready_armor_group_generates_equips_and_preserves_consumers_after_save() {
 fn a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save() {
     const BEAST: &str = "demo.actor.greater-hell-beast";
     const SHIRT: &str = "demo.item.legendary-lost-treasure";
-    // Seed 54 reaches GHB through the unmodified formal entrance/floor/ecology.
+    // Seed 15 reaches GHB through the unmodified formal entrance/floor/ecology.
     // Combat is shortened below; this is not a natural leveling test.
-    let mut game = Game::new_with_build(54, "demo.build.warrior").unwrap();
+    let mut game = Game::new_with_build(15, "demo.build.warrior").unwrap();
     choose_human_talent_if_pending(&mut game);
     place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
     dispatch_next(&mut game, GameCommand::TraverseStairs);
@@ -4603,7 +4623,7 @@ fn a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save() {
     beast.nice = true;
     game.entities[0] = beast.clone();
     game.reveal_current_visibility();
-    game = Game::from_save(game.to_save()).unwrap();
+    game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let prepared = game.clone();
     game = (0..256)
         .find_map(|seed| {
@@ -4642,7 +4662,7 @@ fn a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save() {
             .is_some_and(|knowledge| knowledge.identified)
     );
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     restored.identify_item_instance(&reward.id, ItemIdentificationRequest::new(true));
     let before = restored.player_derived_stats().armor_class.value;
@@ -4654,7 +4674,7 @@ fn a10_hell_beast_natural_entry_drops_zero_rarity_artifact_once_after_save() {
         10
     );
     restored.reveal_current_visibility();
-    let mut resumed = Game::from_save(restored.to_save()).unwrap();
+    let mut resumed = Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
     assert_eq!(resumed.state_hash(), restored.state_hash());
     assert_eq!(resumed.actor_kind_available_instance_count(BEAST), 0);
     // Source xtra2.c skips an already-generated reward; it does not replace it.
@@ -4732,7 +4752,7 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
                 game.pick_up_item_at_player(Some(&id)).unwrap();
                 assert_eq!(game.carried_weight_tenths_pound(), weight);
                 game.reveal_current_visibility();
-                let unknown = Game::from_save(game.to_save()).unwrap();
+                let unknown = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 assert_eq!(unknown.state_hash(), game.state_hash());
                 assert!(
                     !unknown
@@ -4768,7 +4788,8 @@ fn ordinary_heavy_armor_allocation_reaches_equipment_and_save() {
                     if acid_immune { 0 } else { -1 }
                 );
                 game.reveal_current_visibility();
-                let mut restored = Game::from_save(game.to_save()).unwrap();
+                let mut restored =
+                    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 assert_eq!(restored.state_hash(), game.state_hash());
                 assert_eq!(restored.rng, game.rng);
                 assert_eq!(
@@ -4888,7 +4909,7 @@ fn hobbit_fixed_artifacts_generate_equip_and_preserve_uniqueness_after_save() {
         }
     }
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
     assert_eq!(
@@ -5040,7 +5061,7 @@ fn galadriel_instant_generation_lighting_activation_and_cooldown_survive_save() 
         game.process_inventory_device_recovery(&mut events);
     }
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.player_light_radius(), Some(3));
     assert_eq!(restored.items[0].device_recovery_progress, 75);
@@ -5064,7 +5085,8 @@ fn galadriel_instant_generation_lighting_activation_and_cooldown_survive_save() 
     restored.process_inventory_device_recovery(&mut events);
     assert_eq!(restored.items[0].charges.unwrap().current, 1);
     assert_eq!(restored.items[0].device_recovery_progress, 0);
-    let mut continued = Game::from_save(restored.to_save()).unwrap();
+    let mut continued =
+        Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
     let next = restored
         .generate_loot_instances(&context, ItemLocation::Inventory)
         .unwrap();
@@ -5176,7 +5198,7 @@ fn a1_instant_lights_generate_activate_and_resume_after_save() {
                 .is_some_and(|k| k.appraised)
         );
         game.reveal_current_visibility();
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         game = restored;
@@ -5272,7 +5294,7 @@ fn a1_instant_lights_generate_activate_and_resume_after_save() {
                 .is_none()
         );
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         assert_eq!(
@@ -5351,7 +5373,8 @@ fn a1_instant_lights_generate_activate_and_resume_after_save() {
             0
         );
         restored.reveal_current_visibility();
-        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        let mut continued =
+            Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
         assert_eq!(activate(&mut restored, &id), activate(&mut continued, &id));
         assert_eq!(continued.state_hash(), restored.state_hash());
         assert_eq!(continued.rng, restored.rng);
@@ -5461,7 +5484,7 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
                 .is_some_and(|k| k.appraised)
         );
         game.reveal_current_visibility();
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         game = restored;
@@ -5702,7 +5725,7 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
             game.process_inventory_device_recovery(&mut Vec::new());
         }
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         assert_eq!(restored.player.statuses, game.player.statuses);
@@ -5782,7 +5805,8 @@ fn a7_instant_lights_activate_with_source_parameters_and_resume_after_save() {
         );
         restored.reveal_current_visibility();
         restored.rng = RfbRng::seeded(success_seed);
-        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        let mut continued =
+            Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
         assert_eq!(
             use_light(&mut restored, &id, Some(&target)),
             use_light(&mut continued, &id, Some(&target))
@@ -5961,7 +5985,7 @@ fn a8_artifacts_generate_activate_and_resume_source_cooldowns_after_save() {
                 .is_some_and(|k| k.appraised)
         );
         game.reveal_current_visibility();
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         game = restored;
@@ -6083,7 +6107,7 @@ fn a8_artifacts_generate_activate_and_resume_source_cooldowns_after_save() {
             game.process_inventory_device_recovery(&mut Vec::new());
         }
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.items[0].rolled_affixes, rolled);
         assert_eq!(
@@ -6101,7 +6125,8 @@ fn a8_artifacts_generate_activate_and_resume_source_cooldowns_after_save() {
         assert_eq!(restored.items[0].device_recovery_progress, 0);
         restored.rng = RfbRng::seeded(success);
         restored.reveal_current_visibility();
-        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        let mut continued =
+            Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
         assert_eq!(activate(&mut restored, &id), activate(&mut continued, &id));
         assert_eq!(continued.items[0].charges.unwrap().current, 0);
         assert_eq!(continued.state_hash(), restored.state_hash());
@@ -6211,7 +6236,8 @@ fn a8_gauntlet_brands_reach_both_weapons_but_not_ammunition() {
             trial.entities[0].resistances.set(element, resistance);
             trial.rng = RfbRng::seeded(seed);
             trial.reveal_current_visibility();
-            let mut restored = Game::from_save(trial.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(trial.to_save(), trial.behavior_preferences()).unwrap();
             assert_eq!(strike(&mut restored), strike(&mut trial));
             assert_eq!(restored.state_hash(), trial.state_hash());
             assert_eq!(restored.rng, trial.rng);
@@ -6286,7 +6312,8 @@ fn a8_thrown_daggers_use_their_own_brands_and_keep_random_properties_after_picku
             expected.rng.bounded(100);
             let raw = (expected.roll_damage(2, 5) * multiplier / 10 + 12) * thrown.1 / 100;
             trial.reveal_current_visibility();
-            let mut restored = Game::from_save(trial.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(trial.to_save(), trial.behavior_preferences()).unwrap();
             let events = throw(&mut trial, &id);
             assert_eq!(throw(&mut restored, &id), events);
             assert!(events.iter().any(|event| matches!(event, DomainEvent::ItemThrowHit { damage, .. } if damage.raw == raw)));
@@ -6302,7 +6329,8 @@ fn a8_thrown_daggers_use_their_own_brands_and_keep_random_properties_after_picku
             restored.player.position = position;
             restored.pick_up_item_at_player(Some(&id)).unwrap();
             restored.reveal_current_visibility();
-            let recovered = Game::from_save(restored.to_save()).unwrap();
+            let recovered =
+                Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
             assert_eq!(recovered.state_hash(), restored.state_hash());
             let item = recovered.items.iter().find(|item| item.id == id).unwrap();
             assert_eq!(item.rolled_affixes, rolled);
@@ -6372,7 +6400,7 @@ fn a9_ordinary_identity_artifacts_generate_fight_and_preserve_their_scope_after_
                 .is_some_and(|k| k.appraised)
         );
         game.reveal_current_visibility();
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         game = restored;
@@ -6556,7 +6584,7 @@ fn a9_ordinary_identity_artifacts_generate_fight_and_preserve_their_scope_after_
         game.entities[0].hp = 1;
         game.rng = RfbRng::seeded(seed);
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.riding_actor_id, game.riding_actor_id);
         assert_eq!(strike(&mut restored), strike(&mut game));
@@ -6636,7 +6664,7 @@ fn a2_armor_generation_equipment_consumers_and_uniqueness_survive_save() {
                 .is_some_and(|k| k.appraised)
         );
         game.reveal_current_visibility();
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         game = restored;
@@ -6712,7 +6740,7 @@ fn a2_armor_generation_equipment_consumers_and_uniqueness_survive_save() {
             _ => unreachable!(),
         }
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(
             restored.player_derived_stats().armor_class,
@@ -6731,7 +6759,8 @@ fn a2_armor_generation_equipment_consumers_and_uniqueness_survive_save() {
             restored.roll_fixed_artifact_kind_id(&context, Some(&base), false),
             Some(kind)
         );
-        let mut continued = Game::from_save(restored.to_save()).unwrap();
+        let mut continued =
+            Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
         assert_eq!(
             continued
                 .generate_loot_instances(&context, ItemLocation::Inventory)
@@ -6827,14 +6856,23 @@ fn a3_weapons_generate_fight_and_preserve_equipment_and_uniqueness_after_save() 
                 .is_some_and(|k| k.appraised)
         );
         game.reveal_current_visibility();
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         game = restored;
         game.equip_inventory_item(&id, Some("right-hand")).unwrap();
         let profile = game.player_melee_profile(&game.player_derived_stats());
         assert_eq!(profile.source_item_id.as_deref(), Some(id.as_str()));
         assert_eq!((profile.damage_dice, profile.damage_sides), (dice, sides));
-        assert_eq!(profile.to_hit, hit);
+        let weapon = game.equipped_melee_weapons()[0];
+        let grip_hit = if game.weapon_uses_two_hands(weapon)
+            && crate::stats::strength_hold_pounds(game.effective_player_attributes().strength) * 2
+                >= game.item_instance_weight(weapon) / 5
+        {
+            game.player_attribute_to_hit().max(1)
+        } else {
+            0
+        };
+        assert_eq!(profile.to_hit, hit + grip_hit);
         assert!(profile.to_damage >= damage);
         match slug {
             "osondir" => {
@@ -7020,7 +7058,7 @@ fn a3_weapons_generate_fight_and_preserve_equipment_and_uniqueness_after_save() 
         game.entities[0].hp = 1;
         game.rng = RfbRng::seeded(seed);
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(strike(&mut restored), strike(&mut game));
         assert!(
@@ -7106,7 +7144,7 @@ fn terror_mask_generation_uses_current_build_and_preserves_identity_after_save()
         game.pick_up_item_at_player(Some(&id)).unwrap();
         assert!(game.visible_item_resistances(&game.items[0]).is_empty());
         game.reveal_current_visibility();
-        let unknown = Game::from_save(game.to_save()).unwrap();
+        let unknown = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(unknown.state_hash(), game.state_hash());
         let rolled = game.items[0].clone();
         let rng = game.rng.clone();
@@ -7174,7 +7212,7 @@ fn terror_mask_generation_uses_current_build_and_preserves_identity_after_save()
                 ResistanceLevel::Resistant
             );
         }
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.items[0], game.items[0]);
         assert!(
@@ -7252,7 +7290,8 @@ fn terror_mask_generation_uses_current_build_and_preserves_identity_after_save()
             let mana = "demo.resource.mana";
             let masked_maximum = restored.resources[mana].maximum;
             restored.resources.get_mut(mana).unwrap().current = masked_maximum;
-            let mut caster = Game::from_save(restored.to_save()).unwrap();
+            let mut caster =
+                Game::from_save(restored.to_save(), restored.behavior_preferences()).unwrap();
             assert_eq!(caster.state_hash(), restored.state_hash());
             let before = caster.state_hash();
             let mut events = Vec::new();
@@ -7470,7 +7509,7 @@ fn terror_mask_melee_only_bonuses_and_fear_activation_restore() {
         game.world_tick = tick;
         game.process_inventory_device_recovery(&mut events);
     }
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     for tick in 501..1000 {
         restored.world_tick = tick;
@@ -7618,7 +7657,7 @@ fn a4_high_resistance_armor_generates_equips_and_preserves_rolls_after_save() {
         assert_eq!(game.carried_weight_tenths_pound(), weight);
         assert!(game.visible_item_resistances(&game.items[0]).is_empty());
         game.reveal_current_visibility();
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
         assert_eq!(restored.items[0].rolled_affixes, rolled);
@@ -7650,7 +7689,7 @@ fn a4_high_resistance_armor_generates_equips_and_preserves_rolls_after_save() {
             );
         }
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.items[0].rolled_affixes, rolled);
         assert!(restored.generated_artifact_ids.contains(&kind));
@@ -7818,7 +7857,7 @@ fn fixed_high_resistance_armor_generates_reveals_equips_and_restores() {
     );
     assert_eq!(game.carried_weight_tenths_pound(), 575);
     game.reveal_current_visibility();
-    let unknown = Game::from_save(game.to_save()).unwrap();
+    let unknown = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(unknown.state_hash(), game.state_hash());
     for (kind, base, defense, hit) in [
         ("rohirrim", "metal-brigandine-armour", 34, 0),
@@ -7892,7 +7931,8 @@ fn fixed_high_resistance_armor_generates_reveals_equips_and_restores() {
             _ => unreachable!(),
         }
         equipped.reveal_current_visibility();
-        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        let mut restored =
+            Game::from_save(equipped.to_save(), equipped.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), equipped.state_hash());
         assert_eq!(
             restored
@@ -7996,7 +8036,12 @@ fn fixed_weapon_pair_generates_and_preserves_combat_and_passives_after_save() {
         let profile = equipped.player_melee_profile(&equipped.player_derived_stats());
         assert_eq!(profile.source_item_id.as_deref(), Some(id.as_str()));
         assert_eq!((profile.damage_dice, profile.damage_sides), (1, sides));
-        assert_eq!(profile.to_hit, hit);
+        let grip_hit = if equipped.weapon_uses_two_hands(equipped.equipped_melee_weapons()[0]) {
+            equipped.player_attribute_to_hit().max(1)
+        } else {
+            0
+        };
+        assert_eq!(profile.to_hit, hit + grip_hit);
         assert!(profile.to_damage >= damage);
         if kind == "gondricam" {
             assert_eq!(equipped.equipment_modifiers().dexterity, 3);
@@ -8025,7 +8070,8 @@ fn fixed_weapon_pair_generates_and_preserves_combat_and_passives_after_save() {
             }
         }
         equipped.reveal_current_visibility();
-        let mut restored = Game::from_save(equipped.to_save()).unwrap();
+        let mut restored =
+            Game::from_save(equipped.to_save(), equipped.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), equipped.state_hash());
         assert_eq!(
             restored
@@ -8254,7 +8300,7 @@ fn fixed_armor_pair_generates_equips_and_preserves_consumers_after_save() {
         }
     }
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     let expected = game.player_derived_stats();
     let actual = restored.player_derived_stats();
@@ -8360,7 +8406,7 @@ fn razorback_equipment_and_unique_identity_survive_save() {
             .level(DamageType::Electricity),
         ResistanceLevel::Immune
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(
         restored
@@ -8426,7 +8472,7 @@ fn artifact_inventory_drop_finds_distant_land_without_relaxing_ordinary_drops() 
             .any(|item| item.id == artifact_id && item.location == ItemLocation::Ground(landing))
     );
     assert!(game.items.iter().any(|item| item.id == "test.ordinary-drop" && item.location == ItemLocation::Inventory));
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -8476,7 +8522,7 @@ fn razorback_star_ball_and_full_10000_tick_cooldown_survive_save() {
         (item.charges.unwrap().current, item.device_recovery_progress),
         (0, 5_000)
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     for tick in 14_998..=19_996 {
         restored.world_tick = tick;
@@ -8638,7 +8684,7 @@ fn dr_jones_equipment_passives_and_unique_generation_survive_save() {
     assert_eq!(game.equipment_modifiers().wisdom, before.wisdom + 1);
     assert!(game.player_levitates());
     assert_eq!(game.player_see_invisible_sources(), see_invisible + 1);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(
         restored
@@ -8719,7 +8765,7 @@ fn dr_jones_fetch_and_full_300_tick_cooldown_survive_save() {
         (item.charges.unwrap().current, item.device_recovery_progress),
         (0, 150)
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     for tick in 448..=596 {
         restored.world_tick = tick;
@@ -8855,7 +8901,8 @@ fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
     game.content = original_content;
     game.current_floor_id = original_floor_id;
     let hash = game.state_hash();
-    let mut restored = Game::from_save(game.to_save()).expect("Olog-hai reward should restore");
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Olog-hai reward should restore");
     assert_eq!(restored.state_hash(), hash);
     for _ in 0..50 {
         if restored
@@ -9247,7 +9294,7 @@ fn a6_aule_generates_with_both_extras_and_replays_combat_after_save() {
     assert!(game.visible_item_passives(&game.items[0]).is_empty());
     assert!(game.visible_item_resistances(&game.items[0]).is_empty());
     game.reveal_current_visibility();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
     assert_eq!(restored.items[0].intrinsic_properties, intrinsic);
@@ -9292,7 +9339,7 @@ fn a6_aule_generates_with_both_extras_and_replays_combat_after_save() {
     assert_eq!(profile.source_item_id.as_deref(), Some(id.as_str()));
     assert_eq!(
         (profile.damage_dice, profile.damage_sides, profile.to_hit),
-        (5, 7, 19)
+        (5, 7, 20)
     );
     // Slays and the electricity brand take the strongest applicable multiplier.
     for (target, electricity, multiplier) in [
@@ -9339,7 +9386,7 @@ fn a6_aule_generates_with_both_extras_and_replays_combat_after_save() {
     game.entities[0].hp = 1;
     game.rng = RfbRng::seeded(seed);
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.items[0].intrinsic_properties, intrinsic);
     assert_eq!(restored.items[0].rolled_affixes, rolled);
@@ -9513,7 +9560,7 @@ fn a5_weapons_generate_fight_and_keep_random_properties_after_save() {
         );
         assert!(game.known_item_properties(&game.items[0]).is_empty());
         game.reveal_current_visibility();
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.items[0].rolled_affixes, rolled);
         game = restored;
@@ -9664,7 +9711,7 @@ fn a5_weapons_generate_fight_and_keep_random_properties_after_save() {
         game.entities[0].hp = 1;
         game.rng = RfbRng::seeded(seed);
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.items[0].rolled_affixes, rolled);
         assert_eq!(strike(&mut restored), strike(&mut game));
@@ -9758,7 +9805,8 @@ fn p100e_soulsword_rolls_and_persists_one_extra_power_and_increases_life() {
     );
 
     let hash = game.state_hash();
-    let restored = Game::from_save(game.to_save()).expect("Soulsword should restore");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Soulsword should restore");
     assert_eq!(restored.state_hash(), hash);
     let restored_item = restored
         .items
@@ -9840,6 +9888,8 @@ fn p100e_soulsword_warning_reveals_and_stops_before_a_hidden_trap() {
             .any(|event| event.kind == "item.warning-trap")
     );
 
+    // Deliberately step onto the revealed trap instead of invoking convenient disarm.
+    game.operation_options.easy_disarm = false;
     let moved = dispatch_next(
         &mut game,
         GameCommand::Move {
@@ -10103,8 +10153,12 @@ fn resource_restorative_preserves_awareness_order_and_missing_resource_semantics
                 "{case}"
             );
             if has_berserk {
-                let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-                    .expect("restored resource state should reload");
+                let restored = Game::from_save_with_content(
+                    game.to_save(),
+                    game.content.clone(),
+                    game.behavior_preferences(),
+                )
+                .expect("restored resource state should reload");
                 assert_eq!(restored.snapshot(), game.snapshot(), "{case}");
             } else {
                 let event = update
@@ -10429,7 +10483,8 @@ fn cleansing_scrolls_respect_heavy_and_permanent_curse_boundaries() {
         Some(ItemCurseSeverityDto::Permanent)
     );
     let saved = game.to_save();
-    let restored = Game::from_save(saved.clone()).expect("curse severities should round-trip");
+    let restored = Game::from_save(saved.clone(), Game::default_behavior_preferences())
+        .expect("curse severities should round-trip");
     for (item_id, expected) in [
         (HEAVY_ID, None),
         (PERMANENT_ID, Some(ItemCurseSeverityDto::Permanent)),
@@ -10487,8 +10542,12 @@ fn spell_scroll_increases_only_eligible_learning_capacity_without_rng() {
             && event.args.get("after").map(String::as_str) == Some(capacity_after_arg.as_str())
     }));
     assert_eq!(caster.item_knowledge_dto(KIND_ID), ItemKnowledgeDto::Aware);
-    let restored = Game::from_save_with_content(caster.to_save(), caster.content.clone())
-        .expect("spell bonus should round trip");
+    let restored = Game::from_save_with_content(
+        caster.to_save(),
+        caster.content.clone(),
+        caster.behavior_preferences(),
+    )
+    .expect("spell bonus should round trip");
     assert_eq!(restored.state_hash(), caster.state_hash());
 
     let mut warrior =
@@ -10519,7 +10578,7 @@ fn spell_scroll_increases_only_eligible_learning_capacity_without_rng() {
     let mut invalid = warrior.to_save();
     invalid.player.bonus_spell_learning_capacity = 1;
     assert!(matches!(
-        Game::from_save(invalid),
+        Game::from_save(invalid, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave(
             "bonus spell learning capacity is invalid"
         ))
@@ -10920,7 +10979,8 @@ fn friendly_item_summons_are_permanent_controlled_and_round_trip() {
     );
 
     let saved = game.to_save();
-    let restored = Game::from_save(saved).expect("controlled item summons should reload");
+    let restored = Game::from_save(saved, Game::default_behavior_preferences())
+        .expect("controlled item summons should reload");
     assert_eq!(restored.state_hash(), game.state_hash());
     assert!(summoned_ids.iter().all(|entity_id| {
         restored
@@ -11153,7 +11213,8 @@ fn p3_4_light_and_darkness_reuse_persisted_floor_glow() {
         }] if !affected_positions.is_empty()
     ));
 
-    let restored = Game::from_save(game.to_save()).expect("lit floor should reload");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("lit floor should reload");
     assert_eq!(restored.glow, game.glow);
     assert_eq!(restored.state_hash(), game.state_hash());
 
@@ -11656,7 +11717,8 @@ fn p3_7_neo_tsuyoshi_round_trips_and_crashes_on_expiry() {
     assert_eq!(tsuyoshi.granted_modifiers.constitution, 4);
     assert_eq!(tsuyoshi.granted_modifiers.max_hp, 50);
     assert!((91..=190).contains(&tsuyoshi.remaining_ticks));
-    let restored = Game::from_save(game.to_save()).expect("Tsuyoshi status should round trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("Tsuyoshi status should round trip");
     assert_eq!(restored.snapshot(), game.snapshot());
 
     game.progress.attributes.strength = 118;
@@ -12017,8 +12079,12 @@ fn b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng() {
             encumbers
         );
         game.reveal_current_visibility();
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(
             restored
@@ -12123,7 +12189,7 @@ fn all_priest_builds_generate_tailored_hafted_weapons_equip_and_resume_generatio
         game.refresh_player_resource_maxima();
         game.refresh_player_ability_state();
         assert!(!game.item_is_icky(&game.items[0], false));
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(
             b4_pick_up_tailored_matching(&mut game, accepts),
             b4_pick_up_tailored_matching(&mut restored, accepts)
@@ -12141,7 +12207,7 @@ fn tailored_duelist_weapon_equips_and_preserves_continued_generation_after_save(
     let id = b4_pick_up_tailored_kind(&mut game, "demo.item.dagger");
     assert!(game.equip_inventory_item(&id, None).is_some());
     assert!(game.duelist_equipment_error().is_none());
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         b4_pick_up_tailored_kind(&mut game, "demo.item.dagger"),
@@ -12180,7 +12246,7 @@ fn b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper() {
             "{build}: {:?}",
             update.events
         );
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(
             restored.player_projectile_profile().unwrap().source_item_id,
@@ -12225,7 +12291,7 @@ fn b4_tailored_lance_keeps_riding_bonus_in_actual_mounted_combat() {
         .unwrap();
     assert!(!events.is_empty());
     game.reveal_current_visibility();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.riding_actor_id, game.riding_actor_id);
 }
@@ -12285,7 +12351,7 @@ fn b4_tailored_death_books_are_counted_studied_cast_and_restored() {
             game.item_knowledge["demo.item.black-channels"].found_count,
             1
         );
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert!(restored.learned_abilities.contains(ability));
     }
@@ -12327,7 +12393,7 @@ fn b4_tailored_high_mage_device_is_usable_and_restores_its_charges() {
         .charges
         .unwrap();
     assert!(charges.current < before.current);
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         restored
@@ -12457,7 +12523,8 @@ fn p3_5_mundanity_preserves_stack_identity_and_rejects_unmapped_demo_artifacts()
             && event.args.get("split").map(String::as_str) == Some("false")
             && event.args.get("targetId") == Some(&mundane.id)
     }));
-    Game::from_save(game.to_save()).expect("mundane ammunition stack should round-trip");
+    Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("mundane ammunition stack should round-trip");
 
     give_inventory_item(
         &mut game,
@@ -12541,7 +12608,8 @@ fn e6_crafting_keeps_ammunition_stack_identifies_ego_and_cancels_invalid_targets
             && event.args.get("targetId") == Some(&crafted.id)
             && event.args.get("split").map(String::as_str) == Some("false")
     }));
-    Game::from_save(game.to_save()).expect("crafted ammunition should round-trip");
+    Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("crafted ammunition should round-trip");
 
     give_inventory_item(
         &mut game,
@@ -12634,7 +12702,7 @@ fn artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name()
             .insert("RES_FIRE".into());
         let serial = game.next_item_instance_serial;
         let tick = game.world_tick;
-        Game::from_save(game.to_save())
+        Game::from_save(game.to_save(), game.behavior_preferences())
             .unwrap_or_else(|error| panic!("{build}, equipped={equipped}: before scroll: {error}"));
         assert!(
             game.snapshot()
@@ -12687,7 +12755,7 @@ fn artifact_scroll_keeps_selected_equipment_identity_properties_and_saved_name()
                 "generated weapon is not a device"
             );
         }
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(
             restored
                 .items
@@ -12766,7 +12834,7 @@ fn artifact_scroll_destroys_extra_ground_ammunition_and_uses_generated_dice_for_
         (profile.damage_dice, profile.damage_sides),
         (dice.dice, dice.sides)
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         restored.player_projectile_profile().unwrap().damage_sides,
         dice.sides
@@ -12831,7 +12899,9 @@ fn artifact_scroll_zero_value_failure_keeps_generated_item_rng_and_scroll_withou
     );
     assert_eq!(
         game.state_hash(),
-        Game::from_save(game.to_save()).unwrap().state_hash()
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash()
     );
 }
 
@@ -12947,7 +13017,7 @@ fn artifact_scroll_snotling_mushroom_is_reusable_and_restores_its_cooldown() {
     let update = dispatch_next(&mut game, eat.clone());
     assert_eq!(update.events[0].kind, "item.use-unavailable");
     assert_eq!(game.world_tick, tick);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), restored.state_hash());
     let remaining = game.items[0].device_recovery_progress;
     for _ in 0..remaining {
@@ -13052,7 +13122,8 @@ fn e6_crafting_materializes_player_made_armor() {
     );
     assert_eq!(crafted.origin_kind, Some(ItemOriginKindDto::PlayerMade));
     assert_eq!(crafted.discount_percent, 99);
-    Game::from_save(game.to_save()).expect("player-made armour should round-trip");
+    Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("player-made armour should round-trip");
 }
 
 fn crafting_game(kind_id: &str, quantity: u32) -> Game {
@@ -13295,7 +13366,8 @@ fn e6_crafting_uses_shared_weighted_materialization_at_player_level() {
                 .any(|tag| tag == "artifact")
         );
         assert_eq!(game.virtue_current(VirtueKindDto::Enchantment), 1);
-        Game::from_save(game.to_save()).unwrap_or_else(|error| panic!("{kind_id}: {error:?}"));
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap_or_else(|error| panic!("{kind_id}: {error:?}"));
     }
 }
 

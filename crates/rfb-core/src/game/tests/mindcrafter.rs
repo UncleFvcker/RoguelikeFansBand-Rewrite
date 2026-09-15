@@ -11,9 +11,14 @@ mod spells;
 
 #[test]
 fn normal_creation_projects_cast_reasons_and_preserves_upgraded_abilities_after_loading() {
-    let mut game =
-        Game::new_with_build_race_and_name(924, BUILD, "demo.race.rfb-human", " 心灵旅人 ")
-            .unwrap();
+    let mut game = Game::new_with_build_race_and_name(
+        924,
+        BUILD,
+        "demo.race.rfb-human",
+        " 心灵旅人 ",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(game.snapshot().player.name, "心灵旅人");
     let ability = |game: &Game, slug: &str| {
         game.snapshot()
@@ -67,7 +72,7 @@ fn normal_creation_projects_cast_reasons_and_preserves_upgraded_abilities_after_
     );
     assert!(door.can_cast);
     assert!(game.snapshot().player.ability_learning.is_none());
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         restored.snapshot().player.abilities,
         game.snapshot().player.abilities
@@ -306,9 +311,14 @@ fn level_passives_stack_with_race_and_rest_recovers_without_a_power_roll() {
             .any(|event| matches!(event.outcome, Some(GameEventOutcomeDto::AbilityCast { .. })))
     );
 
-    let mut flayer =
-        Game::new_with_build_race_and_name(925, BUILD, "rfb-legacy.race.mindflayer", "Mentalist")
-            .unwrap();
+    let mut flayer = Game::new_with_build_race_and_name(
+        925,
+        BUILD,
+        "rfb-legacy.race.mindflayer",
+        "Mentalist",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     flayer.progress.level = 30;
     assert!(flayer.player_has_permanent_telepathy());
     assert!(flayer.player_sustains_attribute(AttributeKind::Intelligence));
@@ -562,9 +572,14 @@ fn auto_identify_uses_devices_then_scrolls_then_twelve_mana() {
 fn tomte_sensing_and_free_identification_precede_paid_mindcraft_without_replacing_it() {
     for (level, heavy_headgear, expected_cost) in [(39, false, 12), (40, false, 0), (40, true, 12)]
     {
-        let mut game =
-            Game::new_with_build_race_and_name(928, BUILD, "rfb-legacy.race.tomte", "心灵感知")
-                .unwrap();
+        let mut game = Game::new_with_build_race_and_name(
+            928,
+            BUILD,
+            "rfb-legacy.race.tomte",
+            "心灵感知",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         game.debug_prepare_mindcrafter_e2e(level);
         if heavy_headgear {
             give_inventory_item(&mut game, "test.helmet", "demo.item.iron-helm");
@@ -650,9 +665,14 @@ fn low_wisdom_and_stun_failure_are_bounded_and_fail_without_backlash() {
 
 #[test]
 fn bookless_resources_and_sensed_knowledge_round_trip_and_continue() {
-    let mut game =
-        Game::new_with_build_race_and_name(926, BUILD, "rfb-legacy.race.mindflayer", "Mentalist")
-            .unwrap();
+    let mut game = Game::new_with_build_race_and_name(
+        926,
+        BUILD,
+        "rfb-legacy.race.mindflayer",
+        "Mentalist",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     clear_monsters(&mut game);
     game.apply_player_experience(game.experience_required_for_level(35), &mut Vec::new());
     game.resources.get_mut(MANA).unwrap().current = 0;
@@ -702,7 +722,8 @@ fn bookless_resources_and_sensed_knowledge_round_trip_and_continue() {
         game.item_property_knowledge[&weapon_id].feeling,
         Some(rfb_protocol::ItemFeelingDto::Enchanted)
     );
-    let mut restored = Game::from_save(game.to_save()).expect("bookless character should load");
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("bookless character should load");
     let before = serde_json::to_value(game.snapshot()).unwrap();
     let after = serde_json::to_value(restored.snapshot()).unwrap();
     let differences = before

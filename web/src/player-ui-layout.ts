@@ -19,14 +19,10 @@ interface PlayerUiDom {
   readonly hudIdentityHost: HTMLElement;
   readonly hudVitalsHost: HTMLElement;
   readonly hudMenuContent: HTMLElement;
-  readonly settingsOpen: HTMLButtonElement;
-  readonly settingsClose: HTMLButtonElement;
-  readonly settingsDialog: HTMLDialogElement;
   readonly gameplaySettingsHost: HTMLElement;
   readonly inventoryOpen: HTMLButtonElement;
   readonly abilityOpen: HTMLButtonElement;
   readonly characterOpen: HTMLButtonElement;
-  readonly tasksOpen: HTMLButtonElement;
   readonly pageTabs: Record<PlayerPage, HTMLButtonElement>;
   readonly characterTabs: readonly HTMLButtonElement[];
   readonly characterDetailTabs: readonly HTMLButtonElement[];
@@ -87,12 +83,9 @@ export class PlayerUiLayout {
   install(): void {
     if (this.#installed) return;
     this.#installed = true;
-    this.#dom.settingsOpen.addEventListener("click", this.#showSettings);
-    this.#dom.settingsClose.addEventListener("click", this.#closeSettings);
     this.#dom.inventoryOpen.addEventListener("click", this.#openInventory);
     this.#dom.abilityOpen.addEventListener("click", this.#openAbility);
     this.#dom.characterOpen.addEventListener("click", this.#openCharacter);
-    this.#dom.tasksOpen.addEventListener("click", this.#openTasks);
     for (const tab of [...Object.values(this.#dom.pageTabs), ...this.#dom.characterTabs, ...this.#dom.characterDetailTabs]) {
       tab.addEventListener("click", this.#handleTabClick);
       tab.addEventListener("keydown", this.#handleTabKeydown);
@@ -109,12 +102,9 @@ export class PlayerUiLayout {
   dispose(): void {
     if (!this.#installed) return;
     this.#installed = false;
-    this.#dom.settingsOpen.removeEventListener("click", this.#showSettings);
-    this.#dom.settingsClose.removeEventListener("click", this.#closeSettings);
     this.#dom.inventoryOpen.removeEventListener("click", this.#openInventory);
     this.#dom.abilityOpen.removeEventListener("click", this.#openAbility);
     this.#dom.characterOpen.removeEventListener("click", this.#openCharacter);
-    this.#dom.tasksOpen.removeEventListener("click", this.#openTasks);
     for (const tab of [...Object.values(this.#dom.pageTabs), ...this.#dom.characterTabs, ...this.#dom.characterDetailTabs]) {
       tab.removeEventListener("click", this.#handleTabClick);
       tab.removeEventListener("keydown", this.#handleTabKeydown);
@@ -162,13 +152,17 @@ export class PlayerUiLayout {
     this.#activateTab(this.#dom.characterTabs.find(tab => tab.dataset.characterPage === "other")!);
   }
 
-  readonly #showSettings = (): void => {
-    if (!this.#dom.settingsDialog.open) this.#dom.settingsDialog.showModal();
-  };
+  showCharacter(page: "overview" | "details" | "proficiencies" | "other", detail?: "offense"): void {
+    this.open("character");
+    this.#activateTab(this.#dom.characterTabs.find(tab => tab.dataset.characterPage === page)!);
+    if (detail) this.#activateTab(this.#dom.characterDetailTabs.find(tab => tab.dataset.characterDetail === detail)!);
+  }
 
-  readonly #closeSettings = (): void => {
-    if (this.#dom.settingsDialog.open) this.#dom.settingsDialog.close();
-  };
+  showMessages(): void {
+    this.#selectIntelPanel("message");
+    const panel = this.#document.getElementById("message-panel");
+    if (panel) { panel.tabIndex = -1; panel.focus(); panel.scrollIntoView({ block: "nearest" }); }
+  }
 
   readonly #openInventory = (): void => this.open("inventory");
   readonly #openAbility = (): void => this.open("ability");
@@ -272,6 +266,7 @@ export class PlayerUiLayout {
     if (
       event.defaultPrevented ||
       event.repeat ||
+      event.isComposing ||
       event.altKey ||
       event.ctrlKey ||
       event.metaKey ||
@@ -338,7 +333,14 @@ export class PlayerUiLayout {
     ]) {
       const control = this.#document.getElementById(id);
       const label = control?.closest("label");
-      if (label) this.#dom.gameplaySettingsHost.append(label);
+      if (label) {
+        label.dataset.preferenceRow = id;
+        const help = this.#document.createElement("small");
+        help.dataset.l10nId = "preferences-help-" + id;
+        help.textContent = this.#localization.format(help.dataset.l10nId);
+        label.append(help);
+        this.#dom.gameplaySettingsHost.append(label);
+      }
     }
     const controls = this.#document.getElementById("controls-help");
     if (controls) this.#dom.gameplaySettingsHost.append(controls);
@@ -382,14 +384,10 @@ function createPlayerUiDom(document: Document): PlayerUiDom {
     hudIdentityHost: element("hud-identity-host"),
     hudVitalsHost: element("hud-vitals-host"),
     hudMenuContent: element("hud-menu-content"),
-    settingsOpen: element("player-ui-settings-open"),
-    settingsClose: element("player-ui-settings-close"),
-    settingsDialog: element("player-ui-settings-dialog"),
     gameplaySettingsHost: element("gameplay-settings-host"),
     inventoryOpen: element("player-ui-inventory-open"),
     abilityOpen: element("player-ui-ability-open"),
     characterOpen: element("player-ui-character-open"),
-    tasksOpen: element("player-ui-tasks-open"),
     pageTabs: {
       ability: element("player-page-tab-ability"),
       character: element("player-page-tab-character"),
@@ -416,10 +414,6 @@ function createPlayerUiDom(document: Document): PlayerUiDom {
     supportPanelHost: element("support-panel-host"),
     supportPanels: [
       element("dungeon-info-panel"),
-      element("summon-command-panel"),
-      element("campaign-panel"),
-      element("task-log-entry"),
-      element("native-save-panel"),
     ],
     progressionPanel: element("progression-panel"),
     statusPanel: element("status-panel"),

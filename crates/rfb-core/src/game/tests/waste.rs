@@ -278,7 +278,7 @@ fn waste_wait_rest_movement_and_save_share_the_world_clock() {
     assert_eq!(waiting.player.statuses, moving.player.statuses);
     assert!(waiting.player_has_status_kind(STATUS_POISON));
     waiting.reveal_current_visibility();
-    let mut restored = Game::from_save(waiting.to_save()).unwrap();
+    let mut restored = Game::from_save(waiting.to_save(), waiting.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), waiting.state_hash());
     let left = dispatch_next(&mut waiting, GameCommand::Wait);
     let right = dispatch_next(&mut restored, GameCommand::Wait);
@@ -432,19 +432,19 @@ fn waste_save_rejects_ground_items_and_gold_on_deep_waste() {
     give_inventory_item(&mut game, "test.drop", "demo.item.iron-shot");
     game.items[0].location = ItemLocation::Ground(START);
     assert!(matches!(
-        Game::from_save(game.to_save()),
+        Game::from_save(game.to_save(), game.behavior_preferences()),
         Err(CoreError::InvalidSave("item state is invalid"))
     ));
     replace_terrain(&mut game, START, SHALLOW);
     game.reveal_current_visibility();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     game.items.clear();
     let pile = game.generate_gold_pile(START, 1, false).unwrap();
     game.gold_piles.push(pile);
     replace_terrain(&mut game, START, DEEP);
     assert!(matches!(
-        Game::from_save(game.to_save()),
+        Game::from_save(game.to_save(), game.behavior_preferences()),
         Err(CoreError::InvalidSave("gold pile state is invalid"))
     ));
 }
@@ -744,7 +744,9 @@ fn waste_stored_floor_items_use_the_same_save_boundary() {
     descend_one_floor(&mut game);
     game.reveal_current_visibility();
     assert_eq!(
-        Game::from_save(game.to_save()).unwrap().state_hash(),
+        Game::from_save(game.to_save(), game.behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
     let floor = game
@@ -755,7 +757,7 @@ fn waste_stored_floor_items_use_the_same_save_boundary() {
     floor.terrain[position.y as usize * usize::from(floor.width) + position.x as usize] =
         DEEP.to_owned();
     assert!(matches!(
-        Game::from_save(game.to_save()),
+        Game::from_save(game.to_save(), game.behavior_preferences()),
         Err(CoreError::InvalidSave("stored floor item state is invalid"))
     ));
 }

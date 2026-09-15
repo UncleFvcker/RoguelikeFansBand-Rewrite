@@ -34,7 +34,7 @@ fn asgard_mead_actual_use_extends_caps_and_resumes_without_stacking_attributes()
     assert!(game.effective_player_attributes().charisma > before.charisma);
     let boosted = game.effective_player_attributes();
     let second = artifact(&mut game, "muse-tonic");
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let old = remaining(&game);
     for game in [&mut game, &mut restored] {
         dispatch_next(
@@ -71,7 +71,7 @@ fn asgard_mead_actual_use_extends_caps_and_resumes_without_stacking_attributes()
         },
     );
     assert_eq!(remaining(&game), 100_000);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     restored
         .player
         .statuses

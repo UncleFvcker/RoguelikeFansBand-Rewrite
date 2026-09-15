@@ -48,6 +48,8 @@ pub enum NativeSaveStatus {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NativeSaveSummary {
+    pub character_name: Option<String>,
+    pub character_level: Option<u32>,
     pub museum_checkpoint: bool,
     pub slot_id: String,
     pub slot_name: String,
@@ -235,6 +237,8 @@ impl NativeSaveStore {
         };
         let (header, snapshot) = decode_snapshot(&loaded.bytes)?;
         Ok(NativeSaveSummary {
+            character_name: Some(header.character_summary.display_name),
+            character_level: Some(header.character_summary.level),
             museum_checkpoint: false,
             slot_id: slot_id.to_owned(),
             slot_name: if header.slot_name.trim().is_empty() {
@@ -389,13 +393,15 @@ fn slot_id_from_file_name(name: &str) -> Option<String> {
 fn decode_snapshot(bytes: &[u8]) -> DesktopResult<(SaveHeaderV1, GameSnapshot)> {
     let (header, payload) = rfb_save::decode(bytes)
         .map_err(|error| DesktopCommandError::new("native-save-invalid", error.to_string()))?;
-    let game = Game::from_save(payload)
+    let game = Game::from_save(payload, Game::default_behavior_preferences())
         .map_err(|error| DesktopCommandError::new("native-save-invalid", error.to_string()))?;
     Ok((header, game.snapshot()))
 }
 
 fn corrupt_summary(slot_id: &str) -> NativeSaveSummary {
     NativeSaveSummary {
+        character_name: None,
+        character_level: None,
         museum_checkpoint: false,
         slot_id: slot_id.to_owned(),
         slot_name: slot_id.to_owned(),
@@ -416,6 +422,8 @@ pub fn museum_checkpoint_summary(id: u64, bytes: &[u8]) -> DesktopResult<NativeS
         DesktopCommandError::new("museum-checkpoint-invalid", error.to_string())
     })?;
     Ok(NativeSaveSummary {
+        character_name: Some(header.character_summary.display_name.clone()),
+        character_level: Some(header.character_summary.level),
         museum_checkpoint: true,
         slot_id: format!("museum-{id}"),
         slot_name: header.character_summary.display_name,

@@ -602,11 +602,16 @@ fn campaign_score(
         .saturating_add(
             u64::from(completed).saturating_mul(u64::from(campaign.task_completion_points)),
         )
-        .saturating_add(if state.status != CampaignStatusDto::Active {
-            u64::from(campaign.victory_bonus)
-        } else {
-            0
-        });
+        .saturating_add(
+            if matches!(
+                state.status,
+                CampaignStatusDto::Victorious | CampaignStatusDto::Retired
+            ) {
+                u64::from(campaign.victory_bonus)
+            } else {
+                0
+            },
+        );
     let penalty = u64::from(turn / campaign.turn_penalty_interval)
         .saturating_mul(u64::from(campaign.turn_penalty_points));
     base.saturating_sub(penalty)
@@ -1419,6 +1424,21 @@ impl Game {
             attribute_index_cap: CharacterProgress::attribute_index_cap(true),
         });
         self.apply_player_experience(0, events);
+    }
+
+    // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, files.c::do_cmd_suicide.
+    // Confirmation belongs to the caller; this recorded command is the final decision.
+    pub(super) fn end_character(&mut self) -> crate::event::DomainEvent {
+        let score = self.campaign_score_at(self.turn);
+        self.campaign_state.final_score = Some(score);
+        if self.campaign_state.status == CampaignStatusDto::Victorious {
+            self.campaign_state.status = CampaignStatusDto::Retired;
+            self.campaign_state.retired_turn = Some(self.turn);
+            crate::event::DomainEvent::CampaignRetired { score }
+        } else {
+            self.campaign_state.status = CampaignStatusDto::Abandoned;
+            crate::event::DomainEvent::CampaignAbandoned { score }
+        }
     }
 
     pub(super) fn retire_campaign(&mut self) -> Option<u64> {

@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.266";
+pub const PROTOCOL_VERSION: &str = "1.293";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 28;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 41;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -395,6 +395,20 @@ pub enum GameCommand {
         direction: Direction,
     },
     DismissPets,
+    DismissPet {
+        actor_id: String,
+    },
+    SetPetTarget {
+        actor_id: Option<String>,
+    },
+    SetPetOption {
+        option: PetOptionDto,
+        enabled: bool,
+    },
+    SetPetName {
+        actor_id: String,
+        name: Option<String>,
+    },
     ResolveMutationDirection {
         direction: Direction,
     },
@@ -438,8 +452,6 @@ pub enum GameCommand {
     },
     EnterWorldMap {
         #[serde(default)]
-        leave_pets: bool,
-        #[serde(default)]
         cancel_recall: bool,
     },
     LeaveWorldMap,
@@ -449,8 +461,31 @@ pub enum GameCommand {
     TravelLocal {
         destination: Position,
     },
+    FindNearestUnknownItem,
+    TravelUnknownItem {
+        object_id: String,
+        destination: Position,
+    },
+    Run {
+        direction: Direction,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "bindings", schemars(range(min = 1, max = 9999)))]
+        max_steps: Option<u16>,
+    },
+    ContinueRun,
+    CancelRun,
+    AutoExplore,
+    ContinueAutoExplore,
+    CancelAutoExplore,
     Move {
         direction: Direction,
+    },
+    WalkSpecial {
+        direction: Direction,
+    },
+    SwapRings {
+        first_slot_id: String,
+        second_slot_id: String,
     },
     Ride {
         direction: Direction,
@@ -466,13 +501,29 @@ pub enum GameCommand {
     },
     PickUp,
     Retire,
+    EndCharacter,
     ContinueFishing,
     CancelFishing,
     Rest {
         #[cfg_attr(feature = "bindings", schemars(range(min = 1, max = 100)))]
         turns: u16,
     },
+    RestForTurns {
+        #[cfg_attr(feature = "bindings", schemars(range(min = 1, max = 9999)))]
+        turns: u16,
+    },
+    RestUntilResources {
+        #[cfg_attr(feature = "bindings", schemars(range(min = 1, max = 9999)))]
+        turns: u16,
+    },
     Search,
+    ToggleSearch,
+    Alter {
+        direction: Direction,
+    },
+    SpikeDoor {
+        direction: Direction,
+    },
     WithdrawFromHome {
         facility_id: String,
         item_id: String,
@@ -544,6 +595,12 @@ pub enum GameCommand {
     ConfigureTravel {
         options: TravelOptionsDto,
     },
+    ConfigureMogaminatorPreferences {
+        preferences: MogaminatorPreferencesDto,
+    },
+    ConfigurePreferences {
+        preferences: BehaviorPreferencesDto,
+    },
     SetSummonCommand {
         mode: SummonCommandModeDto,
     },
@@ -595,6 +652,7 @@ pub enum GameCommand {
         slot_id: String,
     },
     Wait,
+    Stay,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -703,9 +761,54 @@ pub struct AutoGetTargetDto {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(TS, JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RunningStateDto {
+    pub direction: Direction,
+    pub previous_direction: Direction,
+    pub open_area: bool,
+    pub ignore_avoid_run: bool,
+    pub break_left: bool,
+    pub break_right: bool,
+    pub origin: Position,
+    pub position: Position,
+    pub floor_id: String,
+    pub remaining_steps: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(TS, JsonSchema))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
+pub enum AutoExploreTargetDto {
+    Frontier {
+        position: Position,
+    },
+    Object {
+        object_id: String,
+        position: Position,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(TS, JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct AutoExploreStateDto {
+    pub floor_id: String,
+    pub position: Position,
+    pub target: Option<AutoExploreTargetDto>,
+    pub visited_frontiers: Vec<Position>,
+    pub known_cells: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct MogaminatorDto {
+    pub protection_templates: Vec<MogaminatorProtectionTemplateDto>,
     pub enabled: bool,
     pub leave_destroyed_items: bool,
     pub auto_get_mode: AutoGetModeDto,
@@ -725,6 +828,14 @@ pub struct MogaminatorDto {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MogaminatorProtectionTemplateDto {
+    pub id: String,
+    pub source: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MogaminatorPendingQuerySaveDto {
     pub item_id: String,
@@ -733,7 +844,8 @@ pub struct MogaminatorPendingQuerySaveDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct MogaminatorSaveDto {
+// Execution hash context only; SavePayloadV1 stores wanted targets separately.
+pub struct MogaminatorContextDto {
     pub enabled: bool,
     pub leave_destroyed_items: bool,
     pub auto_get_mode: AutoGetModeDto,
@@ -747,6 +859,88 @@ pub struct MogaminatorSaveDto {
     pub wanted_actor_kind_ids: Vec<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BehaviorPreferencesDto {
+    pub locale: LocaleDto,
+    pub travel: TravelOptionsDto,
+    pub operations: OperationOptionsDto,
+    pub mogaminator: MogaminatorPreferencesDto,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum DefaultTargetModeDto {
+    Manual,
+    OldTarget,
+    NearestEnemy,
+    OldThenNearest,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RunStopsDto {
+    pub stairs: bool,
+    pub open_doors: bool,
+    pub known_treasure: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct OperationOptionsDto {
+    pub run_stops: RunStopsDto,
+    pub cut_corners: bool,
+    pub travel_ignore_items: bool,
+    pub default_target: DefaultTargetModeDto,
+    pub target_pets: bool,
+    pub easy_open: bool,
+    pub easy_disarm: bool,
+    pub auto_repeat: bool,
+}
+
+impl Default for OperationOptionsDto {
+    fn default() -> Self {
+        Self {
+            run_stops: RunStopsDto {
+                stairs: true,
+                open_doors: false,
+                known_treasure: false,
+            },
+            cut_corners: false,
+            travel_ignore_items: true,
+            default_target: DefaultTargetModeDto::Manual,
+            target_pets: false,
+            easy_open: true,
+            easy_disarm: true,
+            auto_repeat: true,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MogaminatorPreferencesDto {
+    pub enabled: bool,
+    pub leave_destroyed_items: bool,
+    pub auto_get_mode: AutoGetModeDto,
+    pub zh_cn_source: String,
+    pub en_us_source: String,
+}
+
+// Replay-only context: transient answers are not character facts or preferences.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BehaviorContextDto {
+    pub preferences: BehaviorPreferencesDto,
+    pub pending_query: Option<MogaminatorPendingQuerySaveDto>,
+    pub dismissed_query_item_ids: Vec<String>,
+}
+
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
@@ -756,15 +950,75 @@ pub enum SummonCommandModeDto {
     Attack,
     KeepDistance,
     Guard,
+    StayClose,
+    GiveSpace,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct SummonCommandDto {
     pub mode: SummonCommandModeDto,
+    #[serde(default)]
+    pub riding_two_hands: bool,
+    #[serde(default)]
+    pub highlight_map: bool,
+    #[serde(default = "default_true")]
+    pub highlight_lists: bool,
+    #[serde(default)]
+    pub open_doors: bool,
+    #[serde(default)]
+    pub pickup_items: bool,
+    #[serde(default)]
+    pub no_breeding: bool,
+    #[serde(default = "default_true")]
+    pub attack_spells: bool,
+    #[serde(default = "default_true")]
+    pub summon_spells: bool,
+    #[serde(default = "default_true")]
+    pub teleport: bool,
+    #[serde(default)]
+    pub allow_player_damage: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_actor_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub guard_position: Option<Position>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum PetOptionDto {
+    RidingTwoHands,
+    HighlightMap,
+    HighlightLists,
+    OpenDoors,
+    PickupItems,
+    NoBreeding,
+    AttackSpells,
+    SummonSpells,
+    Teleport,
+    AllowPlayerDamage,
+}
+
+impl Default for SummonCommandDto {
+    fn default() -> Self {
+        Self {
+            mode: SummonCommandModeDto::Follow,
+            riding_two_hands: false,
+            highlight_map: false,
+            highlight_lists: true,
+            open_doors: false,
+            pickup_items: false,
+            no_breeding: false,
+            attack_spells: true,
+            summon_spells: true,
+            teleport: true,
+            allow_player_damage: false,
+            target_actor_id: None,
+            guard_position: None,
+        }
+    }
 }
 
 fn is_default_summon_command(value: &SummonCommandDto) -> bool {
@@ -2610,6 +2864,8 @@ const fn default_task_stage() -> u32 {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CellDto {
+    /// Passage through remembered terrain only; never consult hidden terrain.
+    pub known_projectile_passage: bool,
     pub position: Position,
     pub terrain_id: String,
     pub item_id: Option<String>,
@@ -3769,6 +4025,7 @@ pub struct MonsterDisplacementResolutionDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
 pub enum RestStopReasonDto {
+    Displaced,
     MaiaPathChoiceRequired,
     Damaged,
     EnemyVisible,
@@ -3799,6 +4056,9 @@ pub struct RestResolutionDto {
     rename_all_fields = "camelCase"
 )]
 pub enum GameEventOutcomeDto {
+    UnknownItemTravelTarget {
+        target: AutoGetTargetDto,
+    },
     AbilityAreaDamage {
         resolution: AbilityAreaDamageResolutionDto,
     },
@@ -3926,7 +4186,36 @@ pub struct SniperConcentrationDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+pub struct EditableVisualDto {
+    /// Source PRF identity, only populated in the knowledge-gated catalog.
+    pub prf: Option<String>,
+    pub id: String,
+    pub glyph: String,
+    pub name_key: String,
+    pub category: VisualCategoryDto,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum VisualCategoryDto {
+    Item,
+    Monster,
+    Terrain,
+    Marker,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct PlayerDto {
+    pub visual_catalog: Vec<EditableVisualDto>,
+    pub speed_energy_per_tick: i32,
+    /// Detected coverage intersected with known local terrain.
+    pub trap_detected_grids: Vec<Position>,
+    pub discovery: DiscoveryDto,
+    pub floor_feeling_message_key: String,
+    pub monster_recall: Vec<ResearchMonsterDto>,
     pub maia_path: Option<MaiaPathDto>,
     pub pending_maia_path_choice: bool,
     pub magic_eater: Option<MagicEaterDto>,
@@ -3971,6 +4260,10 @@ pub struct PlayerDto {
     pub inventory_used_slots: u16,
     #[serde(default)]
     pub inventory_slot_capacity: u16,
+    /// Inventory stacks currently covered by equipped quiver capacity, derived by Core.
+    /// These IDs remain in `inventory`; they are not a second item container.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub quiver_item_ids: Vec<String>,
     #[serde(default)]
     pub base_max_hp: i32,
     #[serde(default)]
@@ -4002,6 +4295,11 @@ pub struct PlayerDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sniper_concentration: Option<SniperConcentrationDto>,
     pub fishing_direction: Option<Direction>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub running: Option<RunningStateDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub auto_explore: Option<AutoExploreStateDto>,
+    pub searching: bool,
     #[serde(default)]
     pub resistances: Vec<ResistanceDto>,
     #[serde(default, skip_serializing_if = "is_default_player_progress")]
@@ -4029,6 +4327,7 @@ pub struct PlayerDto {
     pub riding_actor_id: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub pets: Vec<PetDto>,
+    pub riding_without_reins: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4036,6 +4335,9 @@ pub struct PlayerDto {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PetDto {
     pub actor_id: String,
+    pub custom_name: Option<String>,
+    pub can_name: bool,
+    pub highlight: bool,
     pub actor_kind_id: String,
     pub name_key: String,
     pub level: u32,
@@ -4084,6 +4386,10 @@ pub struct RecallStateDto {
 #[serde(rename_all = "camelCase")]
 pub struct EntityDto {
     pub id: String,
+    pub in_line_of_effect: bool,
+    pub custom_name: Option<String>,
+    pub highlight_map: bool,
+    pub highlight_list: bool,
     pub kind_id: String,
     /// The currently projected map glyph. Telepathy may conceal kind identity
     /// while retaining the original monster symbol.
@@ -4140,6 +4446,8 @@ pub enum EntityFactionDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct SummonDto {
+    #[serde(default)]
+    pub owner_dependent: bool,
     pub owner_id: String,
     pub source_ability_id: String,
     pub remaining_turns: u16,
@@ -4166,6 +4474,7 @@ pub struct ChestDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ItemDto {
+    pub visual: EditableVisualDto,
     #[serde(default, skip_serializing_if = "is_false")]
     pub usable: bool,
     #[serde(default, skip_serializing_if = "is_false")]
@@ -4290,6 +4599,7 @@ pub enum ItemQualityDto {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
 pub enum ItemOriginKindDto {
     Chest,
@@ -4428,6 +4738,7 @@ pub struct ItemPropertyDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CapturedActorDto {
+    pub custom_name: Option<String>,
     pub kind_id: String,
     pub name_key: String,
     pub speed: u16,
@@ -4436,10 +4747,27 @@ pub struct CapturedActorDto {
     pub experience: u64,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemUseCategoryDto {
+    Food,
+    Potion,
+    Scroll,
+    Wand,
+    Staff,
+    Rod,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct InventoryItemDto {
+    pub visual: EditableVisualDto,
+    pub origin_kind: Option<ItemOriginKindDto>,
+    pub discount_percent: u8,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub use_category: Option<ItemUseCategoryDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub throw_target_spec: Option<TargetSpecDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4546,6 +4874,9 @@ pub struct BodySlotDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct EquipmentItemDto {
+    pub visual: EditableVisualDto,
+    pub origin_kind: Option<ItemOriginKindDto>,
+    pub discount_percent: u8,
     #[serde(default, skip_serializing_if = "is_false")]
     pub requires_recharge_targets: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4638,6 +4969,7 @@ pub enum CampaignStatusDto {
     Active,
     Victorious,
     Retired,
+    Abandoned,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4698,6 +5030,9 @@ pub struct ShopOwnerDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ShopStockItemDto {
+    pub visual: EditableVisualDto,
+    pub origin_kind: Option<ItemOriginKindDto>,
+    pub discount_percent: u8,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub affix_name_keys: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4980,6 +5315,7 @@ pub enum CasinoRoundSaveDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ResearchMonsterDto {
+    pub rideable: bool,
     pub kind_id: String,
     pub name_key: String,
     pub glyph: String,
@@ -4987,6 +5323,85 @@ pub struct ResearchMonsterDto {
     pub unique: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub knowledge: Option<MonsterKindKnowledgeDto>,
+}
+
+/// Character-local discovery memory. Sorted unique IDs are checked on load.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DiscoverySaveDto {
+    pub objects: Vec<String>,
+    pub artifacts: Vec<String>,
+    pub egos: Vec<String>,
+    pub monsters: Vec<MonsterDiscoverySaveDto>,
+    pub dungeons: Vec<DungeonDiscoverySaveDto>,
+    pub random_artifacts: Vec<RandomArtifactDiscoveryDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MonsterDiscoverySaveDto {
+    pub kind_id: String,
+    pub seen: bool,
+    pub kills: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DungeonDiscoverySaveDto {
+    pub dungeon_id: String,
+    pub max_depth: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RandomArtifactDiscoveryDto {
+    pub id: String,
+    pub kind_id: String,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct DiscoveryDto {
+    pub objects: Vec<DiscoveryEntryDto>,
+    pub artifacts: Vec<DiscoveryEntryDto>,
+    pub egos: Vec<DiscoveryEntryDto>,
+    pub monsters: Vec<MonsterDiscoveryDto>,
+    pub dungeons: Vec<DungeonDiscoveryDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct DiscoveryEntryDto {
+    pub id: String,
+    pub name_key: String,
+    pub description_key: String,
+    pub custom_name: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MonsterDiscoveryDto {
+    pub monster: ResearchMonsterDto,
+    pub kills: u32,
+    pub alive: Option<bool>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct DungeonDiscoveryDto {
+    pub dungeon_id: String,
+    pub name_key: String,
+    pub max_depth: u16,
+    pub conquered: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -5155,6 +5570,7 @@ pub struct FacilityServiceDto {
 #[serde(rename_all = "camelCase")]
 pub struct GameSnapshot {
     pub travel_options: TravelOptionsDto,
+    pub operation_options: OperationOptionsDto,
     pub protocol_version: String,
     pub revision: u32,
     pub turn: u32,
@@ -5208,7 +5624,9 @@ pub struct GameSnapshot {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct GameUpdate {
+    pub command_repeatable: bool,
     pub travel_options: TravelOptionsDto,
+    pub operation_options: OperationOptionsDto,
     pub base_revision: u32,
     pub revision: u32,
     pub turn: u32,
@@ -5302,6 +5720,11 @@ pub fn generated_typescript() -> String {
     push_declaration!(MagicEaterDto);
     push_declaration!(DeviceCommandDto);
     push_declaration!(TravelOptionsDto);
+    push_declaration!(BehaviorPreferencesDto);
+    push_declaration!(OperationOptionsDto);
+    push_declaration!(RunStopsDto);
+    push_declaration!(DefaultTargetModeDto);
+    push_declaration!(MogaminatorPreferencesDto);
     push_declaration!(LocaleDto);
     push_declaration!(AutoGetModeDto);
     push_declaration!(MogaminatorDispositionDto);
@@ -5312,7 +5735,11 @@ pub fn generated_typescript() -> String {
     push_declaration!(MogaminatorItemMatchDto);
     push_declaration!(MogaminatorPendingQueryDto);
     push_declaration!(AutoGetTargetDto);
+    push_declaration!(RunningStateDto);
+    push_declaration!(AutoExploreStateDto);
+    push_declaration!(AutoExploreTargetDto);
     push_declaration!(MogaminatorDto);
+    push_declaration!(MogaminatorProtectionTemplateDto);
     push_declaration!(GameCommand);
     push_declaration!(GameCommandEnvelope);
     push_declaration!(StatModifiersDto);
@@ -5433,6 +5860,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(MonsterAbilityCastResolutionDto);
     push_declaration!(SummonCommandModeDto);
     push_declaration!(SummonCommandDto);
+    push_declaration!(PetOptionDto);
     push_declaration!(SummonCommandResolutionDto);
     push_declaration!(PetUpkeepDto);
     push_declaration!(PetDto);
@@ -5455,6 +5883,16 @@ pub fn generated_typescript() -> String {
     push_declaration!(VirtueKindDto);
     push_declaration!(VirtueDto);
     push_declaration!(PlayerDto);
+    push_declaration!(EditableVisualDto);
+    push_declaration!(VisualCategoryDto);
+    push_declaration!(DiscoveryDto);
+    push_declaration!(DiscoveryEntryDto);
+    push_declaration!(MonsterDiscoveryDto);
+    push_declaration!(DungeonDiscoveryDto);
+    push_declaration!(DiscoverySaveDto);
+    push_declaration!(MonsterDiscoverySaveDto);
+    push_declaration!(DungeonDiscoverySaveDto);
+    push_declaration!(RandomArtifactDiscoveryDto);
     push_declaration!(EntityFactionDto);
     push_declaration!(SummonDto);
     push_declaration!(EntityDto);
@@ -5469,6 +5907,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(ItemActivationDto);
     push_declaration!(ItemQualityDto);
     push_declaration!(ItemIdentificationDto);
+    push_declaration!(ItemOriginKindDto);
     push_declaration!(ItemFeelingDto);
     push_declaration!(ItemIdentifyResolutionDto);
     push_declaration!(ItemEnchantmentsDto);
@@ -5480,6 +5919,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(ItemPropertyDto);
     push_declaration!(CapturedActorDto);
     push_declaration!(InventoryItemDto);
+    push_declaration!(ItemUseCategoryDto);
     push_declaration!(BodySlotDto);
     push_declaration!(EquipmentItemDto);
     push_declaration!(GameEventDto);
@@ -5585,6 +6025,11 @@ pub struct PlayerSaveDto {
     pub confusing_strike_ready: bool,
     pub sniper_concentration: u8,
     pub fishing_direction: Option<Direction>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub running: Option<RunningStateDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub auto_explore: Option<AutoExploreStateDto>,
+    pub searching: bool,
     pub probed_actor_kind_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resistances: Vec<ResistanceSaveDto>,
@@ -5726,6 +6171,7 @@ pub struct MaterialSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct ActorSaveDto {
     pub id: String,
+    pub custom_name: Option<String>,
     pub kind_id: String,
     pub experience: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5776,6 +6222,8 @@ pub struct ActorSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SummonSaveDto {
+    #[serde(default)]
+    pub owner_dependent: bool,
     pub owner_id: String,
     pub source_ability_id: String,
     pub remaining_turns: u16,
@@ -5845,6 +6293,7 @@ pub struct ResistanceSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CapturedActorSaveDto {
+    pub custom_name: Option<String>,
     pub kind_id: String,
     pub speed: u16,
     pub hp: i32,
@@ -6159,6 +6608,7 @@ pub struct FloorSaveDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TravelOptionsDto {
+    pub always_pickup: bool,
     pub auto_detect_traps: bool,
     pub auto_map_area: bool,
     pub disturb_trap_detect: bool,
@@ -6167,6 +6617,7 @@ pub struct TravelOptionsDto {
 impl Default for TravelOptionsDto {
     fn default() -> Self {
         Self {
+            always_pickup: false,
             auto_detect_traps: false,
             auto_map_area: false,
             disturb_trap_detect: true,
@@ -6336,7 +6787,8 @@ fn is_zero_u8(value: &u8) -> bool {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SavePayloadV1 {
-    pub travel_options: TravelOptionsDto,
+    pub discovery: DiscoverySaveDto,
+    pub wanted_actor_kind_ids: Vec<String>,
     pub detection_coverage: DetectionCoverageSaveDto,
     pub absorbed_devices: Vec<AbsorbedDeviceSaveDto>,
     pub pending_magic_absorption: Option<PendingMagicAbsorptionDto>,
@@ -6358,8 +6810,6 @@ pub struct SavePayloadV1 {
     pub wilderness_chunks: Vec<WildernessChunkSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub world_travel_destination: Option<Position>,
-    pub interface_locale: LocaleDto,
-    pub mogaminator: MogaminatorSaveDto,
     pub terrain: TerrainSaveDto,
     pub player: PlayerSaveDto,
     pub entities: Vec<ActorSaveDto>,
@@ -6504,7 +6954,7 @@ mod tests {
         last_command_seq: u32,
         wilderness_view_offset: Position,
         interface_locale: LocaleDto,
-        mogaminator: MogaminatorSaveDto,
+        mogaminator: MogaminatorContextDto,
         terrain: TerrainSaveDto,
         player: PlayerDto,
         entities: Vec<EntityDto>,
@@ -6538,6 +6988,76 @@ mod tests {
     #[test]
     fn command_messagepack_round_trip() {
         for (index, command) in [
+            GameCommand::SetPetOption {
+                option: PetOptionDto::RidingTwoHands,
+                enabled: true,
+            },
+            GameCommand::SetPetName {
+                actor_id: "pet".into(),
+                name: Some("追风🐎".into()),
+            },
+            GameCommand::SetPetName {
+                actor_id: "pet".into(),
+                name: None,
+            },
+            GameCommand::SetPetOption {
+                option: PetOptionDto::HighlightMap,
+                enabled: true,
+            },
+            GameCommand::SetPetOption {
+                option: PetOptionDto::HighlightLists,
+                enabled: false,
+            },
+            GameCommand::SetPetOption {
+                option: PetOptionDto::SummonSpells,
+                enabled: false,
+            },
+            GameCommand::SetPetOption {
+                option: PetOptionDto::AttackSpells,
+                enabled: false,
+            },
+            GameCommand::SetPetOption {
+                option: PetOptionDto::Teleport,
+                enabled: false,
+            },
+            GameCommand::SetPetOption {
+                option: PetOptionDto::AllowPlayerDamage,
+                enabled: true,
+            },
+            GameCommand::SetPetOption {
+                option: PetOptionDto::NoBreeding,
+                enabled: true,
+            },
+            GameCommand::SetPetOption {
+                option: PetOptionDto::OpenDoors,
+                enabled: true,
+            },
+            GameCommand::SetPetOption {
+                option: PetOptionDto::PickupItems,
+                enabled: false,
+            },
+            GameCommand::DismissPet {
+                actor_id: "pet.1".into(),
+            },
+            GameCommand::SetPetTarget {
+                actor_id: Some("enemy.1".into()),
+            },
+            GameCommand::SetPetTarget { actor_id: None },
+            GameCommand::SetSummonCommand {
+                mode: SummonCommandModeDto::StayClose,
+            },
+            GameCommand::SetSummonCommand {
+                mode: SummonCommandModeDto::GiveSpace,
+            },
+            GameCommand::Run {
+                max_steps: None,
+                direction: Direction::NorthEast,
+            },
+            GameCommand::ContinueRun,
+            GameCommand::CancelRun,
+            GameCommand::AutoExplore,
+            GameCommand::ContinueAutoExplore,
+            GameCommand::CancelAutoExplore,
             GameCommand::Appraise {
                 item_id: "demo.item.chain-mail.1".to_owned(),
             },
@@ -6557,6 +7077,14 @@ mod tests {
             },
             GameCommand::Move {
                 direction: Direction::SouthEast,
+            },
+            GameCommand::WalkSpecial {
+                direction: Direction::NorthWest,
+            },
+            GameCommand::Stay,
+            GameCommand::SwapRings {
+                first_slot_id: "ring-1".into(),
+                second_slot_id: "ring-2".into(),
             },
             GameCommand::PickUp,
             GameCommand::AutoGet {
@@ -6585,7 +7113,6 @@ mod tests {
                 },
             },
             GameCommand::EnterWorldMap {
-                leave_pets: false,
                 cancel_recall: false,
             },
             GameCommand::LeaveWorldMap,
@@ -6595,12 +7122,26 @@ mod tests {
             GameCommand::TravelLocal {
                 destination: Position { x: 40, y: 12 },
             },
+            GameCommand::FindNearestUnknownItem,
+            GameCommand::TravelUnknownItem {
+                object_id: "test.item".into(),
+                destination: Position { x: 40, y: 12 },
+            },
             GameCommand::Throw {
                 item_id: "demo.item.ration-of-food.1".to_owned(),
                 direction: Direction::North,
             },
             GameCommand::TraverseStairs,
+            GameCommand::SpikeDoor {
+                direction: Direction::East,
+            },
+            GameCommand::RestForTurns { turns: 3 },
+            GameCommand::RestUntilResources { turns: 3 },
             GameCommand::Search,
+            GameCommand::ToggleSearch,
+            GameCommand::Alter {
+                direction: Direction::East,
+            },
             GameCommand::SellToShop {
                 shop_id: "demo.shop.outpost-general-store".to_owned(),
                 item_id: "generated.item.1".to_owned(),
@@ -6749,7 +7290,7 @@ mod tests {
             last_command_seq: 2,
             wilderness_view_offset: Position::default(),
             interface_locale: LocaleDto::ZhCn,
-            mogaminator: MogaminatorSaveDto {
+            mogaminator: MogaminatorContextDto {
                 enabled: false,
                 leave_destroyed_items: false,
                 auto_get_mode: AutoGetModeDto::Off,
@@ -6768,6 +7309,12 @@ mod tests {
                 vault_cells: vec![false],
             },
             player: PlayerDto {
+                visual_catalog: Vec::new(),
+                speed_energy_per_tick: 10,
+                trap_detected_grids: Vec::new(),
+                discovery: DiscoveryDto::default(),
+                floor_feeling_message_key: "floor-feeling-town".into(),
+                monster_recall: Vec::new(),
                 magic_eater: None,
                 trait_details: CharacterTraitDetailsDto::default(),
                 id: "demo.player".to_owned(),
@@ -6796,6 +7343,7 @@ mod tests {
                 encumbrance_speed_penalty: 0,
                 inventory_used_slots: 1,
                 inventory_slot_capacity: 26,
+                quiver_item_ids: Vec::new(),
                 base_max_hp: 10,
                 attack: 3,
                 base_attack: 2,
@@ -6821,6 +7369,9 @@ mod tests {
                 confusing_strike_ready: false,
                 sniper_concentration: None,
                 fishing_direction: None,
+                running: None,
+                auto_explore: None,
+                searching: false,
                 resistances: Vec::new(),
                 progress: PlayerProgressDto::default(),
                 build: None,
@@ -6835,8 +7386,13 @@ mod tests {
                 recall: None,
                 riding_actor_id: None,
                 pets: Vec::new(),
+                riding_without_reins: false,
             },
             entities: vec![EntityDto {
+                in_line_of_effect: true,
+                custom_name: None,
+                highlight_map: false,
+                highlight_list: false,
                 id: "demo.monster.1".to_owned(),
                 kind_id: "demo.actor.monster".to_owned(),
                 glyph: "m".to_owned(),
@@ -6866,6 +7422,13 @@ mod tests {
                 summon: None,
             }],
             items: vec![ItemDto {
+                visual: EditableVisualDto {
+                    prf: None,
+                    id: "demo.item.fixture".into(),
+                    glyph: "!".into(),
+                    name_key: "item-unknown-name".into(),
+                    category: VisualCategoryDto::Item,
+                },
                 usable: false,
                 can_supply_recharge: false,
                 can_receive_recharge: false,
@@ -6888,6 +7451,16 @@ mod tests {
             }],
             defeated_unique_actor_kind_ids: Vec::new(),
             inventory: vec![InventoryItemDto {
+                visual: EditableVisualDto {
+                    prf: None,
+                    id: "demo.item.fixture".into(),
+                    glyph: "!".into(),
+                    name_key: "item-unknown-name".into(),
+                    category: VisualCategoryDto::Item,
+                },
+                origin_kind: None,
+                discount_percent: 0,
+                use_category: None,
                 artifact_name: None,
                 bag_capacity: None,
                 id: "demo.item.inventory.1".to_owned(),
@@ -6941,6 +7514,15 @@ mod tests {
                 throw_target_spec: None,
             }],
             equipment: vec![EquipmentItemDto {
+                visual: EditableVisualDto {
+                    prf: None,
+                    id: "demo.item.fixture".into(),
+                    glyph: "!".into(),
+                    name_key: "item-unknown-name".into(),
+                    category: VisualCategoryDto::Item,
+                },
+                origin_kind: None,
+                discount_percent: 0,
                 requires_recharge_targets: false,
                 artifact_name: None,
                 bag_capacity: None,
@@ -7002,7 +7584,9 @@ mod tests {
             "pre-v190 actor saves without nice must be rejected"
         );
         let mut current = serde_json::to_value(&legacy).expect("fixture should serialize");
-        current["travelOptions"] = serde_json::to_value(TravelOptionsDto::default()).unwrap();
+        current["wantedActorKindIds"] = serde_json::json!([]);
+        current.as_object_mut().unwrap().remove("interfaceLocale");
+        current.as_object_mut().unwrap().remove("mogaminator");
         current["detectionCoverage"] =
             serde_json::to_value(DetectionCoverageSaveDto::default()).unwrap();
         current["absorbedDevices"] = serde_json::json!([]);
@@ -7032,6 +7616,7 @@ mod tests {
         current["player"]["probedActorKindIds"] = serde_json::json!([]);
         current["reproductionSuppressed"] = serde_json::json!(false);
         current["defeatedLimitedActorCounts"] = serde_json::json!([]);
+        current["discovery"] = serde_json::to_value(DiscoverySaveDto::default()).unwrap();
         current["generatedArtifactIds"] = serde_json::json!([]);
         current["player"]["ridingBond"] = serde_json::Value::Null;
         current["bountyState"] = serde_json::json!({
@@ -7116,6 +7701,9 @@ mod tests {
             confusing_strike_ready: false,
             sniper_concentration: 0,
             fishing_direction: None,
+            running: None,
+            auto_explore: None,
+            searching: false,
             probed_actor_kind_ids: Vec::new(),
             resistances: Vec::new(),
             progress: None,

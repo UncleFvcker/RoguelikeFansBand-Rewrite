@@ -63,6 +63,7 @@ fn race_ability_follows_the_effective_race_and_projects_its_source() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human warrior should create");
     game.progress.level = 7;
@@ -169,6 +170,7 @@ fn racial_cast_failures_pay_without_revealing_or_creating_items() {
             "demo.build.high-mage-death",
             race_id,
             Game::DEFAULT_PLAYER_NAME,
+            Game::default_behavior_preferences(),
         )
         .expect("racial High-Mage should create");
         clear_monsters(&mut game);
@@ -257,6 +259,7 @@ fn kobold_intrinsics_follow_the_effective_race() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human Warrior should create");
     game.progress.level = 12;
@@ -322,6 +325,7 @@ fn dwarf_intrinsics_follow_the_effective_race_without_replacing_birth_rewards() 
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human Warrior should create");
     game.progress.level = 20;
@@ -406,6 +410,7 @@ fn hobbit_intrinsics_follow_the_effective_race() {
         "demo.build.warrior",
         "demo.race.rfb-human",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Human Warrior should create");
     game.progress.level = 15;
@@ -507,8 +512,12 @@ fn active_mutation_projects_without_learning_progress_or_persistent_cooldown() {
             .contains_key(MUTATION_CONTRACT_ABILITY_ID)
     );
 
-    let mut restored = Game::from_save_with_content(game.to_save(), catalog)
-        .expect("active mutation ability should restore from existing mutation state");
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        catalog,
+        Game::default_behavior_preferences(),
+    )
+    .expect("active mutation ability should restore from existing mutation state");
     assert!(
         restored
             .snapshot()

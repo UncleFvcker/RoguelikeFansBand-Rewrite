@@ -420,7 +420,7 @@ fn real_directional_actions_save_and_continue_deterministically() {
         },
     );
     game.debug_set_ability_casts_succeed(false);
-    let mut loaded = Game::from_save(game.to_save()).unwrap();
+    let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(loaded.state_hash(), game.state_hash());
     let action = GameCommand::CastAbility {
         ability_id: id("detect-menace"),

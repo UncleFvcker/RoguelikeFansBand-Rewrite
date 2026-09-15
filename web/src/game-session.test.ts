@@ -7,6 +7,77 @@ import test from "node:test";
 import { GameSession } from "./game-session.ts";
 import { AppState } from "./app-state.ts";
 
+test("recorders observe normalized successful commands, not internal updates or stale replies", async () => {
+  const records = [], state = sessionState();
+  let pending;
+  const session = new GameSession({ state, execute: async () => pending ? pending.promise : {},
+    applyUpdate() {}, refreshBusyControls() {}, showError() {}, onRememberedCommand: command => records.push(command) });
+  await session.dispatch({ type: "wait" }, { type: "rest-for-turns", turns: 3 });
+  await session.dispatch({ type: "configure-travel", options: {} });
+  assert.deepEqual(records, [{ type: "rest-for-turns", turns: 3 }]);
+  pending = Promise.withResolvers(); const old = session.dispatch({ type: "search" });
+  session.resetCommandHistory(); pending.resolve({}); await old;
+  assert.equal(records.length, 1);
+  pending = Promise.withResolvers(); const failed = session.dispatch({ type: "search" });
+  pending.reject(new Error("rejected")); await failed;
+  assert.deepEqual(records, [{ type: "rest-for-turns", turns: 3 }, undefined]);
+});
+
+test("last command keeps independent copies of chosen parameters and ignores internal updates", async () => {
+  const state = sessionState();
+  const session = new GameSession({ state, execute: async () => ({}),
+    applyUpdate() {}, refreshBusyControls() {}, showError() {},
+  });
+  assert.equal(session.lastCommand, undefined);
+  const command = { type: "use-absorbed-device", itemId: "device-a", targets: [{ type: "item", itemId: "item-b" }] };
+  await session.dispatch(command);
+  command.targets[0].itemId = "unrelated";
+  const replay = session.lastCommand;
+  assert.equal(replay.targets[0].itemId, "item-b");
+  replay.targets.length = 0;
+  for (const type of ["continue-run", "cancel-run", "resolve-ability-direction", "set-interface-locale", "configure-travel"]) {
+    await session.dispatch({ type });
+  }
+  assert.equal(session.lastCommand.targets[0].itemId, "item-b");
+  state.busy = true;
+  assert.equal(await session.dispatch({ type: "move", direction: "east" }), "blocked");
+  state.busy = false;
+  assert.equal(session.lastCommand.itemId, "device-a");
+  await session.dispatch({ type: "buy-from-shop", shopId: "shop", itemId: "x", quantity: 1 });
+  assert.equal(session.lastCommand, undefined, "unsupported user actions clear history instead of replaying an older action");
+});
+
+test("history clears on failures, new sessions, floor changes and map translations", async () => {
+  const state = sessionState();
+  let next = {}, pending;
+  const session = new GameSession({ state, execute: async () => {
+    if (pending) return pending.promise;
+    if (next instanceof Error) throw next;
+    return next;
+  }, applyUpdate() {}, refreshBusyControls() {}, showError() {} });
+  await session.dispatch({ type: "search" });
+  next = new Error("item no longer exists");
+  assert.equal(await session.dispatch({ type: "use-item", itemId: "gone" }), "failed");
+  assert.equal(session.lastCommand, undefined);
+  next = {};
+  await session.dispatch({ type: "search" });
+  pending = Promise.withResolvers();
+  const inFlight = session.dispatch({ type: "move", direction: "east" });
+  session.resetCommandHistory();
+  pending.resolve({});
+  await inFlight;
+  assert.equal(session.lastCommand, undefined, "old replies cannot repopulate a new session");
+  pending = undefined;
+  state.status = { floorId: "a", mapScale: "local" };
+  for (const update of [{ floorId: "b", mapScale: "local" },
+    { floorId: "a", mapScale: "world" },
+    { floorId: "a", mapScale: "local", mapTranslation: { x: -10, y: 0 } }]) {
+    next = update;
+    await session.dispatch({ type: "cast-ability", abilityId: "spell", target: { type: "position", position: { x: 2, y: 3 } } });
+    assert.equal(session.lastCommand, undefined);
+  }
+});
+
 test("a pending Maia choice blocks play and accepts an explicit choice on the world map", async () => {
   const state = new AppState();
   state.mode = "playing";
@@ -20,6 +91,18 @@ test("a pending Maia choice blocks play and accepts an explicit choice on the wo
   assert.deepEqual(calls, [{ type: "choose-maia-path", path: "enlightened" }]);
 });
 
+test("global behavior updates work during a pending choice and on the world map without becoming repeatable", async () => {
+  const state = new AppState(); state.mode = "playing";
+  state.status = { player: { pendingMaiaPathChoice: true }, mapScale: "world" };
+  const calls = [];
+  const session = new GameSession({ state, execute: async command => { calls.push(command); return {}; }, applyUpdate() {}, refreshBusyControls() {}, showError: error => { throw error; } });
+  assert.equal(await session.dispatch({ type: "configure-preferences", preferences: {} }), "applied");
+  assert.equal(calls.length, 1); assert.equal(session.lastCommand, undefined);
+  state.playerDead = true;
+  assert.equal(await session.dispatch({ type: "configure-preferences", preferences: {} }), "blocked");
+  assert.equal(calls.length, 1);
+});
+
 function sessionState() {
   return {
     busy: false,
@@ -31,6 +114,28 @@ function sessionState() {
     },
   };
 }
+
+test("whenIdle waits for a committed update or failure, never a blocked duplicate", async () => {
+  for (const fails of [false, true]) {
+    const state = sessionState();
+    const pending = Promise.withResolvers();
+    let applied = false, idle = false;
+    const session = new GameSession({ state, execute: () => pending.promise,
+      applyUpdate() { applied = true; }, refreshBusyControls() {}, showError() {},
+    });
+    const dispatch = session.dispatch({ type: "wait" });
+    const boundary = session.whenIdle().then(() => { idle = true; });
+    assert.equal(await session.dispatch({ type: "wait" }), "blocked");
+    assert.equal(idle, false);
+    assert.equal(session.isDispatching, true);
+    if (fails) pending.reject(new Error("failed")); else pending.resolve({});
+    await dispatch; await boundary;
+    assert.equal(applied, !fails);
+    assert.equal(idle, true);
+    assert.equal(session.isDispatching, false);
+    assert.equal(state.busy, false);
+  }
+});
 
 test("game session applies successful updates only after clearing busy", async () => {
   const state = sessionState();
@@ -48,7 +153,7 @@ test("game session applies successful updates only after clearing busy", async (
     showError: (error) => calls.push(["error", error]),
   });
 
-  await session.dispatch({ type: "wait" });
+  assert.equal(await session.dispatch({ type: "wait" }), "applied");
 
   assert.deepEqual(calls, [
     ["controls", true],
@@ -77,7 +182,7 @@ test("world map accepts travel and zero-time character configuration", async () 
   await session.dispatch({ type: "move", direction: "east" });
   await session.dispatch({ type: "travel-world", destination: { x: 30, y: 52 } });
   await session.dispatch({ type: "set-interface-locale", locale: "zh-CN" });
-  await session.dispatch({ type: "configure-travel", options: { autoDetectTraps: true, autoMapArea: true, disturbTrapDetect: false } });
+  await session.dispatch({ type: "configure-travel", options: { alwaysPickup: false, autoDetectTraps: true, autoMapArea: true, disturbTrapDetect: false } });
   await session.dispatch({
     type: "configure-mogaminator",
     enabled: true,
@@ -113,9 +218,9 @@ test("game session restores controls after failure and blocks terminal commands"
     showError: (error) => calls.push(["error", error]),
   });
 
-  await session.dispatch({ type: "wait" });
+  assert.equal(await session.dispatch({ type: "wait" }), "failed");
   state.playerDead = true;
-  await session.dispatch({ type: "wait" });
+  assert.equal(await session.dispatch({ type: "wait" }), "blocked");
 
   assert.equal(state.busy, false);
   assert.deepEqual(calls, [

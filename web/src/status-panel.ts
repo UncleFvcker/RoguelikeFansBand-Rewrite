@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { DEFAULT_DISPLAY, type DisplayPreferences } from "./display-preferences.ts";
 
 import type { AppDom } from "./app-dom";
 import type { AppState } from "./app-state";
@@ -19,22 +20,17 @@ import type {
   PlayerDto,
   PlayerMutationDto,
   MaterialDto,
-  PetUpkeepDto,
-  PetDto,
   PendingRaceMutationChoiceDto,
   PlayerProgressDto,
   ProficiencyRankDto,
   ResourcePoolDto,
   SniperConcentrationDto,
-  SummonCommandDto,
-  SummonCommandModeDto,
   TaskStatusDto,
   TaskStatusKindDto,
   WeaponProficiencyGroupDto,
   WeaponProficiencyDto,
   VirtueDto,
 } from "./protocol";
-import { REST_UNTIL_RECOVERED_TURNS } from "./rest.ts";
 import { goldVisualId } from "./render-world.ts";
 import { equippedLightText } from "./shop-panel.ts";
 import { selectJourneyDungeonStatus } from "./journey-guidance.ts";
@@ -94,16 +90,7 @@ type StatusDom = CharacterOverviewDom & Pick<
   | "resourceRest"
   | "nearbyCurrent"
   | "nearbyList"
-  | "summonCommandStatus"
-  | "summonCommandButtons"
-  | "dismissPets"
-  | "petList"
   | "taskLogList"
-  | "campaignStatusValue"
-  | "campaignScoreValue"
-  | "campaignDungeonsValue"
-  | "campaignTasksValue"
-  | "campaignRetire"
   | "dungeonInfoName"
   | "dungeonInfoDepthRow"
   | "dungeonInfoDepth"
@@ -210,14 +197,14 @@ export function renderTaskLog(list: HTMLUListElement, tasks: readonly TaskStatus
 }
 
 export function renderHudExperience(meter: HTMLProgressElement, progress: PlayerProgressDto | undefined,
-  localization: Localization): void {
+  localization: Localization, needed = false): void {
   meter.hidden = !progress;
   if (!progress) return;
   const next = progress.experienceForNextLevel;
   // The projection exposes cumulative XP thresholds, not this level's starting XP.
   meter.value = next == null ? 1000 : next > 0n
     ? Math.max(0, Math.min(1000, Number(BigInt(progress.experience) * 1000n / BigInt(next)))) : 0;
-  const description = localization.format("hud-experience-detail", {
+  const description = needed ? localization.format("display-experience-needed", { amount: experienceNeeded(progress, localization) }) : localization.format("hud-experience-detail", {
     experience: String(progress.experience),
     next: next == null ? localization.format("character-no-next-level") : String(next),
   });
@@ -321,6 +308,7 @@ export function renderCharacterAttributeSources(
   host: HTMLElement, rows: readonly AttributeBreakdownDto[], equipment: readonly EquipmentItemDto[],
   slots: readonly BodySlotDto[], mutations: readonly PlayerMutationDto[], localization: Localization,
   statusName: (id: string | undefined) => string,
+  decimal = false,
 ): void {
   const document = host.ownerDocument;
   const openPanel = host.querySelector<HTMLElement>(".attribute-source-detail:popover-open");
@@ -376,8 +364,8 @@ export function renderCharacterAttributeSources(
     const content = document.createElement("div");
     content.className = "attribute-source-detail-body";
     content.append(text("p", localization.format("attribute-source-range", {
-      base: formatAttributeValue(row.natural), current: formatAttributeValue(row.effective),
-      minimum: formatAttributeValue(row.minimum), maximum: formatAttributeValue(row.maximum),
+      base: formatAttributeValue(row.natural, decimal), current: formatAttributeValue(row.effective, decimal),
+      minimum: formatAttributeValue(row.minimum, decimal), maximum: formatAttributeValue(row.maximum, decimal),
     })), text("p", localization.format("attribute-source-guide")));
     if (row.sources.some((source) => !source.complete)) {
       content.append(text("p", localization.format("attribute-source-incomplete"), "attribute-source-warning"));
@@ -391,7 +379,7 @@ export function renderCharacterAttributeSources(
         : source.kind === "temporary-effect" ? statusName(source.sourceId ?? undefined) : undefined;
       const label = sourceName ? `${kind} · ${sourceName}` : kind;
       const result = source.effectiveAfter == null ? localization.format("attribute-source-result-hidden")
-        : formatAttributeValue(source.effectiveAfter);
+        : formatAttributeValue(source.effectiveAfter, decimal);
       const line = localization.format("attribute-source-step", {
         name: label, modifier: attributeSourceCell([source], localization), result,
       });
@@ -400,7 +388,7 @@ export function renderCharacterAttributeSources(
       if (source.suppressed) entry.append(text("p", localization.format("attribute-source-suppressed"), "attribute-source-warning"));
       if (source.kind === "normal-appearance" && row.normalAppearanceMinimum != null) {
         entry.append(text("p", localization.format("attribute-source-charisma-floor", {
-          value: formatAttributeValue(row.normalAppearanceMinimum),
+          value: formatAttributeValue(row.normalAppearanceMinimum, decimal),
         })));
       }
       if (source.kind === "equipment") {
@@ -440,8 +428,8 @@ export function renderCharacterAttributeSources(
     for (const column of columns) {
       const sources = row.sources.filter((source) => column === "other"
         ? ["mutation", "temporary-effect", "normal-appearance"].includes(source.kind) : source.kind === column);
-      const value = column === "attribute" ? name : column === "base" ? formatAttributeValue(row.natural)
-        : column === "current" ? formatAttributeValue(row.effective) : attributeSourceCell(sources, localization);
+      const value = column === "attribute" ? name : column === "base" ? formatAttributeValue(row.natural, decimal)
+        : column === "current" ? formatAttributeValue(row.effective, decimal) : attributeSourceCell(sources, localization);
       const cell = document.createElement(column === "attribute" ? "th" : "td");
       if (cell instanceof HTMLTableCellElement && column === "attribute") cell.scope = "row";
       const trigger = document.createElement("button");
@@ -520,6 +508,7 @@ export function renderCharacterTraits(
   state: Pick<AppState, "busy" | "playerDead" | "worldMap">,
   localization: Localization,
   dispatch: (command: GameCommand) => Promise<void>,
+  decimal = false,
 ): void {
   const document = dom.attributeList.ownerDocument;
   // Close before replacement, including the temporary document listeners.
@@ -535,7 +524,7 @@ export function renderCharacterTraits(
     label.textContent = localization.format(`attribute-${attribute}` as MessageKey);
     const current = document.createElement("span");
     current.className = "attribute-value";
-    current.textContent = formatAttributeValue(value.effective);
+    current.textContent = formatAttributeValue(value.effective, decimal);
     row.append(label, current);
     return row;
   });
@@ -544,10 +533,10 @@ export function renderCharacterTraits(
     const attribute = ATTRIBUTE_KINDS[index]!;
     const value = progress.attributes[attribute];
     attachStatTooltip(row, `character-attribute-${attribute}-tooltip`, localization.format("character-attribute-detail", {
-      natural: formatAttributeValue(value.natural),
-      maximumNatural: formatAttributeValue(value.maximumNatural),
-      potential: formatAttributeValue(value.potential),
-      effective: formatAttributeValue(value.effective),
+      natural: formatAttributeValue(value.natural, decimal),
+      maximumNatural: formatAttributeValue(value.maximumNatural, decimal),
+      potential: formatAttributeValue(value.potential, decimal),
+      effective: formatAttributeValue(value.effective, decimal),
       index: value.index,
     }));
     if (progress.pendingAttributeIncreases > 0) {
@@ -609,6 +598,7 @@ export function renderCharacterOverview(
   player: PlayerDto,
   worldTick: number,
   localization: Localization,
+  display: DisplayPreferences = DEFAULT_DISPLAY,
 ): void {
   const unavailable = localization.format("progression-unavailable");
   const { build, progress } = player;
@@ -618,7 +608,7 @@ export function renderCharacterOverview(
   dom.characterClassValue.textContent = build ? localization.format(build.classNameKey) : unavailable;
   dom.progressionPersonalityValue.textContent = build ? localization.format(build.personalityNameKey) : unavailable;
   dom.characterLevelValue.textContent = progress ? String(progress.level) : unavailable;
-  dom.progressionExperienceValue.textContent = progress ? String(progress.experience) : unavailable;
+  dom.progressionExperienceValue.textContent = progress ? (display.experienceNeeded ? localization.format("display-experience-needed", { amount: experienceNeeded(progress, localization) }) : String(progress.experience)) : unavailable;
   dom.characterMaximumExperienceValue.textContent = progress ? String(progress.maximumExperience) : unavailable;
   dom.characterNextExperienceValue.textContent = progress
     ? progress.experienceForNextLevel == null ? localization.format("character-no-next-level") : String(progress.experienceForNextLevel)
@@ -637,7 +627,7 @@ export function renderCharacterOverview(
   if (player.sniperConcentration) {
     values.push(["sniper-concentration", `${player.sniperConcentration.current} / ${player.sniperConcentration.maximum}`]);
   }
-  values.push(["character-armor-class", String(player.armorClass)], ["character-speed", String(player.speed)]);
+  values.push(["character-armor-class", String(player.armorClass)], ["character-speed", display.effectiveSpeed ? `${(player.speedEnergyPerTick / 10).toFixed(1)}×` : String(player.speed)]);
   const document = dom.characterVitalsList.ownerDocument;
   dom.characterVitalsList.replaceChildren(...values.map(([key, value]) => {
     const row = document.createElement("div");
@@ -902,16 +892,19 @@ export function renderCharacterMutations(
 }
 
 export class StatusPanel {
+  readonly #confirmItemChoice: (itemId: string, command: "cast" | "power" | "study") => boolean;
   readonly #dom: StatusDom;
   readonly #state: AppState;
   readonly #localization: Localization;
   readonly #dispatch: (command: GameCommand) => Promise<void>;
+  readonly #restUntilRecovered: () => Promise<void>;
   readonly #contentName: (id: string | undefined) => string;
   readonly #statusName: (id: string | undefined) => string;
   readonly #selectItemTarget: (
     excludedItemId: string | undefined,
     onSelect: (itemId: string) => Promise<void>,
     allowedItemIds?: readonly string[],
+    command?: "cast" | "power" | "study" | "browse",
   ) => void;
   readonly #startAbilityTargeting: (ability: AbilityDto) => void;
   readonly #reconcileTargeting: (state: GameSnapshot | GameUpdate) => void;
@@ -920,18 +913,29 @@ export class StatusPanel {
   #worldId: string | undefined;
   #installed = false;
   #abilityFocus: { id: string; action?: string } | undefined;
+  #chosenBook: { id: string; command: string; snapshot: AppState["status"] } | undefined;
+
+  #confirmBook(id: string, command: "cast" | "power" | "study"): boolean {
+    const chosen = this.#chosenBook;
+    this.#chosenBook = undefined;
+    return chosen?.id === id && chosen.command === command && chosen.snapshot === this.#state.status
+      ? true : this.#confirmItemChoice(id, command);
+  }
 
   constructor(options: {
+    confirmItemChoice: (itemId: string, command: "cast" | "power" | "study") => boolean;
     dom: StatusDom;
     state: AppState;
     localization: Localization;
     dispatch: (command: GameCommand) => Promise<void>;
+    restUntilRecovered: () => Promise<void>;
     contentName: (id: string | undefined) => string;
     statusName: (id: string | undefined) => string;
     selectItemTarget: (
       excludedItemId: string | undefined,
       onSelect: (itemId: string) => Promise<void>,
-    allowedItemIds?: readonly string[],
+      allowedItemIds?: readonly string[],
+      command?: "cast" | "power" | "study" | "browse",
     ) => void;
     startAbilityTargeting: (ability: AbilityDto) => void;
     reconcileTargeting: (state: GameSnapshot | GameUpdate) => void;
@@ -942,9 +946,11 @@ export class StatusPanel {
     this.#state = options.state;
     this.#localization = options.localization;
     this.#dispatch = options.dispatch;
+    this.#restUntilRecovered = options.restUntilRecovered;
     this.#contentName = options.contentName;
     this.#statusName = options.statusName;
     this.#selectItemTarget = options.selectItemTarget;
+    this.#confirmItemChoice = options.confirmItemChoice;
     this.#startAbilityTargeting = options.startAbilityTargeting;
     this.#reconcileTargeting = options.reconcileTargeting;
     this.#renderTargeting = options.renderTargeting;
@@ -954,29 +960,13 @@ export class StatusPanel {
   install(): void {
     if (this.#installed) return;
     this.#installed = true;
-    this.#dom.campaignRetire.addEventListener("click", this.#handleRetire);
     this.#dom.resourceRest.addEventListener("click", this.#handleRest);
-    for (const [mode, button] of Object.entries(this.#dom.summonCommandButtons) as [
-      SummonCommandModeDto,
-      HTMLButtonElement,
-    ][]) {
-      button.addEventListener("click", this.#summonCommandHandlers[mode]);
-    }
-    this.#dom.dismissPets.addEventListener("click", this.#handleDismissPets);
   }
 
   dispose(): void {
     if (!this.#installed) return;
     this.#installed = false;
-    this.#dom.campaignRetire.removeEventListener("click", this.#handleRetire);
     this.#dom.resourceRest.removeEventListener("click", this.#handleRest);
-    for (const [mode, button] of Object.entries(this.#dom.summonCommandButtons) as [
-      SummonCommandModeDto,
-      HTMLButtonElement,
-    ][]) {
-      button.removeEventListener("click", this.#summonCommandHandlers[mode]);
-    }
-    this.#dom.dismissPets.removeEventListener("click", this.#handleDismissPets);
   }
 
   render(state: GameSnapshot | GameUpdate): void {
@@ -984,7 +974,7 @@ export class StatusPanel {
     if ("bodySlots" in state) this.#state.bodySlots = state.bodySlots;
     if ("worldId" in state) this.#worldId = state.worldId;
     this.#state.playerDead = state.player.isDead;
-    this.#state.campaignEnded = state.campaign.status === "retired";
+    this.#state.campaignEnded = (state.campaign.status === "retired" || state.campaign.status === "abandoned");
     this.#reconcileTargeting(state);
     this.#dom.mapHost.ownerDocument.documentElement.dataset.playerState = this.#state.playerDead
       ? "dead"
@@ -1013,7 +1003,7 @@ export class StatusPanel {
       state.player.maxHp > 0 ? Math.max(0, Math.min(1, state.player.hp / state.player.maxHp)) : 0;
     this.#dom.healthMeterFill.style.width = `${healthRatio * 100}%`;
     this.#dom.healthMeter.dataset.healthState =
-      healthRatio <= 0.25 ? "critical" : healthRatio <= 0.5 ? "wounded" : "healthy";
+      warningActive(state.player.hp, state.player.maxHp, this.#state.display.hpWarningPercent) ? "critical" : "healthy";
     this.#dom.healthMeter.setAttribute("role", "progressbar");
     this.#dom.healthMeter.setAttribute("aria-valuemin", "0");
     this.#dom.healthMeter.setAttribute("aria-valuemax", String(state.player.maxHp));
@@ -1059,10 +1049,10 @@ export class StatusPanel {
       state.player.equipmentModifiers.defense,
     );
     this.#renderProgression(state.player.name, state.player.progress, state.player.build);
-    renderCharacterOverview(this.#dom, state.player, state.worldTick, this.#localization);
+    renderCharacterOverview(this.#dom, state.player, state.worldTick, this.#localization, this.#state.display);
     renderCharacterAttributeSources(this.#dom.characterAttributeSources,
       state.player.progress?.attributeSources ?? [], state.equipment, this.#state.bodySlots,
-      state.player.mutations ?? [], this.#localization, this.#statusName);
+      state.player.mutations ?? [], this.#localization, this.#statusName, this.#state.display.decimalStats);
     renderCharacterTraitsDetails(this.#dom.characterTraitDefenses, this.#dom.characterTraitAttacks,
       state.player, [...state.equipment, ...state.inventory], this.#localization, this.#statusName, this.#state.bodySlots);
     renderCharacterOtherLists(this.#dom, state.player.virtues, state.player.progress?.materials ?? [], this.#localization);
@@ -1079,11 +1069,6 @@ export class StatusPanel {
       state.player.progress?.level ?? 1,
       state.player.sniperConcentration,
     );
-    this.#renderSummonCommand(
-      state.player.summonCommand,
-      state.player.petUpkeep,
-      state.player.pets ?? [],
-    );
     this.#renderNearby(state);
     const activeEffects = state.player.statuses.map((status) =>
       this.#localization.format("status-effect-entry", {
@@ -1092,21 +1077,18 @@ export class StatusPanel {
         ticks: status.remainingTicks,
       }),
     );
+    if (state.player.searching) {
+      activeEffects.push(this.#localization.format("status-effect-searching", { speed: state.player.speed }));
+    }
     if (state.player.confusingStrikeReady) {
       activeEffects.push(this.#localization.format("status-effect-confusing-strike-ready"));
     }
+    this.#dom.effectsValue.classList.toggle("display-poison-warning", this.#state.display.alertPoison && state.player.statuses.some(effect => effect.kindId === "rfb.status.poison"));
     this.#dom.effectsValue.textContent =
       activeEffects.length === 0
         ? this.#localization.format("status-effects-none")
         : activeEffects.join(" \u00b7 ");
     this.#renderTasks(state);
-    this.#dom.campaignStatusValue.textContent = this.#localization.format(
-      `campaign-status-${state.campaign.status}` as MessageKey,
-    );
-    this.#dom.campaignScoreValue.textContent = String(state.campaign.score);
-    this.#dom.campaignDungeonsValue.textContent = String(state.campaign.conqueredDungeons);
-    this.#dom.campaignTasksValue.textContent = String(state.campaign.completedTasks);
-    this.updateCampaignAction();
     this.#dom.positionValue.textContent = `${state.player.position.x}, ${state.player.position.y}`;
     this.#dom.hashValue.textContent = state.stateHash.slice(0, 12);
     this.#dom.hashValue.title = state.stateHash;
@@ -1127,37 +1109,10 @@ export class StatusPanel {
     this.#renderTargeting();
   }
 
-  updateCampaignAction(): void {
-    const state = this.#state.status;
-    this.#dom.campaignRetire.disabled =
-      this.#state.busy ||
-      this.#state.playerDead ||
-      this.#state.worldMap ||
-      !state ||
-      state.campaign.status !== "victorious" ||
-      state.floorId !== "demo.floor.surface" ||
-      state.dungeonInstanceId != null;
-  }
-
-  readonly #handleRetire = (): void => {
-    void this.#dispatch({ type: "retire" });
-  };
-
   readonly #handleRest = (): void => {
-    void this.#dispatch({ type: "rest", turns: REST_UNTIL_RECOVERED_TURNS });
+    void this.#restUntilRecovered();
   };
 
-  readonly #handleDismissPets = (): void => {
-    void this.#dispatch({ type: "dismiss-pets" });
-  };
-
-  readonly #summonCommandHandlers: Record<SummonCommandModeDto, () => void> = {
-    follow: () => void this.#dispatch({ type: "set-summon-command", mode: "follow" }),
-    attack: () => void this.#dispatch({ type: "set-summon-command", mode: "attack" }),
-    "keep-distance": () =>
-      void this.#dispatch({ type: "set-summon-command", mode: "keep-distance" }),
-    guard: () => void this.#dispatch({ type: "set-summon-command", mode: "guard" }),
-  };
 
   #renderTasks(state: GameSnapshot | GameUpdate): void {
     renderTaskLog(this.#dom.taskLogList, state.tasks, this.#localization,
@@ -1178,7 +1133,7 @@ export class StatusPanel {
           class: this.#localization.format(build.classNameKey as MessageKey),
         })
       : playerName;
-    renderHudExperience(this.#dom.hudExperience, progress, this.#localization);
+    renderHudExperience(this.#dom.hudExperience, progress, this.#localization, this.#state.display.experienceNeeded);
     if (!progress) {
       const unavailable = this.#localization.format("progression-unavailable");
       this.#dom.progressionLevelValue.textContent = unavailable;
@@ -1199,7 +1154,7 @@ export class StatusPanel {
       "progression-cap-value",
       {
         levelCap: progress.levelCap,
-        attributeCap: formatAttributeValue(progress.attributeCap),
+        attributeCap: formatAttributeValue(progress.attributeCap, this.#state.display.decimalStats),
         attributeIndexCap: progress.attributeIndexCap,
       },
     );
@@ -1210,69 +1165,9 @@ export class StatusPanel {
           experience: build.experiencePercent,
         })
       : this.#localization.format("progression-unavailable");
-    renderCharacterTraits(this.#dom, progress, this.#state, this.#localization, this.#dispatch);
+    renderCharacterTraits(this.#dom, progress, this.#state, this.#localization, this.#dispatch, this.#state.display.decimalStats);
     renderCharacterProficiencies(this.#dom.characterProficiencyTables, progress, this.#localization);
   }
-
-  #renderSummonCommand(
-    command: SummonCommandDto | undefined,
-    upkeep: PetUpkeepDto | undefined,
-    pets: PetDto[],
-  ): void {
-    const mode = command?.mode ?? "follow";
-    const count = upkeep?.controlledPets ?? 0;
-    this.#dom.summonCommandStatus.textContent = this.#localization.format(
-      "summon-command-status",
-      {
-        mode: this.#localization.format(`summon-command-mode-${mode}` as MessageKey),
-        count,
-        upkeep: upkeep?.upkeepPercent ?? 0,
-      },
-    );
-    this.#dom.summonCommandStatus.classList.toggle("warning", upkeep?.unsafeWarning ?? false);
-    for (const [buttonMode, button] of Object.entries(this.#dom.summonCommandButtons) as [
-      SummonCommandModeDto,
-      HTMLButtonElement,
-    ][]) {
-      const selected = buttonMode === mode;
-      button.disabled =
-        this.#state.busy || this.#state.commandBlocked || this.#state.worldMap || selected;
-      button.setAttribute("aria-pressed", String(selected));
-    }
-    this.#dom.dismissPets.disabled =
-      this.#state.busy || this.#state.commandBlocked || this.#state.worldMap || count === 0;
-    const document = this.#dom.petList.ownerDocument;
-    this.#dom.petList.replaceChildren(
-      ...pets.map((pet) => {
-        const row = document.createElement("li");
-        row.className = "ability-row";
-        const name = document.createElement("span");
-        name.className = "ability-name";
-        name.textContent = this.#localization.format(pet.nameKey as MessageKey);
-        const details = document.createElement("span");
-        details.className = "ability-details";
-        const experience =
-          pet.requiredExperience == null
-            ? this.#localization.format("pet-experience-none")
-            : this.#localization.format("pet-experience-value", {
-                current: pet.experience,
-                required: pet.requiredExperience,
-              });
-        details.textContent = this.#localization.format("pet-status-value", {
-          level: pet.level,
-          experience,
-          riding: pet.riding ? this.#localization.format("pet-riding") : "",
-          bond:
-            pet.bondPercent == null
-              ? ""
-              : this.#localization.format("pet-bond-value", { percent: pet.bondPercent }),
-        });
-        row.append(name, details);
-        return row;
-      }),
-    );
-  }
-
 
   #renderAbilities(
     abilities: AbilityDto[],
@@ -1336,6 +1231,7 @@ export class StatusPanel {
     for (const resource of resources) {
       const row = document.createElement("li");
       row.className = "resource-row";
+      row.classList.toggle("display-resource-warning", resource.id === "demo.resource.mana" && warningActive(resource.current, resource.maximum, this.#state.display.manaWarningPercent));
       const name = this.#localization.format(resource.nameKey as MessageKey);
       const heading = document.createElement("div");
       heading.className = "resource-heading";
@@ -1410,7 +1306,7 @@ export class StatusPanel {
           heading.dataset.bookItemId = bookItemId;
           heading.tabIndex = -1;
           const study = this.#abilityAction(realms ? "action-ability-study-random" : "action-ability-study-prayer", () =>
-            void this.#dispatch({ type: "study-prayer", bookItemId }),
+            { if (this.#confirmBook(bookItemId, "study")) void this.#dispatch({ type: "study-prayer", bookItemId }); },
           );
           study.dataset.abilityAction = "study-prayer";
           study.disabled =
@@ -1456,6 +1352,38 @@ export class StatusPanel {
     }
   }
 
+  focusCommand(command: "study" | "browse" | "power" | "cast"): void {
+    this.#chosenBook = undefined;
+    const abilities = this.#state.status?.player.abilities ?? [];
+    const books = [...new Set(abilities.filter(ability => ability.bookItemId &&
+      (command !== "study" || ability.canStudy)).map(ability => ability.bookItemId!))];
+    if (command !== "power" && books.length > 0) {
+      this.#selectItemTarget(undefined, async bookId => {
+        this.#chosenBook = { id: bookId, command, snapshot: this.#state.status };
+        const ability = abilities.find(ability => ability.bookItemId === bookId && (command !== "study" || ability.canStudy));
+        if (!ability) return;
+        const row = [...this.#dom.abilityList.querySelectorAll<HTMLElement>("[data-ability-id]")].find(row => row.dataset.abilityId === ability.id);
+        const action = command === "study" ? '[data-ability-action="study"]:not(:disabled)' : ".ability-cast-action:not(:disabled)";
+        const prayer = command === "study" ? [...this.#dom.abilityList.querySelectorAll<HTMLElement>("[data-book-item-id]")]
+          .find(heading => heading.dataset.bookItemId === bookId)?.querySelector<HTMLElement>('[data-ability-action="study-prayer"]:not(:disabled)') : undefined;
+        const control = prayer ?? (command === "browse" ? row : row?.querySelector<HTMLElement>(action) ?? row);
+        control?.focus(); control?.scrollIntoView({ block: "nearest" });
+      }, books, command);
+      return;
+    }
+    const rows = [...this.#dom.abilityList.querySelectorAll<HTMLElement>("[data-ability-id]")];
+    const candidates = rows.filter(row => command !== "power" || this.#state.status?.player.abilities?.some(
+      value => value.id === row.dataset.abilityId && ["race", "class", "mutation"].includes(value.source)));
+    const castSelector = ".ability-cast-action:not(:disabled)";
+    const row = command === "cast" || command === "power"
+      ? candidates.find(row => row.querySelector(castSelector)) ?? candidates[0] : rows[0];
+    const control = command === "study"
+      ? this.#dom.abilityList.querySelector<HTMLElement>('[data-ability-action="study"]:not(:disabled), [data-ability-action="study-prayer"]:not(:disabled)')
+      : command === "cast" || command === "power" ? row?.querySelector<HTMLElement>(castSelector) : row;
+    (control ?? row)?.focus();
+    (control ?? row)?.scrollIntoView({ block: "nearest" });
+  }
+
   #renderNearby(state: GameSnapshot | GameUpdate): void {
     const document = this.#dom.nearbyList.ownerDocument;
     const player = state.player.position;
@@ -1476,7 +1404,8 @@ export class StatusPanel {
         kind: entity.faction === "hostile" ? "hostile" : "ally",
         contentId: entity.kindId,
         glyph: entity.glyph,
-        name: this.#contentName(entity.kindId),
+        name: entity.customName ?? this.#contentName(entity.kindId),
+        highlight: entity.highlightList,
         distance,
         direction: directionKey(player, entity.position),
         hp: entity.hp,
@@ -1489,8 +1418,9 @@ export class StatusPanel {
       entries.push({
         id: `item:${item.id}`,
         kind: "item",
-        contentId: item.kindId,
-        name: this.#contentName(item.kindId),
+        contentId: item.visual.id,
+        glyph: item.visual.glyph,
+        name: item.artifactName ?? this.#localization.format(item.displayNameKey),
         distance,
         direction: distance === 0 ? "here" : directionKey(player, item.position),
         quantity: item.quantity,
@@ -1525,11 +1455,12 @@ export class StatusPanel {
     this.#dom.nearbyList.replaceChildren(
       ...entries.slice(0, 8).map((entry) => {
         const row = document.createElement("li");
-        row.className = `nearby-row nearby-${entry.kind}`;
+        row.className = `nearby-row nearby-${entry.kind}${entry.highlight ? " pet-highlight" : ""}`;
         const glyph = document.createElement("span");
         glyph.className = "nearby-glyph";
+        glyph.hidden = entry.kind === "item" && !this.#state.display.showItemIcons;
         glyph.setAttribute("aria-hidden", "true");
-        glyph.textContent = entry.glyph ?? this.#state.contentGlyphs.get(entry.contentId) ?? "?";
+        this.#state.paintVisual(glyph, entry.contentId, entry.glyph ?? this.#state.contentGlyphs.get(entry.contentId) ?? "?");
         const details = document.createElement("span");
         details.className = "nearby-details";
         const name = document.createElement("strong");
@@ -1549,7 +1480,7 @@ export class StatusPanel {
                   distance: entry.distance,
                   amount: entry.amount ?? 0,
                 })
-            : this.#localization.format("nearby-actor-meta", {
+            : this.#localization.format(this.#state.display.monsterDistance ? "nearby-actor-meta" : "nearby-actor-meta-no-distance", {
                 direction,
                 distance: entry.distance,
                 hp: entry.hp ?? 0,
@@ -1626,6 +1557,7 @@ export class StatusPanel {
     const restudy = ability.learned && this.#state.status?.player.abilityLearning?.realms != null;
     const study = this.#abilityAction(restudy ? "action-ability-restudy" : "action-ability-study", () => {
       if (!ability.bookItemId) return;
+      if (!this.#confirmBook(ability.bookItemId, "study")) return;
       void this.#dispatch({
         type: "study-ability",
         bookItemId: ability.bookItemId,
@@ -1770,6 +1702,8 @@ export class StatusPanel {
   }
 
   #castAbility(ability: AbilityDto, townId?: string, elementId?: string): void {
+    const command = ability.source === "learned" ? "cast" : "power";
+    if (ability.bookItemId && !this.#confirmBook(ability.bookItemId, command)) return;
     const confirmationKey = abilityConfirmationMessageKey(ability.id);
     const view = this.#dom.abilityList.ownerDocument.defaultView;
     if (confirmationKey && view && !view.confirm(this.#localization.format(confirmationKey))) {
@@ -1787,7 +1721,7 @@ export class StatusPanel {
         if (!option) return;
         if (option.confirmationKey && !view?.confirm(this.#localization.format(option.confirmationKey as MessageKey))) return;
         await this.#dispatch({ type: "cast-ability", abilityId: ability.id, target: option.target });
-      }, ability.itemTargets.map(option => option.itemId));
+      }, ability.itemTargets.map(option => option.itemId), command);
       return;
     }
     if (ability.targetSpec.modes.includes("town")) {
@@ -1814,6 +1748,7 @@ export class StatusPanel {
           abilityId: ability.id,
           target: { type: "item", itemId },
         }),
+        undefined, command,
       );
       return;
     }
@@ -1909,8 +1844,9 @@ export function abilityPresentation(
   return entries;
 }
 
-export function formatAttributeValue(value: number): string {
-  return value > 18 ? `18/${value - 18}` : String(value);
+export function formatAttributeValue(value: number, decimal = false): string {
+  if (decimal && value >= 18) return value >= 238 ? "****" : (18 + (value - 18) / 10).toFixed(1);
+  return value > 18 ? (value >= 238 ? "18/***" : `18/${String(value - 18).padStart(2, "0")}`) : String(value);
 }
 
 export function nutritionPercentage(nutrition: number): number {
@@ -1921,6 +1857,7 @@ type NearbyKind = "hostile" | "ally" | "gold" | "item";
 type NearbyDirection = "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw" | "here";
 
 interface NearbyEntry {
+  highlight?: boolean;
   readonly id: string;
   readonly kind: NearbyKind;
   readonly contentId: string;
@@ -1960,4 +1897,13 @@ function nearbyKindPriority(kind: NearbyKind): number {
 
 function signedModifier(value: number): string {
   return value >= 0 ? `+${value}` : String(value);
+}
+
+export function warningActive(current: number, maximum: number, percent: number): boolean {
+  return percent > 0 && maximum > 0 && current * 100 <= maximum * percent;
+}
+function experienceNeeded(progress: PlayerProgressDto, localization: Localization): string {
+  if (progress.experienceForNextLevel == null) return localization.format("character-no-next-level");
+  const remaining = BigInt(progress.experienceForNextLevel) - BigInt(progress.experience);
+  return String(remaining > 0n ? remaining : 0n);
 }

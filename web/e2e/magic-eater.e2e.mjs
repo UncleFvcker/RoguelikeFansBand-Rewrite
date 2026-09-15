@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -188,7 +189,8 @@ export async function runMagicEaterUiScenario(driver, directory, profile) {
     await invoke("plugin:window|set_min_size", { label: "main", value: null });
     for (const locale of ["zh-CN", "en-US"]) {
       localization.setLocale(locale);
-      await driver.execute('localStorage.setItem("rfb.locale",arguments[0]);localStorage.setItem("rfb.input-preset","numpad");return true;', [locale]); await keyboard.reload();
+      await setPreferences(driver, { locale, inputPreset: "numpad" });
+      await keyboard.reload();
       await driver.waitFor('return document.documentElement.dataset.appMode==="title"&&!document.querySelector("#session-new-game").disabled', "localized title", 60_000);
       await driver.execute(`const original=window.fetch,endpoint=window.__TAURI_INTERNALS__.convertFileSrc("dispatch_game_command","ipc");
         window.fetch=(url,options)=>url!==endpoint?original(url,options):original(url,options).then(async response=>{window.__meUpdate=await response.clone().json();return response;});return true;`);
@@ -257,7 +259,11 @@ export async function runMagicEaterUiScenario(driver, directory, profile) {
       assert.equal(current.player.magicEater.slots[1].useLabel, "q");
       await click(slotButton(1, "inspect")); await capture(`${locale}-absorbed-detail`, "#inventory-detail-dialog"); await keyboard.key("Escape");
       await click("#magic-eater-close"); await click("#player-ui-settings-open");
-      for (const selector of ["#travel-auto-detect", "#travel-auto-map", "#travel-disturb-detect"]) { const hash = (await snapshot()).stateHash; await click(selector); current = await changed(hash, "saved travel option"); }
+      for (const [selector, field] of [["#travel-auto-detect", "autoDetectTraps"], ["#travel-auto-map", "autoMapArea"], ["#travel-disturb-detect", "disturbTrapDetect"]]) {
+        const hash = (await snapshot()).stateHash;
+        const checked = await driver.execute('return !document.querySelector(arguments[0]).checked', [selector]);
+        await setPreferences(driver, { travel: { [field]: checked } }); current = await changed(hash, "global travel option");
+      }
       assert.deepEqual(current.travelOptions, { autoDetectTraps: true, autoMapArea: true, disturbTrapDetect: false });
       await capture(`${locale}-travel-options`, "#player-ui-settings-dialog"); await keyboard.key("Escape");
       await open();

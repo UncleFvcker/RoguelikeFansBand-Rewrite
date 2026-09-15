@@ -19,6 +19,7 @@ fn fixture(root: &Path, name: &str) -> AppState {
             "demo.race.rfb-human",
             name,
             "2026-09-09T00:00:00Z".to_owned(),
+            Game::default_behavior_preferences(),
         )
         .unwrap();
     let mut guard = state.lock_session().unwrap();
@@ -30,7 +31,8 @@ fn fixture(root: &Path, name: &str) -> AppState {
         .find(|home| home.facility_id == "demo.town-facility.thalos-museum")
         .unwrap()
         .visited = true;
-    session.recorder = ReplayRecorder::new(Game::from_save(save).unwrap());
+    session.recorder =
+        ReplayRecorder::new(Game::from_save(save, Game::default_behavior_preferences()).unwrap());
     session
         .sync_museum(&MuseumStore::open(root).unwrap())
         .unwrap();
@@ -129,7 +131,9 @@ fn cross_character_transfer_recovery_and_stale_sessions_preserve_one_owner() {
             .starts_with("museum-character-stale")
     );
     let restored = AppState::new(root.clone());
-    let (recovered_donor, recovered) = restored.load_with_recovery(&old_donor).unwrap();
+    let (recovered_donor, recovered) = restored
+        .load_with_recovery(&old_donor, Game::default_behavior_preferences())
+        .unwrap();
     assert!(recovered);
     assert!(
         recovered_donor
@@ -155,7 +159,9 @@ fn cross_character_transfer_recovery_and_stale_sessions_preserve_one_owner() {
         .map(|item| item.quantity)
         .sum();
     assert_eq!(before_quantity, recovered_quantity + 1);
-    let (recovered_recipient, recovered) = restored.load_with_recovery(&old_recipient).unwrap();
+    let (recovered_recipient, recovered) = restored
+        .load_with_recovery(&old_recipient, Game::default_behavior_preferences())
+        .unwrap();
     assert!(recovered);
     assert_eq!(recovered_recipient.state_hash, taken.state_hash);
     let profile = MuseumStore::open(&root).unwrap();
@@ -224,6 +230,7 @@ fn new_character_imports_the_profile_at_the_outpost_museum() {
             "demo.race.rfb-human",
             "Recipient",
             "2026-09-10T00:00:00Z".to_owned(),
+            Game::default_behavior_preferences(),
         )
         .unwrap();
     let museum = initial.homes.iter().find(|home| home.id == MUSEUM).unwrap();
@@ -330,7 +337,9 @@ fn process_interruptions_before_and_after_commit_recover_both_transfer_direction
                 String::from_utf8_lossy(&output.stderr)
             );
             let restarted = AppState::new(root.clone());
-            let (after, recovered) = restarted.load_with_recovery(&bytes).unwrap();
+            let (after, recovered) = restarted
+                .load_with_recovery(&bytes, Game::default_behavior_preferences())
+                .unwrap();
             let committed = point == "after-replace";
             assert_eq!(recovered, committed);
             if !committed {

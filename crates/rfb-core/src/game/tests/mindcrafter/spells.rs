@@ -1074,8 +1074,8 @@ fn a_real_spell_chain_and_monster_no_pet_state_round_trip_and_continue() {
     game.resolve_ability_control(index, 0, "any-monster", 1);
     assert!(game.entities[index].no_pet);
     game.debug_set_ability_casts_succeed(false);
-    let mut loaded =
-        Game::from_save(game.to_save()).expect("spell state and no-pet flag must load");
+    let mut loaded = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("spell state and no-pet flag must load");
     assert_eq!(game.state_hash(), loaded.state_hash());
     let first = dispatch_next(&mut game, GameCommand::Wait);
     let resumed = dispatch_next(&mut loaded, GameCommand::Wait);

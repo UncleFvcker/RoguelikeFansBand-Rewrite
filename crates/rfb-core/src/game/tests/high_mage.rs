@@ -2633,7 +2633,8 @@ fn life_fasting_starts_atomically_persists_and_recasts_for_free() {
     assert!(game.snapshot().player.fasting);
     assert_ne!(game.state_hash(), hash_before);
     game.refresh_character_skills();
-    let restored = Game::from_save(game.to_save()).expect("fasting should round-trip");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("fasting should round-trip");
     assert!(restored.fasting);
     assert_eq!(restored.state_hash(), game.state_hash());
 
@@ -3918,8 +3919,12 @@ fn commit32_nature_corrosion_protection_is_permanent_visible_and_location_agnost
         .expect("persisted armor should exist")
         .permanent_destruction_immunities
         .insert(ItemDestructionElement::Acid);
-    let restored = Game::from_save_with_content(persisted.to_save(), persisted.content.clone())
-        .expect("corrosion protection should round-trip");
+    let restored = Game::from_save_with_content(
+        persisted.to_save(),
+        persisted.content.clone(),
+        persisted.behavior_preferences(),
+    )
+    .expect("corrosion protection should round-trip");
     assert_eq!(restored.state_hash(), persisted.state_hash());
     assert!(
         restored
@@ -4104,7 +4109,8 @@ fn commit33_natures_wrath_direction_prompt_is_atomic_cancelable_and_persistent()
         cancelled.ability_progress["demo.ability.nature-natures-wrath"].cast_count,
         0
     );
-    let restored = Game::from_save(cancelled.to_save()).expect("pending direction should reload");
+    let restored = Game::from_save(cancelled.to_save(), cancelled.behavior_preferences())
+        .expect("pending direction should reload");
     assert_eq!(
         restored
             .pending_ability_direction
@@ -4645,13 +4651,21 @@ fn armageddon_sound_and_inertia_use_distinct_original_monster_riders() {
     save_game.entities[0].minor_slow = 10;
     assert_ne!(save_game.state_hash(), unslowed_hash);
     let save = save_game.to_save();
-    let restored = Game::from_save_with_content(save.clone(), save_game.content.clone())
-        .expect("monster minor slow should round-trip");
+    let restored = Game::from_save_with_content(
+        save.clone(),
+        save_game.content.clone(),
+        Game::default_behavior_preferences(),
+    )
+    .expect("monster minor slow should round-trip");
     assert_eq!(restored.entities[0].minor_slow, 10);
     let mut invalid = save;
     invalid.entities[0].minor_slow = 11;
     assert!(matches!(
-        Game::from_save_with_content(invalid, save_game.content.clone()),
+        Game::from_save_with_content(
+            invalid,
+            save_game.content.clone(),
+            Game::default_behavior_preferences()
+        ),
         Err(CoreError::InvalidSave("entity minor slow is invalid"))
     ));
 

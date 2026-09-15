@@ -84,7 +84,7 @@ fn all_births_have_two_source_books_equipment_and_unlearned_prayers() {
                     && item.quantity == 1
                     && item.location == ItemLocation::Inventory)
         );
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());
         assert_eq!(restored.rng, game.rng);
     }
@@ -133,7 +133,7 @@ fn experience_growth_uses_wisdom_and_ninety_six_studies_without_mage_regeneratio
         game.player_resource_recovery_change(MANA, true),
         i64::from(resource.rest_recovery_amount)
     );
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
 }
@@ -175,10 +175,19 @@ fn proficiencies_virtues_and_racial_births_use_priest_growth() {
         "rfb-legacy.race.spectre",
         "rfb-legacy.race.draconian-red",
     ] {
-        let mut game = Game::new_with_build_race_and_name(925, BUILD, race, "Priest").unwrap();
+        let mut game = Game::new_with_build_race_and_name(
+            925,
+            BUILD,
+            race,
+            "Priest",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(game.active_casting_realm_profiles().len(), 2);
         assert_eq!(
-            Game::from_save(game.to_save()).unwrap().state_hash(),
+            Game::from_save(game.to_save(), game.behavior_preferences())
+                .unwrap()
+                .state_hash(),
             game.state_hash(),
             "{race}"
         );

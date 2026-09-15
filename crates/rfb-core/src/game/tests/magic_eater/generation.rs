@@ -61,7 +61,7 @@ fn natural_three_device_categories_pick_up_absorb_use_recover_and_replay_generat
         .iter()
         .map(|id| item(&game, id).charges.unwrap().current)
         .collect::<Vec<_>>();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for _ in 0..100 {
         assert_eq!(
             dispatch_next(&mut game, GameCommand::Wait),
@@ -120,7 +120,7 @@ fn thieves_wargs_and_orc_rewards_use_real_items_and_remain_single_claims() {
         ("anambar-orc-camp", "demo.item.frost-ball-wand"),
     ] {
         let (mut game, task, facility, id) = reward_ready(925, BUILD, task);
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(
             game.claim_task_reward(&facility, &task),
             restored.claim_task_reward(&facility, &task)
@@ -149,7 +149,7 @@ fn thieves_wargs_and_orc_rewards_use_real_items_and_remain_single_claims() {
             Err("reward-unavailable")
         );
         assert_eq!(game.to_save(), before);
-        Game::from_save(before).unwrap();
+        Game::from_save(before, Game::default_behavior_preferences()).unwrap();
     }
 }
 
@@ -183,7 +183,7 @@ fn castle_one_to_four_choice_is_birth_seeded_and_duplicate_replacement_is_atomic
             [("demo.item.lohengrin", 1), ("demo.item.charmed-pendant", 4)]
         );
         let original = game.clone();
-        let mut advanced = Game::from_save(game.to_save()).unwrap();
+        let mut advanced = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         advanced.rng.bounded(12345);
         game.claim_task_reward(&facility, &task).unwrap();
         advanced.claim_task_reward(&facility, &task).unwrap();
@@ -208,7 +208,8 @@ fn castle_one_to_four_choice_is_birth_seeded_and_duplicate_replacement_is_atomic
                 Err("inventory-full")
             );
             assert_eq!(full.to_save(), before);
-            let mut restored = Game::from_save(duplicate.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(duplicate.to_save(), duplicate.behavior_preferences()).unwrap();
             for run in [&mut duplicate, &mut restored] {
                 run.claim_task_reward(&facility, &task).unwrap();
                 assert_eq!(
@@ -264,7 +265,7 @@ fn two_towers_keep_visitor_membership_and_charge_the_source_ordinary_price() {
         assert_eq!(game.to_save(), before);
         game.gold = cost;
         game.reveal_current_visibility();
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         for run in [&mut game, &mut restored] {
             run.identify_all_at_facility(&facility).unwrap();
             assert_eq!(run.gold, 0);
@@ -329,7 +330,7 @@ fn ordinary_frost_bolt_scales_stored_power_and_replays_after_absorption() {
             .find(|i| i.id == "test.frost")
             .unwrap()
             .location = ItemLocation::Inventory;
-        let mut restored = Game::from_save(game.to_save()).unwrap();
+        let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         let target = TargetSelection::Direction {
             direction: Direction::East,
         };

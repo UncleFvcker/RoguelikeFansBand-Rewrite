@@ -13,7 +13,8 @@ fn every_priest_build_claims_the_source_thieves_and_orc_rewards_and_resumes() {
     for build in builds {
         for task_slug in ["thieves-hideout", "anambar-orc-camp"] {
             let (mut game, task, facility, id) = reward_ready(925, &build, task_slug);
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             game.claim_task_reward(&facility, &task).unwrap();
             restored.claim_task_reward(&facility, &task).unwrap();
             assert_eq!(game.to_save(), restored.to_save());
@@ -40,7 +41,7 @@ fn every_priest_build_claims_the_source_thieves_and_orc_rewards_and_resumes() {
             assert!(game.equip_inventory_item(&id, None).is_some());
             game.refresh_player_resource_maxima();
             game.refresh_player_ability_state();
-            Game::from_save(game.to_save()).unwrap();
+            Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             let before = game.to_save();
             assert_eq!(
                 game.claim_task_reward(&facility, &task),
@@ -88,7 +89,8 @@ fn castle_rewards_keep_one_to_four_birth_selection_and_duplicate_replacement_ato
             let original = game.clone();
             let mut advanced = game.clone();
             advanced.rng.bounded(12345);
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             game.claim_task_reward(&facility, &task).unwrap();
             restored.claim_task_reward(&facility, &task).unwrap();
             assert_eq!(game.to_save(), restored.to_save());
@@ -156,7 +158,7 @@ fn castle_rewards_keep_one_to_four_birth_selection_and_duplicate_replacement_ato
                         ))
                     );
                 }
-                Game::from_save(game.to_save()).unwrap();
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 let mut duplicate = original;
                 duplicate.generated_artifact_ids.insert(kind.clone());
                 let mut full = duplicate.clone();
@@ -170,7 +172,8 @@ fn castle_rewards_keep_one_to_four_birth_selection_and_duplicate_replacement_ato
                     Err("inventory-full")
                 );
                 assert_eq!(full.to_save(), before);
-                let mut restored = Game::from_save(duplicate.to_save()).unwrap();
+                let mut restored =
+                    Game::from_save(duplicate.to_save(), duplicate.behavior_preferences()).unwrap();
                 for run in [&mut duplicate, &mut restored] {
                     run.claim_task_reward(&facility, &task).unwrap();
                     let item = run.items.iter().find(|item| item.id == id).unwrap();
@@ -187,7 +190,7 @@ fn castle_rewards_keep_one_to_four_birth_selection_and_duplicate_replacement_ato
                         run.claim_task_reward(&facility, &task),
                         Err("reward-unavailable")
                     );
-                    Game::from_save(run.to_save()).unwrap();
+                    Game::from_save(run.to_save(), run.behavior_preferences()).unwrap();
                 }
                 assert_eq!(duplicate.to_save(), restored.to_save());
             }
@@ -246,7 +249,8 @@ fn all_priests_receive_both_temple_owner_services_at_projected_prices() {
                     assert_eq!(game.to_save(), before);
                 }
                 game.gold = price;
-                let mut restored = Game::from_save(game.to_save()).unwrap();
+                let mut restored =
+                    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 for run in [&mut game, &mut restored] {
                     run.use_town_facility_service(&facility, service, None, None, &mut Vec::new())
                         .unwrap();
@@ -270,7 +274,8 @@ fn all_priests_receive_both_temple_owner_services_at_projected_prices() {
                 assert_eq!(price, game.town_service_price(10000));
                 assert!(game.gain_mutation("rfb.mutation.alcohol", &mut Vec::new()));
                 game.gold = price;
-                let mut restored = Game::from_save(game.to_save()).unwrap();
+                let mut restored =
+                    Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
                 for run in [&mut game, &mut restored] {
                     run.use_town_facility_service(
                         &facility,
@@ -366,7 +371,7 @@ fn realm_changes_update_inscriptions_and_realm_services_without_extra_guild_memb
                 FacilityMembershipDto::Visitor
             );
         }
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.to_save(), game.to_save());
         assert_eq!(
             restored.town_facility_membership(&tower),

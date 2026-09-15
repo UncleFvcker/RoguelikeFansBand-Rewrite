@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::{BTreeSet, VecDeque};
+use std::cmp::Reverse;
+use std::collections::{BTreeSet, BinaryHeap, VecDeque};
 
 use rfb_protocol::{Direction, Position};
 
@@ -48,6 +49,7 @@ impl Game {
     pub(super) fn prepare_local_travel(
         &mut self,
         destination: Position,
+        ordinary: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -55,9 +57,39 @@ impl Game {
         let Some(direction) = self.next_local_travel_direction(destination) else {
             return Ok(None);
         };
+        let next = self.position_in_direction(direction);
+        if ordinary
+            && next != destination
+            && self.items.iter().any(|item| {
+                item.location == ItemLocation::Ground(next)
+                    && self.item_is_discovered(&item.id)
+                    && (!self.operation_options.travel_ignore_items
+                        || self.item_identification(item) == ItemIdentificationDto::Unexamined)
+            })
+        {
+            events.push(DomainEvent::LocalTravelItemFound);
+            return Ok(None);
+        }
+        let safe = self.prepare_automatic_step(direction, events, changed, removed_entities)?;
+        Ok((safe && self.local_travel_position_is_available(next)).then_some(direction))
+    }
+
+    pub(super) fn prepare_automatic_step(
+        &mut self,
+        direction: Direction,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<bool, CoreError> {
+        if self.visible_hostile_exists()
+            || self.player_has_status_kind(STATUS_BLINDNESS)
+            || self.player_has_status_kind(STATUS_CONFUSION)
+        {
+            return Ok(false);
+        }
         // A paralyzed attempt is replaced by an idle turn before any movement occurs.
         if self.player_has_status_kind(STATUS_PARALYSIS) {
-            return Ok(Some(direction));
+            return Ok(true);
         }
         let (dx, dy) = direction.delta();
         let start = self.player.position;
@@ -66,19 +98,20 @@ impl Game {
             y: start.y + dy,
         };
         let event_start = events.len();
-        if self.travel_options.disturb_trap_detect
-            && self.detection_coverage.traps.contains(&start)
+        if self.detection_coverage.traps.contains(&start)
             && !self.detection_coverage.traps.contains(&next)
-            && !(self.travel_options.auto_detect_traps
+        {
+            let refreshed = self.travel_options.auto_detect_traps
                 && self.auto_travel_detection(
                     AutoDeviceEffect::Traps,
                     events,
                     changed,
                     removed_entities,
-                )?)
-        {
-            events.push(DomainEvent::LocalTravelLeftDetectionArea);
-            return Ok(None);
+                )?;
+            if !refreshed && self.travel_options.disturb_trap_detect {
+                events.push(DomainEvent::LocalTravelLeftDetectionArea);
+                return Ok(false);
+            }
         }
         if self.travel_options.auto_map_area
             && self.detection_coverage.mapping.contains(&start)
@@ -105,7 +138,12 @@ impl Game {
                 })
             })
         });
-        Ok((!found_hostile && self.local_travel_position_is_available(next)).then_some(direction))
+        Ok(!found_hostile
+            && !self.visible_hostile_exists()
+            && !self
+                .content
+                .terrain(self.known_terrain_at(next))
+                .is_some_and(|terrain| terrain.trap.is_some()))
     }
 
     fn auto_travel_detection(
@@ -237,32 +275,148 @@ impl Game {
             return None;
         }
 
-        let mut visited = BTreeSet::from([start]);
-        let mut queue = VecDeque::new();
-        for (direction, position) in ordered_neighbors(start, destination) {
-            if !visited.insert(position) || !self.local_travel_position_is_available(position) {
-                continue;
-            }
-            if position == destination {
-                return Some(direction);
-            }
-            queue.push_back((position, direction));
-        }
-        while let Some((position, first_direction)) = queue.pop_front() {
-            for (_, next) in ordered_neighbors(position, destination) {
-                if !visited.insert(next) || !self.local_travel_position_is_available(next) {
-                    continue;
-                }
-                if next == destination {
-                    return Some(first_direction);
-                }
-                queue.push_back((next, first_direction));
-            }
-        }
-        None
+        self.local_travel_paths(Some(destination)).1[self.index(destination)?]
     }
 
-    fn local_travel_position_is_available(&self, position: Position) -> bool {
+    // RFB master@a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, cmd2.c:
+    // travel_flow / _travel_flow_bonus. Use known terrain and current traveler abilities.
+    fn local_travel_paths(
+        &self,
+        destination: Option<Position>,
+    ) -> (Vec<u32>, Vec<Option<Direction>>) {
+        let mut costs = vec![u32::MAX; self.terrain.len()];
+        let mut directions = vec![None; self.terrain.len()];
+        let start = self.index(self.player.position).unwrap();
+        costs[start] = 0;
+        let mut queue = BinaryHeap::from([Reverse((0, 0usize, start))]);
+        let mut order = 0;
+        let mut bonuses = BTreeMap::new();
+        while let Some(Reverse((cost, _, index))) = queue.pop() {
+            if cost != costs[index] {
+                continue;
+            }
+            let position = Position {
+                x: index as i32 % i32::from(self.width),
+                y: index as i32 / i32::from(self.width),
+            };
+            if destination == Some(position) {
+                break;
+            }
+            // Stable FIFO ties preserve the existing goal-facing direction order on plain floors.
+            for (direction, next) in
+                ordered_neighbors(position, destination.unwrap_or(self.player.position))
+            {
+                if !self.local_travel_position_is_available(next) {
+                    continue;
+                }
+                let next_index = self.index(next).unwrap();
+                let terrain = self.known_terrain_at(next);
+                let bonus = *bonuses
+                    .entry(terrain)
+                    .or_insert_with(|| self.local_travel_terrain_bonus(terrain));
+                let next_cost = cost + 1 + bonus;
+                if next_cost >= costs[next_index] {
+                    continue;
+                }
+                costs[next_index] = next_cost;
+                directions[next_index] = directions[index].or(Some(direction));
+                order += 1;
+                queue.push(Reverse((next_cost, order, next_index)));
+            }
+        }
+        (costs, directions)
+    }
+
+    fn local_travel_terrain_bonus(&self, terrain_id: &str) -> u32 {
+        let terrain = self.content.terrain(terrain_id).unwrap();
+        let has = |tag| terrain.tags.iter().any(|value| value == tag);
+        let flying = self.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly);
+        let element = if has("lava") {
+            Some((DamageType::Fire, if has("deep") { 16 } else { 1 }))
+        } else if has("acid") {
+            Some((DamageType::Acid, if has("deep") { 12 } else { 6 }))
+        } else {
+            None
+        };
+        if let Some((element, mut bonus)) = element {
+            let resistance = self.player_resistance_percent(element);
+            if element == DamageType::Fire && resistance >= 100 {
+                return 0;
+            }
+            if flying {
+                bonus /= 2;
+            }
+            if resistance <= 50 {
+                bonus *= 4;
+            }
+            return bonus;
+        }
+        if has("water")
+            && has("deep")
+            && !flying
+            && !self.active_traveler_has_mode(rfb_content::ActorMovementMode::Swim)
+            && !self.active_traveler_has_mode(rfb_content::ActorMovementMode::Aquatic)
+            && self.carried_weight_tenths_pound() > self.player_carry_capacity_tenths_pound()
+        {
+            return 4;
+        }
+        0
+    }
+
+    pub(super) fn nearest_unknown_item_target(
+        &self,
+    ) -> Result<rfb_protocol::AutoGetTargetDto, &'static str> {
+        if self.map_scale != rfb_protocol::MapScaleDto::Local {
+            return Err("game-unknown-item-local-only");
+        }
+        let candidates = self.unknown_item_travel_candidates();
+        if candidates.is_empty() {
+            return Err("game-unknown-item-none");
+        }
+        let (costs, _) = self.local_travel_paths(None);
+        candidates
+            .into_iter()
+            .filter_map(|target| {
+                let cost = costs[self.index(target.position)?];
+                (cost < u32::MAX).then_some((cost, target))
+            })
+            .min_by(|a, b| (a.0, a.1.object_id.as_str()).cmp(&(b.0, b.1.object_id.as_str())))
+            .map(|(_, target)| target)
+            .ok_or("game-unknown-item-no-route")
+    }
+
+    pub(super) fn unknown_item_travel_target_is_valid(
+        &self,
+        object_id: &str,
+        destination: Position,
+    ) -> bool {
+        self.map_scale == rfb_protocol::MapScaleDto::Local
+            && self
+                .unknown_item_travel_candidates()
+                .iter()
+                .any(|target| target.object_id == object_id && target.position == destination)
+    }
+
+    pub(super) fn reachable_local_travel_positions(&self) -> BTreeSet<Position> {
+        let mut visited = BTreeSet::from([self.player.position]);
+        let mut queue = VecDeque::from([self.player.position]);
+        while let Some(position) = queue.pop_front() {
+            for direction in DIRECTIONS {
+                let (dx, dy) = direction.delta();
+                let next = Position {
+                    x: position.x + dx,
+                    y: position.y + dy,
+                };
+                if !visited.contains(&next) && self.local_travel_position_is_available(next) {
+                    visited.insert(next);
+                    queue.push_back(next);
+                }
+            }
+        }
+        visited
+    }
+
+    pub(super) fn local_travel_position_is_available(&self, position: Position) -> bool {
         let Some(index) = self.index(position) else {
             return false;
         };

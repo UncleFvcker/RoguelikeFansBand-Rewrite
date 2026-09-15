@@ -111,8 +111,12 @@ fn rodeo_mounts_and_tames_a_wild_adjacent_monster() {
             .iter()
             .any(|event| matches!(event, DomainEvent::RodeoTamed { .. }))
     );
-    Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("tamed riding state should remain valid");
+    Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("tamed riding state should remain valid");
 
     let rng_before = game.rng.clone();
     let repeated = cast_rodeo(&mut game);
@@ -156,7 +160,11 @@ fn guardian_and_questor_mounts_are_thrown_off_without_becoming_pets() {
                 .iter()
                 .any(|event| matches!(event, DomainEvent::RidingFell { .. }))
         );
-        Game::from_save_with_content(game.to_save(), game.content.clone())
-            .unwrap_or_else(|error| panic!("{protected_tag} failure should remain valid: {error}"));
+        Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap_or_else(|error| panic!("{protected_tag} failure should remain valid: {error}"));
     }
 }

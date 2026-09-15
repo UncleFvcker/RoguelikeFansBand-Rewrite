@@ -136,6 +136,11 @@ fn restore_campaign_state(
                 && saved.retired_turn.is_none()
                 && saved.final_score.is_none()
         }
+        CampaignStatusDto::Abandoned => {
+            saved.victory_turn.is_none()
+                && saved.retired_turn.is_none()
+                && saved.final_score.is_some()
+        }
         CampaignStatusDto::Retired => {
             saved
                 .victory_turn
@@ -652,6 +657,7 @@ fn item_property_knowledge_from_save(
 #[serde(rename_all = "camelCase")]
 struct StateHashPayloadV98<'a> {
     travel_options: rfb_protocol::TravelOptionsDto,
+    operation_options: rfb_protocol::OperationOptionsDto,
     detection_coverage: rfb_protocol::DetectionCoverageSaveDto,
     absorbed_devices: Vec<rfb_protocol::AbsorbedDeviceSaveDto>,
     pending_magic_absorption: &'a Option<rfb_protocol::PendingMagicAbsorptionDto>,
@@ -668,7 +674,7 @@ struct StateHashPayloadV98<'a> {
     wilderness_chunks: Vec<rfb_protocol::WildernessChunkSaveDto>,
     world_travel_destination: Option<Position>,
     interface_locale: rfb_protocol::LocaleDto,
-    mogaminator: rfb_protocol::MogaminatorSaveDto,
+    mogaminator: rfb_protocol::MogaminatorContextDto,
     terrain: TerrainSaveRef<'a>,
     player: PlayerSaveDto,
     entities: Vec<ActorSaveDto>,
@@ -679,6 +685,7 @@ struct StateHashPayloadV98<'a> {
     equipment: Vec<EquipmentItemSaveDto>,
     carried_items: Vec<CarriedItemSaveDto>,
     item_knowledge: Vec<ItemKnowledgeSaveDto>,
+    discovery: rfb_protocol::DiscoverySaveDto,
     item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     task_states: Vec<TaskStateSaveDto>,
     bounty_state: rfb_protocol::BountyStateSaveDto,
@@ -784,17 +791,23 @@ fn floor_save_for_hash(floor: &FloorState) -> FloorSaveForHash<'_> {
 }
 
 impl Game {
-    pub fn from_save(payload: SavePayloadV1) -> Result<Self, CoreError> {
+    pub fn from_save(
+        payload: SavePayloadV1,
+        preferences: rfb_protocol::BehaviorPreferencesDto,
+    ) -> Result<Self, CoreError> {
         Self::from_save_with_content(
             payload,
             load_built_in_content().expect("built-in content should decode"),
+            preferences,
         )
     }
 
     pub fn from_save_with_content(
         payload: SavePayloadV1,
         content: Arc<ContentCatalog>,
+        preferences: rfb_protocol::BehaviorPreferencesDto,
     ) -> Result<Self, CoreError> {
+        Self::validate_behavior_preferences(&preferences)?;
         if payload.schema_version != SAVE_PAYLOAD_SCHEMA_VERSION {
             return Err(CoreError::UnsupportedSaveVersion(payload.schema_version));
         }
@@ -802,9 +815,13 @@ impl Game {
         {
             return Err(CoreError::ContentMismatch);
         }
-        let mogaminator =
-            super::mogaminator::MogaminatorState::from_save(payload.mogaminator.clone())
-                .map_err(|_| CoreError::InvalidSave("Mogaminator source is invalid"))?;
+        let mogaminator = super::mogaminator::MogaminatorState {
+            wanted_actor_kind_ids: payload.wanted_actor_kind_ids.iter().cloned().collect(),
+            ..super::mogaminator::MogaminatorState::default()
+        };
+        if mogaminator.wanted_actor_kind_ids.len() != payload.wanted_actor_kind_ids.len() {
+            return Err(CoreError::InvalidSave("duplicate wanted actor kind"));
+        }
         if mogaminator.wanted_actor_kind_ids.len() > 20
             || mogaminator.wanted_actor_kind_ids.iter().any(|actor_id| {
                 content
@@ -1028,6 +1045,9 @@ impl Game {
         let confusing_strike_ready = payload.player.confusing_strike_ready;
         let sniper_concentration = payload.player.sniper_concentration;
         let fishing_direction = payload.player.fishing_direction;
+        let running = payload.player.running.clone();
+        let auto_explore = payload.player.auto_explore.clone();
+        let searching = payload.player.searching;
         let saved_probed_actor_kind_ids = payload.player.probed_actor_kind_ids.clone();
         let probed_actor_kind_ids = saved_probed_actor_kind_ids
             .iter()
@@ -1461,8 +1481,9 @@ impl Game {
             wilderness_seed: payload.wilderness_seed,
             wilderness_terrain_cache: BTreeMap::new(),
             world_travel_destination: payload.world_travel_destination,
-            interface_locale: payload.interface_locale,
-            travel_options: payload.travel_options,
+            interface_locale: preferences.locale,
+            travel_options: preferences.travel,
+            operation_options: preferences.operations,
             mogaminator,
             current_floor_id,
             current_dungeon_instance_id,
@@ -1500,6 +1521,7 @@ impl Game {
             items,
             gold_piles,
             item_knowledge,
+            discovery: payload.discovery,
             item_property_knowledge,
             task_states,
             bounty_state,
@@ -1518,6 +1540,9 @@ impl Game {
             confusing_strike_ready,
             sniper_concentration,
             fishing_direction,
+            running,
+            auto_explore,
+            searching,
             probed_actor_kind_ids,
             minor_slow,
             minor_slow_energy,
@@ -1550,6 +1575,7 @@ impl Game {
             debug_item_curses_resisted: false,
             monster_division_remainders: BTreeMap::new(),
         };
+        game.apply_behavior_preferences(preferences)?;
         game.restore_wilderness_chunks(payload.wilderness_chunks)?;
         game.validate_spell_realms()?;
         game.restore_player_ability_state(
@@ -1563,9 +1589,30 @@ impl Game {
             game.campaign_state.status = CampaignStatusDto::Victorious;
             game.campaign_state.victory_turn = Some(game.turn);
         }
+        game.validate_discovery()?;
         game.reveal_current_visibility();
-        game.clear_stale_mogaminator_query();
         game.validate_loaded_state()?;
+        if game.searching && game.fishing_direction.is_some() {
+            return Err(CoreError::InvalidSave(
+                "searching and fishing are mutually exclusive",
+            ));
+        }
+        if game
+            .auto_explore
+            .as_ref()
+            .is_some_and(|state| !game.auto_explore_state_is_valid(state))
+        {
+            return Err(CoreError::InvalidSave(
+                "player auto-explore state is invalid",
+            ));
+        }
+        if game
+            .running
+            .as_ref()
+            .is_some_and(|run| !game.running_state_is_valid(run))
+        {
+            return Err(CoreError::InvalidSave("player running state is invalid"));
+        }
         if game.fishing_direction.is_some() && !game.fishing_state_is_valid() {
             return Err(CoreError::InvalidSave("player fishing state is invalid"));
         }
@@ -1583,7 +1630,12 @@ impl Game {
     #[must_use]
     pub fn to_save(&self) -> SavePayloadV1 {
         SavePayloadV1 {
-            travel_options: self.travel_options,
+            wanted_actor_kind_ids: self
+                .mogaminator
+                .wanted_actor_kind_ids
+                .iter()
+                .cloned()
+                .collect(),
             detection_coverage: self.detection_coverage.to_save(),
             absorbed_devices: crate::save::absorbed_devices_to_save(&self.items),
             pending_magic_absorption: self.pending_magic_absorption.clone(),
@@ -1599,8 +1651,6 @@ impl Game {
             wilderness_seed: self.wilderness_seed,
             wilderness_chunks: self.wilderness_chunks_to_save(),
             world_travel_destination: self.world_travel_destination,
-            interface_locale: self.interface_locale,
-            mogaminator: self.mogaminator.to_save(),
             terrain: TerrainSaveDto {
                 width: self.width,
                 height: self.height,
@@ -1617,6 +1667,7 @@ impl Game {
             equipment: equipment_to_save(&self.items),
             carried_items: carried_items_to_save(&self.items),
             item_knowledge: self.item_knowledge_to_save(),
+            discovery: self.discovery.clone(),
             item_property_knowledge: self.item_property_knowledge_to_save(),
             task_progress: Vec::new(),
             task_states: self.task_states_to_save(),
@@ -1673,6 +1724,7 @@ impl Game {
     pub fn state_hash(&self) -> String {
         let payload = StateHashPayloadV98 {
             travel_options: self.travel_options,
+            operation_options: self.operation_options,
             detection_coverage: self.detection_coverage.to_save(),
             absorbed_devices: crate::save::absorbed_devices_to_save(&self.items),
             pending_magic_absorption: &self.pending_magic_absorption,
@@ -1689,7 +1741,7 @@ impl Game {
             wilderness_chunks: self.wilderness_chunks_to_save(),
             world_travel_destination: self.world_travel_destination,
             interface_locale: self.interface_locale,
-            mogaminator: self.mogaminator.to_save(),
+            mogaminator: self.mogaminator.to_context(),
             terrain: TerrainSaveRef {
                 width: self.width,
                 height: self.height,
@@ -1706,6 +1758,7 @@ impl Game {
             equipment: equipment_to_save(&self.items),
             carried_items: carried_items_to_save(&self.items),
             item_knowledge: self.item_knowledge_to_save(),
+            discovery: self.discovery.clone(),
             item_property_knowledge: self.item_property_knowledge_to_save(),
             task_states: self.task_states_to_save(),
             bounty_state: self.bounty_state.to_save(),
@@ -1825,6 +1878,9 @@ impl Game {
         player.confusing_strike_ready = self.confusing_strike_ready;
         player.sniper_concentration = self.sniper_concentration;
         player.fishing_direction = self.fishing_direction;
+        player.running = self.running.clone();
+        player.auto_explore = self.auto_explore.clone();
+        player.searching = self.searching;
         player.probed_actor_kind_ids = self.probed_actor_kind_ids.iter().cloned().collect();
         player.minor_slow = self.minor_slow;
         player.minor_slow_energy = self.minor_slow_energy;

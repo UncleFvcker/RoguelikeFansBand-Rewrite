@@ -923,7 +923,12 @@ impl Game {
         let mut entity_ids = self
             .entities
             .iter()
-            .filter(|entity| entity.summon.is_some())
+            .filter(|entity| {
+                entity
+                    .summon
+                    .as_ref()
+                    .is_some_and(|summon| summon.remaining_turns > 0)
+            })
             .map(|entity| entity.id.clone())
             .collect::<Vec<_>>();
         entity_ids.sort();
@@ -940,17 +945,9 @@ impl Game {
                 .as_ref()
                 .is_some_and(|summon| summon.remaining_turns <= 1);
             if expires {
-                let position = self.entities[index].position;
                 let target_kind_id = self.entities[index].kind_id.clone();
                 let removed_id = self.entities[index].id.clone();
-                self.entities.remove(index);
-                self.clear_duelist_challenge_for(&removed_id);
-                if self.riding_actor_id.as_deref() == Some(removed_id.as_str()) {
-                    self.riding_actor_id = None;
-                }
-                self.clear_riding_bond_for(&removed_id);
-                changed.insert(position);
-                removed_entities.push(removed_id.clone());
+                self.remove_pet_at(index, changed, removed_entities);
                 events.push(DomainEvent::SummonExpired {
                     entity_id: removed_id,
                     target_kind_id,
@@ -1047,6 +1044,7 @@ impl Game {
             .any(|status_kind_id| status_kind_id == STATUS_TSUYOSHI);
         for damage in player_tick.damage {
             if damage.outcome.applied > 0 {
+                self.searching = false;
                 self.fishing_direction = None;
             }
             events.push(DomainEvent::PlayerStatusDamaged {
@@ -1183,9 +1181,6 @@ impl Game {
             else {
                 continue;
             };
-            if self.riding_actor_id.as_deref() == Some(entity_id.as_str()) {
-                continue;
-            }
             let definition = self
                 .actor_runtime_definition(&self.entities[index])
                 .expect("monster actor definition must remain available");
@@ -1199,6 +1194,9 @@ impl Game {
                 continue;
             }
             spend_energy(&mut self.entities[index].energy_need, STANDARD_ACTION_COST);
+            if self.resolve_missing_summon_owner(index, events, changed, removed_entities) {
+                continue;
+            }
             self.process_monster_minor_slow_recovery(index);
             if self.resolve_neglected_pet(
                 index,
@@ -1209,8 +1207,11 @@ impl Game {
             ) {
                 continue;
             }
-            self.try_trump_blink(index, events, changed);
-            if self.try_quantum_turn(index, events, changed, removed_entities)? {
+            let mounted = self.riding_actor_id.as_deref() == Some(entity_id.as_str());
+            if !mounted {
+                self.try_trump_blink(index, events, changed);
+            }
+            if !mounted && self.try_quantum_turn(index, events, changed, removed_entities)? {
                 continue;
             }
             self.try_clear_monster_confusion(index, events);
@@ -1225,18 +1226,30 @@ impl Game {
                 });
                 continue;
             }
-            if self.try_original_reproduction(index, changed) {
+            if !mounted && self.try_original_reproduction(index, changed) {
                 continue;
             }
             let floor_id = self.current_floor_id.clone();
             let visible_monster_auras_before_action = self.visible_monster_aura_entity_ids();
-            self.resolve_monster_action(
-                index,
-                events,
-                changed,
-                removed_entities,
-                &mut surround_reservations,
-            )?;
+            if mounted && !self.riding_without_reins() {
+                // A rider holding the reins controls movement; releasing them
+                // gives the mount its normal AI action and energy cost.
+                self.resolve_monster_ability_with_changes(
+                    index,
+                    events,
+                    changed,
+                    removed_entities,
+                    false,
+                )?;
+            } else {
+                self.resolve_monster_action(
+                    index,
+                    events,
+                    changed,
+                    removed_entities,
+                    &mut surround_reservations,
+                )?;
+            }
             self.refresh_android_experience(events);
             if self.duelist_prompt().is_some() {
                 self.continue_after_duelist_choice(

@@ -3,7 +3,14 @@ use super::support::*;
 use super::*;
 
 fn needle_game(build: &str, race: &str) -> Game {
-    let mut game = Game::new_with_build_race_and_name(414, build, race, "Needle").unwrap();
+    let mut game = Game::new_with_build_race_and_name(
+        414,
+        build,
+        race,
+        "Needle",
+        Game::default_behavior_preferences(),
+    )
+    .unwrap();
     clear_monsters(&mut game);
     choose_human_talent_if_pending(&mut game);
     game.items.clear();
@@ -97,7 +104,7 @@ fn ordinary_generation_reaches_pickup_equipment_restrictions_and_saved_combat() 
     );
     target(&mut game, "demo.actor.warrens-keeper");
     game.reveal_current_visibility();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(
         restored.snapshot().player.melee_profile,

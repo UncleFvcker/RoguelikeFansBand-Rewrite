@@ -1,11 +1,200 @@
 // SPDX-License-Identifier: MPL-2.0
 
+#[test]
+fn replay_owns_initial_preferences_and_records_changes_between_commands() {
+    let initial = Game::new(42);
+    let save = initial.to_save();
+    let mut recorder = ReplayRecorder::new(initial);
+    let mut preferences = recorder.game().behavior_preferences();
+    preferences.locale = rfb_protocol::LocaleDto::EnUs;
+    preferences.travel.always_pickup = true;
+    preferences.operations.easy_open = false;
+    preferences.operations.default_target = rfb_protocol::DefaultTargetModeDto::NearestEnemy;
+    recorder
+        .dispatch(GameCommand::ConfigurePreferences { preferences })
+        .unwrap();
+    // A saved-rule reload records the supplied rules, never a local filesystem read.
+    let mut rules = recorder.game().behavior_preferences().mogaminator;
+    rules.enabled = true;
+    rules.zh_cn_source = "!物品".into();
+    rules.en_us_source = "!items".into();
+    recorder
+        .dispatch(GameCommand::ConfigureMogaminatorPreferences { preferences: rules })
+        .unwrap();
+    recorder.dispatch(GameCommand::Wait).unwrap();
+    let expected = recorder.game().state_hash();
+    let replay = recorder.replay_snapshot();
+    let mut viewer_preferences = Game::default_behavior_preferences();
+    viewer_preferences.mogaminator.enabled = true;
+    viewer_preferences.mogaminator.zh_cn_source = "!物品".into();
+    let viewer = Game::from_save(save.clone(), viewer_preferences.clone()).unwrap();
+    assert_eq!(verify(&replay, viewer).unwrap().final_state_hash, expected);
+    assert_eq!(
+        Game::from_save(save, viewer_preferences.clone())
+            .unwrap()
+            .behavior_preferences(),
+        viewer_preferences
+    );
+    let bytes = encode(&replay).unwrap();
+    assert_eq!(decode(&bytes).unwrap(), replay);
+}
+
 use rfb_core::stats::{SkillProgress, experience_required_for_level_with_factor};
 use rfb_protocol::{
     ActorSaveDto, Direction, GameCommand, MapScaleDto, MonsterPackBehaviorDto, Position,
 };
 
 use super::*;
+
+#[test]
+fn exploration_replays_after_saving_at_an_active_frontier() {
+    let mut payload = quiet_game(424).to_save();
+    payload.entities.clear();
+    payload.items.clear();
+    payload.gold_piles.clear();
+    payload.item_property_knowledge.clear();
+    payload.terrain.terrain_ids.fill("demo.terrain.wall".into());
+    payload.explored.fill(false);
+    let start = payload.player.position;
+    for dx in 0..=20 {
+        let index = (start.y * i32::from(payload.terrain.width) + start.x + dx) as usize;
+        payload.terrain.terrain_ids[index] = "demo.terrain.floor".into();
+        payload.explored[index] = dx < 8;
+    }
+    let initial = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    recorder.dispatch(GameCommand::ToggleSearch).unwrap();
+    recorder.dispatch(GameCommand::AutoExplore).unwrap();
+    let (game, replay) = recorder.finish();
+    assert!(game.snapshot().player.auto_explore.is_some());
+    assert!(game.snapshot().player.searching);
+    verify(&decode(&encode(&replay).unwrap()).unwrap(), initial).unwrap();
+    let checkpoint = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    let mut expected = ReplayRecorder::new(game);
+    let mut resumed = ReplayRecorder::new(checkpoint.clone());
+    for command in [
+        GameCommand::ContinueAutoExplore,
+        GameCommand::CancelAutoExplore,
+        GameCommand::ToggleSearch,
+        GameCommand::ContinueAutoExplore,
+    ] {
+        assert_eq!(
+            expected.dispatch(command.clone()).unwrap(),
+            resumed.dispatch(command).unwrap()
+        );
+    }
+    let (game, replay) = resumed.finish();
+    assert_eq!(
+        verify(&decode(&encode(&replay).unwrap()).unwrap(), checkpoint)
+            .unwrap()
+            .final_state_hash,
+        game.state_hash()
+    );
+}
+
+#[test]
+fn running_commands_replay_and_resume_from_a_saved_mid_run_state() {
+    let mut payload = quiet_game(424).to_save();
+    payload.entities.clear();
+    payload.items.clear();
+    payload.gold_piles.clear();
+    payload.item_property_knowledge.clear();
+    let start = payload.player.position;
+    for dy in -1..=1 {
+        for dx in 0..=5 {
+            let index = ((start.y + dy) * i32::from(payload.terrain.width) + start.x + dx) as usize;
+            payload.terrain.terrain_ids[index] = if dy == 0 {
+                "demo.terrain.floor"
+            } else {
+                "demo.terrain.wall"
+            }
+            .into();
+            payload.explored[index] = true;
+        }
+    }
+    let initial = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    recorder
+        .dispatch(GameCommand::Run {
+            max_steps: None,
+            direction: Direction::East,
+        })
+        .unwrap();
+    let (game, replay) = recorder.finish();
+    assert!(game.snapshot().player.running.is_some());
+    verify(&decode(&encode(&replay).unwrap()).unwrap(), initial).unwrap();
+    let checkpoint = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
+    let mut expected = ReplayRecorder::new(game);
+    let mut resumed = ReplayRecorder::new(checkpoint.clone());
+    for command in [
+        GameCommand::ContinueRun,
+        GameCommand::CancelRun,
+        GameCommand::Alter {
+            direction: Direction::North,
+        },
+        GameCommand::ContinueRun,
+    ] {
+        assert_eq!(
+            expected.dispatch(command.clone()).unwrap(),
+            resumed.dispatch(command).unwrap()
+        );
+    }
+    let (resumed, replay) = resumed.finish();
+    assert_eq!(
+        verify(&decode(&encode(&replay).unwrap()).unwrap(), checkpoint)
+            .unwrap()
+            .final_state_hash,
+        resumed.state_hash()
+    );
+}
+
+#[test]
+fn single_step_rest_save_resume_replays_identical_events_and_hashes() {
+    let mut payload = Game::new_with_build(424, "demo.build.warrior")
+        .unwrap()
+        .to_save();
+    payload.entities.clear();
+    payload.carried_items.clear();
+    payload.player.hp = 1;
+    let initial = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    for _ in 0..3 {
+        recorder.dispatch(GameCommand::Rest { turns: 1 }).unwrap();
+    }
+    let (mut uninterrupted, replay) = recorder.finish();
+    assert_eq!(
+        verify(&decode(&encode(&replay).unwrap()).unwrap(), initial)
+            .unwrap()
+            .final_state_hash,
+        uninterrupted.state_hash()
+    );
+    let checkpoint = Game::from_save(
+        uninterrupted.to_save(),
+        uninterrupted.behavior_preferences(),
+    )
+    .unwrap();
+    let mut resumed = ReplayRecorder::new(checkpoint.clone());
+    let mut expected = ReplayRecorder::new(uninterrupted.clone());
+    for command in [
+        GameCommand::Rest { turns: 1 },
+        GameCommand::Rest { turns: 1 },
+        GameCommand::Wait,
+    ] {
+        assert_eq!(
+            expected.dispatch(command.clone()).unwrap(),
+            resumed.dispatch(command).unwrap()
+        );
+    }
+    let (final_game, replay) = resumed.finish();
+    uninterrupted = expected.finish().0;
+    assert_eq!(final_game.state_hash(), uninterrupted.state_hash());
+    assert_eq!(
+        verify(&decode(&encode(&replay).unwrap()).unwrap(), checkpoint)
+            .unwrap()
+            .final_state_hash,
+        final_game.state_hash()
+    );
+}
 
 #[test]
 fn tomte_item_feelings_survive_recording_save_reload_and_stack_splits() {
@@ -38,7 +227,7 @@ fn tomte_item_feelings_survive_recording_save_reload_and_stack_splits() {
         }))
         .unwrap(),
     );
-    let initial = Game::from_save(payload).unwrap();
+    let initial = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
     let mut recorder = ReplayRecorder::new(initial.clone());
     recorder.dispatch(GameCommand::Wait).unwrap();
     assert_eq!(
@@ -66,7 +255,7 @@ fn tomte_item_feelings_survive_recording_save_reload_and_stack_splits() {
         midpoint.state_hash()
     );
 
-    let restored = Game::from_save(midpoint.to_save()).unwrap();
+    let restored = Game::from_save(midpoint.to_save(), midpoint.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), midpoint.state_hash());
     let mut recorder = ReplayRecorder::new(restored.clone());
     recorder.dispatch(GameCommand::PickUp).unwrap();
@@ -121,7 +310,8 @@ fn item_replay_survives_shop_save_reload() {
         .find(|state| state.shop_id == "demo.shop.outpost-general-store")
         .expect("General Store state should exist")
         .visited = true;
-    let initial = Game::from_save(payload).expect("shop precondition should restore");
+    let initial = Game::from_save(payload, Game::default_behavior_preferences())
+        .expect("shop precondition should restore");
     let mut recorder = ReplayRecorder::new(initial.clone());
     let shop = recorder
         .game()
@@ -147,8 +337,10 @@ fn item_replay_survives_shop_save_reload() {
     verify(&replay, initial).expect("purchase replay should verify");
 
     let saved = midpoint.to_save();
-    let restored = Game::from_save(saved.clone()).expect("shop state should restore");
-    let replay_initial = Game::from_save(saved).expect("replay state should restore");
+    let restored = Game::from_save(saved.clone(), Game::default_behavior_preferences())
+        .expect("shop state should restore");
+    let replay_initial = Game::from_save(saved, Game::default_behavior_preferences())
+        .expect("replay state should restore");
     let ration_item_id = restored
         .snapshot()
         .inventory
@@ -179,7 +371,6 @@ fn floor_replay_preserves_world_map_state() {
     let mut recorder = ReplayRecorder::new(initial.clone());
     let update = recorder
         .dispatch(GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         })
         .expect("world map should open");
@@ -366,7 +557,8 @@ fn quiet_game(seed: u64) -> Game {
             .is_some_and(|pack| pack.behavior == MonsterPackBehaviorDto::GuardPosition)
     });
     payload.carried_items.clear();
-    Game::from_save(payload).expect("quiet replay fixture should restore")
+    Game::from_save(payload, Game::default_behavior_preferences())
+        .expect("quiet replay fixture should restore")
 }
 
 fn level_thirty_race(seed: u64, race_id: &str) -> Game {
@@ -375,6 +567,7 @@ fn level_thirty_race(seed: u64, race_id: &str) -> Game {
         "demo.build.warrior",
         race_id,
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal level 30 race should create");
     let factor = game.snapshot().player.build.unwrap().experience_percent;
@@ -394,7 +587,8 @@ fn level_thirty_race(seed: u64, race_id: &str) -> Game {
             SkillProgress::at_level(skill.base, skill.growth_per_ten_levels, skill.maximum, 30)
                 .current;
     }
-    Game::from_save(payload).expect("level 30 race replay precondition should restore")
+    Game::from_save(payload, Game::default_behavior_preferences())
+        .expect("level 30 race replay precondition should restore")
 }
 
 fn level_thirty_five_draconian(seed: u64) -> Game {
@@ -403,6 +597,7 @@ fn level_thirty_five_draconian(seed: u64) -> Game {
         "demo.build.warrior",
         "rfb-legacy.race.draconian-red",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal red Draconian should create");
     let factor = game.snapshot().player.build.unwrap().experience_percent;
@@ -422,7 +617,8 @@ fn level_thirty_five_draconian(seed: u64) -> Game {
             SkillProgress::at_level(skill.base, skill.growth_per_ten_levels, skill.maximum, 35)
                 .current;
     }
-    Game::from_save(payload).expect("level 35 Draconian replay precondition should restore")
+    Game::from_save(payload, Game::default_behavior_preferences())
+        .expect("level 35 Draconian replay precondition should restore")
 }
 
 fn invisible_replay_game(seed: u64, race_id: &str) -> Game {
@@ -431,6 +627,7 @@ fn invisible_replay_game(seed: u64, race_id: &str) -> Game {
         "demo.build.warrior",
         race_id,
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("formal replay race should create")
     .to_save();
@@ -447,6 +644,7 @@ fn invisible_replay_game(seed: u64, race_id: &str) -> Game {
     }
 
     payload.entities = vec![ActorSaveDto {
+        custom_name: None,
         id: "test.high-elf-invisible".to_owned(),
         kind_id: "demo.actor.clear-icky-thing".to_owned(),
         experience: 0,
@@ -475,7 +673,8 @@ fn invisible_replay_game(seed: u64, race_id: &str) -> Game {
         controller_id: None,
         summon: None,
     }];
-    Game::from_save(payload).expect("invisible replay precondition should restore")
+    Game::from_save(payload, Game::default_behavior_preferences())
+        .expect("invisible replay precondition should restore")
 }
 
 fn path_to_monster_and_three_attacks() -> Vec<GameCommand> {

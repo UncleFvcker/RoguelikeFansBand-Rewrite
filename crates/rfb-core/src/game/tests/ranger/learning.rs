@@ -190,7 +190,7 @@ fn all_four_builds_learn_and_cast_from_both_birth_books() {
             assert!(game.resources[MANA].current < mana);
         }
         assert_eq!(game.spent_spell_learning, 2);
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(game.state_hash(), restored.state_hash());
         assert_eq!(game.rng, restored.rng);
     }
@@ -307,7 +307,7 @@ fn attribute_and_level_loss_forget_without_refunding_and_resume_after_save() {
     );
     game.apply_player_experience_drain(game.progress.experience, "test.drain", &mut Vec::new());
     assert_eq!(game.progress.level, 1);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for game in [&mut game, &mut restored] {
         game.progress.attributes.wisdom = wisdom;
         game.apply_player_experience(game.experience_required_for_level(10), &mut Vec::new());
@@ -355,9 +355,12 @@ fn saved_spending_caps_and_progress_reject_forged_repeat_studies() {
             5 => save.player.ability_learning_order.push(NATURE.to_owned()),
             _ => save.player.mage_realms = None,
         }
-        assert!(Game::from_save(save).is_err(), "corruption {corruption}");
+        assert!(
+            Game::from_save(save, Game::default_behavior_preferences()).is_err(),
+            "corruption {corruption}"
+        );
     }
-    assert!(Game::from_save(baseline).is_ok());
+    assert!(Game::from_save(baseline, Game::default_behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -401,7 +404,7 @@ fn practice_uses_real_depth_and_primary_master_secondary_expert_caps() {
         cast(&mut game, spell, TargetSelection::SelfTarget);
         assert_eq!(game.ability_progress[spell].proficiency, after);
     }
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for game in [&mut game, &mut restored] {
         game.debug_ability_casts_succeed = false;
         cast(game, SORCERY, TargetSelection::SelfTarget);
@@ -483,7 +486,7 @@ fn death_failure_pays_mana_without_practice_and_preserves_backlash_rng_after_sav
     }
     let damage: i32 = (0..3).map(|_| (expected_rng.bounded(6) + 1) as i32).sum();
     expected_rng.bounded(6);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let experience = game.progress.experience;
     let mana = game.resources[MANA].current;
     for game in [&mut game, &mut restored] {
@@ -497,7 +500,7 @@ fn death_failure_pays_mana_without_practice_and_preserves_backlash_rng_after_sav
         assert_eq!(game.ability_progress[spell].cast_count, 0);
         assert_eq!(experience - game.progress.experience, 4000);
         assert_eq!(game.rng, expected_rng);
-        assert!(Game::from_save(game.to_save()).is_ok());
+        assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
     }
     assert_eq!(game.state_hash(), restored.state_hash());
 }
@@ -557,9 +560,9 @@ fn pending_natures_wrath_saves_and_commits_experience_and_practice_only_once() {
             1 => cast.cast_count = 99,
             _ => cast.resource_paid = 0,
         }
-        assert!(Game::from_save(invalid).is_err());
+        assert!(Game::from_save(invalid, Game::default_behavior_preferences()).is_err());
     }
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let mut cancelled = restored.clone();
     dispatch_next(&mut cancelled, GameCommand::CancelAbilityDirection);
     assert_eq!(cancelled.ability_progress[spell].cast_count, 0);

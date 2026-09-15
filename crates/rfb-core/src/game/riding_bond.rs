@@ -297,6 +297,10 @@ impl Game {
             });
         }
         events.push(DomainEvent::PetEvolved {
+            custom_name: (self.entity_is_visible_to_player(&self.entities[index])
+                && !self.entity_is_fuzzy_to_player(&self.entities[index]))
+            .then(|| self.entities[index].custom_name.clone())
+            .flatten(),
             previous_kind_id: kind_id,
             target_kind_id: next_definition.id,
         });

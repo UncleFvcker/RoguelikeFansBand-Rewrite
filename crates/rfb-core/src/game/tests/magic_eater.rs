@@ -84,7 +84,7 @@ fn birth_has_one_realm_free_build_and_a_real_charged_wand() {
             && item.quantity == 1
             && matches!(item.location, ItemLocation::Equipped { .. })));
     }
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
 }
@@ -122,7 +122,7 @@ fn growth_retains_device_skills_and_never_creates_public_mana() {
     let class = game.character_definitions().unwrap().2;
     assert_eq!((class.base_hp, class.pet_upkeep_divisor), (6, 30));
     assert!(!class.uses_spell_scrolls);
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
 }
@@ -223,14 +223,21 @@ fn device_skill_uses_equipment_and_mutation_contributions_without_mana() {
 #[test]
 fn racial_birth_and_draconian_growth_keep_the_ordinary_class_multiplier() {
     for race in ["rfb-legacy.race.spectre", "rfb-legacy.race.draconian-red"] {
-        let mut game = Game::new_with_build_race_and_name(925, BUILD, race, "Magic-Eater").unwrap();
+        let mut game = Game::new_with_build_race_and_name(
+            925,
+            BUILD,
+            race,
+            "Magic-Eater",
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         assert!(game.player_is_magic_eater());
         assert!(game.casting_profile().is_none());
         if race == "rfb-legacy.race.draconian-red" {
             game.apply_player_experience(game.experience_required_for_level(50), &mut Vec::new());
             assert_eq!(game.draconian_metamorphosis_attack_level(), 105);
         }
-        let restored = Game::from_save(game.to_save()).unwrap();
+        let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash(), "{race}");
         assert_eq!(restored.rng, game.rng);
     }

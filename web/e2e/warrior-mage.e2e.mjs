@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -266,7 +267,7 @@ export async function runWarriorMageUiScenario(driver, directory, profile, playt
     await invoke("plugin:window|set_min_size", { label: "main", value: null });
     for (const locale of playthrough ? ["zh-CN"] : ["zh-CN", "en-US"]) {
       localization.setLocale(locale);
-      await driver.execute('localStorage.setItem("rfb.locale",arguments[0]);localStorage.setItem("rfb.input-preset","numpad");return true;', [locale]);
+      await setPreferences(driver, { locale, inputPreset: "numpad" });
       await keyboard.reload();
       await driver.waitFor('return document.documentElement.dataset.appMode==="title"&&!document.querySelector("#session-new-game").disabled', "localized title", 60_000);
       await driver.execute(`const original=window.fetch,endpoint=window.__TAURI_INTERNALS__.convertFileSrc("dispatch_game_command","ipc");

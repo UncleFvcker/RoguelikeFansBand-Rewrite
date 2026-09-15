@@ -11,7 +11,7 @@ fn export_acquirement_desktop_save() {
     let input = std::env::var("B6_DESKTOP_INPUT").expect("path to the new-game desktop export");
     let (header, payload) = rfb_save::decode(&std::fs::read(input).unwrap()).unwrap();
     assert!(header.museum_binding.is_some());
-    let mut game = Game::from_save(payload).unwrap();
+    let mut game = Game::from_save(payload, Game::default_behavior_preferences()).unwrap();
     let rng = game.rng.clone();
     clear_monsters(&mut game);
     give_inventory_item(&mut game, "b6.acquirement", "demo.item.acquirement-scroll");
@@ -22,11 +22,13 @@ fn export_acquirement_desktop_save() {
         .unwrap()
         .quantity = 3;
     assert_eq!(game.rng, rng);
-    let game = Game::from_save(game.to_save()).unwrap();
+    let game = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let bytes = rfb_save::encode(&header, &game.to_save()).unwrap();
     let (_, payload) = rfb_save::decode(&bytes).unwrap();
     assert_eq!(
-        Game::from_save(payload).unwrap().state_hash(),
+        Game::from_save(payload, Game::default_behavior_preferences())
+            .unwrap()
+            .state_hash(),
         game.state_hash()
     );
     let directory = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../test-results");
@@ -209,7 +211,12 @@ fn empty_acquirement_consumes_scroll_and_runs_both_caps_without_allocating_or_re
             .iter()
             .any(|event| event.kind == "item.use-acquirement" && event.args["count"] == "0")
     );
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);
 }
@@ -467,7 +474,12 @@ fn acquirement_keeps_partial_success_when_the_only_instant_artifact_is_used_up()
             .iter()
             .any(|event| event.kind == "item.use-acquirement" && event.args["count"] == "1")
     );
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
 }
 
@@ -536,7 +548,12 @@ fn rejected_fixed_artifact_retains_generation_registration_without_identity_or_k
     assert_eq!(game.items, before_items);
     assert_eq!(game.item_knowledge, before_knowledge);
     assert_eq!(game.next_item_instance_serial, serial);
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.generated_artifact_ids, game.generated_artifact_ids);
 }
 
@@ -596,7 +613,12 @@ fn rejected_random_artifact_retains_its_name_and_rng_without_allocating() {
         game.next_item_instance_serial,
         template.next_item_instance_serial
     );
-    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    let restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .unwrap();
     assert_eq!(restored.random_artifact_names, names);
     // Total placement failure preserves the name too; fixed preservation is separate.
     game.terrain.fill("demo.terrain.wall".into());

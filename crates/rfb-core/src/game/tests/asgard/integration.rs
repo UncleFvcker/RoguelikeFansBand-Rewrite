@@ -20,7 +20,6 @@ fn enter_site(game: &mut Game) {
     dispatch_next(
         game,
         GameCommand::EnterWorldMap {
-            leave_pets: false,
             cancel_recall: false,
         },
     );
@@ -67,7 +66,8 @@ fn asgard_formal_surface_entry_obeys_birth_pantheon_and_preserves_unique_identit
             );
         }
         let saved = game.to_save();
-        let mut restored = Game::from_save(saved.clone()).unwrap();
+        let mut restored =
+            Game::from_save(saved.clone(), Game::default_behavior_preferences()).unwrap();
         assert_eq!(restored.to_save(), saved);
         enter_site(&mut restored);
         assert_eq!(
@@ -105,7 +105,7 @@ fn asgard_formal_surface_entry_obeys_birth_pantheon_and_preserves_unique_identit
                 "demo.floor.asgard-depth-64"
             );
             assert!(!restored.player_is_dead());
-            assert!(Game::from_save(restored.to_save()).is_ok());
+            assert!(Game::from_save(restored.to_save(), restored.behavior_preferences()).is_ok());
         } else {
             assert!(
                 restored
@@ -146,7 +146,7 @@ fn asgard_outside_unique_deaths_do_not_conquer_or_respawn_at_entrance_or_bottom(
             .iter()
             .any(|id| id == "demo.terrain.asgard-entrance")
     );
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert!(
         restored
             .transition_floor("demo.floor.asgard-depth-88".into(), None, None, false)
@@ -155,7 +155,7 @@ fn asgard_outside_unique_deaths_do_not_conquer_or_respawn_at_entrance_or_bottom(
     );
     assert!(!restored.entities.iter().any(|actor| actor.kind_id == ODIN));
     assert!(!restored.dungeon_states[DUNGEON].guardian_defeated);
-    assert!(Game::from_save(restored.to_save()).is_ok());
+    assert!(Game::from_save(restored.to_save(), restored.behavior_preferences()).is_ok());
 }
 
 #[test]
@@ -241,7 +241,7 @@ fn asgard_early_odin_death_keeps_conquest_scroll_artifact_and_avenger_independen
     };
     game.player.position = position;
     game.pick_up_item_at_player(Some(&id)).unwrap();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for game in [&mut game, &mut restored] {
         dispatch_next(
             game,
@@ -275,7 +275,7 @@ fn asgard_early_odin_death_keeps_conquest_scroll_artifact_and_avenger_independen
                 .any(|item| item.kind_id == "demo.item.acquirement-scroll")
         );
     }
-    assert!(Game::from_save(game.to_save()).is_ok());
+    assert!(Game::from_save(game.to_save(), game.behavior_preferences()).is_ok());
 }
 
 #[test]

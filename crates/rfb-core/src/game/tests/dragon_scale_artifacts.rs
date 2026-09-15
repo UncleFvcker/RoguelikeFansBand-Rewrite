@@ -78,7 +78,7 @@ fn c4a_seiryu_full_pool_equipment_and_opposition_reduce_damage_after_save() {
     game.pick_up_item_at_player(Some(&id)).unwrap();
     assert!(game.visible_item_resistances(&game.items[0]).is_empty());
     game.reveal_current_visibility();
-    let restored = Game::from_save(game.to_save()).unwrap();
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     game = restored;
     game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
@@ -106,7 +106,7 @@ fn c4a_seiryu_full_pool_equipment_and_opposition_reduce_damage_after_save() {
     let mut expected_rng = game.rng.clone();
     assert!(expected_rng.bounded(100) < 5);
     let duration = 21 + expected_rng.bounded(20) as u32;
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(
         activate(&mut game, &id, None),
         activate(&mut restored, &id, None)
@@ -174,7 +174,7 @@ fn c4a_seiryu_full_pool_equipment_and_opposition_reduce_damage_after_save() {
     let before = game.rng.clone();
     assert!(activate(&mut game, &id, None).contains(&DomainEvent::ItemUseUnavailable));
     assert_eq!(game.rng, before);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for run in [&mut game, &mut restored] {
         for tick in 1..=1110 {
             run.world_tick += 1;
@@ -337,7 +337,7 @@ fn c4a_midnight_brand_darkness_and_acid_cone_preserve_saved_cooldown() {
     assert_eq!(charge(&game, &id), 1);
     game.rng = RfbRng::seeded(ready_seed());
     let hp: Vec<_> = game.entities.iter().map(|actor| actor.hp).collect();
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let mut blocked = game.clone();
     replace_terrain(&mut blocked, Position { x: 15, y: 10 }, "demo.terrain.wall");
     activate(&mut blocked, &id, Some(&east));
@@ -362,7 +362,7 @@ fn c4a_midnight_brand_darkness_and_acid_cone_preserve_saved_cooldown() {
         [120, 60, 0]
     );
     assert_eq!(game.state_hash(), restored.state_hash());
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for run in [&mut game, &mut restored] {
         for _ in 0..399 {
             run.world_tick += 1;
@@ -437,7 +437,8 @@ fn c4a_plain_and_ego_scales_keep_base_breath_and_replay_after_cancel() {
             assert_eq!(game.rng, expected);
             assert_eq!(charge(&game, "test.scale"), 1);
             game.rng = RfbRng::seeded(ready_seed());
-            let mut restored = Game::from_save(game.to_save()).unwrap();
+            let mut restored =
+                Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             let east = TargetSelection::Direction {
                 direction: Direction::East,
             };
@@ -581,7 +582,7 @@ fn c4b_bladeturner_ordinary_acquisition_ball_then_shared_boosted_duration_and_sa
         .unwrap();
     let rolled = 51 + expected.rng.bounded(50) as u32;
     let duration = rolled + rolled / 4;
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let events = activate(&mut game, &id, Some(&east));
     assert_eq!(activate(&mut restored, &id, Some(&east)), events);
     assert_eq!(
@@ -647,7 +648,7 @@ fn c4b_bladeturner_ordinary_acquisition_ball_then_shared_boosted_duration_and_sa
     }
     assert_eq!(charge(&game, &id), 0);
     assert!(activate(&mut game, &id, Some(&east)).contains(&DomainEvent::ItemUseUnavailable));
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for run in [&mut game, &mut restored] {
         clear_monsters(run);
         for tick in 1..=4000 {
@@ -792,7 +793,7 @@ fn c4b_bladeturner_command_cancel_failure_and_independent_longer_statuses() {
             ticks
         );
     }
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     for run in [&mut game, &mut restored] {
         for _ in 0..duration {
             run.world_tick += 1;

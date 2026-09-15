@@ -38,22 +38,33 @@ function fixture() {
     useLabel: slot === 0 ? "q" : String.fromCharCode(97 + slot), deviceLabel: slot === 0 ? "8" : String.fromCharCode(97 + slot), failurePerMille: 137, energyCost: 80, recoveryPerMille: 15, allowsMultipleTargets: false })));
   state.status = { mapScale: "local", player: { position: { x: 1, y: 1 }, magicEater: { slots, deviceCommands: ["wand", "staff", "rod"].map(category => ({ category, items: [] })), pendingAbsorption: null },
     abilities: [{ id: "absorb-power", canCast: true, effects: [{ type: "magic-eater-absorb" }], itemTargets: [{ itemId: "source" }] }] }, items: [] };
-  const commands = [], targets = [], inspected = [], sources = []; let exports = 0, imports = 0;
+  const commands = [], targets = [], inspected = [], sources = [], itemChoices = [], confirmations = []; let exports = 0, imports = 0;
   const panel = new MagicEaterPanel({ document, state, localization: { format: (key, args) => key + (args ? JSON.stringify(args) : "") },
     dispatch: async command => commands.push(command), visibleItemName: key => key, inspectItem: id => inspected.push(id),
-    selectItemTarget: (ids, select) => sources.push({ ids, select }), startTargeting: (spec, intent) => targets.push({ spec, intent }),
-    beforeOpen() {}, exportSave: async () => { exports++; }, importSave: () => { imports++; },
+    selectItemTarget: (ids, select, cancel, command) => sources.push({ ids, select, cancel, command }), startTargeting: (spec, intent) => targets.push({ spec, intent }),
+    confirmItemChoice: (id, command) => { confirmations.push({ id, command }); return true; },
+    selectItemTargets: (excluded, select, cancel, command, multiple) => {
+      const choice = { excluded, select, cancel, command, multiple, closed: false };
+      itemChoices.push(choice); return () => { choice.closed = true; };
+    },
+    beforeOpen() {}, saveGame: async () => { exports++; }, loadGame: () => { imports++; },
   });
   const element = suffix => document.getElementById(`magic-eater-${suffix}`);
   element("category").value = "wand";
   const row = slot => element("slots").children.find(row => row.dataset.slot === String(slot));
   const action = (slot, name) => row(slot).children.at(-1).children.find(button => button.dataset.action === name);
   const key = value => { const event = new Event("keydown", { cancelable: true }); Object.assign(event, { key: value }); element("dialog").dispatchEvent(event); };
-  return { state, panel, commands, targets, inspected, sources, element, action, row, key, device, exports: () => exports, imports: () => imports };
+  return { state, panel, commands, targets, inspected, sources, itemChoices, confirmations, element, action, row, key, device, exports: () => exports, imports: () => imports };
 }
 
 test("device menu displays core values, uses projected labels/identities, and respects ordinary-device precedence", () => {
   const f = fixture(); f.panel.open();
+  for (const extra of [{ isComposing: true }, { repeat: true }, { ctrlKey: true }, { metaKey: true }, { altKey: true }]) {
+    const event = Object.assign(new Event("keydown", { cancelable: true }), { key: "q", ...extra });
+    f.element("dialog").dispatchEvent(event);
+    assert.equal(event.defaultPrevented, false);
+  }
+  assert.equal(f.commands.length, 0, "modified or composing labels never use a device");
   assert.equal(f.element("slots").children.length, 10);
   assert.match(f.row(0).children[1].textContent, /13\.7/);
   assert.match(f.row(0).children[1].textContent, /80/);
@@ -117,19 +128,32 @@ test("session blocks movement, ordinary use and travel settings during saved abs
   assert.equal(calls.at(-1).type, "set-interface-locale");
 });
 
-test("multiple identification retains selection order and load cleanup never submits an old device", () => {
+test("ordinary device commands use canonical item selection and do not reconfirm an accepted source", async () => {
+  const f = fixture();
+  const ordinary = f.device("wand.pack");
+  f.state.status.player.magicEater.deviceCommands[0].items = [ordinary, { ...f.device("empty"), usable: false }];
+  f.panel.openDeviceCommand("a");
+  const choice = f.sources.at(-1);
+  assert.equal(choice.command, "wand");
+  assert.deepEqual(choice.ids, ["wand.pack"]);
+  await choice.select("wand.pack");
+  assert.equal(f.confirmations.length, 0, "the shared source chooser already confirmed this item");
+  assert.deepEqual(f.commands, [{ type: "use-item", itemId: "wand.pack", target: { type: "self" } }]);
+});
+
+test("multiple identification uses the shared ordered chooser and reset closes it silently", async () => {
   const f = fixture(), staff = f.state.status.player.magicEater.slots[10];
   staff.item.useTargetSpec.modes = ["item"]; staff.allowsMultipleTargets = true;
   f.state.inventory = ["first", "second"].map(id => ({ id, kindId: id, displayNameKey: id }));
   f.panel.open(); f.key("S"); f.action(0, "use").click();
-  const document = f.element("dialog").ownerDocument;
-  let dialog = document.body.children.at(-1), form = dialog.children[0], select = form.children[0].children[0];
-  assert.equal(select.multiple, true);
-  select.selectedOptions = [select.children[1]]; select.dispatchEvent(new Event("change"));
-  select.selectedOptions = [select.children[0], select.children[1]]; select.dispatchEvent(new Event("change"));
-  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  let choice = f.itemChoices.at(-1);
+  assert.equal(choice.multiple, true);
+  assert.equal(choice.command, "cast");
+  assert.equal(choice.excluded, "staff.body");
+  await choice.select(["second", "first"]);
   assert.deepEqual(f.commands.pop(), { type: "use-absorbed-device", itemId: "staff.body", targets: [{ type: "item", itemId: "second" }, { type: "item", itemId: "first" }] });
-  f.action(0, "use").click(); f.panel.reset(); assert.equal(f.commands.length, 0);
-  f.panel.open(); f.action(0, "use").click(); dialog = document.body.children.at(-1); dialog.close();
+  f.action(0, "use").click(); choice = f.itemChoices.at(-1); f.panel.reset();
+  assert.equal(choice.closed, true); assert.equal(f.commands.length, 0);
+  f.panel.open(); f.action(0, "use").click(); await f.itemChoices.at(-1).cancel();
   assert.deepEqual(f.commands.pop(), { type: "use-absorbed-device", itemId: "staff.body", targets: [] });
 });

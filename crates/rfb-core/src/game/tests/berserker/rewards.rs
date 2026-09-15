@@ -242,7 +242,7 @@ fn automatic_book_destruction_preserves_level_up_events_and_saved_progress() {
             .any(|event| matches!(event, DomainEvent::PlayerLevelGained { .. }))
     );
     crate::game::tests::support::choose_human_talent_if_pending(&mut game);
-    let loaded = Game::from_save(game.to_save()).unwrap();
+    let loaded = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(loaded.state_hash(), game.state_hash());
 }
 

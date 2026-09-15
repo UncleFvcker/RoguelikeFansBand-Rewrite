@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -80,9 +81,7 @@ export async function runCharacterCreationScenario(driver, artifactDirectory) {
   }
 
   for (const locale of ["zh-CN", "en-US"]) {
-    await click("#session-settings");
-    await fill("#session-settings-language", locale);
-    await click("#session-settings-back");
+    await setPreferences(driver, { locale });
     await click("#session-new-game");
     await checkFrame("overview");
     await screenshot(`${locale}-overview`);
@@ -99,9 +98,7 @@ export async function runCharacterCreationScenario(driver, artifactDirectory) {
     }
     await click("#session-new-game-back");
   }
-  await click("#session-settings");
-  await fill("#session-settings-language", "zh-CN");
-  await click("#session-settings-back");
+  await setPreferences(driver, { locale: "zh-CN" });
   await click("#session-new-game");
   await fill("#session-character-name", "面板验收");
   await fill("#session-seed", "18446744073709551615");

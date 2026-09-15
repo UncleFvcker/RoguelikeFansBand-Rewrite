@@ -364,7 +364,9 @@ fn jewelry_forced_base_pipeline_uses_one_outer_limit_roll_and_saves_complete_can
                 actual.items.push(item);
                 actual.content = base.content.clone();
                 assert_eq!(
-                    Game::from_save(actual.to_save()).unwrap().state_hash(),
+                    Game::from_save(actual.to_save(), actual.behavior_preferences())
+                        .unwrap()
+                        .state_hash(),
                     actual.state_hash()
                 );
                 powers.insert(power);

@@ -4,6 +4,7 @@ use super::ability_scaling::{
     apply_ability_level_scaling, apply_ability_spell_power, prorated_level_value, spell_power_value,
 };
 use super::*;
+use crate::action::RestMode;
 
 const SPELL_EXP_BEGINNER: u16 = 900;
 const SPELL_EXP_SKILLED: u16 = 1200;
@@ -1920,14 +1921,25 @@ impl Game {
         })
     }
 
-    fn player_has_rest_need(&self) -> bool {
-        self.player.hp < self.effective_player_max_hp()
+    fn player_has_rest_need(&self, mode: RestMode) -> bool {
+        mode == RestMode::Turns
+            || self.player.hp < self.effective_player_max_hp()
             || self.player_has_depleted_recoverable_resource(true)
             || self.magic_eater_can_regen()
-            || self.recall_is_active()
+            // RFB master a0d92b6 dungeon.c:4622-4664, resting == -1 / -2.
+            // Complete rest waits for these conditions, not every timed buff.
+            || (mode == RestMode::Complete
+                && (self.recall_is_active()
+                    || self.reality_change_ticks > 0
+                    || self.minor_slow > 0
+                    || self.player.statuses.iter().any(|status| {
+                        matches!(status.kind_id.as_str(), STATUS_BLINDNESS | STATUS_CONFUSION
+                            | STATUS_POISON | STATUS_FEAR | STATUS_STUN | STATUS_BLEEDING
+                            | STATUS_SLOW | STATUS_PARALYSIS | STATUS_HALLUCINATION)
+                    })))
     }
 
-    fn visible_hostile_exists(&self) -> bool {
+    pub(super) fn visible_hostile_exists(&self) -> bool {
         self.entities.iter().any(|entity| {
             entity.hp > 0
                 && !self.actor_is_player_side(entity)
@@ -1938,6 +1950,7 @@ impl Game {
     pub(super) fn resolve_player_rest(
         &mut self,
         requested_turns: u16,
+        mode: RestMode,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -1948,17 +1961,28 @@ impl Game {
             .map(|(id, pool)| (id.clone(), pool.current))
             .collect::<BTreeMap<_, _>>();
         let mut completed_turns = 0_u16;
+        if requested_turns > 0 && requested_turns <= MAX_REST_TURNS {
+            self.searching = false;
+        }
         let stop_reason = if requested_turns == 0 || requested_turns > MAX_REST_TURNS {
             RestStopReasonDto::InvalidTurns
         } else if self.pet_upkeep_dto().dismissal_required {
             RestStopReasonDto::PetDismissalRequired
-        } else if !self.player_has_rest_need() {
+        } else if !self.player_has_rest_need(mode) {
             RestStopReasonDto::FullResources
         } else if self.visible_hostile_exists() {
             RestStopReasonDto::EnemyVisible
         } else {
             loop {
                 let hp_before = self.player.hp;
+                let position_before = self.player.position;
+                let event_start = events.len();
+                let nice_entities = self
+                    .entities
+                    .iter()
+                    .filter(|actor| actor.nice)
+                    .map(|actor| actor.id.clone())
+                    .collect::<BTreeSet<_>>();
                 let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
                 spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
                 self.advance_until_player_ready(
@@ -1970,6 +1994,15 @@ impl Game {
                     removed_entities,
                 )?;
                 completed_turns = completed_turns.saturating_add(1);
+                // A batched rest contains multiple player actions. Expire the
+                // same pre-action grace windows as separate Rest { turns: 1 }.
+                if self.pending_duelist.is_none() {
+                    for actor in &mut self.entities {
+                        if nice_entities.contains(&actor.id) {
+                            actor.nice = false;
+                        }
+                    }
+                }
                 if self.pending_maia_path_choice() {
                     break RestStopReasonDto::MaiaPathChoiceRequired;
                 }
@@ -1987,13 +2020,20 @@ impl Game {
                 if self.player.hp < hp_before {
                     break RestStopReasonDto::Damaged;
                 }
+                if self.player.position != position_before
+                    || events[event_start..]
+                        .iter()
+                        .any(|event| matches!(event, DomainEvent::RidingMoved))
+                {
+                    break RestStopReasonDto::Displaced;
+                }
                 if self.visible_hostile_exists() {
                     break RestStopReasonDto::EnemyVisible;
                 }
                 if self.pet_upkeep_dto().dismissal_required {
                     break RestStopReasonDto::PetDismissalRequired;
                 }
-                if !self.player_has_rest_need() {
+                if !self.player_has_rest_need(mode) {
                     break RestStopReasonDto::FullResources;
                 }
                 if completed_turns >= requested_turns {

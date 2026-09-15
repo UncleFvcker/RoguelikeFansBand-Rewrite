@@ -164,7 +164,8 @@ fn ordinary_death_creates_a_corpse_and_animate_dead_consumes_it_persistently() {
     )));
 
     let snapshot = game.snapshot();
-    let restored = Game::from_save(game.to_save()).expect("risen thrall should reload");
+    let restored = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("risen thrall should reload");
     assert_eq!(restored.snapshot(), snapshot);
 }
 
@@ -291,8 +292,12 @@ fn mutation_grow_mold_and_sterility_persist_only_authoritative_state() {
         .expect("Sterility should resolve");
     assert!(sterile.reproduction_suppressed);
     sterile.player.hp = sterile.player.hp.min(sterile.effective_player_max_hp());
-    let restored = Game::from_save_with_content(sterile.to_save(), sterile.content.clone())
-        .expect("sterility state should reload");
+    let restored = Game::from_save_with_content(
+        sterile.to_save(),
+        sterile.content.clone(),
+        sterile.behavior_preferences(),
+    )
+    .expect("sterility state should reload");
     assert!(restored.reproduction_suppressed);
     assert_eq!(restored.state_hash(), sterile.state_hash());
 }
@@ -776,7 +781,8 @@ fn p71_banor_rupart_split_and_merge_preserve_hp_without_recording_deaths() {
     );
 
     let hash = game.state_hash();
-    let mut game = Game::from_save(game.to_save()).expect("split forms should round-trip");
+    let mut game = Game::from_save(game.to_save(), game.behavior_preferences())
+        .expect("split forms should round-trip");
     assert_eq!(game.state_hash(), hash);
     let banor_index = game
         .entities
@@ -1056,7 +1062,7 @@ fn p76_osiris_family_summon_creates_horus_and_isis_as_one_cast() {
         ]
     );
     assert_eq!(summon.duration_turns, 10_000);
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(game.state_hash(), restored.state_hash());
     let mut invalid = game.clone();
     invalid
@@ -1069,7 +1075,7 @@ fn p76_osiris_family_summon_creates_horus_and_isis_as_one_cast() {
         .unwrap()
         .source_ability_id = "rfb-legacy.ability.summon-family-artemis-the-moon-goddess".into();
     assert!(matches!(
-        Game::from_save(invalid.to_save()),
+        Game::from_save(invalid.to_save(), invalid.behavior_preferences()),
         Err(CoreError::InvalidSave("summon state is invalid"))
     ));
     for kind_id in &summon.summoned_kind_ids {
@@ -1199,8 +1205,12 @@ fn p77_dead_unique_resurrection_preserves_the_spent_lifetime_slot() {
         .expect("S_DEAD_UNIQ should summon");
     assert_eq!(summon.summoned_kind_ids[0], "demo.actor.fangorn");
 
-    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
-        .expect("a resurrected dead unique should survive save and restore");
+    let mut restored = Game::from_save_with_content(
+        game.to_save(),
+        game.content.clone(),
+        game.behavior_preferences(),
+    )
+    .expect("a resurrected dead unique should survive save and restore");
     let resurrected_index = restored
         .entities
         .iter()

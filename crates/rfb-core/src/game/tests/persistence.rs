@@ -87,7 +87,7 @@ fn malformed_exploration_memory_is_rejected() {
     let mut payload = Game::new(42).to_save();
     payload.explored.pop();
     assert!(matches!(
-        Game::from_save(payload),
+        Game::from_save(payload, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave(
             "exploration memory dimensions are invalid"
         ))
@@ -99,7 +99,7 @@ fn malformed_revealed_terrain_knowledge_is_rejected() {
     let mut payload = Game::new(42).to_save();
     payload.revealed_terrain = vec![Position { x: 3, y: 3 }];
     assert!(matches!(
-        Game::from_save(payload),
+        Game::from_save(payload, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave(
             "revealed terrain knowledge is invalid"
         ))
@@ -112,7 +112,7 @@ fn save_with_different_content_hash_is_rejected() {
     payload.content_hash = "obsolete-content-hash".to_owned();
 
     assert!(matches!(
-        Game::from_save(payload),
+        Game::from_save(payload, Game::default_behavior_preferences()),
         Err(CoreError::ContentMismatch)
     ));
 }
@@ -128,7 +128,8 @@ fn generated_artifact_state_round_trips_and_changes_the_state_hash() {
 
     let payload = game.to_save();
     assert_eq!(payload.generated_artifact_ids, ["demo.item.crisdurian"]);
-    let restored = Game::from_save(payload).expect("artifact state should restore");
+    let restored = Game::from_save(payload, Game::default_behavior_preferences())
+        .expect("artifact state should restore");
     assert_eq!(restored.state_hash(), after);
     assert!(
         restored
@@ -148,7 +149,7 @@ fn malformed_generated_artifact_state_is_rejected() {
         let mut payload = base.clone();
         payload.generated_artifact_ids = ids.into_iter().map(str::to_owned).collect();
         assert!(matches!(
-            Game::from_save(payload),
+            Game::from_save(payload, Game::default_behavior_preferences()),
             Err(CoreError::InvalidSave(
                 "generated artifact state is invalid"
             ))
@@ -176,7 +177,7 @@ fn fixed_artifact_instance_requires_its_generation_record() {
     payload.generated_artifact_ids.clear();
 
     assert!(matches!(
-        Game::from_save(payload),
+        Game::from_save(payload, Game::default_behavior_preferences()),
         Err(CoreError::InvalidSave(
             "generated artifact state is invalid"
         ))

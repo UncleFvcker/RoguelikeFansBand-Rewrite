@@ -327,7 +327,8 @@ fn trait_details_auras_share_combat_sources_without_rolling_damage() {
             .evil_only
     );
     assert_eq!(game.to_save(), saved, "projection must not consume RNG");
-    let restored = Game::from_save(saved).expect("timed aura and passive sources should restore");
+    let restored = Game::from_save(saved, Game::default_behavior_preferences())
+        .expect("timed aura and passive sources should restore");
     assert_eq!(restored.snapshot(), game.snapshot());
     game.player.statuses.clear();
     assert!(details(&game).auras.is_empty());

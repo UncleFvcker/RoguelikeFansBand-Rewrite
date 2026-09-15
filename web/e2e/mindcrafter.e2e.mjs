@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { setPreferences } from "./preferences.mjs";
 
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -10,7 +11,8 @@ export async function runMindcrafterUiScenario(driver, directory, profile) {
   await mkdir(directory, { recursive: true });
   const keyboard = await connectKeyboard(profile);
   await driver.waitFor('return document.documentElement.dataset.appMode === "title"', "Mindcrafter title", 60_000);
-  await driver.execute('window.__mindReload = true; localStorage.setItem("rfb.locale", "zh-CN"); localStorage.setItem("rfb.input-preset", "numpad"); setTimeout(() => location.reload(), 50); return true;');
+  await setPreferences(driver, { locale: "zh-CN", inputPreset: "numpad" });
+  await driver.execute('window.__mindReload = true;   setTimeout(() => location.reload(), 50); return true;');
   await driver.waitFor('return !window.__mindReload && document.documentElement.dataset.appMode === "title"', "Chinese title", 60_000);
   const sources = Object.fromEntries(await Promise.all(["zh-CN", "en-US"].map(async locale => [locale,
     await Promise.all(["ui", "content", "game"].map(file => readFile(new URL(`../../locales/${locale}/${file}.ftl`, import.meta.url), "utf8"))),
@@ -239,7 +241,7 @@ export async function runMindcrafterUiScenario(driver, directory, profile) {
     const reason = localization.format("ability-disabled-summary", { reason: localization.format("ability-unavailable-insufficient-resource") });
     assert.ok((await driver.execute('return document.querySelector(arguments[0]).textContent', [row("psycho-storm")])).includes(reason));
     await screenshot("unavailable-zh-CN");
-    await driver.execute('const select = document.querySelector("#language-select"); select.value = "en-US"; select.dispatchEvent(new Event("change", { bubbles: true })); return true;');
+    await setPreferences(driver, { locale: "en-US" });
     await ready(); localization.setLocale("en-US");
     const englishReason = localization.format("ability-disabled-summary", { reason: localization.format("ability-unavailable-insufficient-resource") });
     assert.ok((await driver.execute('return document.querySelector(arguments[0]).textContent', [row("psycho-storm")])).includes(englishReason));

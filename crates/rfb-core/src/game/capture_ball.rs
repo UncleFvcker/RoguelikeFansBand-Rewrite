@@ -128,7 +128,7 @@ impl Game {
         }
 
         if self.riding_actor_id.as_deref() == Some(actor.id.as_str()) {
-            self.riding_actor_id = None;
+            self.clear_riding_state();
             self.clear_riding_bond_for(&actor.id.clone());
             if self.player_levitates() {
                 events.push(DomainEvent::RidingDismounted {
@@ -161,6 +161,7 @@ impl Game {
         }
 
         let captured = CapturedActor {
+            custom_name: actor.custom_name.clone(),
             kind_id: target_kind_id.clone(),
             speed: actor.speed,
             hp: actor.hp,
@@ -257,6 +258,7 @@ impl Game {
             true,
         );
         actor.hp = captured.hp;
+        actor.custom_name = captured.custom_name;
         actor.experience = captured.experience;
         actor.resistances = definition_resistance_profile(&definition);
         if !hostile {

@@ -183,8 +183,12 @@ fn spectre_classes_complete_absorb_level_scare_wall_and_save_sequence() {
                 .iter()
                 .any(|event| event.message_key == "player-wall-density")
         );
-        let mut restored =
-            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            game.to_save(),
+            game.content.clone(),
+            game.behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(restored.snapshot(), game.snapshot());
         assert_eq!(
             dispatch_next(&mut restored, GameCommand::Wait),
@@ -303,8 +307,12 @@ fn spectre_scare_success_failure_and_sp_hp_payment_share_the_real_cast_pipeline(
             !success
         );
         result.0.entities.clear();
-        let mut restored =
-            Game::from_save_with_content(result.0.to_save(), result.0.content.clone()).unwrap();
+        let mut restored = Game::from_save_with_content(
+            result.0.to_save(),
+            result.0.content.clone(),
+            Game::default_behavior_preferences(),
+        )
+        .unwrap();
         assert_eq!(cast(&mut restored), cast(&mut result.0));
         assert_eq!(restored.state_hash(), result.0.state_hash());
     }

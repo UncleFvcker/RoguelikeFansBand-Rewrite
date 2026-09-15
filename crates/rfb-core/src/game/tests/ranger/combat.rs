@@ -196,6 +196,7 @@ fn extra_shots_follow_non_arrow_reset_heavy_launcher_and_tomte_headgear() {
         BUILD,
         "rfb-legacy.race.tomte",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .unwrap();
     clear_monsters(&mut tomte);
@@ -348,7 +349,7 @@ fn probing_action_updates_lore_and_save_continuation_with_normal_energy() {
         u32::try_from((100 + gain - 1) / gain).unwrap()
     );
     assert!(game.probed_actor_kind_ids.contains("demo.actor.sheep"));
-    let mut restored = Game::from_save(game.to_save()).unwrap();
+    let mut restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     for game in [&mut game, &mut restored] {
         dispatch_next(
@@ -472,7 +473,7 @@ fn real_shots_use_ranger_skill_for_hit_and_ammunition_recovery() {
         }
     }
     assert!(saw_hit_bonus && saw_breakage_bonus);
-    let mut restored = Game::from_save(base.to_save()).unwrap();
+    let mut restored = Game::from_save(base.to_save(), base.behavior_preferences()).unwrap();
     assert_eq!(shoot(&mut restored), shoot(&mut base));
     assert_eq!(restored.state_hash(), base.state_hash());
     assert_eq!(restored.rng, base.rng);
@@ -515,7 +516,7 @@ fn tree_travel_keeps_normal_cost_and_mount_rules_without_wall_or_snow_privileges
             invalid.player.position = target;
             invalid.entities[0].position = target;
             assert!(matches!(
-                Game::from_save(invalid.to_save()),
+                Game::from_save(invalid.to_save(), invalid.behavior_preferences()),
                 Err(CoreError::InvalidSave("entity position is invalid"))
             ));
         }
@@ -542,11 +543,11 @@ fn tree_travel_keeps_normal_cost_and_mount_rules_without_wall_or_snow_privileges
                 invalid.riding_actor_id = None;
                 invalid.player.position = start;
                 assert!(matches!(
-                    Game::from_save(invalid.to_save()),
+                    Game::from_save(invalid.to_save(), invalid.behavior_preferences()),
                     Err(CoreError::InvalidSave("entity position is invalid"))
                 ));
             }
-            let restored = Game::from_save(game.to_save()).unwrap();
+            let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
             assert_eq!(restored.state_hash(), game.state_hash());
         }
     }

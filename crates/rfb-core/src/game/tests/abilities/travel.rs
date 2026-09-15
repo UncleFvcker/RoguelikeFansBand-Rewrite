@@ -100,8 +100,12 @@ fn formal_amberite_passives_and_powers_match_the_authoritative_behavior() {
     }
     assert_eq!(shadow.player.hp, hp_before - 50);
     assert_eq!(shadow.state_hash(), replay.state_hash());
-    let restored = Game::from_save_with_content(shadow.to_save(), shadow.content.clone())
-        .expect("Shadow Shifting countdown should restore");
+    let restored = Game::from_save_with_content(
+        shadow.to_save(),
+        shadow.content.clone(),
+        shadow.behavior_preferences(),
+    )
+    .expect("Shadow Shifting countdown should restore");
     assert_eq!(restored.reality_change_ticks, shadow.reality_change_ticks);
     assert_eq!(restored.state_hash(), shadow.state_hash());
 
@@ -215,8 +219,12 @@ fn formal_amberite_passives_and_powers_match_the_authoritative_behavior() {
     }
     assert!(pattern.player.hp < pattern.effective_player_max_hp());
     assert_eq!(pattern.state_hash(), replay.state_hash());
-    let restored = Game::from_save_with_content(pattern.to_save(), pattern.content.clone())
-        .expect("Pattern Mindwalking result should restore");
+    let restored = Game::from_save_with_content(
+        pattern.to_save(),
+        pattern.content.clone(),
+        pattern.behavior_preferences(),
+    )
+    .expect("Pattern Mindwalking result should restore");
     assert_eq!(restored.state_hash(), pattern.state_hash());
 }
 
@@ -227,6 +235,7 @@ fn formal_gnome_phase_door_is_distinct_from_the_sorcery_spell() {
         "demo.build.high-mage-sorcery",
         "rfb-legacy.race.gnome",
         Game::DEFAULT_PLAYER_NAME,
+        Game::default_behavior_preferences(),
     )
     .expect("Gnome Sorcery High-Mage should create");
     clear_monsters(&mut game);
