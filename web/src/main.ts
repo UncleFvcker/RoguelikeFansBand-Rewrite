@@ -49,6 +49,8 @@ import type { GameCommand, GameEventDto, GameSnapshot, MogaminatorDto } from "./
 import { TauriNativeTransport } from "./tauri-native-transport";
 import { installRendererProfileHook } from "./render-profile";
 import { createSessionShellDom, SessionShell } from "./session-shell";
+import { TitleBackground } from "./title-background";
+import { version as applicationVersion } from "../package.json";
 import { JourneyResult } from "./journey-result";
 import { PlayerUiLayout } from "./player-ui-layout";
 import { ShopPanel } from "./shop-panel";
@@ -78,6 +80,8 @@ const announcedCrashDiagnosticErrors = new Set<string>();
 
 const appDom = createAppDom(document);
 const sessionShellDom = createSessionShellDom(document);
+const titleBackground = new TitleBackground(sessionShellDom.root, document.getElementById("title-background")!);
+document.getElementById("session-version")!.textContent = `v${applicationVersion}`;
 const {
   mapHost,
   targetCursor,
@@ -714,6 +718,7 @@ document.getElementById("save-exit-button")!.addEventListener("click", () => han
 replayButton.addEventListener("click", () => void exportReplay());
 loadButton.addEventListener("click", () => void openSaveList());
 sessionShell.install();
+titleBackground.install();
 clearMessages.addEventListener("click", () => {
   messagePanel.clear();
 });
@@ -731,6 +736,7 @@ window.addEventListener("beforeunload", () => {
   journeyResult.dispose();
   playerUiLayout.dispose();
   sessionShell.dispose();
+  titleBackground.dispose();
   renderer.destroy();
   core.dispose();
 });

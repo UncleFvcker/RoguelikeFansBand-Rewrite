@@ -762,6 +762,8 @@ export class InputController {
       this.#dom.mapHost.ownerDocument.querySelector("dialog[open]") ||
       isTextInput(event.target)
     ) { this.#heldMovement = undefined; return; }
+    // Focused buttons own native activation, before game shortcuts (Enter opens the command menu).
+    if (event.target instanceof HTMLButtonElement && (event.key === " " || event.key === "Enter")) return;
     if (event.repeat) {
       const held = this.#heldMovement;
       if (!held || this.#state.commandBlocked || this.#state.targeting || this.#state.terrainInteractionMode ||
@@ -847,7 +849,6 @@ export class InputController {
       }
       return;
     }
-    if (event.target instanceof HTMLButtonElement && (event.key === " " || event.key === "Enter")) return;
     if (this.#state.targeting) {
       this.#handleTargetingKey(event);
       event.stopImmediatePropagation();

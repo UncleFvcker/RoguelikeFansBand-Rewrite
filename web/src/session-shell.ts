@@ -43,6 +43,7 @@ interface SessionShellDom {
   readonly loadView: HTMLElement;
   readonly newGameButton: HTMLButtonElement;
   readonly continueButton: HTMLButtonElement;
+  readonly continueSummary: HTMLElement;
   readonly loadGameButton: HTMLButtonElement;
   readonly settingsButton: HTMLButtonElement;
   readonly exitButton: HTMLButtonElement;
@@ -87,6 +88,8 @@ export class SessionShell {
   #activeSnapshot: GameSnapshot | undefined;
   #activeRequest: NewSessionRequest | undefined;
   #resumeGame = false;
+  #titleFocusPending = false;
+  #busyTitleFocus: HTMLButtonElement | undefined;
   readonly #beforeLoad: () => Promise<boolean>;
   readonly #onResume: () => void;
 
@@ -134,6 +137,8 @@ export class SessionShell {
     this.#dom.loadGameButton.addEventListener("click", this.#openLoad);
     this.#dom.settingsButton.addEventListener("click", this.#openSettings);
     this.#dom.exitButton.addEventListener("click", this.#exit);
+    this.#dom.titleView.addEventListener("keydown", this.#titleKeydown);
+    this.#dom.titleView.addEventListener("focusin", this.#titleFocused);
     this.#dom.newGameView.addEventListener("submit", this.#startNewGame);
     this.#dom.newGameView.addEventListener("click", this.#creationClick);
     this.#dom.newGameView.addEventListener("keydown", this.#creationKeydown);
@@ -155,6 +160,8 @@ export class SessionShell {
     this.#dom.loadGameButton.removeEventListener("click", this.#openLoad);
     this.#dom.settingsButton.removeEventListener("click", this.#openSettings);
     this.#dom.exitButton.removeEventListener("click", this.#exit);
+    this.#dom.titleView.removeEventListener("keydown", this.#titleKeydown);
+    this.#dom.titleView.removeEventListener("focusin", this.#titleFocused);
     this.#dom.newGameView.removeEventListener("submit", this.#startNewGame);
     this.#dom.newGameView.removeEventListener("click", this.#creationClick);
     this.#dom.newGameView.removeEventListener("keydown", this.#creationKeydown);
@@ -294,9 +301,37 @@ export class SessionShell {
   };
 
   readonly #continueLatest = (): void => {
-    const latest = this.#saves.find((summary) => summary.status !== "corrupt" && !summary.museumCheckpoint);
+    if (this.#busy) return;
+    const latest = this.#latestContinue;
     if (latest) void this.#load(latest);
   };
+
+  get #latestContinue(): NativeSaveSummary | undefined {
+    return this.#saves.find(summary => summary.status !== "corrupt" && !summary.museumCheckpoint);
+  }
+
+  readonly #titleFocused = (): void => { this.#titleFocusPending = false; };
+
+  readonly #titleKeydown = (event: KeyboardEvent): void => {
+    if (this.#view !== "title" || this.#busy || event.isComposing || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (event.key !== "ArrowUp" && event.key !== "ArrowDown" && event.key !== "Home" && event.key !== "End") return;
+    const buttons = [...this.#dom.titleView.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")];
+    if (buttons.length === 0) return;
+    const current = buttons.indexOf(this.#dom.root.ownerDocument.activeElement as HTMLButtonElement);
+    const index = event.key === "Home" ? 0 : event.key === "End" ? buttons.length - 1
+      : (current + (event.key === "ArrowDown" ? 1 : -1) + buttons.length) % buttons.length;
+    event.preventDefault();
+    event.stopPropagation();
+    buttons[index]!.focus();
+  };
+
+  #focusTitle(): void {
+    if (!this.#titleFocusPending || this.#busy || this.#view !== "title" || this.#dom.root.hidden) return;
+    const document = this.#dom.root.ownerDocument;
+    if (document.querySelector("dialog[open]")) return;
+    (this.#latestContinue ? this.#dom.continueButton : this.#dom.newGameButton).focus();
+    this.#titleFocusPending = false;
+  }
 
   readonly #openLoad = (): void => {
     if (this.#busy) return;
@@ -319,6 +354,7 @@ export class SessionShell {
       return;
     }
     this.#showView("title");
+    this.#focusTitle();
   };
 
   readonly #startNewGame = (event: SubmitEvent): void => {
@@ -433,11 +469,13 @@ export class SessionShell {
       this.#showError(error);
     } finally {
       this.#setBusy(false);
+      this.#focusTitle();
     }
   }
 
   #showView(view: SessionView): void {
     this.#view = view;
+    this.#titleFocusPending = view === "title";
     this.#dom.root.dataset.view = view;
     this.#dom.newGameView.parentElement!.setAttribute("aria-labelledby", view === "new-game" ? "session-creation-heading" : "session-heading");
     this.#dom.titleView.hidden = view !== "title";
@@ -457,17 +495,29 @@ export class SessionShell {
   }
 
   #setBusy(busy: boolean, statusKey?: string): void {
+    const document = this.#dom.root.ownerDocument;
+    if (busy && !this.#busy) {
+      const active = document.activeElement;
+      this.#busyTitleFocus = active instanceof HTMLButtonElement && this.#dom.titleView.contains(active) ? active : undefined;
+    }
     this.#busy = busy;
     if (statusKey) this.#dom.status.textContent = this.#localization.format(statusKey);
     this.#updateControls();
-    if (!busy) this.#renderReadyStatus();
+    if (!busy) {
+      this.#renderReadyStatus();
+      if (this.#view === "title" && !this.#dom.root.hidden && document.activeElement === document.body &&
+        !document.querySelector("dialog[open]") && this.#busyTitleFocus && !this.#busyTitleFocus.disabled) {
+        this.#busyTitleFocus.focus();
+      }
+      this.#busyTitleFocus = undefined;
+    }
   }
 
   #updateControls(): void {
     this.#dom.error.parentElement!.tabIndex = !this.#busy && this.#dom.error.textContent ? 0 : -1;
     this.#raceMenu.setBusy(this.#busy);
     this.#careerMenu.setBusy(this.#busy);
-    const validSave = this.#saves.some((summary) => summary.status !== "corrupt" && !summary.museumCheckpoint);
+    const validSave = this.#latestContinue;
     this.#dom.continueButton.disabled = this.#busy || !validSave;
     for (const control of this.#dom.root.querySelectorAll<
       HTMLButtonElement | HTMLInputElement | HTMLSelectElement
@@ -588,7 +638,11 @@ export class SessionShell {
 
   #renderReadyStatus(): void {
     if (this.#busy) return;
-    this.#dom.status.textContent = this.#view === "new-game" ? "" : this.#localization.format("session-status-ready", {
+    const latest = this.#latestContinue;
+    this.#dom.continueSummary.textContent = latest
+      ? this.#localization.format("session-last-journey", { details: this.#metadata(latest) })
+      : this.#localization.format("session-no-continue");
+    this.#dom.status.textContent = this.#view !== "load" ? "" : this.#localization.format("session-status-ready", {
       saves: this.#saves.filter((summary) => summary.status !== "corrupt").length,
     });
   }
@@ -631,6 +685,7 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     loadView: element<HTMLElement>(document, "session-load-view"),
     newGameButton: element<HTMLButtonElement>(document, "session-new-game"),
     continueButton: element<HTMLButtonElement>(document, "session-continue"),
+    continueSummary: element<HTMLElement>(document, "session-continue-summary"),
     loadGameButton: element<HTMLButtonElement>(document, "session-load-game"),
     settingsButton: element<HTMLButtonElement>(document, "session-settings"),
     exitButton: element<HTMLButtonElement>(document, "session-exit"),

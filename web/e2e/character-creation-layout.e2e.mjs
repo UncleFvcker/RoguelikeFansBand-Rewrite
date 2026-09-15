@@ -58,6 +58,7 @@ export async function connectKeyboard(profile) {
   await send("Runtime.enable", {});
   return {
     errors,
+    command: send,
     downloadsTo: directory => send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: directory }),
     async pauseTimers() { await send("Emulation.setVirtualTimePolicy", { policy: "pause" }); },
     async key(key, modifiers = 0) {
@@ -199,6 +200,37 @@ export async function runCreationLayoutScenario(driver, artifactDirectory, debug
     await invoke("plugin:window|set_min_size", { label: "main", value: null });
     for (const locale of ["zh-CN", "en-US"]) {
       await reload(locale);
+      // Title regression: real buttons, native keyboard defaults, and the GPU artwork.
+      await driver.waitFor('return document.querySelector("#title-background").dataset.rendered === "true"', "title shader first frame");
+      assert.equal(await driver.execute('return document.querySelector("#session-heading").textContent'), "RoguelikeFansBand");
+      assert.equal(await driver.execute('return document.querySelector("#session-continue").disabled ? document.activeElement.id === "session-new-game" : document.activeElement.id === "session-continue"'), true);
+      for (const [width, height] of [[1920, 1080], [1280, 720], [390, 844]]) {
+        await viewport(width, height);
+        const title = await driver.execute(`
+          const shell = document.querySelector('#session-shell');
+          const heading = document.querySelector('#session-heading').getBoundingClientRect();
+          return { overflow:shell.scrollWidth > shell.clientWidth + 1,
+            headingVisible:heading.left >= 0 && heading.right <= innerWidth + 1,
+            buttons:[...document.querySelectorAll('#session-title-view button')].map(button => {
+              const r=button.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth + 1 && r.height >= 44;
+            }) };`);
+        assert.equal(title.overflow, false, `${locale}: title overflow at ${width}`);
+        assert.equal(title.headingVisible, true);
+        assert.ok(title.buttons.length === 6 && title.buttons.every(Boolean));
+        await screenshot(`title-${locale}-${width}`);
+      }
+      await viewport(1280, 720);
+      await tabTo('#session-new-game');
+      await keyboard.key('ArrowUp'); assert.equal(await focusIs('#session-exit'), true);
+      await keyboard.key('ArrowDown'); assert.equal(await focusIs('#session-new-game'), true);
+      await keyboard.key('End'); assert.equal(await focusIs('#session-exit'), true);
+      await keyboard.key('Home'); assert.equal(await focusIs('#session-new-game'), true);
+      await keyboard.key('Enter');
+      assert.equal(await visible('#session-new-game-view'), true);
+      assert.equal(await visible('#title-background'), false);
+      await click('#session-new-game-back');
+      assert.equal(await driver.execute('return document.querySelectorAll("#title-background canvas").length'), 1);
+      assert.equal(await visible('#title-background'), true);
       await click("#session-new-game");
       for (const [width, height, zoom] of [[1280, 720, 1], [1280, 820, 1], [1920, 1080, 1], [2560, 1440, 1], [900, 620, 1], [390, 844, 1], [450, 310, 2], [640, 360, 2]]) {
         await viewport(width, height, zoom);

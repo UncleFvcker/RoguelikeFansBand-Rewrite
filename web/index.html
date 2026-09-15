@@ -19,23 +19,32 @@
       </form>
     </dialog>
     <main id="session-shell" class="session-shell" data-view="title">
+      <div id="title-background" class="title-background" aria-hidden="true">
+        <pre class="title-ruins"></pre>
+      </div>
       <section class="session-card" aria-labelledby="session-heading">
+        <h1 id="session-heading" data-l10n-aria-label="session-heading"><span data-l10n-id="session-brand-first"></span><wbr><span data-l10n-id="session-brand-second"></span></h1>
         <p class="eyebrow" data-l10n-id="session-eyebrow"></p>
-        <h1 id="session-heading" data-l10n-id="session-heading"></h1>
-        <p class="session-subtitle" data-l10n-id="session-subtitle"></p>
 
         <section id="session-title-view" class="session-view">
           <div class="session-primary-actions">
             <button id="session-new-game" class="primary-button" type="button" data-l10n-id="action-session-new-game"></button>
-            <button id="session-continue" type="button" data-l10n-id="action-session-continue"></button>
+            <div class="title-continue">
+              <button id="session-continue" type="button" data-l10n-id="action-session-continue" aria-describedby="session-continue-summary"></button>
+              <p id="session-continue-summary"></p>
+            </div>
             <button id="session-load-game" type="button" data-l10n-id="action-session-load-game"></button>
           </div>
           <div class="session-secondary-actions">
             <button id="title-high-scores" type="button" data-l10n-id="guide-entry-scores"></button>
-          <button id="session-settings" class="quiet-button" type="button" data-l10n-id="action-session-settings"></button>
+            <button id="session-settings" class="quiet-button" type="button" data-l10n-id="action-session-settings"></button>
             <button id="session-exit" class="quiet-button" type="button" data-l10n-id="action-session-exit"></button>
           </div>
         </section>
+        <footer class="title-footer">
+          <span id="session-version"></span>
+          <span data-l10n-id="session-menu-help"></span>
+        </footer>
 
         <form id="session-new-game-view" class="session-view" aria-labelledby="session-creation-heading" novalidate hidden>
           <header class="session-creation-header">

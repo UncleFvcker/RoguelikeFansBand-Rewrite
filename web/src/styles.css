@@ -128,6 +128,184 @@ button:disabled,
   min-height: 3.2rem;
 }
 
+/* Title has its own composition; creation and save browsers keep their frames. */
+.title-background, .title-footer { display: none; }
+.session-shell[data-view="title"] {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  height: 100dvh;
+  min-height: 0;
+  overflow: auto;
+  padding: 0;
+  background: var(--ui-bg);
+}
+.session-shell[data-view="title"] > .title-background {
+  display: block;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  --title-fog-a: #397d91;
+  --title-fog-b: #438777;
+  --title-fog-c: #e6a25b;
+  background:
+    radial-gradient(ellipse at 75% 40%, #243641 0%, transparent 65%),
+    radial-gradient(ellipse at 60% 80%, #252536 0%, transparent 60%),
+    var(--ui-bg);
+}
+.title-background canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.title-background::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, var(--ui-bg) 0%, color-mix(in srgb, var(--ui-bg) 94%, transparent) 32%, transparent 65%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ui-bg) 85%, transparent), transparent 40%, var(--ui-bg));
+}
+.title-ruins {
+  position: absolute;
+  left: 52%;
+  top: 25%;
+  margin: 0;
+  color: #64928d;
+  opacity: 0.22;
+  font: clamp(10px, 1.25vw, 22px)/1.45 "Cascadia Mono", Consolas, monospace;
+  user-select: none;
+}
+.title-background[data-rendered="true"] > .title-ruins { visibility: hidden; }
+.session-shell[data-view="title"] > .session-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.75fr);
+  grid-template-rows: auto auto 1fr auto auto;
+  grid-template-areas: "brand brand" "edition edition" "menu ." "feedback ." "footer footer";
+  width: min(84%, 1440px);
+  min-height: 100%;
+  margin: 0 auto;
+  padding: clamp(2rem, 7dvh, 6rem) 0 1.5rem;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  animation: title-arrive 260ms ease-out both;
+}
+.session-shell[data-view="title"] #session-heading {
+  grid-area: brand;
+  max-width: none;
+  margin: 0;
+  color: var(--ui-text);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 6.2vw, 6.5rem);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.045em;
+  text-align: center;
+  text-shadow: 0 0 38px color-mix(in srgb, var(--ui-accent) 14%, transparent);
+}
+.session-shell[data-view="title"] .eyebrow {
+  grid-area: edition;
+  margin: 1rem 0 clamp(2rem, 5dvh, 4rem);
+  color: var(--ui-muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.55em;
+  text-align: center;
+}
+.session-shell[data-view="title"] #session-title-view {
+  grid-area: menu;
+  align-self: center;
+  width: min(100%, 28rem);
+  margin-left: clamp(0rem, 4vw, 4rem);
+  gap: clamp(1rem, 3dvh, 2rem);
+}
+.session-shell[data-view="title"] :is(.session-primary-actions, .session-secondary-actions) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.15rem;
+}
+.session-shell[data-view="title"] #session-title-view button {
+  position: relative;
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  padding: 0.4em 1.1em;
+  background: transparent;
+  color: var(--ui-text);
+  text-align: left;
+  font-size: clamp(1.15rem, 1.5vw, 1.65rem);
+  font-weight: 400;
+  transition: color 140ms ease, background 140ms ease;
+}
+.session-shell[data-view="title"] #session-title-view .session-secondary-actions button { font-size: clamp(1rem, 1.2vw, 1.25rem); }
+.session-shell[data-view="title"] #session-title-view button:is(:hover, :focus-visible):not(:disabled) {
+  color: var(--ui-accent-strong);
+  background: color-mix(in srgb, var(--ui-accent) 8%, transparent);
+}
+.session-shell[data-view="title"] #session-title-view button:focus-visible { outline: 1px solid var(--ui-accent); outline-offset: 2px; }
+.session-shell[data-view="title"] #session-title-view button:is(:hover, :focus-visible):not(:disabled)::before {
+  content: "";
+  position: absolute;
+  top: calc(50% - 3px);
+  left: 0.3em;
+  width: 5px;
+  height: 5px;
+  border-top: 1px solid currentColor;
+  border-right: 1px solid currentColor;
+  transform: rotate(45deg);
+}
+#session-continue-summary {
+  max-width: 34ch;
+  margin: 0.1rem 1.5rem 0.7rem;
+  color: var(--ui-muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.session-shell[data-view="title"] .session-feedback {
+  grid-area: feedback;
+  margin: 1rem 0 0;
+  padding-left: clamp(0rem, 4vw, 4rem);
+  overflow-wrap: anywhere;
+}
+.session-shell[data-view="title"] .session-feedback p:empty { display: none; }
+.session-shell[data-view="title"] .title-footer {
+  grid-area: footer;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--ui-text) 10%, transparent);
+  color: var(--ui-muted);
+  font-size: 0.75rem;
+}
+@keyframes title-arrive { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 640px) {
+  .session-shell[data-view="title"] > .session-card {
+    width: calc(100% - 3rem);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "brand" "edition" "menu" "feedback" "footer";
+    padding-top: 2.5rem;
+  }
+  .session-shell[data-view="title"] #session-title-view { margin: 0 auto; }
+  .session-shell[data-view="title"] .session-feedback { padding-left: 0; }
+  .session-shell[data-view="title"] .title-background { opacity: 0.45; }
+}
+@media (max-height: 740px) {
+  .session-shell[data-view="title"] > .session-card { padding-top: 1.5rem; }
+  .session-shell[data-view="title"] .eyebrow { margin-bottom: 1.2rem; }
+  .session-shell[data-view="title"] #session-title-view { gap: 0.65rem; }
+  .session-shell[data-view="title"] .title-footer { margin-top: 0.75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .session-shell[data-view="title"] > .session-card { animation: none; }
+  .session-shell[data-view="title"] #session-title-view button { transition: none; }
+}
+
 .session-secondary-actions,
 .session-form-actions {
   display: flex;

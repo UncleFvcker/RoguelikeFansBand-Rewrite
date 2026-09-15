@@ -1,8 +1,13 @@
 # SPDX-License-Identifier: CC-BY-SA-4.0
 
-app-title = RoguelikeFansBand Rewrite — Player Journey
-session-eyebrow = PHASE 17 / COMPLETE PLAYER JOURNEY
-session-heading = Enter the Warrens
+app-title = RoguelikeFansBand Rewrite
+session-eyebrow = REWRITE
+session-heading = RoguelikeFansBand
+session-brand-first = Roguelike
+session-brand-second = FansBand
+session-menu-help = ↑↓ Select · Enter Confirm
+session-no-continue = No save to continue
+session-last-journey = Last journey: { $details }
 session-subtitle = Start a new adventure or load a save from the game directory.
 save-game = Save (Ctrl+S)
 save-as = Save as

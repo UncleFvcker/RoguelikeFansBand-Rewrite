@@ -1,8 +1,13 @@
 # SPDX-License-Identifier: CC-BY-SA-4.0
 
-app-title = RoguelikeFansBand 重构版 — 玩家旅程
-session-eyebrow = PHASE 17 / 完整玩家旅程
-session-heading = 进入兽穴
+app-title = RoguelikeFansBand Rewrite
+session-eyebrow = REWRITE
+session-heading = RoguelikeFansBand
+session-brand-first = Roguelike
+session-brand-second = FansBand
+session-menu-help = ↑↓ 选择 · Enter 确认
+session-no-continue = 暂无可继续的存档
+session-last-journey = 上次旅程：{ $details }
 session-subtitle = 开始新的冒险，或读取保存在游戏目录中的存档。
 save-game = 保存（Ctrl+S）
 save-as = 另存为

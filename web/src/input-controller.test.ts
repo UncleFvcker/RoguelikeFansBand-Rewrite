@@ -25,6 +25,23 @@ import { defaultPreferences } from "./preferences.ts";
 
 const flushCommands = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
 
+test("focused buttons keep native Enter and Space before game shortcuts", t => {
+  installElementIdentities(t);
+  for (const preset of ["original", "roguelike", "numpad", "vi", "wasd"]) {
+    const h = continuousHarness("local", undefined, preset);
+    for (const key of ["Enter", " "]) {
+      const event = h.emit("keydown", { key, target: new HTMLButtonElement() });
+      assert.equal(event.defaultPrevented, false);
+      assert.equal(event.stopped, false);
+    }
+    assert.deepEqual(h.shortcuts, []);
+    assert.deepEqual(h.requests, []);
+    h.emit("keydown", { key: "Enter" });
+    assert.deepEqual(h.shortcuts, ["command-menu"], "map Enter still opens commands");
+    h.controller.dispose();
+  }
+});
+
 test("r opens recall at the look cursor without changing targeting or dispatching a command", t => {
   installElementIdentities(t);
   for (const preset of ["original", "roguelike"]) {
