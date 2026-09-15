@@ -95,7 +95,7 @@ export class DuelistPanel {
     this.#dialog.dataset.prompt = prompt.type;
     this.#title.textContent = format(`duelist-choice-${prompt.type}-title`);
     const source = snapshot?.entities.find(entity => entity.id === ("sourceEntityId" in prompt ? prompt.sourceEntityId : "targetEntityId" in prompt ? prompt.targetEntityId : ""));
-    this.#description.textContent = format(`duelist-choice-${prompt.type}-help`, {
+    this.#description.textContent = prompt.type === "burglary-negotiate" ? format("duelist-choice-burglary-negotiate-description", { cost: prompt.cost }) : format(`duelist-choice-${prompt.type}-help`, {
       target: source ? this.#contentName(source.kindId) : format("duelist-challenge-unseen-target"),
       distance: prompt.type === "charge" ? prompt.distance : 0,
       range: prompt.type === "charge" ? prompt.range : 0,

@@ -155,7 +155,11 @@ fn anti_cave_round_trip(seed: u64, slug: &str, suppressed: &str, world_position:
                 game.content.actor(&actor.kind_id).unwrap(),
                 false
             ));
-            assert!(!game.actor_kind_is_dungeon_guardian(&actor.kind_id));
+            assert!(
+                !game.actor_kind_is_dungeon_guardian(&actor.kind_id),
+                "unexpected guardian {} at depth {depth}",
+                actor.kind_id
+            );
         }
         clear_monsters(&mut game);
         if depth < 50 {

@@ -14,6 +14,7 @@ impl Game {
     ) -> Result<bool, CoreError> {
         let terrain_index = self.index(position).unwrap();
         let trap = self.terrain[terrain_index].clone();
+        let rogue_major = trap == "demo.terrain.burglary-major-trap";
         let id = self.entities[index].id.clone();
         let actor = self
             .actor_runtime_definition(&self.entities[index])
@@ -36,12 +37,17 @@ impl Game {
             .unwrap()
             .clone();
         ability.id = match trap.as_str() {
+            "demo.terrain.burglary-minor-trap" => "demo.ability.burglary-minor-trap",
+            "demo.terrain.burglary-major-trap" => "demo.ability.burglary-major-trap",
+            "demo.terrain.burglary-ultimate-trap" => "demo.ability.burglary-ultimate-trap",
             "demo.terrain.law-expert-trap" => "demo.ability.law-expert-trap",
             "demo.terrain.law-semicolon" => "demo.ability.law-semicolon-of-punishment",
             _ => "demo.ability.law-basic-trap",
         }
         .into();
-        if trap == "demo.terrain.law-semicolon" {
+        if trap == "demo.terrain.burglary-ultimate-trap" {
+            self.burglary_ultimate_trap(&ability, position, events, changed, removed)?;
+        } else if trap == "demo.terrain.law-semicolon" {
             self.law_trap_damage(
                 &ability.id,
                 position,
@@ -52,7 +58,10 @@ impl Game {
                 changed,
                 removed,
             )?;
-        } else if trap == "demo.terrain.law-basic-trap" {
+        } else if matches!(
+            trap.as_str(),
+            "demo.terrain.law-basic-trap" | "demo.terrain.burglary-minor-trap"
+        ) {
             match self.rng.bounded(9) {
                 n @ 0..=2 => {
                     let (kind, radius) = match n {
@@ -108,7 +117,11 @@ impl Game {
         } else {
             match self.rng.bounded(7) {
                 0 => {
-                    let damage = 2 * (self.roll_damage(6, 5) + i32::from(level / 3));
+                    let damage = if rogue_major {
+                        4 * (self.roll_damage(6, 5) + i32::from(level / 2))
+                    } else {
+                        2 * (self.roll_damage(6, 5) + i32::from(level / 3))
+                    };
                     self.law_trap_damage(
                         &ability.id,
                         position,
@@ -121,7 +134,11 @@ impl Game {
                     )?;
                 }
                 1 => {
-                    let damage = self.roll_damage(8, 7) + i32::from(level / 2);
+                    let damage = if rogue_major {
+                        2 * (self.roll_damage(10, 10) + i32::from(level))
+                    } else {
+                        self.roll_damage(8, 7) + i32::from(level / 2)
+                    };
                     self.law_trap_damage(
                         &ability.id,
                         position,
@@ -134,8 +151,16 @@ impl Game {
                     )?;
                 }
                 2 => {
-                    let radius = (self.rng.bounded(2) + 1) as u8;
-                    let damage = self.roll_damage(8, 8) + i32::from(level);
+                    let radius = if rogue_major {
+                        2
+                    } else {
+                        (self.rng.bounded(2) + 1) as u8
+                    };
+                    let damage = if rogue_major {
+                        self.roll_damage(10, 10) + i32::from(level) * 3
+                    } else {
+                        self.roll_damage(8, 8) + i32::from(level)
+                    };
                     self.law_trap_damage(
                         &ability.id,
                         position,
@@ -155,8 +180,16 @@ impl Game {
                         DamageType::Acid,
                         DamageType::Poison,
                     ] {
-                        let radius = (self.rng.bounded(2) + 1) as u8;
-                        let damage = self.roll_damage(4, 6) + i32::from(level / 5);
+                        let radius = if rogue_major {
+                            2
+                        } else {
+                            (self.rng.bounded(2) + 1) as u8
+                        };
+                        let damage = if rogue_major {
+                            2 * (self.roll_damage(7, 7) + i32::from(level / 2))
+                        } else {
+                            self.roll_damage(4, 6) + i32::from(level / 5)
+                        };
                         self.law_trap_damage(
                             &ability.id,
                             position,
@@ -170,7 +203,11 @@ impl Game {
                     }
                 }
                 4 => {
-                    let damage = self.roll_damage(7, 7) + i32::from(level);
+                    let damage = if rogue_major {
+                        2 * (self.roll_damage(10, 10) + i32::from(level) * 3)
+                    } else {
+                        self.roll_damage(7, 7) + i32::from(level)
+                    };
                     self.law_trap_damage(
                         &ability.id,
                         position,
@@ -187,7 +224,11 @@ impl Game {
                     position,
                     1,
                     STATUS_PARALYSIS,
-                    3 * level / 2,
+                    if rogue_major {
+                        4 * level
+                    } else {
+                        3 * level / 2
+                    },
                     events,
                     changed,
                     removed,
@@ -198,7 +239,7 @@ impl Game {
                         position,
                         10,
                         DamageType::Disintegrate,
-                        50,
+                        if rogue_major { 100 } else { 50 },
                         events,
                         changed,
                         removed,
@@ -219,7 +260,7 @@ impl Game {
                             );
                         }
                     }
-                    let hostile = self.rng.bounded(3) != 0;
+                    let hostile = !rogue_major && self.rng.bounded(3) != 0;
                     self.trump_summon_batch(
                         &ability,
                         "piranha",
@@ -256,7 +297,7 @@ impl Game {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn law_trap_damage(
+    pub(in crate::game) fn law_trap_damage(
         &mut self,
         source: &str,
         center: Position,

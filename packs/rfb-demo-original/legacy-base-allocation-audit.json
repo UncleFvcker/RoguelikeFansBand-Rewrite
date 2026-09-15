@@ -1,6 +1,6 @@
 {
   "acceptanceScope": "B0-B6 current playable builds and imported canonical pool; see design/base-allocation-acquirement-plan.md for evidence and object-representation limits",
-  "allocationRowCount": 455,
+  "allocationRowCount": 459,
   "explicitItems": [
     {
       "itemId": "demo.item.aegir",
@@ -10530,12 +10530,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.burglars-handbook",
       "maxDepth": 30,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 568,
       "sourceName": "[Burglar's Handbook]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 0,
       "tval": 109
     },
@@ -10549,12 +10549,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.thieving-ways",
       "maxDepth": 50,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 569,
       "sourceName": "[Thieving Ways]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 1,
       "tval": 109
     },
@@ -10568,12 +10568,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.great-escapes",
       "maxDepth": 90,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 570,
       "sourceName": "[Great Escapes]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 2,
       "tval": 109
     },
@@ -10587,12 +10587,12 @@
         }
       ],
       "hasNaturalAllocationRows": true,
-      "itemId": null,
+      "itemId": "demo.item.book-of-shadows",
       "maxDepth": 65535,
-      "reason": "source kind has no active formal implementation/mapping",
+      "reason": "source allocation rows mapped without promotion",
       "sourceIndex": 571,
       "sourceName": "[Book of Shadows]",
-      "status": "not-imported",
+      "status": "mapped",
       "sval": 3,
       "tval": 109
     },

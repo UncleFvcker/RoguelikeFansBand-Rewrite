@@ -75,7 +75,9 @@
     {"itemKindId": "demo.item.handbook-of-hex", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
     {"itemKindId": "demo.item.high-curse", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
     {"itemKindId": "demo.item.anger-management", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
-    {"itemKindId": "demo.item.northern-frights", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1}
+    {"itemKindId": "demo.item.northern-frights", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
+    {"itemKindId": "demo.item.burglars-handbook", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
+    {"itemKindId": "demo.item.thieving-ways", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1}
   ],
   "maintenance": { "intervalWorldTicks": 10000 }
 }

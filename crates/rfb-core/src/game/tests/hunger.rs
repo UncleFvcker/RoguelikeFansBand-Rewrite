@@ -1176,7 +1176,7 @@ fn golem_slow_digestion_and_food_magic_follow_construct_metabolism() {
         "test.item.golem-waybread",
         "demo.item.piece-of-elvish-waybread",
     );
-    dispatch_next(
+    let update = dispatch_next(
         &mut waybread,
         GameCommand::UseItem {
             item_id: "test.item.golem-waybread".to_owned(),
@@ -1184,7 +1184,12 @@ fn golem_slow_digestion_and_food_magic_follow_construct_metabolism() {
         },
     );
     assert_eq!(waybread.nutrition, 9_375);
-    assert!(waybread.player.hp > 1);
+    let healed = update
+        .events
+        .iter()
+        .find(|event| event.kind == "item.use-heal")
+        .expect("Waybread heals before the poison tick");
+    assert!((4..=32).contains(&healed.args["amount"].parse::<i32>().unwrap()));
     assert_eq!(
         waybread
             .player

@@ -16,6 +16,9 @@ pub(super) const VISIBILITY_RADIUS: i32 = 8;
 
 impl Game {
     pub(super) fn player_has_night_vision(&self) -> bool {
+        if self.player_has_status_kind("rfb.status.burglary-shadows") {
+            return true;
+        }
         self.player_equipment_passives()
             .contains(&EquipmentPassive::NightVision)
     }

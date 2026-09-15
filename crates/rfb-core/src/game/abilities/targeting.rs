@@ -12,6 +12,9 @@ use std::collections::BTreeSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::game) enum AbilityTargetPlan {
+    Burglary {
+        target: TargetSelection,
+    },
     Rage {
         target: TargetSelection,
     },
@@ -129,6 +132,9 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
+            AbilityEffectDefinition::Burglary { spell } => {
+                self.burglary_target_plan(ability, spell, target)
+            }
             AbilityEffectDefinition::Rage { spell } => {
                 self.rage_target_plan(ability, spell, target)
             }

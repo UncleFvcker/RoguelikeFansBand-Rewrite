@@ -1999,6 +1999,9 @@ impl Game {
     }
 
     pub(super) fn player_has_black_market_standard_prices(&self) -> bool {
+        if self.player_is_rogue() {
+            return true;
+        }
         self.content.mutations().any(|mutation| {
             mutation.black_market_standard_prices
                 && self.progress.active_mutation_ids.contains(&mutation.id)

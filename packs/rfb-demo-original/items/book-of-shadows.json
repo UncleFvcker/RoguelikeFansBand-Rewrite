@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.book-of-shadows",
+  "nameKey": "item-demo-book-of-shadows-name",
+  "descriptionKey": "item-demo-book-of-shadows-description",
+  "abilityBookId": "demo.ability-book.book-of-shadows",
+  "rfbBaseKind": {
+    "sourceIndex": 571,
+    "tval": 109,
+    "sval": 3
+  },
+  "baseValue": 100000,
+  "generationLevel": 80,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "burglary",
+    "book",
+    "spellbook"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

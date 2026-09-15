@@ -1035,7 +1035,8 @@ fn pyramidal_mound_phoenix_rebirth_keeps_melee_and_status_targets_alive() {
                 break;
             }
         }
-        let game = reborn.expect("one-third revival must be reachable");
+        let mut game = reborn.expect("one-third revival must be reachable");
+        game.reveal_current_visibility();
         let mut restored =
             Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
         assert_eq!(restored.state_hash(), game.state_hash());

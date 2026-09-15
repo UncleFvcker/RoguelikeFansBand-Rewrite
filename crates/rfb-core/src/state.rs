@@ -41,6 +41,7 @@ pub(crate) struct Actor {
     pub(crate) cloned: bool,
     pub(crate) no_destruction: bool,
     pub(crate) casting_cooldown_remaining: u16,
+    pub(crate) burglary_drops_remaining: Option<u32>,
     pub(crate) observed_player_resistances: BTreeMap<DamageType, ResistanceLevel>,
     pub(crate) statuses: Vec<StatusInstance>,
     pub(crate) resistances: ResistanceProfile,
@@ -169,6 +170,8 @@ impl ItemInstance {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CapturedActor {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) burglary_drops_remaining: Option<u32>,
     pub(crate) kind_id: String,
     pub(crate) speed: u16,
     pub(crate) hp: i32,

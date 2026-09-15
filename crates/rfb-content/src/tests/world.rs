@@ -13020,6 +13020,8 @@ fn town_stock_and_spellbook_tiers_match_source() {
                 "demo.item.yagyuu-bugeichou",
                 "demo.item.handbook-of-hex",
                 "demo.item.high-curse",
+                "demo.item.burglars-handbook",
+                "demo.item.thieving-ways",
                 "demo.item.anger-management",
                 "demo.item.northern-frights",
                 "demo.item.obstacle-coursebook",
@@ -13428,7 +13430,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 455);
+    assert_eq!(base_items.entries.len(), 459);
     // Source kind 245 retains its 1/255 allocation as integer weight zero.
     assert_eq!(
         base_items
@@ -13568,6 +13570,10 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
             "demo.item.forbidden-cursebook",
             "demo.item.the-sound-and-the-fury",
             "demo.item.dire-ire",
+            "demo.item.burglars-handbook",
+            "demo.item.thieving-ways",
+            "demo.item.great-escapes",
+            "demo.item.book-of-shadows",
         ])
         .collect::<BTreeSet<_>>();
     let actual_item_ids = base_items
@@ -13575,7 +13581,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 421);
+    assert_eq!(expected_item_ids.len(), 425);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.

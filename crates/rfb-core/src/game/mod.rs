@@ -237,7 +237,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 138;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 139;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -2604,6 +2604,8 @@ impl Game {
                 events.extend(self.resolve_wilderness_terrain_hazard(self.player.position));
             }
             if advances_world {
+                if events.iter().any(|e|matches!(e,DomainEvent::AbilityCastSucceeded {resolution} if resolution.ability_id=="demo.ability.burglary-major-getaway")) { action_cost=15; }
+                if self.player_has_astral_guide() && events.iter().any(|e|matches!(e,DomainEvent::AbilityCastSucceeded {resolution} if resolution.ability_id=="demo.ability.burglary-minor-getaway")) { action_cost=30; }
                 if self.player_has_status_kind(STATUS_BERSERK) && events.iter().any(|e|matches!(e,DomainEvent::AbilityCastSucceeded {resolution} if resolution.ability_id=="demo.ability.rage-evasive-leap")) { action_cost=30; }
                 if astral_guide_blink.as_ref().is_some_and(|ability_id| {
                     events.iter().any(|event| {
@@ -3132,6 +3134,7 @@ impl Game {
                     && self.pantheon_allows_allocation(&self.current_floor_id, definition)
                     && excluded_category
                         .is_none_or(|category| !actor_matches_category(definition, category))
+                    && !self.actor_kind_is_dungeon_guardian(&definition.id)
                     && !definition.tags.iter().any(|tag| tag == "guardian")
                     && actor_answers_summons(definition)
                     && self.dungeon_allows_monster(

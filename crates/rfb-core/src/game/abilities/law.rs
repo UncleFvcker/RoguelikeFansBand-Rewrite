@@ -458,7 +458,7 @@ impl Game {
         Ok(None)
     }
 
-    fn law_subpoena(
+    pub(in crate::game) fn law_subpoena(
         &mut self,
         ability: &AbilityDefinition,
         id: &str,
@@ -481,9 +481,11 @@ impl Game {
         let from = self.entities[index].position;
         let mut to = None;
         if !resisted {
-            self.entities[index]
-                .statuses
-                .retain(|s| s.kind_id != crate::effect::STATUS_SLEEP);
+            if ability.id != "demo.ability.burglary-teleport-to" {
+                self.entities[index]
+                    .statuses
+                    .retain(|s| s.kind_id != crate::effect::STATUS_SLEEP);
+            }
             // Shared map uses a finite candidate set; widen only when the adjacent ring is full.
             for radius in 1..=18 {
                 let candidates = self

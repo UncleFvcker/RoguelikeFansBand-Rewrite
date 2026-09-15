@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.burglary-panic-shot",
+  "nameKey": "ability-demo-burglary-panic-shot-name",
+  "descriptionKey": "ability-demo-burglary-panic-shot-description",
+  "abilityProgramId": "demo.ability-program.burglary-panic-shot",
+  "target": {
+    "modes": [
+      "direction",
+      "entity",
+      "position"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "burglary",
+    "technique"
+  ],
+  "affectsGroundItems": false
+}

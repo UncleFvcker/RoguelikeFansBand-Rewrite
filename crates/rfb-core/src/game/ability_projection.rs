@@ -490,6 +490,9 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
         AbilityEffectDefinition::SamuraiPosture { posture } => {
             AbilityEffectSpecDto::SamuraiPosture { posture: *posture }
         }
+        AbilityEffectDefinition::Burglary { spell } => {
+            AbilityEffectSpecDto::Burglary { spell: *spell }
+        }
         AbilityEffectDefinition::Rage { spell } => AbilityEffectSpecDto::Rage { spell: *spell },
         AbilityEffectDefinition::StopSinging => AbilityEffectSpecDto::StopSinging,
         AbilityEffectDefinition::Hex { spell } => AbilityEffectSpecDto::Hex { spell: *spell },
@@ -622,6 +625,9 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
         },
         AbilityEffectDefinition::TerrainBeam { operation } => AbilityEffectSpecDto::TerrainBeam {
             operation: match operation {
+                AbilityTerrainBeamOperationDefinition::DisarmTraps => {
+                    rfb_protocol::AbilityTerrainBeamOperationDto::DisarmTraps
+                }
                 AbilityTerrainBeamOperationDefinition::JamDoors => {
                     AbilityTerrainBeamOperationDto::JamDoors
                 }

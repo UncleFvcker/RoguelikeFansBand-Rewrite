@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.burglary-hide-in-shadows",
+  "nameKey": "ability-demo-burglary-hide-in-shadows-name",
+  "descriptionKey": "ability-demo-burglary-hide-in-shadows-description",
+  "abilityProgramId": "demo.ability-program.burglary-hide-in-shadows",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "burglary",
+    "technique"
+  ],
+  "affectsGroundItems": false
+}

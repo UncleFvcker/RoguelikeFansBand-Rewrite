@@ -277,6 +277,7 @@ pub enum AbilityStatusStackingDefinition {
 #[serde(rename_all = "kebab-case")]
 pub enum AbilityTerrainBeamOperationDefinition {
     JamDoors,
+    DisarmTraps,
     DestroyTrapsAndDoors,
     StoneToMud,
 }
@@ -663,6 +664,9 @@ pub enum AbilityEffectDefinition {
         spell: u8,
     },
     StopSinging,
+    Burglary {
+        spell: u8,
+    },
     Rage {
         spell: u8,
     },

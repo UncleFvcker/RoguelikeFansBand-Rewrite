@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.rogue",
+  "nameKey": "build-demo-rogue-name",
+  "descriptionKey": "build-demo-rogue-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.rogue",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.rogue-player",
+  "firstRealmId": "burglary",
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.burglars-handbook",
+      "quantity": 1
+    }
+  ],
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": [
+    "caster",
+    "rogue",
+    "rfb-compatibility"
+  ]
+}

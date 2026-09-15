@@ -2649,6 +2649,7 @@ impl Game {
             || self.player_is_mage()
             || self.player_is_necromancer()
             || self.player_is_bard()
+            || self.player_is_rogue()
             || self.player_is_samurai()
             || self.player_uses_hex()
             || self.player_is_rage_mage()
@@ -2695,6 +2696,17 @@ impl Game {
                 (
                     "demo.class.high-mage",
                     self.class_base_blows(weapon, 400, 100, 20),
+                    0,
+                )
+            } else if self.player_is_rogue() {
+                (
+                    "demo.class.rogue",
+                    self.class_base_blows(
+                        weapon,
+                        (650 - i32::from(self.item_instance_weight(weapon))).max(400),
+                        40,
+                        30,
+                    ),
                     0,
                 )
             } else if self.player_is_bard() {
@@ -3017,6 +3029,7 @@ impl Game {
                     "demo.class.berserker" => 170,
                     "demo.class.paladin" => 110,
                     "demo.class.rage-mage" => 90,
+                    "demo.class.rogue" => 105,
                     "demo.class.high-mage" | "demo.class.mage" => 80,
                     _ => 100,
                 });
@@ -3348,6 +3361,24 @@ impl Game {
         let Some((_, race, class, personality)) = self.character_definitions() else {
             return;
         };
+        if self.player_is_rogue()
+            && self.items.iter().any(|item| {
+                matches!(item.location, ItemLocation::Equipped { .. })
+                    && self
+                        .content
+                        .item(&item.kind_id)
+                        .and_then(|d| d.rfb_base_kind)
+                        .is_some_and(|b| b.tval == 19 && b.sval == 2)
+            })
+        {
+            add_nonzero_stat(
+                pipeline,
+                StatKind::RangedSkill,
+                StatLayer::Class,
+                &class.id,
+                20 + i32::from(self.progress.level),
+            );
+        }
         if self.player_is_ranger() && self.items.iter().any(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("launcher"))
         }) {

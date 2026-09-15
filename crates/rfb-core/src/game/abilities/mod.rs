@@ -2,6 +2,7 @@
 
 mod berserker;
 mod book_magic;
+mod burglary;
 mod casting;
 mod chaos;
 mod compound;
@@ -45,6 +46,16 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<Position>, CoreError> {
         match (ability.effect.clone(), target_plan) {
+            (AbilityEffectDefinition::Burglary { spell }, plan) => {
+                return self.resolve_burglary(
+                    &ability,
+                    spell,
+                    plan,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
             (AbilityEffectDefinition::Rage { spell }, plan) => {
                 return self.resolve_rage(&ability, spell, plan, events, changed, removed_entities);
             }

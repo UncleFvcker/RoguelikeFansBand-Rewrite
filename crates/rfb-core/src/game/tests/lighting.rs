@@ -805,6 +805,8 @@ fn nightcap_reduces_carried_light_preserves_glow_and_senses_only_undead_after_sa
     choose_human_talent_if_pending(&mut game);
     descend_one_floor(&mut game);
     clear_monsters(&mut game);
+    // This local terrain fixture does not exercise generated floor treasure.
+    game.gold_piles.clear();
     game.items.clear();
     game.player.position = Position { x: 10, y: 10 };
     for y in 8..=12 {

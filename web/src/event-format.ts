@@ -1997,6 +1997,7 @@ export function createPresentationFormatter(
   }
 
   function statusName(statusId: string | undefined): string {
+    if (statusId?.startsWith("rfb.status.burglary-")) return localization.format(`status-rfb-burglary-${statusId.slice(20)}`);
     if (statusId?.startsWith("rfb.status.rage-")) return localization.format(`status-${statusId.slice(11)}-name`);
     if (statusId === "rfb.status.music" || statusId === "rfb.status.necromancy-cloak" || statusId === "rfb.status.necromancy-shield" || statusId === "rfb.status.law-spin" || statusId === "rfb.status.law-tread-softly") {
       return localization.format(`status-${statusId.slice(11)}-name`);

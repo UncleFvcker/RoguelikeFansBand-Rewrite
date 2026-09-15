@@ -1550,3 +1550,16 @@ status-rage-armor-of-fury-name = 狂怒之甲
 status-rage-spell-turning-name = 法术反转
 status-rage-detect-magical-name = 探测魔法敌人
 status-rage-anti-magic-name = 反魔法射线
+
+realm-burglary-name = 行窃
+
+duelist-choice-burglary-escape-title = 逃跑吗？
+duelist-choice-burglary-negotiate-title = 你付款吗？
+duelist-choice-burglary-negotiate-description = 支付 { $cost } 枚金币雇佣窃贼；对方可能反悔。
+
+session-career-category-stealth = 潜行
+status-rfb-burglary-infravision = 黑暗视觉
+status-rfb-burglary-tread-softly = 轻声行走
+status-rfb-burglary-shadows = 隐匿于阴影
+
+duelist-choice-burglary-escape-help = 现在传送离开吗？

@@ -446,6 +446,9 @@ impl Game {
     }
 
     pub(super) fn player_light_radius(&self) -> Option<i32> {
+        if self.player_has_status_kind("rfb.status.burglary-shadows") {
+            return Some(0);
+        }
         let equipment = self
             .items
             .iter()

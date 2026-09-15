@@ -244,6 +244,7 @@ impl Game {
             || self.player_is_mage()
             || self.player_is_necromancer()
             || self.player_is_bard()
+            || self.player_is_rogue()
             || (self.player_is_samurai() || self.player_is_rage_mage())
             || self.player_is_ranger()
             || self.player_is_priest()
@@ -271,7 +272,7 @@ impl Game {
             [(false, 20_000_u32), (true, 9_000)]
         } else if self.player_is_ranger() {
             [(false, 80_000_u32), (true, 80_000)]
-        } else if self.player_is_priest() || self.player_is_bard() {
+        } else if self.player_is_priest() || self.player_is_bard() || self.player_is_rogue() {
             // RFB master a0d92b6378: priest.c FAST/WEAK, MED/STRONG.
             [(false, 9_000_u32), (true, 20_000)]
         } else if self.player_is_warrior_mage() {
@@ -329,7 +330,8 @@ impl Game {
                 if in_pack && self.rng.bounded(3) != 0 {
                     continue;
                 }
-                let strong = (self.player_is_samurai() || self.player_is_rage_mage())
+                let strong = self.player_is_rogue()
+                    || (self.player_is_samurai() || self.player_is_rage_mage())
                     || self.player_is_ranger()
                     || second
                     || knowledge >= 100

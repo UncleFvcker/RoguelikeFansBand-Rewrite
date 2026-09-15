@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.274";
+pub const PROTOCOL_VERSION: &str = "1.275";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 29;
 
@@ -121,6 +121,11 @@ pub struct PendingAbilityGlyphDto {
 )]
 pub enum DuelistPromptDto {
     LawEscape,
+    BurglaryEscape,
+    BurglaryNegotiate {
+        target_entity_id: String,
+        cost: u32,
+    },
     Charge {
         ability_id: String,
         target_entity_id: String,
@@ -1348,6 +1353,7 @@ pub struct AbilitySummonCandidateSpecDto {
 #[serde(rename_all = "kebab-case")]
 pub enum AbilityTerrainBeamOperationDto {
     JamDoors,
+    DisarmTraps,
     DestroyTrapsAndDoors,
     StoneToMud,
 }
@@ -1652,6 +1658,9 @@ pub enum AbilityEffectSpecDto {
         spell: u8,
     },
     StopSinging,
+    Burglary {
+        spell: u8,
+    },
     Rage {
         spell: u8,
     },
@@ -5870,6 +5879,8 @@ pub struct ActorSaveDto {
     pub no_destruction: bool,
     #[serde(default)]
     pub casting_cooldown_remaining: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub burglary_drops_remaining: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub observed_player_resistances: Vec<ResistanceSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -5956,6 +5967,8 @@ pub struct ResistanceSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CapturedActorSaveDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub burglary_drops_remaining: Option<u32>,
     pub kind_id: String,
     pub speed: u16,
     pub hp: i32,

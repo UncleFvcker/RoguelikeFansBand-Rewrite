@@ -107,3 +107,5 @@ mod music;
 mod necromancy;
 mod rage;
 mod trump;
+
+mod burglary;

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.burglary-assassination",
+  "nameKey": "ability-demo-burglary-assassination-name",
+  "descriptionKey": "ability-demo-burglary-assassination-description",
+  "abilityProgramId": "demo.ability-program.burglary-assassination",
+  "target": {
+    "modes": [
+      "direction",
+      "entity",
+      "position"
+    ],
+    "range": 1,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "burglary",
+    "technique"
+  ],
+  "affectsGroundItems": false
+}

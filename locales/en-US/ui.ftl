@@ -1554,3 +1554,16 @@ status-rage-armor-of-fury-name = Armor of Fury
 status-rage-spell-turning-name = Spell Turning
 status-rage-detect-magical-name = Detect Magical Foes
 status-rage-anti-magic-name = Anti-Magic Ray
+
+realm-burglary-name = Burglary
+
+duelist-choice-burglary-escape-title = Escape?
+duelist-choice-burglary-negotiate-title = Pay for service?
+duelist-choice-burglary-negotiate-description = Pay { $cost } gold to hire the thief. The thief may betray you.
+
+session-career-category-stealth = Stealth
+status-rfb-burglary-infravision = See in the Dark
+status-rfb-burglary-tread-softly = Tread Softly
+status-rfb-burglary-shadows = Hide in Shadows
+
+duelist-choice-burglary-escape-help = Teleport away now?

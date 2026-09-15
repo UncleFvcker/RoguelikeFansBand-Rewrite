@@ -301,6 +301,105 @@ impl Game {
         Ok(generated)
     }
 
+    pub(super) fn roll_monster_drop_count(
+        &mut self,
+        actor_definition: &rfb_content::ActorDefinition,
+    ) -> u32 {
+        let Some(drop) = actor_definition.death_drop.as_ref() else {
+            return 0;
+        };
+        let unique = actor_definition.tags.iter().any(|tag| tag == "unique");
+        let mut count = u32::from(drop.base_rolls);
+        for roll in &drop.chance_rolls {
+            if (roll.guaranteed_for_unique && unique)
+                || self.rng.bounded(100) < u64::from(roll.percent)
+            {
+                count = count.saturating_add(1);
+            }
+        }
+        for dice in &drop.count_dice {
+            for _ in 0..dice.dice {
+                count = count.saturating_add(
+                    u32::try_from(self.rng.bounded(u64::from(dice.sides)) + 1)
+                        .expect("validated monster drop die must fit u32"),
+                );
+            }
+        }
+        if count > 2 && !unique && drop.minimum_quality != rfb_content::ItemQuality::Exceptional {
+            count = 2 + (count - 2) / 2;
+        }
+        count
+    }
+
+    pub(super) fn generate_ordinary_monster_drops(
+        &mut self,
+        actor: &Actor,
+        count: u32,
+    ) -> Result<(Vec<ItemInstance>, Vec<GoldPile>), CoreError> {
+        let actor_definition = self.content.actor(&actor.kind_id).unwrap().clone();
+        let drop = actor_definition
+            .death_drop
+            .as_ref()
+            .expect("ordinary drop definition");
+        let floor_id = self.current_floor_id.clone();
+        let depth = self.floor_depth(&floor_id);
+        let mut generated = Vec::new();
+        let mut gold = Vec::new();
+        let object_level = {
+            let actor_level = actor_definition.level.min(u32::from(u16::MAX));
+            let floor_level = u32::from(depth);
+            if actor_level >= floor_level {
+                actor_level
+            } else {
+                (actor_level + floor_level) / 2
+            }
+        };
+        for _ in 0..count {
+            // get_monster_drop chooses the theme before deciding gold/item.
+            let use_theme = drop.theme_table_id.is_some()
+                && self.rng.bounded(100) < u64::from(drop.theme_chance_percent);
+            let drops_gold = match drop.kind {
+                MonsterDropKindDefinition::Gold => true,
+                MonsterDropKindDefinition::Items => false,
+                MonsterDropKindDefinition::ItemsAndGold => self.rng.bounded(100) < 20,
+            };
+            if drops_gold {
+                gold.push(self.generate_gold_pile(
+                    actor.position,
+                    u16::try_from(object_level).expect("bounded gold level must fit u16"),
+                    true,
+                )?);
+                continue;
+            }
+            let table_id = if use_theme {
+                drop.theme_table_id
+                    .as_ref()
+                    .expect("checked monster theme table must exist")
+            } else {
+                drop.item_table_id
+                    .as_ref()
+                    .expect("validated item drop must define a table")
+            };
+            generated.extend(self.generate_one_loot_instance(
+                &LootContext {
+                    table_id: table_id.clone(),
+                    floor_id: floor_id.clone(),
+                    depth: u16::try_from(object_level).expect("bounded monster object level"),
+                    source: LootSource::MonsterDeath {
+                        actor_id: actor.id.clone(),
+                    },
+                },
+                ItemLocation::Ground(actor.position),
+                if drop.great_only {
+                    ItemGenerationMode::GreatOnly
+                } else {
+                    drop.minimum_quality.into()
+                },
+            )?);
+        }
+        Ok((generated, gold))
+    }
+
     pub(super) fn generate_death_loot(
         &mut self,
         actor: &Actor,
@@ -408,80 +507,13 @@ impl Game {
                     .push(self.commit_generated_item_draft(draft, ItemLocation::Ground(position))?);
             }
         }
-        if let Some(drop) = actor_definition.death_drop.clone() {
-            let unique = actor_definition.tags.iter().any(|tag| tag == "unique");
-            let mut count = u32::from(drop.base_rolls);
-            for roll in &drop.chance_rolls {
-                if (roll.guaranteed_for_unique && unique)
-                    || self.rng.bounded(100) < u64::from(roll.percent)
-                {
-                    count = count.saturating_add(1);
-                }
-            }
-            for dice in &drop.count_dice {
-                for _ in 0..dice.dice {
-                    count = count.saturating_add(
-                        u32::try_from(self.rng.bounded(u64::from(dice.sides)) + 1)
-                            .expect("validated monster drop die must fit u32"),
-                    );
-                }
-            }
-            if count > 2 && !unique && drop.minimum_quality != rfb_content::ItemQuality::Exceptional
-            {
-                count = 2 + (count - 2) / 2;
-            }
-            let object_level = {
-                let actor_level = actor_definition.level.min(u32::from(u16::MAX));
-                let floor_level = u32::from(depth);
-                if actor_level >= floor_level {
-                    actor_level
-                } else {
-                    (actor_level + floor_level) / 2
-                }
-            };
-            for _ in 0..count {
-                // get_monster_drop chooses the theme before deciding gold/item.
-                let use_theme = drop.theme_table_id.is_some()
-                    && self.rng.bounded(100) < u64::from(drop.theme_chance_percent);
-                let drops_gold = match drop.kind {
-                    MonsterDropKindDefinition::Gold => true,
-                    MonsterDropKindDefinition::Items => false,
-                    MonsterDropKindDefinition::ItemsAndGold => self.rng.bounded(100) < 20,
-                };
-                if drops_gold {
-                    gold.push(self.generate_gold_pile(
-                        actor.position,
-                        u16::try_from(object_level).expect("bounded gold level must fit u16"),
-                        true,
-                    )?);
-                    continue;
-                }
-                let table_id = if use_theme {
-                    drop.theme_table_id
-                        .as_ref()
-                        .expect("checked monster theme table must exist")
-                } else {
-                    drop.item_table_id
-                        .as_ref()
-                        .expect("validated item drop must define a table")
-                };
-                generated.extend(self.generate_one_loot_instance(
-                    &LootContext {
-                        table_id: table_id.clone(),
-                        floor_id: floor_id.clone(),
-                        depth: u16::try_from(object_level).expect("bounded monster object level"),
-                        source: LootSource::MonsterDeath {
-                            actor_id: actor.id.clone(),
-                        },
-                    },
-                    ItemLocation::Ground(actor.position),
-                    if drop.great_only {
-                        ItemGenerationMode::GreatOnly
-                    } else {
-                        drop.minimum_quality.into()
-                    },
-                )?);
-            }
+        if actor_definition.death_drop.is_some() {
+            let count = actor
+                .burglary_drops_remaining
+                .unwrap_or_else(|| self.roll_monster_drop_count(&actor_definition));
+            let (items, piles) = self.generate_ordinary_monster_drops(actor, count)?;
+            generated.extend(items);
+            gold.extend(piles);
         } else if let Some(table_id) = table_id {
             let context = LootContext {
                 table_id,

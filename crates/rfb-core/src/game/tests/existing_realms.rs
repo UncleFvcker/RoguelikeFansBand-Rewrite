@@ -174,6 +174,15 @@ fn existing_realms_new_builds_generate_pick_up_study_cast_and_resume() {
             .contains(&AbilityTargetModeDefinition::SelfTarget)
         {
             TargetSelection::SelfTarget
+        } else if ability
+            .target
+            .modes
+            .contains(&AbilityTargetModeDefinition::Item)
+        {
+            give_inventory_item(&mut game, "test.identify", "demo.item.dagger");
+            TargetSelection::Item {
+                item_id: "test.identify".into(),
+            }
         } else {
             let entity_target = ability
                 .target

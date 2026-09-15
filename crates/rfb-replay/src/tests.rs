@@ -447,6 +447,7 @@ fn invisible_replay_game(seed: u64, race_id: &str) -> Game {
     }
 
     payload.entities = vec![ActorSaveDto {
+        burglary_drops_remaining: None,
         id: "test.high-elf-invisible".to_owned(),
         kind_id: "demo.actor.clear-icky-thing".to_owned(),
         experience: 0,

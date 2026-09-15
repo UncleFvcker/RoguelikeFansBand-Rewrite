@@ -24,7 +24,14 @@ pub(super) fn starting_gold(build: Option<&CharacterBuildIdentity>, rng: &mut Rf
     }
     let first = u32::try_from(rng.bounded(300) + 1).expect("birth gold roll must fit u32");
     let second = u32::try_from(rng.bounded(300) + 1).expect("birth gold roll must fit u32");
-    first + second + 200
+    first
+        + second
+        + 200
+        + if build.is_some_and(|b| b.class_id == "demo.class.rogue") {
+            200
+        } else {
+            0
+        }
 }
 
 impl Game {

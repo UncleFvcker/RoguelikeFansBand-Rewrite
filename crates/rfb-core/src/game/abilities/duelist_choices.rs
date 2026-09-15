@@ -64,6 +64,40 @@ impl Game {
             return false;
         }
         let prompt_valid = match &pending.prompt {
+            Some(DuelistPromptDto::BurglaryEscape) => {
+                self.player_is_rogue()
+                    && self.progress.level >= 35
+                    && [
+                        "demo.ability.burglary-pick-pocket",
+                        "demo.ability.burglary-master-thievery",
+                    ]
+                    .iter()
+                    .any(|id| self.learned_abilities.contains(*id))
+            }
+            Some(DuelistPromptDto::BurglaryNegotiate {
+                target_entity_id,
+                cost,
+            }) => {
+                self.player_is_rogue()
+                    && self
+                        .learned_abilities
+                        .contains("demo.ability.burglary-negotiate")
+                    && actor(target_entity_id).is_some_and(|a| {
+                        let d = self.actor_runtime_definition(a).unwrap();
+                        d.tags.iter().any(|t| t == "thief")
+                            && !a.friendly
+                            && a.controller_id.is_none()
+                            && a.summon.is_none()
+                            && *cost
+                                == (10 + d.level * 100)
+                                    * if d.tags.iter().any(|t| t == "unique") {
+                                        10
+                                    } else {
+                                        1
+                                    }
+                            && self.gold >= *cost
+                    })
+            }
             Some(DuelistPromptDto::LawEscape) => {
                 self.learned_abilities.contains("demo.ability.law-getaway")
                     && self.law_escape_plan().is_some()
@@ -263,6 +297,8 @@ impl Game {
                 Some(
                     DuelistPromptDto::Charge { .. }
                     | DuelistPromptDto::LawEscape
+                    | DuelistPromptDto::BurglaryEscape
+                    | DuelistPromptDto::BurglaryNegotiate { .. }
                     | DuelistPromptDto::BlockTeleport { .. }
                     | DuelistPromptDto::FollowTeleport { .. },
                 ),
@@ -316,6 +352,25 @@ impl Game {
             .take()
             .expect("validated prompt");
         match (prompt, choice) {
+            (DuelistPromptDto::BurglaryEscape, DuelistChoiceDto::Confirm { accepted }) => {
+                if accepted {
+                    self.burglary_blink(
+                        25 + self.progress.level / 2,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+            }
+            (
+                DuelistPromptDto::BurglaryNegotiate {
+                    target_entity_id,
+                    cost,
+                },
+                DuelistChoiceDto::Confirm { accepted },
+            ) => {
+                self.burglary_negotiate_choice(&target_entity_id, cost, accepted);
+            }
             (DuelistPromptDto::LawEscape, DuelistChoiceDto::Confirm { accepted }) => {
                 if accepted && let Some((ability, plan)) = self.law_escape_plan() {
                     self.resolve_player_ability_effect(

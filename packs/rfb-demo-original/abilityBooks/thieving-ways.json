@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.thieving-ways",
+  "nameKey": "item-demo-thieving-ways-name",
+  "descriptionKey": "item-demo-thieving-ways-description",
+  "realmId": "burglary",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.burglary-map-escape-route",
+    "demo.ability.burglary-pick-pocket",
+    "demo.ability.burglary-negotiate",
+    "demo.ability.burglary-fetch",
+    "demo.ability.burglary-sense-danger",
+    "demo.ability.burglary-examine-loot",
+    "demo.ability.burglary-major-trap",
+    "demo.ability.burglary-haste-self"
+  ],
+  "tags": [
+    "burglary",
+    "spellbook"
+  ]
+}

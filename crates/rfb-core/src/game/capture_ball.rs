@@ -161,6 +161,7 @@ impl Game {
         }
 
         let captured = CapturedActor {
+            burglary_drops_remaining: actor.burglary_drops_remaining,
             kind_id: target_kind_id.clone(),
             speed: actor.speed,
             hp: actor.hp,
@@ -258,6 +259,7 @@ impl Game {
         );
         actor.hp = captured.hp;
         actor.experience = captured.experience;
+        actor.burglary_drops_remaining = captured.burglary_drops_remaining;
         actor.resistances = definition_resistance_profile(&definition);
         if !hostile {
             actor.controller_id = Some(self.player.id.clone());

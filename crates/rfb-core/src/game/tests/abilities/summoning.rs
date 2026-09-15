@@ -328,6 +328,8 @@ fn p55b_eagle_summon_includes_unseen_unique_eagles() {
     else {
         panic!("S_EAGLE should retain a category summon plan");
     };
+    // Thorondor is an active dungeon guardian even without a guardian tag.
+    assert!(!candidate_kind_ids.contains(&"demo.actor.thorondor".to_owned()));
     assert_eq!(
         candidate_kind_ids.into_iter().collect::<BTreeSet<_>>(),
         [
@@ -335,7 +337,6 @@ fn p55b_eagle_summon_includes_unseen_unique_eagles() {
             "demo.actor.great-eagle".to_owned(),
             "demo.actor.gwaihir-the-windlord".to_owned(),
             "demo.actor.meneldor-the-swift".to_owned(),
-            "demo.actor.thorondor".to_owned(),
         ]
         .into_iter()
         .collect()

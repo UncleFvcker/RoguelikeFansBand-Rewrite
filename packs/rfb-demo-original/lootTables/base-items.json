@@ -1024,6 +1024,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.burglars-handbook",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.jo-staff",
       "maxDepth": 65535,
       "minDepth": 11,
@@ -1627,6 +1634,13 @@
     },
     {
       "itemKindId": "demo.item.northern-frights",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.thieving-ways",
       "maxDepth": 50,
       "minDepth": 20,
       "quantity": 1,
@@ -2522,6 +2536,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.great-escapes",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.dwarven-pick",
       "maxDepth": 65535,
       "minDepth": 50,
@@ -3087,6 +3108,13 @@
       "minDepth": 80,
       "quantity": 1,
       "weight": 50
+    },
+    {
+      "itemKindId": "demo.item.book-of-shadows",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
     },
     {
       "itemKindId": "demo.item.armageddon-tome",

@@ -2011,6 +2011,26 @@
               "type": "integer"
             },
             "type": {
+              "const": "burglary",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "spell": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
               "const": "rage",
               "type": "string"
             }
@@ -4418,6 +4438,7 @@
     "AbilityTerrainBeamOperationDefinition": {
       "enum": [
         "jam-doors",
+        "disarm-traps",
         "destroy-traps-and-doors",
         "stone-to-mud"
       ],

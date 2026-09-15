@@ -787,6 +787,8 @@ fn spear_pierces_invulnerability_and_player_wraithform_but_other_mental_damage_d
     .status;
     shield.incoming_damage_percent = 0;
     game.entities[0].statuses.push(shield.clone());
+    // Isolate the protected branch from unrelated birth and shop RNG draws.
+    game.rng = RfbRng::seeded(0);
     cast(
         &mut game,
         "neural-blast",

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.burglars-handbook",
+  "nameKey": "item-demo-burglars-handbook-name",
+  "descriptionKey": "item-demo-burglars-handbook-description",
+  "realmId": "burglary",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.burglary-detect-traps",
+    "demo.ability.burglary-disarm-traps",
+    "demo.ability.burglary-detect-treasure",
+    "demo.ability.burglary-detect-objects",
+    "demo.ability.burglary-see-in-the-dark",
+    "demo.ability.burglary-tread-softly",
+    "demo.ability.burglary-minor-getaway",
+    "demo.ability.burglary-minor-trap"
+  ],
+  "tags": [
+    "burglary",
+    "spellbook"
+  ]
+}

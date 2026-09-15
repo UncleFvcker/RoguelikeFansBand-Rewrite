@@ -3598,7 +3598,8 @@ impl Game {
                         && (category == "guardian"
                             || !self.actor_is_pantheon_suppressed(definition))
                         && (category == "guardian"
-                            || !definition.tags.iter().any(|tag| tag == "guardian"))
+                            || (!definition.tags.iter().any(|tag| tag == "guardian")
+                                && !self.actor_kind_is_dungeon_guardian(&definition.id)))
                         && actor_answers_summons(definition)
                         && self.dungeon_allows_monster(&self.current_floor_id, definition, false)
                         && definition.allocation.as_ref().is_none_or(|allocation| {

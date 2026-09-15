@@ -322,6 +322,21 @@ impl Game {
         if trace.impact != trace.landing && self.index(trace.impact).is_some() {
             affected_positions.push(trace.impact);
         }
+        if operation == AbilityTerrainBeamOperationDefinition::DisarmTraps {
+            let chest_ids = self.items.iter().filter(|item| {
+                matches!(item.location, ItemLocation::Ground(p) if affected_positions.contains(&p))
+                    && item.chest.is_some_and(|chest| chest.difficulty > 0)
+            }).map(|item| item.id.clone()).collect::<Vec<_>>();
+            for id in chest_ids {
+                let item = self.items.iter_mut().find(|item| item.id == id).unwrap();
+                let chest = item.chest.as_mut().unwrap();
+                chest.difficulty = -chest.difficulty;
+                if let ItemLocation::Ground(p) = item.location {
+                    changed.insert(p);
+                }
+                self.identify_item_instance(&id, ItemIdentificationRequest::new(false));
+            }
+        }
         let mut replacements = Vec::new();
         for position in affected_positions {
             let Some(index) = self.index(position) else {
@@ -331,31 +346,50 @@ impl Game {
                 continue;
             };
             let target_id = match operation {
+                AbilityTerrainBeamOperationDefinition::DisarmTraps => terrain
+                    .trap
+                    .as_ref()
+                    .map(|t| t.disarm_to_terrain_id.as_str())
+                    .or_else(|| {
+                        terrain
+                            .tags
+                            .iter()
+                            .any(|t| t == "monster-trap")
+                            .then_some("demo.terrain.floor")
+                    })
+                    .or_else(|| {
+                        (terrain.open_to_terrain_id.is_some()
+                            && terrain
+                                .tags
+                                .iter()
+                                .any(|t| t == "door-locked" || t == "secret"))
+                        .then_some("demo.terrain.door-closed")
+                    }),
                 AbilityTerrainBeamOperationDefinition::JamDoors => {
-                    terrain.jam_to_terrain_id.as_ref()
+                    terrain.jam_to_terrain_id.as_deref()
                 }
                 AbilityTerrainBeamOperationDefinition::DestroyTrapsAndDoors => terrain
                     .trap
                     .as_ref()
-                    .map(|trap| &trap.disarm_to_terrain_id)
+                    .map(|trap| trap.disarm_to_terrain_id.as_str())
                     .or_else(|| {
                         terrain
                             .tags
                             .iter()
                             .any(|tag| tag == "door")
-                            .then_some(terrain.bash_to_terrain_id.as_ref())
+                            .then_some(terrain.bash_to_terrain_id.as_deref())
                             .flatten()
                     }),
                 AbilityTerrainBeamOperationDefinition::StoneToMud => terrain
                     .digging
                     .as_ref()
                     .filter(|digging| digging.resolution != TerrainDiggingResolution::Permanent)
-                    .and_then(|digging| digging.result_terrain_id.as_ref()),
+                    .and_then(|digging| digging.result_terrain_id.as_deref()),
             };
             if let Some(target_id) = target_id
-                && target_id != &terrain.id
+                && target_id != terrain.id
             {
-                replacements.push((position, terrain.id.clone(), target_id.clone()));
+                replacements.push((position, terrain.id.clone(), target_id.to_owned()));
             }
         }
 

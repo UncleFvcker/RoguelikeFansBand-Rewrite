@@ -69,6 +69,16 @@ impl Game {
         if definition.equipment_slot.as_deref() != Some("gloves") {
             return false;
         }
+        // object1.c: the thief glove Ego and Dogram remain cumbersome to Burglary.
+        if self.player_is_rogue()
+            && (ego::item_has_ego(&self.content, item, 136)
+                || self.item_is_fixed_artifact(item, 355))
+            && !self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::EasySpell)
+        {
+            return true;
+        }
         // obj_flags + shared pval, before knowledge filtering. Flag presence
         // matters: MAGIC_MASTERY exempts even a zero/negative pval glove.
         let mut flags = BTreeSet::new();

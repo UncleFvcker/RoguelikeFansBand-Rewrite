@@ -4673,6 +4673,7 @@ fn shared_museum_import_preserves_instances_and_knowledge_without_id_collisions(
         .find(|item| item.id == "test.ball")
         .unwrap()
         .captured_actor = Some(CapturedActor {
+        burglary_drops_remaining: None,
         kind_id: "demo.actor.horse".to_owned(),
         speed: 117,
         hp: 3,
@@ -6343,6 +6344,8 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             ("demo.item.yagyuu-bugeichou", 1_350),
             ("demo.item.handbook-of-hex", 135),
             ("demo.item.high-curse", 1_350),
+            ("demo.item.burglars-handbook", 135),
+            ("demo.item.thieving-ways", 1_350),
             ("demo.item.anger-management", 135),
             ("demo.item.northern-frights", 1_350),
             ("demo.item.black-mass", 1_350),

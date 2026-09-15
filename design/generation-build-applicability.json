@@ -5,7 +5,7 @@
   "reviewedAt": "2026-09-15",
   "codeBaseline": "5c5f6f38b + cbc851b8e + d873743d6 integration",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
-  "scope": "Covers 215 creation builds and five generation areas per build, including Rage-Mage. Evidence references are not test execution results.",
+  "scope": "Covers 216 creation builds and five generation areas per build, including Burglary Rogue. Evidence references are not test execution results.",
   "recordSemantics": {
     "implemented": "Reachable implementation exists; gapIds still block acceptance completion.",
     "no-special-difference": "Source and indirect consumers reviewed; shared path applies without an additional class generation branch.",
@@ -633,8 +633,8 @@
       "start": 2429,
       "end": 2453,
       "status": "implemented-current-builds",
-      "entry": "Mage and High Mage open; other source device classes unavailable",
-      "change": "Mage and High Mage device preference and eligible source device kinds; needs-book 1/10 precedes device 1/7",
+      "entry": "Mage, High Mage, Magic Eater, Necromancer and Rogue open",
+      "change": "Mage and High Mage device preference and eligible source device kinds; needs-book 1/10 precedes device 1/7; Rogue added with book-before-device draw order.",
       "consumer": "loot/allocation.rs; device generation and item use",
       "tests": "game::tests::items::b4_tailored_high_mage_device_is_usable_and_restores_its_charges; game::loot::allocation::tests::mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw; game::random_artifact::scheduling::tests::real_build_generated_devices_keep_use_costs_charges_and_continued_rng",
       "prerequisite": "other device classes and Monster pseudo class await real entries"
@@ -10116,6 +10116,67 @@
           "tests": [
             "crates/rfb-core/src/game/tests/rage.rs#rage_four_books_generate_in_the_full_pool_and_teach_after_pickup",
             "crates/rfb-core/src/game/tests/rage.rs#rage_all_32_formal_techniques_cast_and_resume_without_books"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.rogue",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Source object2.c: ordinary melee favorites; device-class membership enables eligible devices and the 1/7 preference after the shared needs-book 1/10. Four Burglary kinds 568-571 enter ordinary allocation; normal book discovery limits apply. Reviewed master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; docs/burglary-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_all_32_formal_techniques_cast_and_resume",
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_theft_and_death_share_one_saved_drop_budget",
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_birth_dexterity_capacity_and_thief_gloves_use_real_consumers",
+            "crates/rfb-core/src/game/loot/allocation.rs#mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Source ego.c uses existing Rogue ring, amulet and thief-glove preference. The formal Rogue ID reaches those predicates; caster encumbrance retains the thief-glove and Dogram exceptions. Reviewed master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; docs/burglary-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_all_32_formal_techniques_cast_and_resume",
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_theft_and_death_share_one_saved_drop_budget",
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_birth_dexterity_capacity_and_thief_gloves_use_real_consumers",
+            "crates/rfb-core/src/game/loot/allocation.rs#mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Source artifact.c Rogue bias has 50 percent override; existing random_artifact.rs already maps rogue to Rogue bias. Standard body and appraisal apply. Reviewed master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; docs/burglary-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_all_32_formal_techniques_cast_and_resume",
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_theft_and_death_share_one_saved_drop_budget",
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_birth_dexterity_capacity_and_thief_gloves_use_real_consumers",
+            "crates/rfb-core/src/game/loot/allocation.rs#mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "no-special-difference",
+          "reason": "Existing reachable fixed artifacts and rewards retain their ordinary pool eligibility and identity. The Thief glove Ego is exercised through the actual equipment and caster encumbrance consumer. Dogram (source artifact 355) is not a formal item; other Rogue realm entries remain outside this Burglary batch. Reviewed master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; docs/burglary-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_all_32_formal_techniques_cast_and_resume",
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_theft_and_death_share_one_saved_drop_budget",
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_birth_dexterity_capacity_and_thief_gloves_use_real_consumers",
+            "crates/rfb-core/src/game/loot/allocation.rs#mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Real book learning/casting, source Dexterity capacity and encumbrance, actual theft budget, traps, paid negotiation, equipment and saved continuation. Reviewed master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; docs/burglary-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_all_32_formal_techniques_cast_and_resume",
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_theft_and_death_share_one_saved_drop_budget",
+            "crates/rfb-core/src/game/tests/burglary.rs#burglary_birth_dexterity_capacity_and_thief_gloves_use_real_consumers",
+            "crates/rfb-core/src/game/loot/allocation.rs#mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw"
           ]
         }
       ],

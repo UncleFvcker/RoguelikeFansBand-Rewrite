@@ -4816,6 +4816,25 @@
             },
             "type": {
               "type": "string",
+              "const": "burglary"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
               "const": "rage"
             }
           },
@@ -7464,6 +7483,7 @@
       "type": "string",
       "enum": [
         "jam-doors",
+        "disarm-traps",
         "destroy-traps-and-doors",
         "stone-to-mud"
       ]
@@ -9224,6 +9244,40 @@
           },
           "required": [
             "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "burglary-escape"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cost": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "targetEntityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "burglary-negotiate"
+            }
+          },
+          "required": [
+            "type",
+            "targetEntityId",
+            "cost"
           ]
         },
         {

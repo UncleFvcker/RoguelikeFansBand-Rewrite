@@ -20,6 +20,7 @@ fn effect_can_affect_ground_items(effect: &AbilityEffectDefinition) -> bool {
     match effect {
         AbilityEffectDefinition::ChainLightning
         | AbilityEffectDefinition::Law { spell: 27 }
+        | AbilityEffectDefinition::Burglary { spell: 27 }
         | AbilityEffectDefinition::Music {
             spell: 2 | 16 | 22 | 30,
         }
@@ -594,7 +595,8 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::Music { spell }
                 | AbilityEffectDefinition::Hissatsu { spell }
                 | AbilityEffectDefinition::Hex { spell }
-                | AbilityEffectDefinition::Rage { spell } => *spell < 32,
+                | AbilityEffectDefinition::Rage { spell }
+                | AbilityEffectDefinition::Burglary { spell } => *spell < 32,
                 AbilityEffectDefinition::StopHex { spell } => spell.is_none_or(|s| s < 32),
                 AbilityEffectDefinition::SamuraiPosture { posture } => *posture <= 4,
                 AbilityEffectDefinition::TrumpSummoning { category } => matches!(
@@ -1451,6 +1453,15 @@ pub(super) fn validate_abilities(
                         })
                 } else {
                     ability.target.modes == [AbilityTargetModeDefinition::SelfTarget]
+                }
+            }
+            AbilityEffectDefinition::Burglary { spell } => {
+                if matches!(spell, 13) {
+                    item_target_rule
+                } else if matches!(spell, 1 | 9 | 10 | 11 | 17 | 18 | 25 | 26 | 27 | 31) {
+                    projectile_target_rule
+                } else {
+                    self_target_rule
                 }
             }
             AbilityEffectDefinition::Rage { spell } => {

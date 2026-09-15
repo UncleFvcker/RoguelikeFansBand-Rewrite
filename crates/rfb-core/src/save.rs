@@ -121,6 +121,7 @@ pub(crate) fn actor_from_spawn(
         cloned: false,
         no_destruction: false,
         casting_cooldown_remaining: 0,
+        burglary_drops_remaining: None,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
@@ -163,6 +164,7 @@ pub(crate) fn actor_from_runtime_spawn(
         cloned: false,
         no_destruction: false,
         casting_cooldown_remaining: 0,
+        burglary_drops_remaining: None,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
@@ -218,6 +220,7 @@ pub(crate) fn actor_from_player(
         cloned: false,
         no_destruction: false,
         casting_cooldown_remaining: 0,
+        burglary_drops_remaining: None,
         observed_player_resistances: BTreeMap::new(),
         statuses,
         resistances,
@@ -245,6 +248,29 @@ fn generated_item_serial(id: &str) -> Option<u64> {
     id.strip_prefix(GENERATED_ITEM_ID_PREFIX)?.parse().ok()
 }
 
+fn validate_burglary_drop_budget(
+    definition: &rfb_content::ActorDefinition,
+    remaining: Option<u32>,
+) -> Result<(), CoreError> {
+    if let Some(remaining) = remaining {
+        let maximum = definition.death_drop.as_ref().map_or(0, |drop| {
+            u32::from(drop.base_rolls)
+                + drop.chance_rolls.len() as u32
+                + drop
+                    .count_dice
+                    .iter()
+                    .map(|d| u32::from(d.dice) * u32::from(d.sides))
+                    .sum::<u32>()
+        });
+        if remaining > maximum {
+            return Err(CoreError::InvalidSave(
+                "monster burglary drop budget is invalid",
+            ));
+        }
+    }
+    Ok(())
+}
+
 pub(crate) fn actor_from_entity(
     entity: ActorSaveDto,
     content: &ContentCatalog,
@@ -252,6 +278,7 @@ pub(crate) fn actor_from_entity(
     let definition = content
         .actor(&entity.kind_id)
         .ok_or_else(|| CoreError::UnknownActor(entity.kind_id.clone()))?;
+    validate_burglary_drop_budget(definition, entity.burglary_drops_remaining)?;
     let appearance = if let Some(appearance_kind_id) = entity.appearance_kind_id.as_deref() {
         let appearance = content
             .actor(appearance_kind_id)
@@ -344,6 +371,7 @@ pub(crate) fn actor_from_entity(
         cloned: entity.cloned,
         no_destruction: entity.no_destruction,
         casting_cooldown_remaining: entity.casting_cooldown_remaining,
+        burglary_drops_remaining: entity.burglary_drops_remaining,
         observed_player_resistances,
         statuses,
         resistances,
@@ -747,7 +775,12 @@ fn captured_actor_from_save(
     {
         return Err(CoreError::InvalidSave("captured actor state is invalid"));
     }
+    validate_burglary_drop_budget(
+        content.actor(&value.kind_id).unwrap(),
+        value.burglary_drops_remaining,
+    )?;
     Ok(Some(CapturedActor {
+        burglary_drops_remaining: value.burglary_drops_remaining,
         kind_id: value.kind_id,
         speed: value.speed,
         hp: value.hp,
@@ -758,6 +791,7 @@ fn captured_actor_from_save(
 
 fn captured_actor_to_save(value: &CapturedActor) -> CapturedActorSaveDto {
     CapturedActorSaveDto {
+        burglary_drops_remaining: value.burglary_drops_remaining,
         kind_id: value.kind_id.clone(),
         speed: value.speed,
         hp: value.hp,
@@ -1187,6 +1221,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             cloned: entity.cloned,
             no_destruction: entity.no_destruction,
             casting_cooldown_remaining: entity.casting_cooldown_remaining,
+            burglary_drops_remaining: entity.burglary_drops_remaining,
             observed_player_resistances: entity
                 .observed_player_resistances
                 .iter()

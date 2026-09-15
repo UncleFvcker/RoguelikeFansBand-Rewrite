@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "blocksSight": false,
+  "descriptionKey": "terrain-demo-burglary-ultimate-trap-description",
+  "formatVersion": 1,
+  "glyph": ";",
+  "id": "demo.terrain.burglary-ultimate-trap",
+  "monsterDestroyToTerrainId": "demo.terrain.floor",
+  "nameKey": "terrain-demo-burglary-ultimate-trap-name",
+  "tags": [
+    "monster-trap"
+  ],
+  "walkable": true
+}

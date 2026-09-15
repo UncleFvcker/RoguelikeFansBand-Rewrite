@@ -381,6 +381,13 @@ pub(super) struct PlayerMeleeOutcome {
     pub(super) energy_cost_on_kill: Option<i32>,
 }
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum WeaponAttackMode {
+    Normal,
+    Single,
+    Assassinate,
+}
+
 impl Game {
     fn actor_can_be_angered_by_ranged_damage(&self, index: usize) -> bool {
         let Some(casting) = self
@@ -2109,7 +2116,7 @@ impl Game {
             None,
             false,
             Some(spell),
-            false,
+            WeaponAttackMode::Normal,
             events,
             changed,
             removed,
@@ -2127,10 +2134,38 @@ impl Game {
     ) -> Result<PlayerMeleeOutcome, CoreError> {
         let energy = self.player.energy_need;
         let result = self.resolve_player_melee_with_draconian_strike(
-            index, true, None, false, None, true, events, changed, removed,
+            index,
+            true,
+            None,
+            false,
+            None,
+            WeaponAttackMode::Single,
+            events,
+            changed,
+            removed,
         );
         self.player.energy_need = energy;
         result
+    }
+
+    pub(in crate::game) fn resolve_burglary_assassination(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed: &mut Vec<String>,
+    ) -> Result<PlayerMeleeOutcome, CoreError> {
+        self.resolve_player_melee_with_draconian_strike(
+            index,
+            true,
+            None,
+            false,
+            None,
+            WeaponAttackMode::Assassinate,
+            events,
+            changed,
+            removed,
+        )
     }
 
     fn hissatsu_damage_multiplier(
@@ -2238,7 +2273,7 @@ impl Game {
             None,
             false,
             None,
-            false,
+            WeaponAttackMode::Normal,
             events,
             changed,
             removed_entities,
@@ -2259,7 +2294,7 @@ impl Game {
             Some(mode),
             false,
             None,
-            false,
+            WeaponAttackMode::Normal,
             events,
             changed,
             removed_entities,
@@ -2279,7 +2314,7 @@ impl Game {
             None,
             true,
             None,
-            false,
+            WeaponAttackMode::Normal,
             events,
             changed,
             removed_entities,
@@ -2294,7 +2329,7 @@ impl Game {
         strike_mode: Option<DraconianStrikeModeDefinition>,
         revenge: bool,
         hissatsu: Option<u8>,
-        single_weapon_blow: bool,
+        weapon_attack_mode: WeaponAttackMode,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -2391,10 +2426,10 @@ impl Game {
         if train_weapon && self.equipped_melee_weapons().len() >= 2 {
             self.train_dual_wielding(definition.level);
         }
-        if single_weapon_blow {
+        if weapon_attack_mode != WeaponAttackMode::Normal {
             profiles.retain(|p| p.source_item_id.is_some());
         }
-        if revenge || single_weapon_blow {
+        if revenge || weapon_attack_mode != WeaponAttackMode::Normal {
             profiles.truncate(1);
             for profile in &mut profiles {
                 profile.attacks = 1;
@@ -2443,7 +2478,9 @@ impl Game {
                 });
                 continue;
             }
-            let assassination = artifact_index == Some(275) && sleeping_at_start;
+            let assassination = (artifact_index == Some(275)
+                || weapon_attack_mode == WeaponAttackMode::Assassinate)
+                && sleeping_at_start;
             if (profile_attacks > 0 || profile.source_item_id.is_none())
                 && self.duelist_auto_challenge(
                     index,
@@ -2643,6 +2680,35 @@ impl Game {
                     || stun
                         && self.rng.bounded(100) + 1
                             < u64::try_from(base_damage.max(0)).unwrap_or(u64::MAX);
+                if self.player_is_rogue() && profile.source_item_id.is_some() && attack_number == 1
+                {
+                    if sleeping_at_start {
+                        base_damage *= 3 + i32::from(self.progress.level / 20);
+                    } else if self.entities[index]
+                        .statuses
+                        .iter()
+                        .any(|s| s.kind_id == STATUS_FEAR)
+                    {
+                        base_damage = base_damage * 3 / 2;
+                    } else if self.player_has_status_kind("rfb.status.burglary-shadows")
+                        && !self.position_is_lit(self.player.position)
+                        && !definition.tags.iter().any(|t| t == "resist-all")
+                    {
+                        let mut power = i32::from(self.progress.level) * 6
+                            + (self.player_derived_stats().stealth_skill.value + 10) * 4;
+                        if self.player_has_equipped_aggravation() {
+                            power /= 2;
+                        }
+                        if definition.level > u32::from(self.progress.level).pow(2) / 20 + 10 {
+                            power /= 3;
+                        }
+                        if self.rng.bounded(power.max(1) as u64) > u64::from(definition.level + 20)
+                        {
+                            base_damage =
+                                base_damage * (5 + i32::from(self.progress.level) * 2 / 25) / 2;
+                        }
+                    }
+                }
                 let mut ordinary_drain = base_damage;
                 // cmd1.c applies VORPAL to the weapon dice before adding to_d.
                 // Fixed kinds and rolled weapon traits share this branch.
