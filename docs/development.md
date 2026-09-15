@@ -30,7 +30,8 @@ npm ci
 | 前端资源 | `npm run build:ui` | `web/dist/`；命令包含 typecheck |
 | 独立调试程序 | `npm run build:standalone:debug` | `target/debug/rfb-tauri.exe` |
 | 优化后的独立程序 | `npm run build -- --no-bundle` | `target/release/rfb-tauri.exe` |
-| Windows 安装包 | `npm run build` | `target/release/bundle/nsis/` |
+
+当前 Tauri 配置关闭安装包生成；发布使用独立 EXE，不创建 NSIS。
 
 这些 Tauri 构建会生成并嵌入前端资源。普通 `cargo build -p rfb-tauri` 的开发配置可能仍引用 Vite，不能用来证明已经产出可分发的独立程序。若设置了 `CARGO_TARGET_DIR`，输出位置随之改变。
 
@@ -61,6 +62,6 @@ rustup target add aarch64-linux-android
 | 正式内容 lock 不匹配导致 Rust 构建失败 | 先按[内容开发](content-development.md)完成 source/lock 同步；不要移除 build.rs 校验 |
 | Vite 端口 1420 被占用 | 检查正在运行的开发任务，结束所属实例；不要随意终止无关进程 |
 
-游戏存档使用 Tauri 的应用本地数据目录下 `saves/`，日志使用应用日志目录，诊断记录位于其 `diagnostics/`。实际位置由 [native_store / desktop_log_path](../web/src-tauri/src/lib.rs)决定，不在仓库缓存目录里。
+桌面角色存档使用 EXE 旁的 `userdata/saves/`，关联档案使用 `userdata/profile/`；复制或备份时保留整个 `userdata/`，见[游戏内存档](builtin-save-system.md)。全局偏好独立使用应用本地数据目录中的 `preferences.json`。日志使用应用日志目录，诊断记录位于其 `diagnostics/`；实际路径由[原生层](../web/src-tauri/src/lib.rs)及[偏好模块](../web/src-tauri/src/preferences.rs)决定。
 
 不需要为了文档或普通规则修改构建桌面、Android。检查范围见[验证与契约](testing.md)。
