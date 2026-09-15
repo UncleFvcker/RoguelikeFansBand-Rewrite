@@ -64,6 +64,8 @@ Q1–Q5统一验证已完成：核心有效1826项（初轮1821通过、5处修�
 
 ## 版本与源内容
 
+`v0.0.1` Windows x64 便携发布：使用 `npm run build -- --no-bundle` 构建优化版，EXE 文件／产品版本均为0.0.1。ZIP 根目录仅有 `rfb-tauri.exe` 与必要许可／来源说明的 `LICENSES/`；内容、界面和图块已内嵌，首次运行创建 `userdata/`。不生成NSIS，不附带开发存档、调试符号、测试资料或额外源码包。对本次优化EXE的独立副本完成五组游戏内存档验证，包含重启继续、目录搬迁、备份恢复与写入失败保护；报告为 `test-results/native-saves/report.json`，运行时错误为空。下载见 [v0.0.1 Release](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.1)。
+
 随机荒野地牢：[RD1–RD6](../design/random-wilderness-dungeons-plan-20260912.md#统一验收结果2026-09-13)已完成本计划范围的实现与验收。四类、119 个独立深度、六种正式入口地图进入分块生成和保存；30 个源候选保留完整权重，抽到未实现模板时不重抽。随机入场、上楼离开、楼层传送、实例重建、无普通目的地的向外召回及普通目的地保留均有行为证据。品质上限、隧道／外墙／森林材料、湖泊／破坏／洞窟互斥和河流条件已接入。核心全量首轮 1,748 通过／9 失败，修复后 26 项定向复验通过，最终有效 1,757 通过／5 项原有 ignored；内容 175、协议 7、保存 2、回放 9、前端 61、原生接口拒绝 2 项及 Clippy／生成物／lock 检查通过。26 条契约仅刷新已解释的状态哈希并复验。桌面四类完成进入、深度显示、上楼、再次入场新实例、召回返回和 20 次原生保存恢复；另从海洋召回检查点续跑通过。普通 Tauri standalone 已验证启动、三阶段准备 IPC 拒绝及正常退出。完整源房间模板／湖泊 vault 几何及普通荒野遭遇仍属保留适配，桌面准备不代表自然遭遇频率或战斗难度通关；证据与产物见计划。
 
 特殊行走 `-＋方向` 与停留拾取已接入，支持次数、重复上一命令和取消；“默认拾取物品”默认关闭、可保存，特殊行走仅翻转本次。核心 97、前端 152、协议 7、保存 2、回放 12 项及 26 条契约通过；原版多叠拾取菜单、easy_disarm／跳过陷阱及桌面 K5 仍保留，见[操作说明](keyboard-controls.md#特殊行走与停留)。
@@ -80,7 +82,7 @@ Q1–Q5统一验证已完成：核心有效1826项（初轮1821通过、5处修�
 
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
-| 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
+| 应用版本 | 0.0.1 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
 | 协议 | 1.294；联合操作／宠物／偏好、领域／职业及安格班任务投影，绑定／Schema 已生成并检查通过 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | 147；联合角色状态与行为上下文，契约差异已解释、刷新并验证 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload / 容器 | 14 / 42 / 1；联合领域、宠物和任务状态，角色负载不含全局偏好，从新开发存档开始 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |

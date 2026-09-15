@@ -11,7 +11,7 @@ import { setPreferences } from "./preferences.mjs";
 import { runNativeSaves } from "./native-saves.e2e.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url));
-const builtExecutable = path.join(root, "target/debug/rfb-tauri.exe");
+const builtExecutable = process.env.RFB_STANDALONE_EXE ?? path.join(root, "target/debug/rfb-tauri.exe");
 const nativeSaves = process.argv.includes("--native-saves");
 const terrainColors = process.argv.includes("--terrain-colors");
 const directory = path.join(root, nativeSaves ? "test-results/native-saves" : terrainColors ? "test-results/terrain-colors" : "test-results/global-preferences");

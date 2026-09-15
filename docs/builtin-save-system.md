@@ -25,4 +25,6 @@ S1–S6 使用现有原生存档格式与备份机制实现，不建立另一套
 
 S1–S5 实现和 S6 用例准备结束后统一验证：相关前端用例、原生存储／馆藏／成绩用例、普通 Tauri standalone 构建，以及 `node e2e/global-preferences-standalone.e2e.mjs --native-saves`。桌面脚本使用独立复制的普通 EXE、新角色和正常游戏操作；仅损坏恢复与写入失败场景有明确文件故障注入。报告在 `test-results/native-saves/`。
 
+验证优化发布版时，先在 `web` 执行 `npm run build -- --no-bundle`，再将环境变量 `RFB_STANDALONE_EXE` 设为 `target/release/rfb-tauri.exe` 的绝对路径，执行同一存档脚本；未设置时仍使用普通调试版。
+
 S6 结果（2026-09-15）：前端全量 446 项、原生 34 项通过；实机发现并修复行动后保存按钮未刷新，以及失败提示缺失原因两处问题，保存提示定向 7 项通过。最终 standalone 构建含类型检查通过，桌面五组场景全部通过、无未捕获运行时错误。最后一组确认保存失败后原文件不变且游戏继续运行，随后 Ctrl+X 保存并正常退出。脚本恢复测试前的全局偏好；旧 AppData 角色数据不参与测试。
