@@ -1068,6 +1068,7 @@ impl Game {
         let reality_change_ticks = payload.player.reality_change_ticks;
         let music = payload.player.music.clone();
         let hex = payload.player.hex.clone();
+        let rage_mana_sustained = payload.player.rage_mana_sustained;
         let samurai = payload.player.samurai;
         if reality_change_ticks > 35 {
             return Err(CoreError::InvalidSave(
@@ -1566,6 +1567,7 @@ impl Game {
             reality_change_ticks,
             music,
             hex,
+            rage_mana_sustained,
             samurai,
             pending_mutation_direction,
             pending_ability_direction,
@@ -1613,6 +1615,9 @@ impl Game {
         game.validate_loaded_state()?;
         if !game.samurai_state_is_valid() {
             return Err(CoreError::InvalidSave("invalid Samurai state"));
+        }
+        if !game.player_is_rage_mage() && game.rage_mana_sustained {
+            return Err(CoreError::InvalidSave("invalid Rage state"));
         }
         if !game.hex_state_is_valid() {
             return Err(CoreError::InvalidSave("invalid Hex state"));
@@ -1886,6 +1891,7 @@ impl Game {
         player.reality_change_ticks = self.reality_change_ticks;
         player.music = self.music.clone();
         player.hex = self.hex.clone();
+        player.rage_mana_sustained = self.rage_mana_sustained;
         player.samurai = self.samurai;
         player.pending_mutation_direction = self.pending_mutation_direction.clone();
         player.pending_ability_direction = self.pending_ability_direction.clone();

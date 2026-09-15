@@ -712,6 +712,7 @@ impl Game {
         };
         let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
         let damage = application.damage;
+        self.rage_armor_of_fury(source_entity_id, ability_id, damage.applied);
         self.damage_player_inventory(source_kind_id, damage_type, false, damage.applied, events);
         if application.fatal {
             events.push(DomainEvent::PlayerDied {

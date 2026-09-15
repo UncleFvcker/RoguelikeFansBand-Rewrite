@@ -220,6 +220,18 @@ fn ability_program_input_accepts_step(
             _ => false,
         };
     }
+    if let AbilityEffectDefinition::Rage { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::Item => matches!(spell, 24 | 28),
+            AbilityProgramInputDefinition::CastTarget => {
+                matches!(spell, 0 | 2 | 10 | 12 | 22 | 23 | 30 | 31)
+            }
+            AbilityProgramInputDefinition::SelfTarget => {
+                *spell < 32 && !matches!(spell, 0 | 2 | 10 | 12 | 22 | 23 | 24 | 28 | 30 | 31)
+            }
+            _ => false,
+        };
+    }
     if let AbilityEffectDefinition::Hex { spell } = effect {
         return match input {
             AbilityProgramInputDefinition::Item => matches!(spell, 5 | 10 | 18 | 20 | 26),

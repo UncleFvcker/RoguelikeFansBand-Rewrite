@@ -4965,6 +4965,9 @@ impl Game {
         request: ResourceRestorationRequest<'_>,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
+        if self.player_is_rage_mage() {
+            return false;
+        }
         let outcome = apply_resource_restoration(&mut self.resources, request);
         if outcome.recovered > 0 {
             self.mark_item_aware(source_kind_id);
@@ -5002,6 +5005,15 @@ impl Game {
         status_kind_id: &str,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
+        if source_kind_id == "demo.item.boldness-potion" && self.player_is_rage_mage() {
+            let pool = self
+                .resources
+                .get_mut("demo.resource.mana")
+                .expect("Rage pool");
+            let amount = pool.current.min(200);
+            pool.current -= amount;
+            self.resolve_item_healing(source_kind_id, amount as i32, events);
+        }
         let outcome = apply_status_removal(
             &mut self.player.statuses,
             StatusRemovalRequest::new(status_kind_id),

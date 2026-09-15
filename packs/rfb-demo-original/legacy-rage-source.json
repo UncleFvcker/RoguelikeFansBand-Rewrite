@@ -1,0 +1,280 @@
+{
+  "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+  "sourceFiles": [
+    "src/ragemage.c",
+    "src/tables.c",
+    "src/py_birth.c",
+    "src/combat.c",
+    "src/effects.c",
+    "src/xtra1.c",
+    "src/xtra2.c",
+    "src/spells1.c",
+    "src/gf.c",
+    "src/monspell.c",
+    "src/object2.c",
+    "lib/edit/s_info.txt",
+    "lib/edit/k_info.txt",
+    "src/kind_name_zh.inc"
+  ],
+  "spells": [
+    {
+      "slot": 0,
+      "abilityId": "demo.ability.rage-shout",
+      "name": "怒吼",
+      "minimumLevel": 1,
+      "resourceCost": 2,
+      "baseFailurePercent": 30
+    },
+    {
+      "slot": 1,
+      "abilityId": "demo.ability.rage-detect-magical-foes",
+      "name": "探测魔法敌人",
+      "minimumLevel": 2,
+      "resourceCost": 2,
+      "baseFailurePercent": 25
+    },
+    {
+      "slot": 2,
+      "abilityId": "demo.ability.rage-smash",
+      "name": "猛击",
+      "minimumLevel": 3,
+      "resourceCost": 3,
+      "baseFailurePercent": 30
+    },
+    {
+      "slot": 3,
+      "abilityId": "demo.ability.rage-evasive-leap",
+      "name": "规避跳跃",
+      "minimumLevel": 5,
+      "resourceCost": 5,
+      "baseFailurePercent": 25
+    },
+    {
+      "slot": 4,
+      "abilityId": "demo.ability.rage-light-area",
+      "name": "照亮区域",
+      "minimumLevel": 5,
+      "resourceCost": 5,
+      "baseFailurePercent": 35
+    },
+    {
+      "slot": 5,
+      "abilityId": "demo.ability.rage-focus-rage",
+      "name": "专注狂怒",
+      "minimumLevel": 7,
+      "resourceCost": 0,
+      "baseFailurePercent": 50
+    },
+    {
+      "slot": 6,
+      "abilityId": "demo.ability.rage-rage-sustenance",
+      "name": "狂怒维持",
+      "minimumLevel": 8,
+      "resourceCost": 10,
+      "baseFailurePercent": 50
+    },
+    {
+      "slot": 7,
+      "abilityId": "demo.ability.rage-veterans-blessing",
+      "name": "老兵祝福",
+      "minimumLevel": 12,
+      "resourceCost": 6,
+      "baseFailurePercent": 35
+    },
+    {
+      "slot": 8,
+      "abilityId": "demo.ability.rage-crude-mapping",
+      "name": "粗略绘图",
+      "minimumLevel": 15,
+      "resourceCost": 8,
+      "baseFailurePercent": 45
+    },
+    {
+      "slot": 9,
+      "abilityId": "demo.ability.rage-resist-disenchantment",
+      "name": "抵抗解除附魔",
+      "minimumLevel": 18,
+      "resourceCost": 18,
+      "baseFailurePercent": 50
+    },
+    {
+      "slot": 10,
+      "abilityId": "demo.ability.rage-awesome-blow",
+      "name": "惊骇一击",
+      "minimumLevel": 20,
+      "resourceCost": 30,
+      "baseFailurePercent": 55
+    },
+    {
+      "slot": 11,
+      "abilityId": "demo.ability.rage-spell-reaction",
+      "name": "法术反击",
+      "minimumLevel": 22,
+      "resourceCost": 15,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 12,
+      "abilityId": "demo.ability.rage-greater-shout",
+      "name": "高等怒吼",
+      "minimumLevel": 23,
+      "resourceCost": 21,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 13,
+      "abilityId": "demo.ability.rage-whirlwind-attack",
+      "name": "旋风攻击",
+      "minimumLevel": 25,
+      "resourceCost": 18,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 14,
+      "abilityId": "demo.ability.rage-resist-curses",
+      "name": "抵抗诅咒",
+      "minimumLevel": 27,
+      "resourceCost": 20,
+      "baseFailurePercent": 55
+    },
+    {
+      "slot": 15,
+      "abilityId": "demo.ability.rage-detect-magic",
+      "name": "探测魔法",
+      "minimumLevel": 28,
+      "resourceCost": 23,
+      "baseFailurePercent": 70
+    },
+    {
+      "slot": 16,
+      "abilityId": "demo.ability.rage-berserk",
+      "name": "狂暴",
+      "minimumLevel": 10,
+      "resourceCost": 12,
+      "baseFailurePercent": 35
+    },
+    {
+      "slot": 17,
+      "abilityId": "demo.ability.rage-sterility",
+      "name": "绝育术",
+      "minimumLevel": 25,
+      "resourceCost": 16,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 18,
+      "abilityId": "demo.ability.rage-barbaric-resistance",
+      "name": "野蛮抗性",
+      "minimumLevel": 26,
+      "resourceCost": 20,
+      "baseFailurePercent": 80
+    },
+    {
+      "slot": 19,
+      "abilityId": "demo.ability.rage-summon-horde",
+      "name": "召唤部落",
+      "minimumLevel": 28,
+      "resourceCost": 22,
+      "baseFailurePercent": 55
+    },
+    {
+      "slot": 20,
+      "abilityId": "demo.ability.rage-armor-of-fury",
+      "name": "狂怒之甲",
+      "minimumLevel": 32,
+      "resourceCost": 28,
+      "baseFailurePercent": 75
+    },
+    {
+      "slot": 21,
+      "abilityId": "demo.ability.rage-force-brand",
+      "name": "原力附魔",
+      "minimumLevel": 35,
+      "resourceCost": 55,
+      "baseFailurePercent": 70
+    },
+    {
+      "slot": 22,
+      "abilityId": "demo.ability.rage-dispel-magic",
+      "name": "驱散魔法",
+      "minimumLevel": 38,
+      "resourceCost": 30,
+      "baseFailurePercent": 50
+    },
+    {
+      "slot": 23,
+      "abilityId": "demo.ability.rage-mana-clash",
+      "name": "法力碰撞",
+      "minimumLevel": 40,
+      "resourceCost": 60,
+      "baseFailurePercent": 85
+    },
+    {
+      "slot": 24,
+      "abilityId": "demo.ability.rage-barbarian-lore",
+      "name": "野蛮人传说",
+      "minimumLevel": 30,
+      "resourceCost": 25,
+      "baseFailurePercent": 75
+    },
+    {
+      "slot": 25,
+      "abilityId": "demo.ability.rage-earthquake",
+      "name": "地震术",
+      "minimumLevel": 32,
+      "resourceCost": 15,
+      "baseFailurePercent": 65
+    },
+    {
+      "slot": 26,
+      "abilityId": "demo.ability.rage-greater-focus-rage",
+      "name": "专注*狂怒*",
+      "minimumLevel": 35,
+      "resourceCost": 0,
+      "baseFailurePercent": 90
+    },
+    {
+      "slot": 27,
+      "abilityId": "demo.ability.rage-spell-turning",
+      "name": "法术反转",
+      "minimumLevel": 38,
+      "resourceCost": 60,
+      "baseFailurePercent": 95
+    },
+    {
+      "slot": 28,
+      "abilityId": "demo.ability.rage-shatter-device",
+      "name": "粉碎装置",
+      "minimumLevel": 40,
+      "resourceCost": 55,
+      "baseFailurePercent": 80
+    },
+    {
+      "slot": 29,
+      "abilityId": "demo.ability.rage-dispel-curse",
+      "name": "驱散诅咒",
+      "minimumLevel": 42,
+      "resourceCost": 50,
+      "baseFailurePercent": 75
+    },
+    {
+      "slot": 30,
+      "abilityId": "demo.ability.rage-anti-magic-ray",
+      "name": "反魔法射线",
+      "minimumLevel": 43,
+      "resourceCost": 70,
+      "baseFailurePercent": 80
+    },
+    {
+      "slot": 31,
+      "abilityId": "demo.ability.rage-rage-strike",
+      "name": "狂怒打击",
+      "minimumLevel": 47,
+      "resourceCost": 0,
+      "baseFailurePercent": 80
+    }
+  ],
+  "buildIds": [
+    "demo.build.rage-mage"
+  ]
+}

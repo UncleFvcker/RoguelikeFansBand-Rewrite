@@ -1054,6 +1054,8 @@ impl Game {
                 }
             }
         }
+        let rage = self.player_is_rage_mage();
+        let max_hp = self.effective_player_max_hp();
         let transcendence = self.player_has_status_kind(STATUS_TRANSCENDENCE);
         let mut mana = self.resources.get_mut("demo.resource.mana");
         let necromancy_repose = self.player.statuses.iter().any(|s| {
@@ -1066,6 +1068,12 @@ impl Game {
             player_damage_percent,
             ignores_suffocation,
             |player, damage, fatality_policy| {
+                if rage && let Some(pool) = mana.as_deref_mut() {
+                    pool.current = pool
+                        .current
+                        .saturating_add(Self::rage_damage_mana(damage.applied, player.hp, max_hp))
+                        .min(pool.maximum);
+                }
                 commit_final_player_damage(
                     player,
                     mana.as_deref_mut(),
@@ -1114,6 +1122,7 @@ impl Game {
             self.reconcile_player_body_slots_for_current_form();
         }
         if invulnerability_expiring {
+            self.rage_after_action(STANDARD_ACTION_COST);
             spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
         }
         if player_status_expired {

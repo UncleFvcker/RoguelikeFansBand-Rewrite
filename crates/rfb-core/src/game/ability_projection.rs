@@ -490,6 +490,7 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
         AbilityEffectDefinition::SamuraiPosture { posture } => {
             AbilityEffectSpecDto::SamuraiPosture { posture: *posture }
         }
+        AbilityEffectDefinition::Rage { spell } => AbilityEffectSpecDto::Rage { spell: *spell },
         AbilityEffectDefinition::StopSinging => AbilityEffectSpecDto::StopSinging,
         AbilityEffectDefinition::Hex { spell } => AbilityEffectSpecDto::Hex { spell: *spell },
         AbilityEffectDefinition::StopHex { spell } => {

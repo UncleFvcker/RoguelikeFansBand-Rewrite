@@ -3352,7 +3352,9 @@ fn p86d_camelot_entrance_recall_conquest_and_reward_round_trip() {
         panic!("Arthur's reward must be on the ground");
     };
     // The normal drop consumer scatters when the death square already holds loot.
-    assert!(crate::game::projectile_geometry::rfb_distance(reward_position, guardian_position) <= 3);
+    assert!(
+        crate::game::projectile_geometry::rfb_distance(reward_position, guardian_position) <= 3
+    );
     assert_eq!(mirror_shield.quality, ItemQualityDto::Ordinary);
     assert!(mirror_shield.affix_ids.is_empty());
 

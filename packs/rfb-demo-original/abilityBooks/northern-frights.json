@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.northern-frights",
+  "nameKey": "item-demo-northern-frights-name",
+  "descriptionKey": "item-demo-northern-frights-description",
+  "realmId": "rage",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.rage-crude-mapping",
+    "demo.ability.rage-resist-disenchantment",
+    "demo.ability.rage-awesome-blow",
+    "demo.ability.rage-spell-reaction",
+    "demo.ability.rage-greater-shout",
+    "demo.ability.rage-whirlwind-attack",
+    "demo.ability.rage-resist-curses",
+    "demo.ability.rage-detect-magic"
+  ],
+  "tags": [
+    "rage",
+    "spellbook"
+  ]
+}

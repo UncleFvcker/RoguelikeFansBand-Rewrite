@@ -5,7 +5,7 @@
   "reviewedAt": "2026-09-15",
   "codeBaseline": "5c5f6f38b + cbc851b8e + d873743d6 integration",
   "entrySource": "web/src/character-creation.ts CREATION_BUILDS / PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS",
-  "scope": "Covers 212 creation builds and five generation areas per build, including the Bard. Evidence references are not test execution results.",
+  "scope": "Covers 215 creation builds and five generation areas per build, including Rage-Mage. Evidence references are not test execution results.",
   "recordSemantics": {
     "implemented": "Reachable implementation exists; gapIds still block acceptance completion.",
     "no-special-difference": "Source and indirect consumers reviewed; shared path applies without an additional class generation branch.",
@@ -646,9 +646,9 @@
       "end": 2570,
       "status": "implemented-current-builds",
       "entry": "70 open builds; real body slots; birth Tomte knit cap",
-      "change": "slot/favorite/book filters; full materialized glove flags and pval reject caster encumbrance; Duelist excludes shields and body armor heavier than 200",
+      "change": "slot/favorite/book filters; full materialized glove flags and pval reject caster encumbrance; Duelist excludes shields and body armor heavier than 200 Rage-Mage always needs books: first 1/3 preference then 1/10; Tailored Rage books use found<8.",
       "consumer": "loot/allocation.rs; mod.rs slot helper; player_abilities.rs; inventory.rs",
-      "tests": "game::loot::allocation::tests::; game::tests::items::tomte_tailored_acquirement_filters_headgear_by_birth_race_only; game::tests::items::b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng",
+      "tests": "game::loot::allocation::tests::; game::tests::items::tomte_tailored_acquirement_filters_headgear_by_birth_race_only; game::tests::items::b4_tailored_glove_egos_share_casting_encumbrance_and_rejection_keeps_rng; crates/rfb-core/src/game/loot/allocation.rs#rage_books_keep_eight_discoveries_and_ordered_preference_draws",
       "prerequisite": "unavailable identities/body forms remain separate; physical books retain the B1 one-instance representation"
     },
     {
@@ -658,10 +658,10 @@
       "end": 2645,
       "status": "implemented-current-builds",
       "entry": "source Great book selection",
-      "change": "current classes reject advanced books after two discoveries",
+      "change": "Rage-Mage permits eight discoveries; other classes retain two.",
       "consumer": "loot/allocation.rs; item_knowledge.rs",
-      "tests": "game::loot::allocation::tests::good_and_great_distinguish_damaged_bases_ammo_consumables_and_books; game::tests::book_discovery::",
-      "prerequisite": "Rage Mage limit 8 awaits real class; book stacking outside B1 representation"
+      "tests": "game::loot::allocation::tests::good_and_great_distinguish_damaged_bases_ammo_consumables_and_books; game::tests::book_discovery::; crates/rfb-core/src/game/loot/allocation.rs#rage_books_keep_eight_discoveries_and_ordered_preference_draws",
+      "prerequisite": "Book stacking remains outside B1 representation."
     },
     {
       "id": "good-book-count",
@@ -670,10 +670,10 @@
       "end": 2750,
       "status": "implemented-current-builds",
       "entry": "source Good book selection",
-      "change": "current classes reject advanced books after two discoveries",
+      "change": "Rage-Mage permits eight discoveries; other classes retain two.",
       "consumer": "loot/allocation.rs; item_knowledge.rs",
-      "tests": "game::loot::allocation::tests::good_and_great_distinguish_damaged_bases_ammo_consumables_and_books; game::tests::book_discovery::",
-      "prerequisite": "Rage Mage limit 8 awaits real class; book stacking outside B1 representation"
+      "tests": "game::loot::allocation::tests::good_and_great_distinguish_damaged_bases_ammo_consumables_and_books; game::tests::book_discovery::; crates/rfb-core/src/game/loot/allocation.rs#rage_books_keep_eight_discoveries_and_ordered_preference_draws",
+      "prerequisite": "Book stacking remains outside B1 representation."
     },
     {
       "id": "ring-allocation-weight",
@@ -709,9 +709,9 @@
       "end": 3493,
       "status": "implemented-current-builds",
       "entry": "High Mage/Paladin realms and Mage/Ranger current first/second realms",
-      "change": "realm and persistent discoveries decide book preference independently of inventory quantity; changing the second realm changes eligible books without resetting discoveries",
+      "change": "realm and persistent discoveries decide book preference independently of inventory quantity; changing the second realm changes eligible books without resetting discoveries Rage-Mage always needs books: first 1/3 preference then 1/10; Tailored Rage books use found<8.",
       "consumer": "loot/allocation.rs; item_knowledge.rs; study/cast",
-      "tests": "game::loot::allocation::tests::tailored_preference_draws_follow_class_then_book_then_device; game::tests::items::b4_tailored_death_books_are_counted_studied_cast_and_restored; game::tests::book_discovery::; game::tests::town::book_discovery_shop_groups_and_repurchase_do_not_count_as_found; game::loot::allocation::tests::mage_realm_change_updates_book_need_and_actual_allocation_without_resetting_discovery",
+      "tests": "game::loot::allocation::tests::tailored_preference_draws_follow_class_then_book_then_device; game::tests::items::b4_tailored_death_books_are_counted_studied_cast_and_restored; game::tests::book_discovery::; game::tests::town::book_discovery_shop_groups_and_repurchase_do_not_count_as_found; game::loot::allocation::tests::mage_realm_change_updates_book_need_and_actual_allocation_without_resetting_discovery; crates/rfb-core/src/game/loot/allocation.rs#rage_books_keep_eight_discoveries_and_ordered_preference_draws",
       "prerequisite": "other source classes require real realm/study entries"
     },
     {
@@ -733,9 +733,9 @@
       "end": 3665,
       "status": "implemented-current-builds",
       "entry": "All open classes; Ranger has the current-realms book draw without an extra bow/device preference",
-      "change": "bows 1/5; lances 1/7; ordered books/devices preference; source fallback category width",
+      "change": "bows 1/5; lances 1/7; ordered books/devices preference; source fallback category width Rage-Mage always needs books: first 1/3 preference then 1/10; Tailored Rage books use found<8.",
       "consumer": "Acquirement -> loot/allocation.rs -> loot.rs -> item use/equip/save",
-      "tests": "game::loot::allocation::tests::; game::tests::items::b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper; game::tests::items::b4_tailored_death_books_are_counted_studied_cast_and_restored; game::tests::acquirement::",
+      "tests": "game::loot::allocation::tests::; game::tests::items::b4_tailored_launchers_equip_shoot_and_restore_for_archer_and_sniper; game::tests::items::b4_tailored_death_books_are_counted_studied_cast_and_restored; game::tests::acquirement::; crates/rfb-core/src/game/loot/allocation.rs#rage_books_keep_eight_discoveries_and_ordered_preference_draws",
       "prerequisite": "unavailable classes, Monster body hooks and Draconian Metamorphosis need real entries"
     },
     {
@@ -10065,6 +10065,57 @@
           "tests": [
             "crates/rfb-core/src/game/tests/hex.rs#hex_all_32_formal_spells_cast_and_resume",
             "crates/rfb-core/src/game/tests/hex.rs#hex_patience_and_revenge_store_actual_damage_and_prompt_at_expiry"
+          ]
+        }
+      ],
+      "gapIds": []
+    },
+    {
+      "buildId": "demo.build.rage-mage",
+      "areas": [
+        {
+          "review": "base-allocation-tailored",
+          "status": "implemented",
+          "reason": "Source object2.c: Rage 1/3 book preference then shared 1/10; needs-book always true; Good/Great eight discoveries and Tailored Rage found<8. Four source kinds 564-567 enter the ordinary pool. Reviewed master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; docs/rage-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/rage.rs#rage_four_books_generate_in_the_full_pool_and_teach_after_pickup",
+            "crates/rfb-core/src/game/tests/rage.rs#rage_all_32_formal_techniques_cast_and_resume_without_books"
+          ]
+        },
+        {
+          "review": "ego-negative",
+          "status": "no-special-difference",
+          "reason": "Source ego.c contains no direct Rage-Mage override. Standard body, ordinary melee favorites and existing curse consumers apply; no device-class preference. Reviewed master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; docs/rage-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/rage.rs#rage_four_books_generate_in_the_full_pool_and_teach_after_pickup",
+            "crates/rfb-core/src/game/tests/rage.rs#rage_all_32_formal_techniques_cast_and_resume_without_books"
+          ]
+        },
+        {
+          "review": "random-artifact",
+          "status": "no-special-difference",
+          "reason": "Source artifact.c has no Rage-Mage class branch; existing default bias and standard equipment valuation apply. Reviewed master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; docs/rage-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/rage.rs#rage_four_books_generate_in_the_full_pool_and_teach_after_pickup",
+            "crates/rfb-core/src/game/tests/rage.rs#rage_all_32_formal_techniques_cast_and_resume_without_books"
+          ]
+        },
+        {
+          "review": "fixed-artifact-reward",
+          "status": "no-special-difference",
+          "reason": "object1.c grants Stress Ball activation specifically to Rage-Mage, but that fixed identity is not imported. Existing reachable artifacts retain shared generation/reward behavior; this batch adds no Stress Ball claim. Reviewed master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; docs/rage-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/rage.rs#rage_four_books_generate_in_the_full_pool_and_teach_after_pickup",
+            "crates/rfb-core/src/game/tests/rage.rs#rage_all_32_formal_techniques_cast_and_resume_without_books"
+          ]
+        },
+        {
+          "review": "use-save",
+          "status": "implemented",
+          "reason": "Consumed books, learned-without-book casting, damage-driven mana and action drain enter real consumers and saved state. Reviewed master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c; docs/rage-realm.md.",
+          "tests": [
+            "crates/rfb-core/src/game/tests/rage.rs#rage_four_books_generate_in_the_full_pool_and_teach_after_pickup",
+            "crates/rfb-core/src/game/tests/rage.rs#rage_all_32_formal_techniques_cast_and_resume_without_books"
           ]
         }
       ],

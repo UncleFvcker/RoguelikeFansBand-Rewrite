@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill-set.schema.json",
+  "formatVersion": 1,
+  "id": "demo.skill-set.rage-mage",
+  "entries": [
+    {
+      "skillId": "demo.skill.device",
+      "base": 20,
+      "growthPerTenLevels": 8
+    },
+    {
+      "skillId": "demo.skill.disarming",
+      "base": 20,
+      "growthPerTenLevels": 7
+    },
+    {
+      "skillId": "demo.skill.melee",
+      "base": 50,
+      "growthPerTenLevels": 15
+    },
+    {
+      "skillId": "demo.skill.perception",
+      "base": 2,
+      "growthPerTenLevels": 0
+    },
+    {
+      "skillId": "demo.skill.ranged",
+      "base": 30,
+      "growthPerTenLevels": 15
+    },
+    {
+      "skillId": "demo.skill.saving-throw",
+      "base": 40,
+      "growthPerTenLevels": 15
+    },
+    {
+      "skillId": "demo.skill.search",
+      "base": 12,
+      "growthPerTenLevels": 0
+    },
+    {
+      "skillId": "demo.skill.stealth",
+      "base": -1,
+      "growthPerTenLevels": 0
+    }
+  ]
+}

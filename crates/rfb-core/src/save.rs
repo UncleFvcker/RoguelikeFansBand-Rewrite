@@ -1053,6 +1053,7 @@ pub(crate) fn player_to_save(
         reality_change_ticks: 0,
         music: rfb_protocol::MusicStateDto::default(),
         hex: Default::default(),
+        rage_mana_sustained: false,
         samurai: Default::default(),
         pending_mutation_direction: None,
         pending_ability_direction: None,

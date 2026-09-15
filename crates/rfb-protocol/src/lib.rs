@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.273";
+pub const PROTOCOL_VERSION: &str = "1.274";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 29;
 
@@ -1652,6 +1652,9 @@ pub enum AbilityEffectSpecDto {
         spell: u8,
     },
     StopSinging,
+    Rage {
+        spell: u8,
+    },
     Hex {
         spell: u8,
     },
@@ -4047,6 +4050,7 @@ pub struct PlayerDto {
     pub reality_change_ticks: u8,
     pub music: MusicStateDto,
     pub hex: HexStateDto,
+    pub rage_mana_sustained: bool,
     pub samurai: SamuraiStateDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
@@ -5677,6 +5681,7 @@ pub struct PlayerSaveDto {
     pub reality_change_ticks: u8,
     pub music: MusicStateDto,
     pub hex: HexStateDto,
+    pub rage_mana_sustained: bool,
     pub samurai: SamuraiStateDto,
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
@@ -6895,6 +6900,7 @@ mod tests {
                 reality_change_ticks: 0,
                 music: MusicStateDto::default(),
                 hex: HexStateDto::default(),
+                rage_mana_sustained: false,
                 samurai: SamuraiStateDto::default(),
                 pending_mutation_direction: None,
                 pending_ability_direction: None,
@@ -7222,6 +7228,7 @@ mod tests {
             reality_change_ticks: 0,
             music: MusicStateDto::default(),
             hex: HexStateDto::default(),
+            rage_mana_sustained: false,
             samurai: SamuraiStateDto::default(),
             pending_mutation_direction: None,
             pending_ability_direction: None,

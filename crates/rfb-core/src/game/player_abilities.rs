@@ -901,6 +901,7 @@ impl Game {
         let capacity_percent = i32::from(profile.capacity_percent)
             .saturating_add(racial_capacity_percent)
             .saturating_add(self.player_equipment_bonuses().spell_capacity_bonus * 5)
+            .saturating_add(if self.player_is_rage_mage() { 15 } else { 0 })
             .max(0);
         maximum.saturating_mul(u32::try_from(capacity_percent).unwrap_or(u32::MAX)) / 100
     }
@@ -1170,6 +1171,9 @@ impl Game {
         ability_id: &str,
     ) -> Result<(), &'static str> {
         self.study_single_player_ability(book_item_id, ability_id)?;
+        if self.player_is_rage_mage() {
+            self.consume_one_item(book_item_id);
+        }
         if self.player_is_samurai() {
             let book = self.study_book_id(book_item_id).expect("validated book");
             let ids = self
@@ -1389,6 +1393,7 @@ impl Game {
             || self.player_is_bard()
             || self.player_is_samurai()
             || self.player_uses_hex()
+            || self.player_is_rage_mage()
         {
             return Err("manual-forgetting-unavailable");
         }
@@ -1615,6 +1620,11 @@ impl Game {
         self.ability_learning_order.clear();
         self.ability_progress.clear();
         self.refresh_player_ability_state();
+        if self.player_is_rage_mage() {
+            for pool in self.resources.values_mut() {
+                pool.current = 0;
+            }
+        }
     }
 
     pub(super) fn refresh_player_ability_state(&mut self) {
@@ -1820,7 +1830,10 @@ impl Game {
         progress: AbilityProgress,
     ) -> u32 {
         let player = Self::player_ability_parameters(ability);
-        if matches!(ability.effect, AbilityEffectDefinition::Hissatsu { .. }) {
+        if matches!(
+            ability.effect,
+            AbilityEffectDefinition::Hissatsu { .. } | AbilityEffectDefinition::Rage { .. }
+        ) {
             return player.resource_cost;
         }
         let proficiency = u64::from(progress.proficiency.min(SPELL_EXP_MASTER));
@@ -1985,6 +1998,35 @@ impl Game {
         if matches!(ability.effect, AbilityEffectDefinition::Hissatsu { .. }) {
             return 0;
         }
+        if matches!(ability.effect, AbilityEffectDefinition::Rage { .. }) {
+            let p = Self::player_ability_parameters(ability);
+            let index = usize::from(
+                self.effective_player_attributes()
+                    .index(AttributeKind::Strength)
+                    .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
+            );
+            let easy = i32::from(
+                self.player_equipment_passives()
+                    .contains(&EquipmentPassive::EasySpell),
+            );
+            let stun = self
+                .player
+                .statuses
+                .iter()
+                .filter(|s| s.kind_id == STATUS_STUN)
+                .map(|s| i32::from(s.intensity).min(100) / 2)
+                .max()
+                .unwrap_or(0);
+            let chance = (i32::from(p.base_failure_percent)
+                - 3 * i32::from(self.progress.level.saturating_sub(p.minimum_level))
+                - 3 * (i32::from(RFB_MAGIC_STAT_ADJUSTMENT[index]) - 1)
+                + self.player_spell_failure_modifier_percent()
+                - 4 * easy)
+                .max(i32::from(RFB_MAGIC_FAILURE_MINIMUM[index]));
+            return ((chance + stun).min(95) - easy)
+                .max(self.player_spell_failure_minimum_percent())
+                .clamp(0, 100) as u8;
+        }
         self.profile_failure_percent(
             profile,
             ability,
@@ -2118,6 +2160,7 @@ impl Game {
             loop {
                 let hp_before = self.player.hp;
                 let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
+                self.rage_after_action(STANDARD_ACTION_COST);
                 spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
                 self.advance_until_player_ready(
                     true,

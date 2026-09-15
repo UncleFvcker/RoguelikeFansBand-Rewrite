@@ -829,6 +829,7 @@ impl Game {
                         self.effective_player_spell_power_bonus(),
                     ) as u16)
                 }
+                "demo.ability.rage-shatter-device" => Some(self.progress.level * 4),
                 "demo.ability.chaos-wonder" => Some(self.progress.level * 2),
                 _ => None,
             };
@@ -1104,6 +1105,7 @@ impl Game {
                     damage,
                     FatalityPolicy::AtOrBelowZero,
                 );
+                self.rage_blood_lust(application.damage.applied);
                 commit_damage_application(&mut self.entities[actor_index], &application);
                 self.entities[actor_index].alerted = true;
                 let trace = ProjectileTrace {

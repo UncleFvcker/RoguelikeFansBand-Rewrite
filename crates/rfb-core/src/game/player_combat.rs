@@ -1220,6 +1220,7 @@ impl Game {
         let damage = self.apply_metal_monster_resistance(index, damage);
         let application =
             plan_damage_application(&self.entities[index], damage, FatalityPolicy::AtOrBelowZero);
+        self.rage_blood_lust(application.damage.applied);
         commit_damage_application(&mut self.entities[index], &application);
         events.push(DomainEvent::ProjectileHit {
             target_kind_id: target_kind_id.clone(),
@@ -1314,6 +1315,7 @@ impl Game {
                 damage,
                 FatalityPolicy::AtOrBelowZero,
             );
+            self.rage_blood_lust(application.damage.applied);
             commit_damage_application(&mut self.entities[index], &application);
             events.push(DomainEvent::ProjectileHit {
                 target_kind_id: definition.id.clone(),
@@ -1347,7 +1349,7 @@ impl Game {
         })
     }
 
-    fn knockback_projectile_target(
+    pub(in crate::game) fn knockback_projectile_target(
         &mut self,
         actor_id: &str,
         remaining_path: &[Position],
@@ -1389,11 +1391,24 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<DamageOutcome, CoreError> {
+        let raw_damage = if ability_id == "demo.ability.rage-mana-clash" {
+            raw_damage
+                * i32::from(
+                    self.actor_runtime_definition(&self.entities[index])
+                        .and_then(|d| d.monster_casting.as_ref())
+                        .map_or(0, |c| c.frequency_percent.min(66)),
+                )
+                / 100
+        } else {
+            raw_damage
+        };
         // GF_MISSILE and GF_DISP_ALL bypass armor and physical resistance.
         let resistance = ((damage_type == DamageType::Physical
             && matches!(
                 ability_id,
                 "demo.item-activation.one-ring"
+                    | "demo.ability.rage-rage-strike"
+                    | "demo.ability.rage-mana-clash"
                     | "rfb.ability.race.android-ray-gun"
                     | "rfb.ability.race.android-blaster"
                     | "rfb.ability.race.android-bazooka"
@@ -1542,6 +1557,7 @@ impl Game {
         );
         let application =
             plan_damage_application(&self.entities[index], damage, FatalityPolicy::AtOrBelowZero);
+        self.rage_blood_lust(application.damage.applied);
         commit_damage_application(&mut self.entities[index], &application);
         events.push(DomainEvent::AbilityHit {
             ability_id: ability_id.to_owned(),
@@ -1845,6 +1861,7 @@ impl Game {
                     damage,
                     FatalityPolicy::AtOrBelowZero,
                 );
+                self.rage_blood_lust(application.damage.applied);
                 commit_damage_application(&mut self.entities[index], &application);
                 events.push(DomainEvent::ItemThrowHit {
                     source_kind_id: source_kind_id.clone(),
@@ -2092,9 +2109,25 @@ impl Game {
             None,
             false,
             Some(spell),
+            false,
             events,
             changed,
             removed,
+        );
+        self.player.energy_need = energy;
+        result
+    }
+
+    pub(in crate::game) fn resolve_rage_single_blow(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed: &mut Vec<String>,
+    ) -> Result<PlayerMeleeOutcome, CoreError> {
+        let energy = self.player.energy_need;
+        let result = self.resolve_player_melee_with_draconian_strike(
+            index, true, None, false, None, true, events, changed, removed,
         );
         self.player.energy_need = energy;
         result
@@ -2205,6 +2238,7 @@ impl Game {
             None,
             false,
             None,
+            false,
             events,
             changed,
             removed_entities,
@@ -2225,6 +2259,7 @@ impl Game {
             Some(mode),
             false,
             None,
+            false,
             events,
             changed,
             removed_entities,
@@ -2244,6 +2279,7 @@ impl Game {
             None,
             true,
             None,
+            false,
             events,
             changed,
             removed_entities,
@@ -2258,6 +2294,7 @@ impl Game {
         strike_mode: Option<DraconianStrikeModeDefinition>,
         revenge: bool,
         hissatsu: Option<u8>,
+        single_weapon_blow: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -2354,7 +2391,10 @@ impl Game {
         if train_weapon && self.equipped_melee_weapons().len() >= 2 {
             self.train_dual_wielding(definition.level);
         }
-        if revenge {
+        if single_weapon_blow {
+            profiles.retain(|p| p.source_item_id.is_some());
+        }
+        if revenge || single_weapon_blow {
             profiles.truncate(1);
             for profile in &mut profiles {
                 profile.attacks = 1;
@@ -2785,6 +2825,7 @@ impl Game {
                     damage,
                     FatalityPolicy::AtOrBelowZero,
                 );
+                self.rage_blood_lust(application.damage.applied);
                 commit_damage_application(&mut self.entities[index], &application);
                 events.push(profile.hit_event(&target_kind, damage));
                 self.wake_entity_after_damage(index, damage.applied, events);
@@ -3726,6 +3767,7 @@ impl Game {
                     damage,
                     FatalityPolicy::AtOrBelowZero,
                 );
+                self.rage_blood_lust(application.damage.applied);
                 commit_damage_application(&mut self.entities[target_index], &application);
                 changed.insert(target_position);
                 self.wake_entity_after_damage(target_index, damage.applied, events);

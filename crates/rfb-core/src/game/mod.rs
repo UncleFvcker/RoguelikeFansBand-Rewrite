@@ -237,7 +237,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 137;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 138;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -896,6 +896,7 @@ pub struct Game {
     reality_change_ticks: u8,
     music: rfb_protocol::MusicStateDto,
     hex: rfb_protocol::HexStateDto,
+    rage_mana_sustained: bool,
     samurai: rfb_protocol::SamuraiStateDto,
     pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pending_ability_direction: Option<PendingAbilityDirectionDto>,
@@ -2603,6 +2604,7 @@ impl Game {
                 events.extend(self.resolve_wilderness_terrain_hazard(self.player.position));
             }
             if advances_world {
+                if self.player_has_status_kind(STATUS_BERSERK) && events.iter().any(|e|matches!(e,DomainEvent::AbilityCastSucceeded {resolution} if resolution.ability_id=="demo.ability.rage-evasive-leap")) { action_cost=30; }
                 if astral_guide_blink.as_ref().is_some_and(|ability_id| {
                     events.iter().any(|event| {
                         matches!(
@@ -2677,6 +2679,7 @@ impl Game {
                         },
                     );
                 } else {
+                    self.rage_after_action(action_cost);
                     spend_energy(&mut self.player.energy_need, action_cost);
                     self.advance_until_player_ready(
                         false,
@@ -5148,6 +5151,9 @@ fn slay_target_matches(target: SlayTarget, definition: &rfb_content::ActorDefini
 }
 
 fn actor_matches_category(definition: &rfb_content::ActorDefinition, category: &str) -> bool {
+    if category == "magical" {
+        return definition.monster_casting.is_some();
+    }
     if category == "mind" {
         return definition.role == ActorRole::Monster
             && !definition.tags.iter().any(|tag| tag == "empty-mind");

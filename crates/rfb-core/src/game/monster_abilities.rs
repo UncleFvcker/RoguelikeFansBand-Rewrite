@@ -1815,6 +1815,106 @@ impl Game {
         (resolutions, affected_positions)
     }
 
+    fn rage_turn_monster_spell(
+        &mut self,
+        source_index: usize,
+        plan: &MonsterAbilityPlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed: &mut Vec<String>,
+    ) -> Option<MonsterAbilityPlanResolution> {
+        if !self.player_has_status_kind("rfb.status.rage-spell-turning")
+            || self.monster_ability_is_innate(&plan.ability.id)
+        {
+            return None;
+        }
+        let trace = match &plan.target {
+            MonsterAbilityTargetPlan::Projectile { target, trace }
+            | MonsterAbilityTargetPlan::Area { target, trace, .. }
+            | MonsterAbilityTargetPlan::Beam { target, trace, .. }
+            | MonsterAbilityTargetPlan::Cone { target, trace, .. }
+                if target.is_player() =>
+            {
+                trace
+            }
+            _ => return None,
+        };
+        let (dice, sides, bonus, kind, radius) = match plan.ability.effect {
+            AbilityEffectDefinition::Damage {
+                damage_dice,
+                damage_sides,
+                damage_bonus,
+                damage_type,
+            }
+            | AbilityEffectDefinition::BeamDamage {
+                damage_dice,
+                damage_sides,
+                damage_bonus,
+                damage_type,
+                ..
+            } => (damage_dice, damage_sides, damage_bonus, damage_type, 0),
+            AbilityEffectDefinition::AreaDamage {
+                damage_dice,
+                damage_sides,
+                damage_bonus,
+                damage_type,
+                radius,
+                ..
+            }
+            | AbilityEffectDefinition::ConeDamage {
+                damage_dice,
+                damage_sides,
+                damage_bonus,
+                damage_type,
+                radius,
+            } => (damage_dice, damage_sides, damage_bonus, damage_type, radius),
+            _ => return None,
+        };
+        let berserk = self.player_has_status_kind(STATUS_BERSERK);
+        if self.rng.bounded(if berserk { 100 } else { 200 })
+            >= u64::from(self.progress.level) + if berserk { 0 } else { 20 }
+        {
+            return None;
+        }
+        let source = self.entities[source_index].clone();
+        let mut path = trace.traversed.clone();
+        path.reverse();
+        path.retain(|p| *p != self.player.position);
+        if path.last() != Some(&source.position) {
+            path.push(source.position);
+        }
+        let raw = self.roll_damage(dice, sides) + i32::from(bonus);
+        let raw = self.scale_monster_damage(&source.id, raw);
+        self.resolve_player_area_damage_with_base_policy(
+            &plan.ability.id,
+            path,
+            false,
+            kind.into(),
+            radius,
+            None,
+            raw,
+            plan.ability.affects_ground_items,
+            true,
+            false,
+            events,
+            changed,
+            removed,
+        )
+        .expect("turned projection");
+        Some(MonsterAbilityPlanResolution {
+            target_entity_id: source.id,
+            target_kind_id: source.kind_id,
+            affected_positions: vec![source.position],
+            summon: None,
+            effects: vec![AbilityEffectResolutionDto::Skipped {
+                effect_index: 0,
+                reason: AbilityEffectSkipReasonDto::Saved,
+            }],
+            targets: Vec::new(),
+            trace: Some(trace.clone()),
+        })
+    }
+
     pub(super) fn resolve_monster_ability_plan(
         &mut self,
         source_index: usize,
@@ -1824,7 +1924,12 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> MonsterAbilityPlanResolution {
-        if (!self.monster_ability_is_innate(&plan.ability.id) && self.hex_barrier(source_index, 30))
+        if (!self.monster_ability_is_innate(&plan.ability.id)
+            && (self.entities[source_index]
+                .statuses
+                .iter()
+                .any(|s| s.kind_id == "rfb.status.rage-anti-magic")
+                || self.hex_barrier(source_index, 30)))
             || (matches!(
                 plan.ability.effect,
                 AbilityEffectDefinition::TeleportSelf { .. }
@@ -1842,6 +1947,11 @@ impl Game {
                 targets: Vec::new(),
                 trace: None,
             };
+        }
+        if let Some(result) =
+            self.rage_turn_monster_spell(source_index, plan, events, changed, removed_entities)
+        {
+            return result;
         }
         let source_entity_id = self.entities[source_index].id.clone();
         let player_hp_before = self.player.hp;
@@ -2495,6 +2605,42 @@ impl Game {
                 }
             }
         };
+        if self.player_has_status_kind("rfb.status.rage-spell-reaction")
+            && !self.player_has_status_kind(STATUS_HASTE)
+            && (resolution.target_entity_id == self.player.id
+                || matches!(
+                    plan.ability.effect,
+                    AbilityEffectDefinition::DarkenRoom
+                        | AbilityEffectDefinition::AggravateMonsters
+                ))
+            && plan
+                .ability
+                .effect
+                .ordered_effects()
+                .iter()
+                .any(|e| match e {
+                    AbilityEffectDefinition::ApplyStatus { status_kind_id, .. } => matches!(
+                        status_kind_id.as_str(),
+                        "rfb.status.blindness"
+                            | "rfb.status.confusion"
+                            | "rfb.status.paralysis"
+                            | "rfb.status.fear"
+                            | "rfb.status.slow"
+                    ),
+                    AbilityEffectDefinition::DarkenRoom
+                    | AbilityEffectDefinition::AggravateMonsters
+                    | AbilityEffectDefinition::TeleportLevel
+                    | AbilityEffectDefinition::AnimateDead { .. } => true,
+                    _ => false,
+                })
+        {
+            let status = crate::game::monster_combat::melee_status(
+                STATUS_HASTE,
+                4,
+                "demo.ability.rage-spell-reaction",
+            );
+            apply_status(&mut self.player.statuses, status);
+        }
         let player_damage = player_hp_before
             .saturating_sub(self.player.hp)
             .clamp(0, 200);

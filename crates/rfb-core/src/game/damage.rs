@@ -95,6 +95,7 @@ impl Game {
         if damage.applied > 0 {
             self.fishing_direction = None;
         }
+        self.rage_fueled(damage.applied);
         let transcendence = self
             .player
             .statuses

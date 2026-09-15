@@ -121,6 +121,7 @@ impl Game {
             reality_change_ticks: self.reality_change_ticks,
             music: self.music.clone(),
             hex: self.hex.clone(),
+            rage_mana_sustained: self.rage_mana_sustained,
             samurai: self.samurai,
             pending_mutation_direction: self.pending_mutation_direction.clone(),
             pending_ability_direction: self.pending_ability_direction.clone(),
@@ -157,6 +158,7 @@ impl Game {
                 .chain(self.music_status().iter())
                 .chain(self.samurai_status().iter())
                 .chain(self.hex_status().iter())
+                .chain(self.rage_status().iter())
                 .map(crate::effect::StatusInstance::to_dto)
                 .collect(),
             confusing_strike_ready: self.confusing_strike_ready,
@@ -593,6 +595,7 @@ impl Game {
                     Some("anti-magic")
                 } else if source == AbilitySourceDto::Learned
                     && !self.player_is_samurai()
+                    && !self.player_is_rage_mage()
                     && self.player_has_status_kind(STATUS_BERSERK)
                 {
                     Some("berserk")
@@ -616,6 +619,7 @@ impl Game {
                     Some("cooldown")
                 } else if source == AbilitySourceDto::Learned
                     && !self.player_is_samurai()
+                    && !self.player_is_rage_mage()
                     && book_item_id.is_none()
                 {
                     Some("book-unavailable")
@@ -764,6 +768,7 @@ impl Game {
                         && !self.player_is_bard()
                         && !self.player_uses_hex()
                         && !self.player_is_samurai()
+                        && !self.player_is_rage_mage()
                         && !self.player_uses_dual_realm_learning(),
                     can_cast: unavailable_reason.is_none(),
                     unavailable_reason: unavailable_reason.map(str::to_owned),

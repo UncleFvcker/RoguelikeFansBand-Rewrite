@@ -323,6 +323,7 @@ impl Game {
                 damage,
                 FatalityPolicy::AtOrBelowZero,
             );
+            self.rage_blood_lust(application.damage.applied);
             commit_damage_application(&mut self.entities[index], &application);
             changed.insert(target_position);
             self.wake_entity_after_damage(index, damage.applied, events);
@@ -446,6 +447,7 @@ impl Game {
                 damage,
                 FatalityPolicy::AtOrBelowZero,
             );
+            self.rage_blood_lust(application.damage.applied);
             commit_damage_application(&mut self.entities[index], &application);
             changed.insert(target_position);
             self.wake_entity_after_damage(index, damage.applied, events);
@@ -559,6 +561,7 @@ impl Game {
             damage,
             FatalityPolicy::AtOrBelowZero,
         );
+        self.rage_blood_lust(application.damage.applied);
         commit_damage_application(&mut self.entities[target_index], &application);
         changed.insert(target_position);
         self.wake_entity_after_damage(target_index, damage.applied, events);
@@ -638,6 +641,7 @@ impl Game {
                 damage,
                 FatalityPolicy::AtOrBelowZero,
             );
+            self.rage_blood_lust(application.damage.applied);
             commit_damage_application(&mut self.entities[index], &application);
             changed.insert(target_position);
             self.wake_entity_after_damage(index, damage.applied, events);
@@ -729,6 +733,7 @@ impl Game {
                 damage,
                 FatalityPolicy::AtOrBelowZero,
             );
+            self.rage_blood_lust(application.damage.applied);
             commit_damage_application(&mut self.entities[index], &application);
             changed.insert(target_position);
             self.wake_entity_after_damage(index, damage.applied, events);

@@ -1541,3 +1541,16 @@ status-hex-active = Hex: { $spells }
 status-hex-cursed-armor = Hex: cursed armor bonus
 status-hex-interrupted = Hex interrupted: { $spells }
 item-hex-curse-confirm = Curse this equipment?
+
+realm-rage-name = Rage
+
+rage-self-damage-confirm = This technique costs life and can kill you. Cast it?
+
+status-rage-mage-name = Rage-Mage
+status-rage-resist-disenchantment-name = Resist Disenchantment
+status-rage-resist-curses-name = Resist Curses
+status-rage-spell-reaction-name = Spell Reaction
+status-rage-armor-of-fury-name = Armor of Fury
+status-rage-spell-turning-name = Spell Turning
+status-rage-detect-magical-name = Detect Magical Foes
+status-rage-anti-magic-name = Anti-Magic Ray

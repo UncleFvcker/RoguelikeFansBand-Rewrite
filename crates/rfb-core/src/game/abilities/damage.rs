@@ -1444,6 +1444,7 @@ impl Game {
                 damage,
                 FatalityPolicy::AtOrBelowZero,
             );
+            self.rage_blood_lust(application.damage.applied);
             commit_damage_application(&mut self.entities[index], &application);
             self.entities[index].alerted = true;
             changed.insert(self.entities[index].position);
@@ -1833,6 +1834,7 @@ impl Game {
                 damage,
                 FatalityPolicy::AtOrBelowZero,
             );
+            self.rage_blood_lust(application.damage.applied);
             commit_damage_application(&mut self.entities[target_index], &application);
             changed.insert(application.position);
             events.push(DomainEvent::AbilityHit {

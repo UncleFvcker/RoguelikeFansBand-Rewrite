@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.rage-mage",
+  "nameKey": "build-demo-rage-mage-name",
+  "descriptionKey": "build-demo-rage-mage-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.rage-mage",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.rage-mage-player",
+  "firstRealmId": "rage",
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.anger-management",
+      "quantity": 1
+    }
+  ],
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": [
+    "caster",
+    "rage-mage",
+    "rfb-compatibility"
+  ]
+}

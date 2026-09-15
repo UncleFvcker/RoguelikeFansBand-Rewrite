@@ -217,6 +217,7 @@ impl Game {
         }
         if source == AbilitySourceDto::Learned
             && !matches!(ability.effect, AbilityEffectDefinition::Hissatsu { .. })
+            && !matches!(ability.effect, AbilityEffectDefinition::Rage { .. })
             && self.player_has_status_kind(STATUS_BERSERK)
         {
             events.push(DomainEvent::AbilityCastUnavailable {
@@ -281,6 +282,7 @@ impl Game {
                 } else if !self.profile_supports_ability(profile, ability_id) {
                     Some("ability-not-supported")
                 } else if !self.player_is_samurai()
+                    && !self.player_is_rage_mage()
                     && self.ability_book_item_id(profile, ability_id).is_none()
                 {
                     Some("book-unavailable")
@@ -519,6 +521,9 @@ impl Game {
         let resource_after = resource_before.saturating_sub(resource_paid);
         let book_spell =
             source == AbilitySourceDto::Learned && self.player_uses_dual_realm_learning();
+        if !succeeded && let AbilityEffectDefinition::Rage { spell } = ability.effect {
+            self.rage_failure(spell);
+        }
         let progress_after = if source != AbilitySourceDto::Learned {
             mutation_progress
         } else {

@@ -4816,6 +4816,25 @@
             },
             "type": {
               "type": "string",
+              "const": "rage"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
               "const": "hex"
             }
           },
@@ -14859,6 +14878,9 @@
             }
           ]
         },
+        "rageManaSustained": {
+          "type": "boolean"
+        },
         "realityChangeTicks": {
           "type": "integer",
           "format": "uint8",
@@ -14948,6 +14970,7 @@
         "fasting",
         "music",
         "hex",
+        "rageManaSustained",
         "samurai",
         "virtues"
       ]

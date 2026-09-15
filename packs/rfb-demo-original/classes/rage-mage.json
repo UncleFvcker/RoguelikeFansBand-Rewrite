@@ -1,0 +1,456 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "dualWieldingMaximum": 6000,
+  "id": "demo.class.rage-mage",
+  "nameKey": "class-demo-rage-mage-name",
+  "descriptionKey": "class-demo-rage-mage-description",
+  "modifiers": {
+    "strength": 3,
+    "intelligence": -2,
+    "wisdom": -2,
+    "dexterity": -2,
+    "constitution": 2,
+    "charisma": 1
+  },
+  "lifePercent": 106,
+  "experiencePercent": 150,
+  "baseHp": 6,
+  "skillSetId": "demo.skill-set.rage-mage",
+  "weaponProficiency": {
+    "defaultInitial": 2000,
+    "defaultMaximum": 8000,
+    "overrides": {
+      "demo.item.awl-pike": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.ball-and-chain": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.baseball-bat": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.basillard": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.bastard-sword": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.battle-axe": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.beaked-axe": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.blade-of-chaos": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.bo-staff": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.broad-axe": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.broad-spear": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.broad-sword": {
+        "initial": 4000,
+        "maximum": 6000
+      },
+      "demo.item.broken-dagger": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.broken-sword": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.claymore": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.club": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.cutlass": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.dagger": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.death-scythe": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.diamond-edge": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.dragon-fang": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.dwarven-pick": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.dwarven-shovel": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.espadon": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.executioners-sword": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.falchion": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.falcon-sword": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.fauchard": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.fishingpole": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.flail": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.flamberge": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.glaive": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.gnomish-shovel": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.great-axe": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.great-hammer": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.guisarme": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.halberd": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.hatchet": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.heavy-crossbow": {
+        "initial": 2000,
+        "maximum": 4000
+      },
+      "demo.item.heavy-lance": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.jo-staff": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.katana": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.khopesh": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.lajatang": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.lance": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.lead-filled-mace": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.light-crossbow": {
+        "initial": 2000,
+        "maximum": 4000
+      },
+      "demo.item.lochaber-axe": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.long-bow": {
+        "initial": 2000,
+        "maximum": 4000
+      },
+      "demo.item.long-sword": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.lucerne-hammer": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.mace-of-disruption": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.mace": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.main-gauche": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.mattock": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.mighty-hammer": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.morning-star": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.naginata": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.ninjato": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.no-dachi": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.nunchaku": {
+        "initial": 2000,
+        "maximum": 4000
+      },
+      "demo.item.orcish-pick": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.pick": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.pike": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.quarterstaff": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.rapier": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.rune-sword": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.sabre": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.scimitar": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.scythe-of-slicing": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.scythe": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.short-bow": {
+        "initial": 2000,
+        "maximum": 4000
+      },
+      "demo.item.short-sword": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.shovel": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.sickle": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.sling": {
+        "initial": 2000,
+        "maximum": 4000
+      },
+      "demo.item.small-sword": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.spear": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.tanto": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.tetsubo": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.three-piece-rod": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.trident": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.trifurcate-spear": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.tulwar": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.two-handed-flail": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.two-handed-sword": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.wakizashi": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.war-hammer": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.whip": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.wizardstaff": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.zweihander": {
+        "initial": 2000,
+        "maximum": 6000
+      }
+    }
+  },
+  "ridingProficiency": {
+    "initial": 0,
+    "maximum": 4000
+  },
+  "petUpkeepDivisor": 40,
+  "usesSpellScrolls": true,
+  "castingProfile": {
+    "resourceId": "demo.resource.mana",
+    "castingAttribute": "strength",
+    "capacityFormula": "rfb-mana",
+    "baseCapacity": 0,
+    "capacityPerLevel": 0,
+    "capacityPerAttributeIndex": 0,
+    "capacityPercent": 100,
+    "learningFormula": "linear",
+    "failureFormula": "rfb-magic",
+    "baseLearningCapacity": 32,
+    "learningCapacityPerLevel": 0,
+    "learningCapacityPerAttributeIndex": 0,
+    "learningCapacityCap": 32,
+    "resourceRecoveryPercent": 0,
+    "minimumFailurePercent": 0,
+    "beamChanceLevelMultiplier": 0,
+    "beamChanceLevelDivisor": 1,
+    "spellDamageBonusBase": 0,
+    "spellDamageBonusPerLevel": 0,
+    "spellDamageBonusLevelDivisor": 5,
+    "encumbrance": {
+      "maximumWeightTenthsPound": 1000,
+      "weaponWeightPercent": 20,
+      "penaltyWeightTenthsPound": 1200,
+      "gloveEncumbrance": false
+    },
+    "realmProfiles": [
+      {
+        "realmId": "rage",
+        "abilityBookIds": [
+          "demo.ability-book.anger-management",
+          "demo.ability-book.northern-frights",
+          "demo.ability-book.the-sound-and-the-fury",
+          "demo.ability-book.dire-ire"
+        ]
+      }
+    ]
+  },
+  "abilities": [],
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.broad-sword",
+      "quantity": 1,
+      "equipped": true
+    },
+    {
+      "itemKindId": "demo.item.soft-leather-armour",
+      "quantity": 1,
+      "equipped": true
+    }
+  ],
+  "specialItemTags": [
+    "spellbook"
+  ],
+  "tags": [
+    "caster",
+    "rage-mage",
+    "rfb-compatibility"
+  ]
+}

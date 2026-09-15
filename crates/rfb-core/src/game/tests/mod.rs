@@ -105,4 +105,5 @@ mod hissatsu;
 mod law;
 mod music;
 mod necromancy;
+mod rage;
 mod trump;

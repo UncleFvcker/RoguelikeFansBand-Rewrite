@@ -593,7 +593,8 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::Law { spell }
                 | AbilityEffectDefinition::Music { spell }
                 | AbilityEffectDefinition::Hissatsu { spell }
-                | AbilityEffectDefinition::Hex { spell } => *spell < 32,
+                | AbilityEffectDefinition::Hex { spell }
+                | AbilityEffectDefinition::Rage { spell } => *spell < 32,
                 AbilityEffectDefinition::StopHex { spell } => spell.is_none_or(|s| s < 32),
                 AbilityEffectDefinition::SamuraiPosture { posture } => *posture <= 4,
                 AbilityEffectDefinition::TrumpSummoning { category } => matches!(
@@ -1452,6 +1453,15 @@ pub(super) fn validate_abilities(
                     ability.target.modes == [AbilityTargetModeDefinition::SelfTarget]
                 }
             }
+            AbilityEffectDefinition::Rage { spell } => {
+                if matches!(spell, 24 | 28) {
+                    item_target_rule
+                } else if matches!(spell, 0 | 2 | 10 | 12 | 22 | 23 | 30 | 31) {
+                    projectile_target_rule
+                } else {
+                    self_target_rule
+                }
+            }
             AbilityEffectDefinition::Hex { spell } => {
                 if matches!(spell, 5 | 10 | 18 | 20 | 26) {
                     item_target_rule
@@ -1647,7 +1657,12 @@ pub(super) fn validate_abilities(
             || ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Direction];
         let valid_player = ability.player.as_ref().is_none_or(|player| {
             (1..=100).contains(&player.minimum_level)
-                && (1..=1_000_000).contains(&player.resource_cost)
+                && (player.resource_cost <= 1_000_000
+                    && (player.resource_cost > 0
+                        || matches!(
+                            ability.effect,
+                            AbilityEffectDefinition::Rage { spell: 5 | 26 | 31 }
+                        )))
                 && player.base_failure_percent <= 95
                 && player.first_success_experience <= 1_000_000
                 && player.proficiency.initial <= player.proficiency.cap

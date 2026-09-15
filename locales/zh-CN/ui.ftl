@@ -1537,3 +1537,16 @@ status-hex-active = 诅咒：{ $spells }
 status-hex-cursed-armor = 诅咒：诅咒护甲加成
 status-hex-interrupted = 诅咒中断：{ $spells }
 item-hex-curse-confirm = 确定要诅咒这件装备吗？
+
+realm-rage-name = 狂怒
+
+rage-self-damage-confirm = 此招式会消耗生命，可能致死。继续施展？
+
+status-rage-mage-name = 狂怒法师
+status-rage-resist-disenchantment-name = 抵抗解除附魔
+status-rage-resist-curses-name = 抵抗诅咒
+status-rage-spell-reaction-name = 法术反击
+status-rage-armor-of-fury-name = 狂怒之甲
+status-rage-spell-turning-name = 法术反转
+status-rage-detect-magical-name = 探测魔法敌人
+status-rage-anti-magic-name = 反魔法射线

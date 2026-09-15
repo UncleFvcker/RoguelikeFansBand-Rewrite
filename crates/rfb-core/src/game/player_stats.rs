@@ -567,6 +567,7 @@ impl Game {
             .chain(self.music_status().iter())
             .chain(self.samurai_status().iter())
             .chain(self.hex_status().iter())
+            .chain(self.rage_status().iter())
         {
             for (damage_type, level) in &status.granted_resistances {
                 if *level == ResistanceLevel::Resistant
@@ -898,6 +899,7 @@ impl Game {
             .chain(self.music_status().iter())
             .chain(self.samurai_status().iter())
             .chain(self.hex_status().iter())
+            .chain(self.rage_status().iter())
         {
             immunities.extend(status.granted_status_immunities.iter().cloned());
         }
@@ -1359,6 +1361,11 @@ impl Game {
         &self,
         definition: &rfb_content::ActorDefinition,
     ) -> bool {
+        if self.player_has_status_kind("rfb.status.rage-detect-magical")
+            && definition.monster_casting.is_some()
+        {
+            return true;
+        }
         if self.player_is_maia()
             && definition
                 .tags
@@ -2644,6 +2651,7 @@ impl Game {
             || self.player_is_bard()
             || self.player_is_samurai()
             || self.player_uses_hex()
+            || self.player_is_rage_mage()
             || self.player_is_ranger()
             || self.player_is_priest()
             || self.player_is_warrior_mage()
@@ -2675,6 +2683,12 @@ impl Game {
                 (
                     "demo.class.samurai",
                     self.class_base_blows(weapon, 550, 70, 45),
+                    0,
+                )
+            } else if self.player_is_rage_mage() {
+                (
+                    "demo.class.rage-mage",
+                    self.class_base_blows(weapon, 300, 70, 30),
                     0,
                 )
             } else if self.player_uses_hex() {
@@ -3002,6 +3016,7 @@ impl Game {
                     "demo.class.warrior" => 120,
                     "demo.class.berserker" => 170,
                     "demo.class.paladin" => 110,
+                    "demo.class.rage-mage" => 90,
                     "demo.class.high-mage" | "demo.class.mage" => 80,
                     _ => 100,
                 });
@@ -3211,6 +3226,7 @@ impl Game {
             .chain(self.music_status().iter())
             .chain(self.samurai_status().iter())
             .chain(self.hex_status().iter())
+            .chain(self.rage_status().iter())
         {
             for brand in &status.granted_brands {
                 if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
@@ -3948,12 +3964,14 @@ impl Game {
         let music = include_equipment.then(|| self.music_status()).flatten();
         let samurai = include_equipment.then(|| self.samurai_status()).flatten();
         let hex = include_equipment.then(|| self.hex_status()).flatten();
+        let rage = include_equipment.then(|| self.rage_status()).flatten();
         for status in actor
             .statuses
             .iter()
             .chain(music.iter())
             .chain(samurai.iter())
             .chain(hex.iter())
+            .chain(rage.iter())
         {
             if include_equipment && self.player_is_berserker() && status.kind_id == STATUS_BERSERK {
                 continue;

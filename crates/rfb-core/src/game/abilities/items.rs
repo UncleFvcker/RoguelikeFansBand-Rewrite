@@ -99,6 +99,7 @@ impl Game {
             E::BrandWeapon { .. }
                 | E::RechargeFromPlayer { .. }
                 | E::Hissatsu { spell: 11 }
+                | E::Rage { spell: 24 | 28 }
                 | E::Hex {
                     spell: 5 | 10 | 18 | 20 | 26
                 }

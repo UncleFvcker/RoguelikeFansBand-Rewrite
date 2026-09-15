@@ -96,12 +96,16 @@ fn music_all_32_formal_songs_study_cast_and_resume() {
             g.music.spell.is_some(),
             crate::game::abilities::music::continuous(slot as u8)
         );
+        g.reveal_current_visibility();
         let mut restored = Game::from_save(g.to_save()).unwrap();
         g.advance_music(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
             .unwrap();
         restored
             .advance_music(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
             .unwrap();
+        // Direct rule calls bypass the command boundary's discovery update.
+        g.reveal_current_visibility();
+        restored.reveal_current_visibility();
         assert_eq!(g.state_hash(), restored.state_hash(), "slot {slot}");
         assert_eq!(g.rng, restored.rng);
         if matches!(slot, 2 | 9 | 13 | 20 | 22 | 27 | 30) {

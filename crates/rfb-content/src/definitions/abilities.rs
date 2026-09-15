@@ -663,6 +663,9 @@ pub enum AbilityEffectDefinition {
         spell: u8,
     },
     StopSinging,
+    Rage {
+        spell: u8,
+    },
     Hex {
         spell: u8,
     },

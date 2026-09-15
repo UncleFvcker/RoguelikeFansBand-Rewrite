@@ -72,7 +72,7 @@
       },
       "playerStatuses": [],
       "revision": 2,
-      "stateHash": "d0d43e0de893be7b809635d86327eb70f76766dc932079f08f931882939e4381",
+      "stateHash": "b9b6c626e496976b1a3a789d617ec40a5a4a25e94f0e55cd010d847c7cdac6b9",
       "turn": 2,
       "worldTick": 20
     },
@@ -92,6 +92,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "d0d43e0de893be7b809635d86327eb70f76766dc932079f08f931882939e4381"
+    "saveRoundTripStateHash": "b9b6c626e496976b1a3a789d617ec40a5a4a25e94f0e55cd010d847c7cdac6b9"
   }
 }

@@ -1017,6 +1017,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.anger-management",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.jo-staff",
       "maxDepth": 65535,
       "minDepth": 11,
@@ -1613,6 +1620,13 @@
     },
     {
       "itemKindId": "demo.item.high-curse",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.northern-frights",
       "maxDepth": 50,
       "minDepth": 20,
       "quantity": 1,
@@ -2501,6 +2515,13 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.the-sound-and-the-fury",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.dwarven-pick",
       "maxDepth": 65535,
       "minDepth": 50,
@@ -3059,6 +3080,13 @@
       "minDepth": 80,
       "quantity": 1,
       "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.dire-ire",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 50
     },
     {
       "itemKindId": "demo.item.armageddon-tome",

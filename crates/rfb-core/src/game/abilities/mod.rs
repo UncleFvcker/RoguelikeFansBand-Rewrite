@@ -16,6 +16,7 @@ mod law;
 pub(in crate::game) mod mindcraft;
 pub(in crate::game) mod music;
 mod necromancy;
+pub(in crate::game) mod rage;
 mod restoration;
 mod summoning;
 mod targeting;
@@ -44,6 +45,9 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<Position>, CoreError> {
         match (ability.effect.clone(), target_plan) {
+            (AbilityEffectDefinition::Rage { spell }, plan) => {
+                return self.resolve_rage(&ability, spell, plan, events, changed, removed_entities);
+            }
             (AbilityEffectDefinition::Hex { spell }, plan) => {
                 return self.resolve_hex(&ability, spell, plan, events, changed, removed_entities);
             }

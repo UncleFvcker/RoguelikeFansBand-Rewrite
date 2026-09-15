@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.dire-ire",
+  "nameKey": "item-demo-dire-ire-name",
+  "descriptionKey": "item-demo-dire-ire-description",
+  "realmId": "rage",
+  "rank": 4,
+  "abilityIds": [
+    "demo.ability.rage-barbarian-lore",
+    "demo.ability.rage-earthquake",
+    "demo.ability.rage-greater-focus-rage",
+    "demo.ability.rage-spell-turning",
+    "demo.ability.rage-shatter-device",
+    "demo.ability.rage-dispel-curse",
+    "demo.ability.rage-anti-magic-ray",
+    "demo.ability.rage-rage-strike"
+  ],
+  "tags": [
+    "rage",
+    "spellbook"
+  ]
+}

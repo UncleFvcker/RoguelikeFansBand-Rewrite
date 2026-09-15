@@ -475,6 +475,8 @@ fn crafting_uses_common_ego_factory_and_requires_exact_risky_stack_confirmation(
         )
         .is_none()
     );
+    // Isolate the successful quantity/Ego roll from the changing town inventory.
+    game.rng = crate::rng::RfbRng::seeded(1);
     cast(
         &mut game,
         &id,

@@ -75,6 +75,9 @@ impl Game {
     }
 
     pub(super) fn player_resource_recovery_change(&self, id: &str, resting: bool) -> i64 {
+        if self.player_is_rage_mage() && id == "demo.resource.mana" {
+            return 0;
+        }
         let Some(definition) = self.content.resource(id) else {
             return 0;
         };

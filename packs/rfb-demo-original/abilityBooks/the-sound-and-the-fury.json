@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.the-sound-and-the-fury",
+  "nameKey": "item-demo-the-sound-and-the-fury-name",
+  "descriptionKey": "item-demo-the-sound-and-the-fury-description",
+  "realmId": "rage",
+  "rank": 3,
+  "abilityIds": [
+    "demo.ability.rage-berserk",
+    "demo.ability.rage-sterility",
+    "demo.ability.rage-barbaric-resistance",
+    "demo.ability.rage-summon-horde",
+    "demo.ability.rage-armor-of-fury",
+    "demo.ability.rage-force-brand",
+    "demo.ability.rage-dispel-magic",
+    "demo.ability.rage-mana-clash"
+  ],
+  "tags": [
+    "rage",
+    "spellbook"
+  ]
+}

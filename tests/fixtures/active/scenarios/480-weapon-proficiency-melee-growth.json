@@ -4,7 +4,7 @@
   "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
-  "seed": "0x4d454c455a",
+  "seed": "0x4d454c455b",
   "preconditions": {
     "world": "demo.world.middle-earth",
     "playerBuildId": "demo.build.warrior",
@@ -64,8 +64,8 @@
         "y": 33
       },
       "revision": 1,
-      "rngDrawCounter": 217,
-      "stateHash": "43d3886c94c662b851a9006cd8285331076a03de65b0d99687575a42ebf96061",
+      "rngDrawCounter": 237,
+      "stateHash": "7332c66d427a4eb3d291f107bae42a3b28a33c847db7dc76e169346c9abfe7fa",
       "turn": 1
     },
     "events": [

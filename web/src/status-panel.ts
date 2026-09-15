@@ -599,6 +599,7 @@ export function wildernessClock(worldTick: number): WildernessClock {
 }
 
 export function abilityConfirmationMessageKey(abilityId: string): MessageKey | undefined {
+  if (["demo.ability.rage-focus-rage", "demo.ability.rage-greater-focus-rage", "demo.ability.rage-rage-strike"].includes(abilityId)) return "rage-self-damage-confirm";
   if (abilityId === "demo.ability.hissatsu-harakiri") return "hissatsu-harakiri-confirm";
   if (abilityId === "demo.ability.necromancy-repose-of-the-dead") return "confirm-ability-necromancy-repose";
   return abilityId === "rfb.ability.race.devour-flesh"

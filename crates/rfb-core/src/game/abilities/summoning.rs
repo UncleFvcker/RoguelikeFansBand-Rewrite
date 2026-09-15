@@ -55,7 +55,9 @@ impl Game {
                 true,
             );
             self.maybe_initialize_chameleon_form(&mut entity);
-            if !hostile {
+            if !hostile && *duration_turns == 0 {
+                entity.controller_id = Some(self.player.id.clone());
+            } else if !hostile {
                 entity.summon = Some(SummonIdentity {
                     owner_id: self.player.id.clone(),
                     source_ability_id: ability.id.clone(),
