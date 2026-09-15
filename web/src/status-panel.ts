@@ -588,6 +588,9 @@ export function wildernessClock(worldTick: number): WildernessClock {
 }
 
 export function abilityConfirmationMessageKey(abilityId: string): MessageKey | undefined {
+  if (["demo.ability.rage-focus-rage", "demo.ability.rage-greater-focus-rage", "demo.ability.rage-rage-strike"].includes(abilityId)) return "rage-self-damage-confirm";
+  if (abilityId === "demo.ability.hissatsu-harakiri") return "hissatsu-harakiri-confirm";
+  if (abilityId === "demo.ability.necromancy-repose-of-the-dead") return "confirm-ability-necromancy-repose";
   return abilityId === "rfb.ability.race.devour-flesh"
     ? "confirm-ability-devour-flesh"
     : undefined;
@@ -905,6 +908,7 @@ export class StatusPanel {
     onSelect: (itemId: string) => Promise<void>,
     allowedItemIds?: readonly string[],
     command?: "cast" | "power" | "study" | "browse",
+    onCancel?: () => Promise<void>,
   ) => void;
   readonly #startAbilityTargeting: (ability: AbilityDto) => void;
   readonly #reconcileTargeting: (state: GameSnapshot | GameUpdate) => void;
@@ -936,6 +940,7 @@ export class StatusPanel {
       onSelect: (itemId: string) => Promise<void>,
       allowedItemIds?: readonly string[],
       command?: "cast" | "power" | "study" | "browse",
+      onCancel?: () => Promise<void>,
     ) => void;
     startAbilityTargeting: (ability: AbilityDto) => void;
     reconcileTargeting: (state: GameSnapshot | GameUpdate) => void;
@@ -1070,13 +1075,25 @@ export class StatusPanel {
       state.player.sniperConcentration,
     );
     this.#renderNearby(state);
-    const activeEffects = state.player.statuses.map((status) =>
-      this.#localization.format("status-effect-entry", {
+    const activeEffects = state.player.statuses.map((status) => {
+      if (status.kindId === "rfb.status.hex") {
+        const spells = state.player.abilities?.filter(ability => ability.effects.some(effect => effect.type === "hex" && (state.player.hex.active & (1 << effect.spell)) !== 0)).map(ability => this.#localization.format(ability.nameKey as MessageKey)).join("、") ?? "";
+        return this.#localization.format(state.player.hex.interrupted ? "status-hex-interrupted" : spells ? "status-hex-active" : "status-hex-cursed-armor", { spells });
+      }
+      if (status.kindId === "rfb.status.samurai-posture") {
+        const posture = state.player.abilities?.find(ability => ability.effects.some(effect => effect.type === "samurai-posture" && effect.posture === state.player.samurai.posture));
+        return this.#localization.format("status-samurai-posture", { posture: this.#localization.format((posture?.nameKey ?? "class-demo-samurai-name") as MessageKey) });
+      }
+      if (status.kindId === "rfb.status.music") {
+        const song = state.player.abilities?.find(ability => ability.effects.some(effect => effect.type === "music" && effect.spell === state.player.music.spell));
+        return this.#localization.format("status-music-active", { song: this.#localization.format((song?.nameKey ?? "status-music-name") as MessageKey) });
+      }
+      return this.#localization.format("status-effect-entry", {
         status: this.#statusName(status.kindId),
         intensity: status.intensity,
         ticks: status.remainingTicks,
-      }),
-    );
+      });
+    });
     if (state.player.searching) {
       activeEffects.push(this.#localization.format("status-effect-searching", { speed: state.player.speed }));
     }
@@ -1709,19 +1726,24 @@ export class StatusPanel {
     if (confirmationKey && view && !view.confirm(this.#localization.format(confirmationKey))) {
       return;
     }
+    if (ability.id === "demo.ability.hissatsu-harakiri" && view?.prompt(this.#localization.format("hissatsu-harakiri-type")) !== "@") return;
     if (ability.targetSpec.modes.includes("element")) {
       const element = ability.elementTargets?.find(element => element === elementId);
       if (!element) return;
       void this.#dispatch({ type: "cast-ability", abilityId: ability.id, target: { type: "element", element } });
       return;
     }
+    const cancelTarget = ability.itemSelectionCancelTarget;
+    const onCancel = cancelTarget
+      ? () => this.#dispatch({ type: "cast-ability", abilityId: ability.id, target: cancelTarget })
+      : undefined;
     if (ability.itemTargets) {
       this.#selectItemTarget(undefined, async (itemId) => {
         const option = ability.itemTargets?.find(option => option.itemId === itemId);
         if (!option) return;
         if (option.confirmationKey && !view?.confirm(this.#localization.format(option.confirmationKey as MessageKey))) return;
         await this.#dispatch({ type: "cast-ability", abilityId: ability.id, target: option.target });
-      }, ability.itemTargets.map(option => option.itemId), command);
+      }, ability.itemTargets.map(option => option.itemId), command, onCancel);
       return;
     }
     if (ability.targetSpec.modes.includes("town")) {
@@ -1733,7 +1755,7 @@ export class StatusPanel {
       });
       return;
     }
-    if (ability.targetSpec.modes.includes("self")) {
+    if (ability.targetSpec.modes.includes("self") && !ability.targetSpec.modes.includes("position")) {
       void this.#dispatch({
         type: "cast-ability",
         abilityId: ability.id,
@@ -1748,7 +1770,7 @@ export class StatusPanel {
           abilityId: ability.id,
           target: { type: "item", itemId },
         }),
-        undefined, command,
+        undefined, command, onCancel,
       );
       return;
     }

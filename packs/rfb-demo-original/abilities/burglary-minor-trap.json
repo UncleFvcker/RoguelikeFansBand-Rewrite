@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.burglary-minor-trap",
+  "nameKey": "ability-demo-burglary-minor-trap-name",
+  "descriptionKey": "ability-demo-burglary-minor-trap-description",
+  "abilityProgramId": "demo.ability-program.burglary-minor-trap",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "burglary",
+    "technique"
+  ],
+  "affectsGroundItems": false
+}

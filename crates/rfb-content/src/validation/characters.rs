@@ -511,7 +511,7 @@ pub(super) fn validate_characters(
                 || !(-100..=100).contains(&profile.beam_chance_bonus)
                 || profile.spell_damage_bonus_level_divisor == 0
                 || !(1..=400).contains(&profile.capacity_percent)
-                || !(1..=400).contains(&profile.resource_recovery_percent)
+                || profile.resource_recovery_percent > 400
                 || (profile.realm_profiles.is_empty()
                     && (maximum_learning_capacity != 0
                         || profile.learning_capacity_cap != 0

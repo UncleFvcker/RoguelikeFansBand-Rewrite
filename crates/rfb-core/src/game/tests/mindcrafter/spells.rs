@@ -335,6 +335,7 @@ fn mind_wave_uses_cast_damage_and_switches_to_line_of_sight_at_twenty_five() {
     target(&mut game, 10);
     game.apply_player_mental_status(STATUS_BLINDNESS, 20, "test.blind");
     assert!(!game.entity_is_visible_to_player(&game.entities[0]));
+    game.rng = RfbRng::seeded(1); // Keep a damaging roll independent of birth/shop allocation.
     let events = self_cast(&mut game, "mind-wave");
     assert!(events.iter().any(|event| matches!(event, DomainEvent::AbilityVisibleDamage { resolution, .. } if (1..=75).contains(&resolution.base_raw_damage))));
     assert!(game.entities[0].hp < 2000);
@@ -786,6 +787,8 @@ fn spear_pierces_invulnerability_and_player_wraithform_but_other_mental_damage_d
     .status;
     shield.incoming_damage_percent = 0;
     game.entities[0].statuses.push(shield.clone());
+    // Isolate the protected branch from unrelated birth and shop RNG draws.
+    game.rng = RfbRng::seeded(0);
     cast(
         &mut game,
         "neural-blast",

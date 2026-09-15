@@ -1,0 +1,27 @@
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: lib/edit/a_info.txt
+N:234:of Yositsune
+I:32:8:2
+W:50:20:60:96000
+P:7:1d2:0:0:8
+F:DEX | CON | CHR | SEARCH | INFRA | HIDE_TYPE |
+F:RES_FEAR | RES_BLIND | RES_SOUND |
+F:WARNING | ESP_HUMAN |
+D:这是源义经的头盔。它保护了他的头部免受
+D:敌人无数箭矢和刀剑的伤害。
+
+N:360:'Black Belet'
+I:32:1:0
+W:56:90:8:50000
+P:1:0d0:0:0:18
+F:RES_SOUND | RES_TIME | RES_FEAR | SUST_STR | SUST_INT | SUST_WIS | SUST_DEX
+F:SUST_CON | SUST_CHR | REGEN | RES_FIRE | RES_DISEN | FREE_ACT | HOLD_LIFE
+F:SEE_INVIS | RES_CONF | ESP_HUMAN | ESP_ANIMAL
+D:海象艾杰姆（Aijem）传说中的黑帽子，在时间的迷雾中缝制而成，
+D:据说能保持其主人身心永远年轻。
+
+N:392:'Dunce Cap'
+I:32:10:3
+W:10:40:5:0
+P:1:0d0:0:0:-1
+F:DEC_INT | DEC_WIS | DEC_SPELL_CAP | HEAVY_CURSE
+D:它能产生一种特殊的感觉。

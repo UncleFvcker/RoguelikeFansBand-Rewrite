@@ -277,6 +277,7 @@ pub enum AbilityStatusStackingDefinition {
 #[serde(rename_all = "kebab-case")]
 pub enum AbilityTerrainBeamOperationDefinition {
     JamDoors,
+    DisarmTraps,
     DestroyTrapsAndDoors,
     StoneToMud,
 }
@@ -560,6 +561,9 @@ pub enum AbilityEffectDefinition {
     },
     PolymorphSelf,
     PolymorphTarget,
+    CloneTarget,
+    HasteTarget,
+    HealTarget,
     SwapPosition,
     Recall {
         delay_dice: u16,
@@ -646,6 +650,47 @@ pub enum AbilityEffectDefinition {
         radius: u8,
         duration_turns: u16,
     },
+    ChainLightning,
+    ChaosMeteorSwarm,
+    TrumpSummoning {
+        category: String,
+    },
+    TrumpShuffle,
+    /// Source necromancer.c book slot (0..31), including touch and summon rules.
+    Necromancy {
+        spell: u8,
+    },
+    Music {
+        spell: u8,
+    },
+    StopSinging,
+    Burglary {
+        spell: u8,
+    },
+    Rage {
+        spell: u8,
+    },
+    Hex {
+        spell: u8,
+    },
+    StopHex {
+        spell: Option<u8>,
+    },
+    Hissatsu {
+        spell: u8,
+    },
+    SamuraiConcentration,
+    SamuraiPosture {
+        posture: u8,
+    },
+    Law {
+        spell: u8,
+    },
+    ResetRecall,
+    CallChaos,
+    ChaosPolymorphSelf,
+    CallVoid,
+
     DemonSummoning,
     AngelSummoning,
     BanishEvil,
@@ -844,6 +889,8 @@ pub enum AbilityEffectDefinition {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         remaining_divisor: Option<u32>,
     },
+    PrepareConfusingStrike,
+    DestroyAdjacentTrapsAndDoors,
     SatisfyHunger,
     DevourFlesh {
         maximum_hp_divisor: u16,
@@ -1047,8 +1094,12 @@ fn ability_level_scaling_base_and_limit(
             AbilityLevelScalingField::IdentifyPower,
         ) => Some((u64::from(*full_identify_power), 1_000)),
         (
-            AbilityEffectDefinition::AreaDamage { radius, .. }
-            | AbilityEffectDefinition::LavaFlow { radius, .. }
+            // Invoke Logrus reaches radius 20 at the shared level-100 validation bound.
+            AbilityEffectDefinition::AreaDamage { radius, .. },
+            AbilityLevelScalingField::Radius,
+        ) => Some((u64::from(*radius), 32)),
+        (
+            AbilityEffectDefinition::LavaFlow { radius, .. }
             | AbilityEffectDefinition::InsanityCircle { radius, .. }
             | AbilityEffectDefinition::Hellfire { radius, .. }
             | AbilityEffectDefinition::LightArea { radius, .. }
@@ -1519,3 +1570,51 @@ pub struct AbilityBookDefinition {
     pub ability_ids: Vec<String>,
     pub tags: Vec<String>,
 }
+
+// do_chaos_spell(28), master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c.
+// Includes every eligible ordinary race and all three special mimic forms.
+pub const CHAOS_POLYMORPH_RACES: &[(u16, &str)] = &[
+    (1, "rfb-legacy.race.tonberry"),
+    (3, "rfb-legacy.race.hobbit"),
+    (4, "rfb-legacy.race.gnome"),
+    (5, "rfb-legacy.race.dwarf"),
+    (6, "rfb-legacy.race.snotling"),
+    (7, "rfb-legacy.race.half-troll"),
+    (8, "rfb-legacy.race.amberite"),
+    (9, "rfb-legacy.race.high-elf"),
+    (10, "rfb-legacy.race.barbarian"),
+    (11, "rfb-legacy.race.ogre"),
+    (12, "rfb-legacy.race.half-giant"),
+    (13, "rfb-legacy.race.half-titan"),
+    (14, "rfb-legacy.race.cyclops"),
+    (15, "rfb-legacy.race.yeek"),
+    (16, "rfb-legacy.race.klackon"),
+    (17, "rfb-legacy.race.kobold"),
+    (18, "rfb-legacy.race.nibelung"),
+    (19, "rfb-legacy.race.dark-elf"),
+    (21, "rfb-legacy.race.mindflayer"),
+    (22, "rfb-legacy.race.imp"),
+    (23, "rfb-legacy.race.golem"),
+    (24, "rfb-legacy.race.skeleton"),
+    (25, "rfb-legacy.race.zombie"),
+    (26, "rfb-legacy.race.vampire"),
+    (27, "rfb-legacy.race.spectre"),
+    (28, "rfb-legacy.race.sprite"),
+    (29, "rfb-legacy.race.beastman"),
+    (30, "rfb-legacy.race.ent"),
+    (31, "rfb-legacy.race.archon"),
+    (32, "rfb-legacy.race.balrog"),
+    (33, "rfb-legacy.race.dunadan"),
+    (34, "rfb-legacy.race.shadow-fairy"),
+    (35, "rfb-legacy.race.kutar"),
+    (51, "rfb-legacy.race.centaur"),
+    (60, "rfb-legacy.race.wood-elf"),
+    (63, "rfb-legacy.race.half-orc"),
+    (64, "rfb-legacy.race.einheri"),
+    (67, "rfb-legacy.race.boit"),
+    (70, "rfb-legacy.race.tomte"),
+    (74, "rfb-legacy.race.maia"),
+    (1000, "demo.race.demon"),
+    (1001, "demo.race.demon-lord"),
+    (1002, "demo.race.vampire-lord"),
+];

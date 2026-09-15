@@ -64,6 +64,9 @@ impl Game {
             - 1
             + i32::from(self.virtue_current(VirtueKindDto::Harmony)) / 10
             - i32::from(self.virtue_current(VirtueKindDto::Individualism)) / 20;
+        if self.player_has_status_kind("rfb.status.law-spin") {
+            power += 25.max(power * 2 / 5);
+        }
         if has("unique") || has("unique2") || questor {
             power = power * 18 / 25;
         }
@@ -85,7 +88,14 @@ impl Game {
                 if has("resist-all") || has("no-pet") || self.entities[index].no_pet || questor {
                     AbilityControlOutcomeDto::Ineligible
                 } else if level > u32::from(roll) || self.player_has_equipped_aggravation() {
-                    let no_pet = self.rng.bounded(5) == 0;
+                    let no_pet =
+                        self.rng
+                            .bounded(if self.player_has_status_kind("rfb.status.law-spin") {
+                                10
+                            } else {
+                                5
+                            })
+                            == 0;
                     if no_pet && !was_friend {
                         self.entities[index].no_pet = true;
                     }
@@ -549,7 +559,9 @@ impl Game {
             .statuses
             .iter()
             .any(|status| status.kind_id == crate::effect::STATUS_INVULNERABILITY);
-        let pierces = pierces || (damage > 0 && invulnerable && self.rng.bounded(13) == 0);
+        let pierces = pierces
+            || self.player_has_equipped_artifact(362)
+            || (damage > 0 && invulnerable && self.rng.bounded(13) == 0);
         self.entities[index]
             .statuses
             .iter()
@@ -562,6 +574,7 @@ impl Game {
     pub(super) fn player_spell_damage_percent(&mut self, kind: DamageType, damage: i32) -> u8 {
         let invulnerable = self.player_has_status_kind(crate::effect::STATUS_INVULNERABILITY);
         let pierces = kind == DamageType::PsySpear
+            || self.player_has_equipped_artifact(362)
             || damage >= 9000
             || (damage > 0 && invulnerable && self.rng.bounded(13) == 0);
         self.player

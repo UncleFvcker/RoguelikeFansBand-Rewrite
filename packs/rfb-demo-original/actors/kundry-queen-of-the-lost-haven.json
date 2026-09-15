@@ -223,6 +223,7 @@
     "water": "resistant"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.kundry", "chancePercent": 12},
   "speed": 132,
   "statusImmunities": [
     "rfb.status.confusion",

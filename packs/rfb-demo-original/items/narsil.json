@@ -1,0 +1,69 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.narsil",
+  "nameKey": "item-demo-narsil-name",
+  "descriptionKey": "item-demo-narsil-description",
+  "glyph": "|",
+  "generationLevel": 20,
+  "weightTenthsPound": 130,
+  "baseValue": 20000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 191,
+    "baseItemKindId": "demo.item.broken-sword",
+    "instant": false,
+    "rarityOneIn": 4
+  },
+  "weaponProficiencyBaseItemId": "demo.item.broken-sword",
+  "rfbValue": {
+    "flags": [
+      "BLOWS",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_FIRE",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "STR"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 2,
+    "toHit": 6,
+    "toDamage": 10
+  },
+  "modifiers": {
+    "strength": 3
+  },
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 150
+  },
+  "resistances": {
+    "fire": "resistant"
+  },
+  "slays": {
+    "orc": "slay",
+    "troll": "slay"
+  }
+}

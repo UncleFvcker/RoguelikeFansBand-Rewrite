@@ -1,0 +1,84 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.eowyn",
+  "nameKey": "item-demo-eowyn-name",
+  "descriptionKey": "item-demo-eowyn-description",
+  "glyph": "|",
+  "generationLevel": 50,
+  "weightTenthsPound": 140,
+  "baseValue": 120000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 216,
+    "baseItemKindId": "demo.item.bastard-sword",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "weaponProficiencyBaseItemId": "demo.item.bastard-sword",
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_UNDEAD",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_FEAR",
+      "RES_NETHER",
+      "SLAY_ANIMAL",
+      "SLAY_EVIL",
+      "SLAY_GIANT",
+      "SPEED",
+      "STEALTH",
+      "STR"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 5,
+    "toHit": 12,
+    "toDamage": 16
+  },
+  "modifiers": {
+    "strength": 4,
+    "charisma": 4,
+    "speed": 4
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 4
+  },
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant",
+    "nether": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "slays": {
+    "animal": "slay",
+    "evil": "slay",
+    "undead": "kill",
+    "giant": "slay"
+  }
+}

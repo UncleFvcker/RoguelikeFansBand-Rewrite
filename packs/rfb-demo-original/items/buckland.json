@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.buckland",
+  "nameKey": "item-demo-buckland-name",
+  "descriptionKey": "item-demo-buckland-description",
+  "glyph": "}",
+  "generationLevel": 40,
+  "weightTenthsPound": 20,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 134,
+    "baseItemKindId": "demo.item.sling",
+    "instant": false,
+    "rarityOneIn": 35,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-res-or-power"
+    ]
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_BLIND",
+      "RES_CONF",
+      "SHOW_MODS",
+      "SPEED",
+      "XTRA_RES_OR_POWER"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "projectileProfile": {
+    "ammunitionType": "shot",
+    "damageMultiplierPercent": 275,
+    "range": 16,
+    "shotEnergy": 7150,
+    "toDamage": 22,
+    "toHit": 19
+  },
+  "modifiers": {
+    "speed": 3
+  },
+  "resistances": {
+    "confusion": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.blindness"
+  ]
+}

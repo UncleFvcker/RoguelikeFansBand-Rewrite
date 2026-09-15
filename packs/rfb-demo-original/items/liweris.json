@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.liweris",
+  "nameKey": "item-demo-liweris-name",
+  "descriptionKey": "item-demo-liweris-description",
+  "glyph": "/",
+  "generationLevel": 55,
+  "weightTenthsPound": 100,
+  "baseValue": 80000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 352,
+    "baseItemKindId": "demo.item.broad-spear",
+    "instant": false,
+    "rarityOneIn": 55
+  },
+  "weaponProficiencyBaseItemId": "demo.item.broad-spear",
+  "rfbValue": {
+    "flags": [
+      "DEC_WIS",
+      "FULL_NAME",
+      "HEAVY_CURSE",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_DRAGON",
+      "RANDOM_CURSE0",
+      "RIDING",
+      "SLAY_GOOD"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 11,
+    "toHit": 13,
+    "toDamage": 23
+  },
+  "modifiers": {
+    "wisdom": -4
+  },
+  "slays": {
+    "good": "slay",
+    "dragon": "kill"
+  },
+  "ridingWeaponKind": "compatible",
+  "initialCurse": "heavy"
+}

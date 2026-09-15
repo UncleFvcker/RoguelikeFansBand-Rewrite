@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.beruthiel",
+  "nameKey": "item-demo-beruthiel-name",
+  "descriptionKey": "item-demo-beruthiel-description",
+  "glyph": "]",
+  "generationLevel": 90,
+  "weightTenthsPound": 20,
+  "baseValue": 0,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 35,
+    "baseItemKindId": "demo.item.iron-crown",
+    "instant": false,
+    "rarityOneIn": 66
+  },
+  "rfbValue": {
+    "flags": [
+      "CURSED",
+      "DEC_CON",
+      "DEC_DEX",
+      "DEC_LIFE",
+      "DEC_MANA",
+      "DEC_STR",
+      "EASY_SPELL",
+      "FREE_ACT",
+      "HEAVY_CURSE",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "PERMA_CURSE",
+      "REGEN_MANA",
+      "SEE_INVIS",
+      "SPELL_POWER",
+      "TELEPATHY",
+      "XTRA_POWER"
+    ],
+    "pval": 20,
+    "toArmor": 25
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 25,
+    "strength": -20,
+    "dexterity": -20,
+    "constitution": -20,
+    "spellPowerBonus": 20
+  },
+  "equipmentBonuses": {
+    "lifePercent": -60
+  },
+  "passives": [
+    "easy-spell",
+    "mana-regeneration",
+    "reduced-mana-cost",
+    "see-invisible",
+    "telepathy"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "initialCurse": "permanent"
+}

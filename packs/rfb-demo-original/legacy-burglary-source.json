@@ -1,0 +1,301 @@
+{
+  "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+  "sourceFiles": [
+    "src/rogue.c",
+    "src/tables.c",
+    "src/combat.c",
+    "src/cmd1.c",
+    "src/cave.c",
+    "src/shop.c",
+    "src/object2.c",
+    "src/object1.c",
+    "src/py_birth.c",
+    "lib/edit/s_info.txt",
+    "lib/edit/k_info.txt",
+    "src/kind_name_zh.inc",
+    "lib/edit/f_info.txt",
+    "src/races_a.c",
+    "src/monster2.c"
+  ],
+  "spells": [
+    {
+      "slot": 0,
+      "abilityId": "demo.ability.burglary-detect-traps",
+      "name": "探测陷阱",
+      "minimumLevel": 1,
+      "resourceCost": 1,
+      "baseFailurePercent": 30
+    },
+    {
+      "slot": 1,
+      "abilityId": "demo.ability.burglary-disarm-traps",
+      "name": "解除陷阱",
+      "minimumLevel": 3,
+      "resourceCost": 2,
+      "baseFailurePercent": 30
+    },
+    {
+      "slot": 2,
+      "abilityId": "demo.ability.burglary-detect-treasure",
+      "name": "探测财宝",
+      "minimumLevel": 5,
+      "resourceCost": 3,
+      "baseFailurePercent": 40
+    },
+    {
+      "slot": 3,
+      "abilityId": "demo.ability.burglary-detect-objects",
+      "name": "探测物品",
+      "minimumLevel": 7,
+      "resourceCost": 3,
+      "baseFailurePercent": 40
+    },
+    {
+      "slot": 4,
+      "abilityId": "demo.ability.burglary-see-in-the-dark",
+      "name": "黑暗视觉",
+      "minimumLevel": 9,
+      "resourceCost": 3,
+      "baseFailurePercent": 40
+    },
+    {
+      "slot": 5,
+      "abilityId": "demo.ability.burglary-tread-softly",
+      "name": "轻声行走",
+      "minimumLevel": 11,
+      "resourceCost": 10,
+      "baseFailurePercent": 45
+    },
+    {
+      "slot": 6,
+      "abilityId": "demo.ability.burglary-minor-getaway",
+      "name": "小型逃遁",
+      "minimumLevel": 13,
+      "resourceCost": 10,
+      "baseFailurePercent": 45
+    },
+    {
+      "slot": 7,
+      "abilityId": "demo.ability.burglary-minor-trap",
+      "name": "设置小型陷阱",
+      "minimumLevel": 15,
+      "resourceCost": 15,
+      "baseFailurePercent": 50
+    },
+    {
+      "slot": 8,
+      "abilityId": "demo.ability.burglary-map-escape-route",
+      "name": "标记逃跑路线",
+      "minimumLevel": 17,
+      "resourceCost": 15,
+      "baseFailurePercent": 50
+    },
+    {
+      "slot": 9,
+      "abilityId": "demo.ability.burglary-pick-pocket",
+      "name": "妙手空空",
+      "minimumLevel": 20,
+      "resourceCost": 20,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 10,
+      "abilityId": "demo.ability.burglary-negotiate",
+      "name": "谈判",
+      "minimumLevel": 22,
+      "resourceCost": 20,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 11,
+      "abilityId": "demo.ability.burglary-fetch",
+      "name": "取回物品",
+      "minimumLevel": 23,
+      "resourceCost": 25,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 12,
+      "abilityId": "demo.ability.burglary-sense-danger",
+      "name": "危险感知",
+      "minimumLevel": 25,
+      "resourceCost": 25,
+      "baseFailurePercent": 40
+    },
+    {
+      "slot": 13,
+      "abilityId": "demo.ability.burglary-examine-loot",
+      "name": "检查战利品",
+      "minimumLevel": 30,
+      "resourceCost": 15,
+      "baseFailurePercent": 40
+    },
+    {
+      "slot": 14,
+      "abilityId": "demo.ability.burglary-major-trap",
+      "name": "设置大型陷阱",
+      "minimumLevel": 32,
+      "resourceCost": 30,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 15,
+      "abilityId": "demo.ability.burglary-haste-self",
+      "name": "加速",
+      "minimumLevel": 33,
+      "resourceCost": 25,
+      "baseFailurePercent": 50
+    },
+    {
+      "slot": 16,
+      "abilityId": "demo.ability.burglary-create-stairs",
+      "name": "创造楼梯",
+      "minimumLevel": 10,
+      "resourceCost": 20,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 17,
+      "abilityId": "demo.ability.burglary-panic-hit",
+      "name": "恐慌打击",
+      "minimumLevel": 15,
+      "resourceCost": 10,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 18,
+      "abilityId": "demo.ability.burglary-panic-shot",
+      "name": "恐慌射击",
+      "minimumLevel": 17,
+      "resourceCost": 10,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 19,
+      "abilityId": "demo.ability.burglary-panic-summons",
+      "name": "恐慌召唤",
+      "minimumLevel": 25,
+      "resourceCost": 20,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 20,
+      "abilityId": "demo.ability.burglary-panic-traps",
+      "name": "恐慌陷阱",
+      "minimumLevel": 27,
+      "resourceCost": 30,
+      "baseFailurePercent": 70
+    },
+    {
+      "slot": 21,
+      "abilityId": "demo.ability.burglary-flee-level",
+      "name": "逃离楼层",
+      "minimumLevel": 30,
+      "resourceCost": 30,
+      "baseFailurePercent": 70
+    },
+    {
+      "slot": 22,
+      "abilityId": "demo.ability.burglary-new-beginnings",
+      "name": "新的开始",
+      "minimumLevel": 32,
+      "resourceCost": 35,
+      "baseFailurePercent": 70
+    },
+    {
+      "slot": 23,
+      "abilityId": "demo.ability.burglary-major-getaway",
+      "name": "大型逃遁",
+      "minimumLevel": 40,
+      "resourceCost": 40,
+      "baseFailurePercent": 70
+    },
+    {
+      "slot": 24,
+      "abilityId": "demo.ability.burglary-protect-loot",
+      "name": "保护战利品",
+      "minimumLevel": 5,
+      "resourceCost": 7,
+      "baseFailurePercent": 50
+    },
+    {
+      "slot": 25,
+      "abilityId": "demo.ability.burglary-teleport-to",
+      "name": "传送到",
+      "minimumLevel": 12,
+      "resourceCost": 9,
+      "baseFailurePercent": 60
+    },
+    {
+      "slot": 26,
+      "abilityId": "demo.ability.burglary-master-thievery",
+      "name": "大师级盗窃",
+      "minimumLevel": 35,
+      "resourceCost": 20,
+      "baseFailurePercent": 70
+    },
+    {
+      "slot": 27,
+      "abilityId": "demo.ability.burglary-darkness-storm",
+      "name": "暗影风暴",
+      "minimumLevel": 39,
+      "resourceCost": 30,
+      "baseFailurePercent": 70
+    },
+    {
+      "slot": 28,
+      "abilityId": "demo.ability.burglary-hide-in-shadows",
+      "name": "隐匿于阴影",
+      "minimumLevel": 42,
+      "resourceCost": 30,
+      "baseFailurePercent": 70
+    },
+    {
+      "slot": 29,
+      "abilityId": "demo.ability.burglary-thieves-den",
+      "name": "盗贼巢穴",
+      "minimumLevel": 45,
+      "resourceCost": 50,
+      "baseFailurePercent": 85
+    },
+    {
+      "slot": 30,
+      "abilityId": "demo.ability.burglary-ultimate-trap",
+      "name": "设置终极陷阱",
+      "minimumLevel": 47,
+      "resourceCost": 100,
+      "baseFailurePercent": 90
+    },
+    {
+      "slot": 31,
+      "abilityId": "demo.ability.burglary-assassination",
+      "name": "暗杀",
+      "minimumLevel": 50,
+      "resourceCost": 100,
+      "baseFailurePercent": 95
+    }
+  ],
+  "bookKindIndices": [
+    568,
+    569,
+    570,
+    571
+  ],
+  "buildIds": [
+    "demo.build.rogue"
+  ],
+  "terrainNames": [
+    {
+      "sourceIndex": 222,
+      "name": "次级陷阱"
+    },
+    {
+      "sourceIndex": 223,
+      "name": "高级陷阱"
+    },
+    {
+      "sourceIndex": 224,
+      "name": "终极陷阱"
+    }
+  ]
+}

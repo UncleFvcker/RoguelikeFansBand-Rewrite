@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 25000,
+  "descriptionKey": "item-demo-eye-description",
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "glyph": "*",
+  "id": "demo.item.eye",
+  "maxStack": 1,
+  "nameKey": "item-demo-eye-name",
+  "rfbBaseKind": {
+    "sourceIndex": 623,
+    "tval": 39,
+    "sval": 22
+  },
+  "rfbValue": {
+    "flags": [
+      "INSTA_ART"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "instant-artifact-base",
+    "light-source"
+  ],
+  "weightTenthsPound": 5
+}

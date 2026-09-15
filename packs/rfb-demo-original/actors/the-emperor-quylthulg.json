@@ -65,6 +65,7 @@
     "skeletonWeight": 0
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.emperor-quylthulg", "chancePercent": 5},
   "speed": 130,
   "statusImmunities": [
     "rfb.status.confusion",

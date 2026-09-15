@@ -51,6 +51,11 @@ export function createPresentationFormatter(
         return localization.format("message-pet-evolved", {
           source: event.args.name || contentName(event.args.source), target: contentName(event.args.target),
         });
+      case "skill-check-device-success":
+      case "skill-check-device-failure":
+        return localization.format(`message-${event.messageKey}`, {
+          target: visibleItemNameForKind(event.args.target),
+        });
       case "duelist-challenge-cleared":
         return localization.format(event.messageKey);
       case "duelist-challenge-issued":
@@ -207,7 +212,7 @@ export function createPresentationFormatter(
           count: event.args.count ?? "0",
         });
       case "ability-detect":
-        return localization.format(event.args.category === "mind" ? "message-ability-detect-mind" : "message-ability-detect", {
+        return localization.format(event.args.category === "mind" ? "message-ability-detect-mind" : event.args.category === "normal-monster" ? "message-ability-detect-monsters" : "message-ability-detect", {
           ability: contentName(event.args.target),
           category: event.args.category ?? "?",
           count: event.args.count ?? "0",
@@ -220,6 +225,10 @@ export function createPresentationFormatter(
         });
       case "ability-effects":
         if (event.outcome?.type === "ability-effects") {
+          const card = event.outcome.resolution.effects.find(effect => effect.type === "random-choice");
+          if (event.args.target === "demo.ability.trump-shuffle" && card?.type === "random-choice") {
+            return localization.format(`message-trump-card-${card.branchIndex}`);
+          }
           if (event.outcome.resolution.effects.some(effect => effect.type === "ring-of-power-backlash")) {
             return localization.format("message-ring-of-power-backlash");
           }
@@ -419,6 +428,8 @@ export function createPresentationFormatter(
           ability: contentName(event.args.source),
           amount: event.args.amount ?? "?",
         });
+      case "equipment-regenerated":
+        return localization.format("equipment-regenerated", { amount: event.args.amount ?? "?" });
       case "ability-resource-converted":
       case "ability-resource-conversion-failed":
         return localization.format(`message-${event.messageKey}`, {
@@ -1814,6 +1825,15 @@ export function createPresentationFormatter(
   }
 
   function contentName(id: string | undefined): string {
+    if (id) {
+      const itemId = id.startsWith("rfb.item-activation.")
+        ? id.slice("rfb.item-activation.".length) : undefined;
+      const { currentInventory, currentEquipment } = getState();
+      const item = currentInventory.find(item => (itemId !== undefined && item.id === itemId) || item.activation?.profileId === id) ??
+        currentEquipment.find(item => (itemId !== undefined && item.id === itemId) || item.activation?.profileId === id);
+      if (item) return visibleItemName(item.displayNameKey, item.kindId, item.artifactName);
+      if (itemId) return localization.format("item-unknown-name");
+    }
     const ability = getState().currentStatus?.player.abilities?.find(ability => ability.id === id);
     if (ability) return localization.format(ability.nameKey);
     if (id === "demo.resource.mana") {
@@ -1995,6 +2015,11 @@ export function createPresentationFormatter(
   }
 
   function statusName(statusId: string | undefined): string {
+    if (statusId?.startsWith("rfb.status.burglary-")) return localization.format(`status-rfb-burglary-${statusId.slice(20)}`);
+    if (statusId?.startsWith("rfb.status.rage-")) return localization.format(`status-${statusId.slice(11)}-name`);
+    if (statusId === "rfb.status.music" || statusId === "rfb.status.necromancy-cloak" || statusId === "rfb.status.necromancy-shield" || statusId === "rfb.status.law-spin" || statusId === "rfb.status.law-tread-softly") {
+      return localization.format(`status-${statusId.slice(11)}-name`);
+    }
     const craftStatuses: Record<string, string> = {
       "hero": "heroism", "berserk": "berserk", "resist-cold": "resist-cold", "resist-fire": "resist-fire",
       "resist-electricity": "resist-electricity", "resist-acid": "resist-acid", "resist-poison": "resist-poison",
@@ -2012,6 +2037,18 @@ export function createPresentationFormatter(
     }
     if (statusId === "rfb.status.haste") {
       return localization.format("status-haste-name");
+    }
+    if (statusId === "rfb.status.light-speed") {
+      return localization.format("device-activation-e5-light-speed-name");
+    }
+    if (statusId === "rfb.status.player-polymorph") {
+      return localization.format("ability-demo-chaos-polymorph-self-name");
+    }
+    if (statusId === "rfb.status.demon-lord-transformation") {
+      return localization.format("ability-demo-daemon-polymorph-demonlord-name");
+    }
+    if (statusId === "rfb.status.vampiric-transformation") {
+      return localization.format("ability-demo-death-vampiric-transformation-name");
     }
     if (statusId === "rfb.status.slow") {
       return localization.format("status-slow-name");

@@ -161,14 +161,13 @@ pub(super) fn quality_candidate(
         }
         16 => !is_great(mode),
         17 | 18 | 40 | 45 | 55 | 65 | 66 => true,
-        // Rage Mage's limit of eight has no current class/build entry.
         90..=95 | 97..=101 | 104..=109 => {
             base.sval >= 2
                 && game
                     .item_knowledge
                     .get(&item.id)
                     .map_or(0, |state| state.found_count)
-                    < 2
+                    < if game.player_is_rage_mage() { 8 } else { 2 }
         }
         75 if is_great(mode) => matches!(base.sval, 38 | 39 | 55),
         75 => matches!(base.sval, 37..=39 | 48..=53 | 55 | 60),
@@ -199,6 +198,9 @@ fn book_weight(game: &Game, item: &ItemDefinition, weight: u32) -> u32 {
 }
 
 fn needs_book(game: &Game) -> bool {
+    if game.player_is_rage_mage() {
+        return true;
+    }
     let books = game.active_casting_book_ids();
     game.content.item_definitions().any(|item| {
         item.ability_book_id
@@ -262,7 +264,13 @@ fn tailored_candidate(game: &Game, item: &ItemDefinition) -> bool {
         }
         55 | 65 | 66 => matches!(
             class,
-            Some("demo.class.mage" | "demo.class.high-mage" | "demo.class.magic-eater")
+            Some(
+                "demo.class.mage"
+                    | "demo.class.high-mage"
+                    | "demo.class.magic-eater"
+                    | "demo.class.necromancer"
+                    | "demo.class.rogue"
+            )
         ),
         90..=95 | 97..=101 | 104..=109 => {
             base.sval >= 2
@@ -274,7 +282,7 @@ fn tailored_candidate(game: &Game, item: &ItemDefinition) -> bool {
                     .item_knowledge
                     .get(&item.id)
                     .map_or(0, |state| state.found_count)
-                    < 3
+                    < if base.tval == 108 { 8 } else { 3 }
         }
         _ => false,
     }
@@ -285,6 +293,7 @@ fn tailored_candidate(game: &Game, item: &ItemDefinition) -> bool {
 fn tailored_category(game: &mut Game) -> Option<Category> {
     let class = game.build.as_ref().map(|build| build.class_id.as_str());
     match class {
+        Some("demo.class.rage-mage") if game.rng.bounded(3) == 0 => return Some(Category::Book),
         Some("demo.class.magic-eater") if game.rng.bounded(5) == 0 => {
             return Some(Category::Device);
         }
@@ -298,7 +307,13 @@ fn tailored_category(game: &mut Game) -> Option<Category> {
         Some(Category::Book)
     } else if matches!(
         class,
-        Some("demo.class.mage" | "demo.class.high-mage" | "demo.class.magic-eater")
+        Some(
+            "demo.class.mage"
+                | "demo.class.high-mage"
+                | "demo.class.magic-eater"
+                | "demo.class.necromancer"
+                | "demo.class.rogue"
+        )
     ) && game.rng.bounded(7) == 0
     {
         Some(Category::Device)
@@ -853,44 +868,78 @@ mod tests {
     }
 
     #[test]
+    fn rage_books_keep_eight_discoveries_and_ordered_preference_draws() {
+        let mut g = Game::new_with_build(925, "demo.build.rage-mage").unwrap();
+        let book = g.content.item("demo.item.dire-ire").unwrap().clone();
+        for found in [2, 7, 8] {
+            g.item_knowledge
+                .entry(book.id.clone())
+                .or_default()
+                .found_count = found;
+            assert_eq!(
+                quality_candidate(&g, ItemGenerationMode::Good, &book),
+                found < 8
+            );
+            assert_eq!(
+                quality_candidate(&g, ItemGenerationMode::Great, &book),
+                found < 8
+            );
+            assert_eq!(tailored_candidate(&g, &book), found < 8);
+            assert!(needs_book(&g));
+        }
+        for seed in 0..128 {
+            g.rng = crate::rng::RfbRng::seeded(seed);
+            let mut expected = g.rng.clone();
+            let preferred = expected.bounded(3) == 0 || expected.bounded(10) == 0;
+            assert_eq!(
+                tailored_category(&mut g),
+                preferred.then_some(Category::Book)
+            );
+            assert_eq!(g.rng, expected);
+        }
+    }
+
+    #[test]
     fn mage_tailored_draws_book_before_device_and_skips_satisfied_book_draw() {
-        let mut game = Game::new_with_build(925, "demo.build.mage-death-sorcery").unwrap();
-        let books: Vec<_> = game
-            .content
-            .item_definitions()
-            .filter(|item| {
-                item.ability_book_id
-                    .as_deref()
-                    .is_some_and(|id| game.active_casting_book_ids().contains(&id))
-            })
-            .map(|item| item.id.clone())
-            .collect();
-        for needs in [true, false] {
-            for id in &books {
-                game.item_knowledge
-                    .entry(id.clone())
-                    .or_default()
-                    .found_count = if needs { 0 } else { 3 };
+        for build in ["demo.build.mage-death-sorcery", "demo.build.rogue"] {
+            let mut game = Game::new_with_build(925, build).unwrap();
+            let books: Vec<_> = game
+                .content
+                .item_definitions()
+                .filter(|item| {
+                    item.ability_book_id
+                        .as_deref()
+                        .is_some_and(|id| game.active_casting_book_ids().contains(&id))
+                })
+                .map(|item| item.id.clone())
+                .collect();
+            for needs in [true, false] {
+                for id in &books {
+                    game.item_knowledge
+                        .entry(id.clone())
+                        .or_default()
+                        .found_count = if needs { 0 } else { 3 };
+                }
+                assert_eq!(needs_book(&game), needs);
+                let mut seen = [false; 3];
+                for seed in 0..128 {
+                    game.rng = crate::rng::RfbRng::seeded(seed);
+                    let mut expected = game.rng.clone();
+                    let category = if needs && expected.bounded(10) == 0 {
+                        seen[0] = true;
+                        Some(Category::Book)
+                    } else if expected.bounded(7) == 0 {
+                        seen[1] = true;
+                        Some(Category::Device)
+                    } else {
+                        seen[2] = true;
+                        None
+                    };
+                    assert_eq!(tailored_category(&mut game), category);
+                    assert_eq!(game.rng, expected);
+                }
+                assert_eq!(seen, [needs, true, true]);
             }
-            assert_eq!(needs_book(&game), needs);
-            let mut seen = [false; 3];
-            for seed in 0..128 {
-                game.rng = crate::rng::RfbRng::seeded(seed);
-                let mut expected = game.rng.clone();
-                let category = if needs && expected.bounded(10) == 0 {
-                    seen[0] = true;
-                    Some(Category::Book)
-                } else if expected.bounded(7) == 0 {
-                    seen[1] = true;
-                    Some(Category::Device)
-                } else {
-                    seen[2] = true;
-                    None
-                };
-                assert_eq!(tailored_category(&mut game), category);
-                assert_eq!(game.rng, expected);
-            }
-            assert_eq!(seen, [needs, true, true]);
         }
     }
 

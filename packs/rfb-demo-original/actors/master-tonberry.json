@@ -76,6 +76,7 @@
   },
   "nameKey": "actor-demo-master-tonberry-name",
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.master-tonberry", "chancePercent": 99},
   "speed": 120,
   "statusImmunities": [
     "rfb.status.confusion",

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.high-curse",
+  "nameKey": "item-demo-high-curse-name",
+  "descriptionKey": "item-demo-high-curse-description",
+  "abilityBookId": "demo.ability-book.high-curse",
+  "rfbBaseKind": {
+    "sourceIndex": 561,
+    "tval": 107,
+    "sval": 1
+  },
+  "baseValue": 1000,
+  "generationLevel": 20,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "hex",
+    "book",
+    "spellbook"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ]
+}

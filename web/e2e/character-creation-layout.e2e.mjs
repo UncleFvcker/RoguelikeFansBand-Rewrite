@@ -59,6 +59,7 @@ export async function connectKeyboard(profile) {
   return {
     errors,
     downloadsTo: directory => send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: directory }),
+    async pauseTimers() { await send("Emulation.setVirtualTimePolicy", { policy: "pause" }); },
     async key(key, modifiers = 0) {
       const [code, windowsVirtualKeyCode, implicitModifiers = 0] = keys[key];
       const params = { key, code, windowsVirtualKeyCode, modifiers: modifiers | implicitModifiers };

@@ -599,10 +599,14 @@ fn neutral_tonberry_content() -> Arc<ContentCatalog> {
     let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
     let race = content
         .races
-        .iter_mut()
+        .iter()
         .find(|race| race.id == "rfb-legacy.race.tonberry")
-        .unwrap();
+        .unwrap()
+        .clone();
+    let mut race = race;
     race.id = "test.race.tonberry-control".to_owned();
+    race.legacy_index = None;
+    content.races.push(race);
     Arc::new(ContentCatalog::from_artifact(
         rfb_content::encode_content(content).unwrap(),
     ))
@@ -677,6 +681,17 @@ fn tonberry_damage_is_added_after_weapon_criticals_and_does_not_change_shooting(
         .unwrap();
         events
     };
+    let seed = (0..128)
+        .find(|seed| {
+            let mut trial = archer.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            shoot(&mut trial)
+                .iter()
+                .any(|event| matches!(event, DomainEvent::ProjectileHit { .. }))
+        })
+        .expect("a real bow hit must be reachable");
+    archer.rng = RfbRng::seeded(seed);
+    control.rng = archer.rng.clone();
     let events = shoot(&mut archer);
     assert_eq!(events, shoot(&mut control));
     assert!(
@@ -959,6 +974,148 @@ fn impact_weapon_reuses_earthquake_and_strong_hit_stun_without_extra_trigger_rng
     resolve_melee(&mut missed);
     resolve_melee(&mut control);
     assert_eq!(missed.rng.draw_counter, control.rng.draw_counter);
+}
+
+#[test]
+fn q2_quaker_gloves_forward_impact_only_while_equipped() {
+    let mut base = melee_game(0, "demo.build.warrior");
+    let gloves = "test.q2.quaker";
+    give_inventory_item(&mut base, gloves, "demo.item.quaker");
+    base.equip_inventory_item(gloves, None).unwrap();
+    // Force the strong-hit boundary through the existing test weapon fixture.
+    add_weapon_trait(&mut base, WeaponTraitDto::Order, 60, 1);
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(*seed);
+            resolve_melee(&mut game)
+                .iter()
+                .any(|event| matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. }))
+        })
+        .expect("Quaker gloves must cause a real weapon earthquake");
+    let mut equipped = base.clone();
+    equipped.rng = RfbRng::seeded(seed);
+    let mut intrinsic = equipped.clone();
+    let weapon = weapon_index(&intrinsic);
+    intrinsic.items[weapon]
+        .intrinsic_weapon_traits
+        .insert(WeaponTraitDto::Impact);
+    assert_eq!(resolve_melee(&mut equipped), resolve_melee(&mut intrinsic));
+    assert_eq!(
+        equipped.rng, intrinsic.rng,
+        "two IMPACT sources do not double-roll"
+    );
+
+    let mut removed = base.clone();
+    let slot = match &removed
+        .items
+        .iter()
+        .find(|item| item.id == gloves)
+        .unwrap()
+        .location
+    {
+        ItemLocation::Equipped { slot_id } => slot_id.clone(),
+        _ => panic!("equipped gloves"),
+    };
+    removed.unequip_slot(&slot).unwrap();
+    removed.rng = RfbRng::seeded(seed);
+    assert!(
+        !resolve_melee(&mut removed)
+            .iter()
+            .any(|event| { matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. }) })
+    );
+    force_melee_misses(&mut base);
+    let mut missed_intrinsic = base.clone();
+    let weapon = weapon_index(&missed_intrinsic);
+    missed_intrinsic.items[weapon]
+        .intrinsic_weapon_traits
+        .insert(WeaponTraitDto::Impact);
+    assert_eq!(
+        resolve_melee(&mut base),
+        resolve_melee(&mut missed_intrinsic)
+    );
+    assert_eq!(base.rng, missed_intrinsic.rng);
+}
+
+#[test]
+fn q3_master_tonberry_negative_blows_apply_in_full_to_both_hands() {
+    let mut game = Game::new_with_build(531, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    let offhand = game
+        .body_slots
+        .iter()
+        .find(|slot| slot.slot_type == "shield")
+        .unwrap()
+        .id
+        .clone();
+    give_inventory_item(&mut game, "test.q3.offhand", "demo.item.dagger");
+    game.equip_inventory_item("test.q3.offhand", Some(&offhand))
+        .unwrap();
+    give_inventory_item(&mut game, "test.q3.gloves", "demo.item.master-tonberry");
+    game.generated_artifact_ids
+        .insert("demo.item.master-tonberry".into());
+    game.equip_inventory_item("test.q3.gloves", None).unwrap();
+    // Keep both rates above the zero floor to expose the full per-hand penalty.
+    let weapons = game
+        .equipped_melee_weapons()
+        .iter()
+        .map(|item| item.id.clone())
+        .collect::<Vec<_>>();
+    for item in &mut game.items {
+        if weapons.contains(&item.id) {
+            item.intrinsic_properties
+                .equipment_bonuses
+                .melee_attacks_delta_percent = 400;
+        }
+    }
+    let mut control = game.clone();
+    control
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.q3.gloves")
+        .unwrap()
+        .intrinsic_properties
+        .equipment_bonuses
+        .melee_attacks_delta_percent = 200;
+    let profiles = game.player_melee_profiles(&game.player_derived_stats());
+    let controls = control.player_melee_profiles(&control.player_derived_stats());
+    assert_eq!(profiles.len(), 2);
+    let rate = |profile: &crate::game::player_stats::ResolvedAttackProfile| {
+        i32::from(profile.attacks) * 100 + i32::from(profile.extra_attack_chance_percent)
+    };
+    for (actual, control) in profiles.iter().zip(&controls) {
+        assert_eq!(rate(actual), rate(control) - 200);
+    }
+    let loaded = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(game.state_hash(), loaded.state_hash());
+    assert_eq!(
+        profiles.iter().map(rate).collect::<Vec<_>>(),
+        loaded
+            .player_melee_profiles(&loaded.player_derived_stats())
+            .iter()
+            .map(rate)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn q3_atlas_fixed_impact_reaches_the_existing_earthquake_consumer() {
+    let mut base = melee_game(532, "demo.build.warrior");
+    give_inventory_item(&mut base, "test.q3.atlas", "demo.item.atlas");
+    base.equip_inventory_item("test.q3.atlas", None).unwrap();
+    // A prepared strong hit isolates the fixed artifact's IMPACT flag.
+    add_weapon_trait(&mut base, WeaponTraitDto::Order, 60, 1);
+    let successful = (0..10_000).any(|seed| {
+        let mut game = base.clone();
+        game.rng = RfbRng::seeded(seed);
+        resolve_melee(&mut game)
+            .iter()
+            .any(|event| matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. }))
+    });
+    assert!(
+        successful,
+        "Atlas must trigger the existing earthquake/stun path"
+    );
 }
 
 #[test]

@@ -454,7 +454,7 @@ fn realm_eligibility_and_saved_history_keep_primary_arcane_and_the_eighty_four_c
             1 => realms.previous_realm_ids = vec!["arcane".to_owned(), "sorcery".to_owned()],
             2 => realms.previous_realm_ids.clear(),
             3 => realms.previous_realm_ids.push("sorcery".to_owned()),
-            4 => realms.second_realm_id = "chaos".to_owned(),
+            4 => realms.second_realm_id = "trump".to_owned(),
             _ => save.player.spent_spell_learning = 84 + 64 + 1,
         }
         assert!(

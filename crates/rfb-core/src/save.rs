@@ -119,7 +119,10 @@ pub(crate) fn actor_from_spawn(
         friendly: false,
         no_pet: false,
         no_genocide: false,
+        cloned: false,
+        no_destruction: false,
         casting_cooldown_remaining: 0,
+        burglary_drops_remaining: None,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
@@ -160,7 +163,10 @@ pub(crate) fn actor_from_runtime_spawn(
         friendly: false,
         no_pet: false,
         no_genocide: false,
+        cloned: false,
+        no_destruction: false,
         casting_cooldown_remaining: 0,
+        burglary_drops_remaining: None,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
         resistances: ResistanceProfile::default(),
@@ -214,7 +220,10 @@ pub(crate) fn actor_from_player(
         friendly: false,
         no_pet: false,
         no_genocide: false,
+        cloned: false,
+        no_destruction: false,
         casting_cooldown_remaining: 0,
+        burglary_drops_remaining: None,
         observed_player_resistances: BTreeMap::new(),
         statuses,
         resistances,
@@ -242,6 +251,29 @@ fn generated_item_serial(id: &str) -> Option<u64> {
     id.strip_prefix(GENERATED_ITEM_ID_PREFIX)?.parse().ok()
 }
 
+fn validate_burglary_drop_budget(
+    definition: &rfb_content::ActorDefinition,
+    remaining: Option<u32>,
+) -> Result<(), CoreError> {
+    if let Some(remaining) = remaining {
+        let maximum = definition.death_drop.as_ref().map_or(0, |drop| {
+            u32::from(drop.base_rolls)
+                + drop.chance_rolls.len() as u32
+                + drop
+                    .count_dice
+                    .iter()
+                    .map(|d| u32::from(d.dice) * u32::from(d.sides))
+                    .sum::<u32>()
+        });
+        if remaining > maximum {
+            return Err(CoreError::InvalidSave(
+                "monster burglary drop budget is invalid",
+            ));
+        }
+    }
+    Ok(())
+}
+
 pub(crate) fn actor_from_entity(
     entity: ActorSaveDto,
     content: &ContentCatalog,
@@ -249,6 +281,7 @@ pub(crate) fn actor_from_entity(
     let definition = content
         .actor(&entity.kind_id)
         .ok_or_else(|| CoreError::UnknownActor(entity.kind_id.clone()))?;
+    validate_burglary_drop_budget(definition, entity.burglary_drops_remaining)?;
     let appearance = if let Some(appearance_kind_id) = entity.appearance_kind_id.as_deref() {
         let appearance = content
             .actor(appearance_kind_id)
@@ -339,7 +372,10 @@ pub(crate) fn actor_from_entity(
         friendly: entity.friendly,
         no_pet: entity.no_pet,
         no_genocide: entity.no_genocide,
+        cloned: entity.cloned,
+        no_destruction: entity.no_destruction,
         casting_cooldown_remaining: entity.casting_cooldown_remaining,
+        burglary_drops_remaining: entity.burglary_drops_remaining,
         observed_player_resistances,
         statuses,
         resistances,
@@ -393,6 +429,8 @@ pub(crate) fn item_from_dto(
         item.origin_kind,
         item.damage_dice_override,
         item.discount_percent,
+        item.intrinsic_weapon_traits
+            .contains(&rfb_protocol::WeaponTraitDto::Blessed),
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
@@ -491,6 +529,8 @@ fn inventory_item_from_dto_at(
         item.origin_kind,
         item.damage_dice_override,
         item.discount_percent,
+        item.intrinsic_weapon_traits
+            .contains(&rfb_protocol::WeaponTraitDto::Blessed),
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
@@ -572,6 +612,8 @@ pub(crate) fn equipment_item_from_dto(
         item.origin_kind,
         item.damage_dice_override,
         item.discount_percent,
+        item.intrinsic_weapon_traits
+            .contains(&rfb_protocol::WeaponTraitDto::Blessed),
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
@@ -650,6 +692,8 @@ pub(crate) fn carried_item_from_dto(
         item.origin_kind,
         item.damage_dice_override,
         item.discount_percent,
+        item.intrinsic_weapon_traits
+            .contains(&rfb_protocol::WeaponTraitDto::Blessed),
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
@@ -740,8 +784,13 @@ fn captured_actor_from_save(
     {
         return Err(CoreError::InvalidSave("captured actor state is invalid"));
     }
+    validate_burglary_drop_budget(
+        content.actor(&value.kind_id).unwrap(),
+        value.burglary_drops_remaining,
+    )?;
     Ok(Some(CapturedActor {
         custom_name: value.custom_name,
+        burglary_drops_remaining: value.burglary_drops_remaining,
         kind_id: value.kind_id,
         speed: value.speed,
         hp: value.hp,
@@ -753,6 +802,7 @@ fn captured_actor_from_save(
 fn captured_actor_to_save(value: &CapturedActor) -> CapturedActorSaveDto {
     CapturedActorSaveDto {
         custom_name: value.custom_name.clone(),
+        burglary_drops_remaining: value.burglary_drops_remaining,
         kind_id: value.kind_id.clone(),
         speed: value.speed,
         hp: value.hp,
@@ -963,11 +1013,15 @@ fn validate_item_creation_state(
     origin_kind: Option<ItemOriginKindDto>,
     damage_dice_override: Option<u16>,
     discount_percent: u8,
+    blessed_weapon: bool,
 ) -> Result<(), CoreError> {
     let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
-    // cast_enchantment discounts nameless equipment while preserving its origin.
+    // cast_enchantment discounts nameless equipment; bless_weapon can also
+    // discount fixed weapons, retaining a persisted Blessed trait and origin.
     let discounted_equipment = discount_percent == 99
-        && definition.artifact_generation.is_none()
+        && (definition.artifact_generation.is_none()
+            || blessed_weapon
+                && (definition.melee_profile.is_some() || definition.projectile_profile.is_some()))
         && (definition.melee_profile.is_some()
             || definition
                 .tags
@@ -1042,8 +1096,13 @@ pub(crate) fn player_to_save(
         minor_slow_energy: 0,
         chaos_patron_id: None,
         reality_change_ticks: 0,
+        music: rfb_protocol::MusicStateDto::default(),
+        hex: Default::default(),
+        rage_mana_sustained: false,
+        samurai: Default::default(),
         pending_mutation_direction: None,
         pending_ability_direction: None,
+        pending_ability_glyph: None,
         duelist_target_id: None,
         pending_duelist: None,
         statuses: player
@@ -1174,7 +1233,10 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             friendly: entity.friendly,
             no_pet: entity.no_pet,
             no_genocide: entity.no_genocide,
+            cloned: entity.cloned,
+            no_destruction: entity.no_destruction,
             casting_cooldown_remaining: entity.casting_cooldown_remaining,
+            burglary_drops_remaining: entity.burglary_drops_remaining,
             observed_player_resistances: entity
                 .observed_player_resistances
                 .iter()

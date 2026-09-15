@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.hex-ice-armor",
+  "nameKey": "ability-demo-hex-ice-armor-name",
+  "descriptionKey": "ability-demo-hex-ice-armor-description",
+  "abilityProgramId": "demo.ability-program.hex-ice-armor",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "hex",
+    "spell"
+  ],
+  "affectsGroundItems": false
+}

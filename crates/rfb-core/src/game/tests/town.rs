@@ -1376,6 +1376,16 @@ fn zul_eddies_failure_and_abandonment_never_unlock_town_teleport() {
     let task = "demo.task.zul-eddies";
     for abandon in [false, true] {
         let mut game = town_facility_game(42, "demo.build.warrior", tower);
+        // This exercises task exit state, not survival of the entry turn.
+        game.apply_player_melee_status(STATUS_INVULNERABILITY, 1000, "test.task-lifecycle");
+        game.player
+            .statuses
+            .iter_mut()
+            .find(|status| status.kind_id == STATUS_INVULNERABILITY)
+            .unwrap()
+            .granted_modifiers
+            .max_hp = 10_000;
+        game.player.hp = game.effective_player_max_hp();
         support::clear_monsters(&mut game);
         dispatch_next(
             &mut game,
@@ -2955,7 +2965,7 @@ fn telmora_nine_shops_trade_and_save() {
         "demo.town.telmora",
         "demo.shop.telmora-inn",
         Position { x: 87, y: 49 },
-        9,
+        10,
     );
 }
 
@@ -3689,74 +3699,14 @@ fn angwil_inner_temple_uses_class_membership_for_healing_and_restoration() {
 #[test]
 fn angwil_trump_tower_prices_and_recall_survive_save_and_return() {
     let id = "demo.town-facility.angwil-trump-tower";
-    // Trump is not a formal player build yet. This validated fixture supplies
-    // only a realm identity to exercise the real membership and recall paths.
-    let root =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
-    let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
-    // New realm identities need both high-book reward ranks required by the world.
-    for (rank, source) in [(3, "black-prayers"), (4, "necronomicon")] {
-        let book_id = format!("test.ability-book.trump-{rank}");
-        let mut book = artifact
-            .content
-            .ability_books
-            .iter()
-            .find(|book| book.id == format!("demo.ability-book.{source}"))
-            .unwrap()
-            .clone();
-        book.id = book_id.clone();
-        book.realm_id = Some("trump".to_owned());
-        book.rank = Some(rank);
-        book.ability_ids.truncate(1);
-        artifact.content.ability_books.push(book);
-        let mut item = artifact
-            .content
-            .items
-            .iter()
-            .find(|item| item.id == format!("demo.item.{source}"))
-            .unwrap()
-            .clone();
-        item.id = format!("test.item.trump-book-{rank}");
-        item.rfb_base_kind = None;
-        item.ability_book_id = Some(book_id);
-        artifact.content.items.push(item);
-    }
-    let profile = artifact
-        .content
-        .classes
-        .iter_mut()
-        .find(|class| class.id == "demo.class.high-mage")
-        .unwrap()
-        .casting_profile
-        .as_mut()
-        .unwrap();
-    profile
-        .realm_profiles
-        .push(rfb_content::CastingRealmProfileDefinition {
-            realm_id: "trump".to_owned(),
-            ability_book_ids: vec![
-                "test.ability-book.trump-3".to_owned(),
-                "test.ability-book.trump-4".to_owned(),
-            ],
-            learning_capacity_bonus: 0,
-            ability_overrides: Vec::new(),
-        });
-    let mut build = artifact
-        .content
-        .builds
-        .iter()
-        .find(|build| build.id == "demo.build.high-mage-death")
-        .unwrap()
-        .clone();
-    build.id = "test.build.trump".to_owned();
-    build.first_realm_id = Some("trump".to_owned());
-    build.starting_items.clear();
-    artifact.content.builds.push(build);
-    let content = Arc::new(rfb_content::ContentCatalog::from_artifact(
-        rfb_content::encode_content(artifact.content).unwrap(),
-    ));
+    let content = load_built_in_content().unwrap();
     for (build, amberite, membership, base_cost) in [
-        ("test.build.trump", false, FacilityMembershipDto::Owner, 0),
+        (
+            "demo.build.high-mage-trump",
+            false,
+            FacilityMembershipDto::Owner,
+            0,
+        ),
         (
             "demo.build.warrior",
             false,
@@ -4798,6 +4748,7 @@ fn shared_museum_import_preserves_instances_and_knowledge_without_id_collisions(
         .unwrap()
         .captured_actor = Some(CapturedActor {
         custom_name: None,
+        burglary_drops_remaining: None,
         kind_id: "demo.actor.horse".to_owned(),
         speed: 117,
         hp: 3,
@@ -6479,11 +6430,23 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             .collect::<std::collections::BTreeMap<_, _>>(),
         std::collections::BTreeMap::from([
             ("demo.item.black-prayers", 135),
+            ("demo.item.apprentice-handbook", 135),
+            ("demo.item.minstrels-music", 1_350),
+            ("demo.item.bugei-shofu", 135),
+            ("demo.item.yagyuu-bugeichou", 1_350),
+            ("demo.item.handbook-of-hex", 135),
+            ("demo.item.high-curse", 1_350),
+            ("demo.item.burglars-handbook", 135),
+            ("demo.item.thieving-ways", 1_350),
+            ("demo.item.anger-management", 135),
+            ("demo.item.northern-frights", 1_350),
             ("demo.item.black-mass", 1_350),
             ("demo.item.cantrips-for-beginners", 135),
             ("demo.item.minor-arcana", 338),
             ("demo.item.major-arcana", 1_350),
             ("demo.item.manual-of-mastery", 3_380),
+            ("demo.item.attractions-of-law", 135),
+            ("demo.item.obstacle-coursebook", 1350),
             ("demo.item.beginners-handbook", 135),
             ("demo.item.master-sorcerers-handbook", 1_350),
             ("demo.item.book-of-elements", 135),
@@ -6496,6 +6459,14 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             ("demo.item.immortal-rituals", 1_350),
             ("demo.item.rites-of-initiation", 135),
             ("demo.item.ways-of-war", 1_350),
+            ("demo.item.handbook-for-pupils", 135),
+            ("demo.item.grade-holders-book", 1_350),
+            ("demo.item.sign-of-chaos", 135),
+            ("demo.item.chaos-mastery", 1_350),
+            ("demo.item.conjurings-and-tricks", 135),
+            ("demo.item.deck-of-many-things", 1_350),
+            ("demo.item.stench-of-death", 135),
+            ("demo.item.sepulchral-ways", 1_350),
         ])
     );
     let book = shop

@@ -49,11 +49,24 @@ fn mattock_forced_base_disruption_activation_round_trips() {
             actor_id: "test.loot-source".to_owned(),
         },
     };
-    // This seed reaches Disruption after the natural artifact gate.
-    game.rng = RfbRng::seeded(136);
-    let mut drops = game
-        .generate_loot_instances(&context, ItemLocation::Inventory)
-        .unwrap();
+    // Keep the natural artifact gate; choose a repeatable Disruption sample
+    // independently of how many fixed mattock candidates exist.
+    let (mut game, mut drops) = (0..5000)
+        .find_map(|seed| {
+            let mut trial = game.clone();
+            trial.rng = RfbRng::seeded(seed);
+            let drops = trial
+                .generate_loot_instances(&context, ItemLocation::Inventory)
+                .unwrap();
+            (drops.len() == 1
+                && drops[0].kind_id == "demo.item.mattock"
+                && drops[0].affix_ids == ["rfb-legacy.affix.disruption"]
+                && drops[0].rolled_affixes[0].properties.modifiers.strength == 3
+                && drops[0].rolled_affixes[0].melee_damage_dice
+                    == Some(rfb_protocol::MeleeDamageDiceDto { dice: 3, sides: 9 }))
+            .then_some((trial, drops))
+        })
+        .expect("a natural Disruption sample with pval3 and 3d9 must exist");
     assert_eq!(drops.len(), 1);
     let item = drops.remove(0);
     assert_eq!(item.kind_id, "demo.item.mattock");
@@ -77,6 +90,13 @@ fn mattock_forced_base_disruption_activation_round_trips() {
     game.items.push(item);
     game.equip_inventory_item(&item_id, None).unwrap();
 
+    // Pick the source check's immediate-success branch, so cancellation
+    // has exactly one percentile draw and cannot fail before target selection.
+    game.rng = RfbRng::seeded(
+        (0..1000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+            .unwrap(),
+    );
     let save = game.to_save();
     let mut game = Game::from_save_with_content(
         save.clone(),
@@ -85,6 +105,8 @@ fn mattock_forced_base_disruption_activation_round_trips() {
     )
     .expect("natural ego rolls and activation should survive a save round-trip");
     assert_eq!(game.to_save(), save);
+    let mut expected = game.clone();
+    expected.rng.bounded(100);
     game.use_inventory_item(
         &item_id,
         None,
@@ -96,8 +118,8 @@ fn mattock_forced_base_disruption_activation_round_trips() {
     .unwrap();
     assert_eq!(
         game.to_save(),
-        save,
-        "missing direction must preserve item, resources, and RNG"
+        expected.to_save(),
+        "missing direction only performs the device check; item and resources are preserved"
     );
 
     let target = Position {
@@ -422,6 +444,11 @@ fn riding_charge_moves_mount_attacks_and_uses_profile_recovery() {
         x: target.x - 1,
         y: target.y,
     };
+    // This fixture exercises charge movement/recovery after a real device success.
+    let seed = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
     let mut events = Vec::new();
     game.use_inventory_item(
         ITEM_ID,
@@ -498,6 +525,11 @@ fn dungeon_anti_melee_riding_charge_moves_and_spends_charge_without_attacking() 
     );
     game.entities[1].controller_id = Some(game.player.id.clone());
     game.riding_actor_id = Some("test.mount".to_owned());
+    // This fixture exercises charge movement/recovery after a real device success.
+    let seed = (0..1000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+        .unwrap();
+    game.rng = RfbRng::seeded(seed);
     let mut events = Vec::new();
     game.use_inventory_item(
         ITEM_ID,
@@ -541,6 +573,12 @@ fn dungeon_anti_melee_riding_charge_moves_and_spends_charge_without_attacking() 
 #[test]
 fn biased_ego_activation_reuses_the_ability_effect_resolver() {
     let mut game = ability_effect_game(0xE3_7001);
+    // Exercise the resolver after a real successful device check.
+    game.rng = RfbRng::seeded(
+        (0..1000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+            .unwrap(),
+    );
     let mut events = Vec::new();
     game.use_inventory_item(
         ABILITY_EFFECT_ITEM_ID,

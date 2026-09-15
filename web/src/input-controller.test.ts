@@ -1888,45 +1888,76 @@ test("a pending Produce Mana effect opens mandatory direction targeting", () => 
   assert.deepEqual(announcements, ["message-mutation-direction-required"]);
 });
 
-test("a pending Nature's Wrath branch opens ability direction targeting", () => {
-  const state = new AppState();
-  const announcements = [];
-  const controller = new InputController({
-    state,
-    dom: {},
-    localization: {},
-    window: {},
-    getInputPreset: () => "roguelike",
-    getZoom: () => 1,
-    whenIdle: async () => {},
-    dispatch: async () => {},
-    describeLook: () => "",
-    openObjectList: () => {},
-    openMogaminator: () => {},
-    onLookOrTargeting: () => {},
-    onLookFocusChange: () => {},
-    announce: (key) => announcements.push(key),
-  });
-  const update = {
-    mapScale: "local",
-    worldTravelDestination: null,
-    width: 96,
-    height: 33,
-    floorId: "core.floor.wilderness",
-    player: {
-      position: { x: 48, y: 16 },
-      pendingAbilityDirection: {
-        abilityId: "demo.ability.nature-natures-wrath",
-        branchRoll: 6,
+for (const [abilityId, message] of [
+  ["demo.ability.nature-natures-wrath", "message-ability-direction-required"],
+  ["demo.ability.chaos-call-chaos", "message-chaos-direction-required"],
+  ["demo.ability.trump-shuffle", "message-trump-direction-required"],
+]) {
+  test(`a pending ${abilityId} branch opens ability direction targeting`, () => {
+    const state = new AppState();
+    const announcements = [];
+    const controller = new InputController({
+      state,
+      dom: {},
+      localization: {},
+      window: {},
+      getInputPreset: () => "roguelike",
+      whenIdle: async () => {},
+      getZoom: () => 1,
+      dispatch: async () => {},
+      describeLook: () => "",
+      openObjectList: () => {},
+      openMogaminator: () => {},
+      onLookOrTargeting: () => {},
+      onLookFocusChange: () => {},
+      announce: (key) => announcements.push(key),
+    });
+    const update = {
+      mapScale: "local",
+      worldTravelDestination: null,
+      width: 96,
+      height: 33,
+      floorId: "core.floor.wilderness",
+      player: {
+        position: { x: 48, y: 16 },
+        pendingAbilityDirection: {
+          abilityId,
+          branchRoll: 6,
+        },
       },
-    },
-  };
+    };
 
-  controller.reconcileStatus(update);
+    controller.reconcileStatus(update);
 
-  assert.equal(state.targetingIntent?.type, "ability-direction");
-  assert.deepEqual(state.targeting?.spec.modes, ["direction"]);
-  assert.deepEqual(announcements, ["message-ability-direction-required"]);
+    assert.equal(state.targetingIntent?.type, "ability-direction");
+    assert.deepEqual(state.targeting?.spec.modes, ["direction"]);
+    assert.deepEqual(announcements, [message]);
+  });
+}
+
+test("saved Wonder prompts once, validates a symbol and can cancel", () => {
+  for (const answer of ["q", null]) {
+    const state = new AppState();
+    state.status = { mapScale: "local", width: 96, height: 33, floorId: "floor",
+      player: { position: { x: 10, y: 10 }, pendingAbilityGlyph: { castResolution: {} } } };
+    const timers = [];
+    const commands = [];
+    const answers = ["two symbols", answer];
+    const controller = new InputController({ state, dom: {},
+      localization: { format: key => key },
+      window: { setTimeout: fn => timers.push(fn), prompt: () => answers.shift() },
+      getInputPreset: () => "vi", getZoom: () => 1,
+      dispatch: async command => commands.push(command),
+      describeLook: () => "", openObjectList() {}, openMogaminator() {},
+      onLookFocusChange() {}, announce() {},
+    });
+    controller.reconcileStatus(state.status);
+    controller.reconcileStatus(state.status);
+    assert.equal(timers.length, 1);
+    assert.equal(commands.length, 0);
+    timers[0]();
+    assert.deepEqual(commands, [{ type: "resolve-ability-glyph", glyph: answer }]);
+  }
 });
 
 test("auto-get locks one target, then requests the next Core target", async () => {

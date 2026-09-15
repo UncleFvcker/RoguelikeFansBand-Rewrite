@@ -35,6 +35,75 @@ const DEATH_VAMPIRIC_DRAIN_ABILITY_ID: &str = "demo.ability.death-vampiric-drain
 const DEATH_VAMPIRISM_TRUE_ABILITY_ID: &str = "demo.ability.death-vampirism-true";
 
 impl Game {
+    pub(in crate::game) fn resolve_player_chain_lightning_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        use rfb_protocol::{Direction, TargetSelection};
+
+        let mut beam = ability.clone();
+        beam.effect = AbilityEffectDefinition::BeamDamage {
+            damage_dice: 5 + self.progress.level / 10,
+            damage_sides: 8,
+            damage_bonus: 0,
+            damage_type: rfb_content::ActorDamageType::Electricity,
+            maximum_range: None,
+        };
+        if let Some(profile) = self.casting_profile() {
+            self.apply_casting_profile_damage_bonus(profile, &mut beam, self.progress.level);
+        }
+        let AbilityEffectDefinition::BeamDamage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            ..
+        } = beam.effect
+        else {
+            unreachable!()
+        };
+
+        // do_chaos_spell(17) rolls separately for keypad directions 0..=9.
+        // 0 is the origin; 5 uses RFB's old global target. This game has no
+        // retained target, so both are empty shots but still consume their dice.
+        for direction in [
+            None,
+            Some(Direction::SouthWest),
+            Some(Direction::South),
+            Some(Direction::SouthEast),
+            Some(Direction::West),
+            None,
+            Some(Direction::East),
+            Some(Direction::NorthWest),
+            Some(Direction::North),
+            Some(Direction::NorthEast),
+        ] {
+            let damage = self
+                .roll_damage(damage_dice, damage_sides)
+                .saturating_add(i32::from(damage_bonus))
+                .max(0);
+            let damage = i32::try_from(spell_power_value(damage as u64, ability.spell_power_bonus))
+                .expect("chain lightning damage must fit i32");
+            let Some(direction) = direction else { continue };
+            let path = self
+                .projectile_path(&TargetSelection::Direction { direction }, 8)
+                .expect("a compass direction always produces a projectile path");
+            self.resolve_player_beam_damage_with_base(
+                &ability.id,
+                path,
+                DamageType::Electricity,
+                damage,
+                ability.affects_ground_items,
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        Ok(())
+    }
+
     pub(in crate::game) fn resolve_player_projectile_damage_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -475,6 +544,13 @@ impl Game {
             u64::try_from(base_raw_damage).expect("area damage must be non-negative"),
         ))
         .expect("spell-powered area damage must fit i32");
+        // do_chaos_spell(10): double the already spell-powered value, then
+        // let the shared area projection attenuate it by distance.
+        let base_raw_damage = if ability.id == "demo.ability.chaos-sonic-boom" {
+            base_raw_damage.saturating_mul(2)
+        } else {
+            base_raw_damage
+        };
         let noticed_drain = ability.id == "demo.ability.mindcrafter-psychic-drain" && {
             let (trace, _) =
                 self.trace_projectile_path_with_actor_policy(path.clone(), stop_at_actor);
@@ -852,7 +928,8 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
+        let (trace, _) =
+            self.trace_projectile_path_with_damage_policy(path, false, Some(damage_type));
         let affected_positions = trace.traversed.clone();
         self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
         self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);
@@ -1367,6 +1444,7 @@ impl Game {
                 damage,
                 FatalityPolicy::AtOrBelowZero,
             );
+            self.rage_blood_lust(application.damage.applied);
             commit_damage_application(&mut self.entities[index], &application);
             self.entities[index].alerted = true;
             changed.insert(self.entities[index].position);
@@ -1756,6 +1834,7 @@ impl Game {
                 damage,
                 FatalityPolicy::AtOrBelowZero,
             );
+            self.rage_blood_lust(application.damage.applied);
             commit_damage_application(&mut self.entities[target_index], &application);
             changed.insert(application.position);
             events.push(DomainEvent::AbilityHit {
@@ -1885,12 +1964,21 @@ impl Game {
                 u64::try_from(raw_damage).expect("drain life damage must be non-negative"),
             ))
             .expect("spell-powered drain life damage must fit i32");
-            let damage = self.resolve_ability_damage_to_entity(
+            // devices.c EFFECT_DRAIN_LIFE projects GF_OLD_DRAIN: living targets
+            // do not resist it as nether, and vamp_player restores life first.
+            let item_drain = ability.tags.iter().any(|tag| tag == "item-activation");
+            // Wonder's drain_life is GF_OLD_DRAIN, not vampirism: no nether
+            // resistance and no player healing.
+            let wonder_drain = ability.id == "demo.ability.chaos-wonder";
+            let damage = self.resolve_ability_damage_to_entity_with_resistance(
                 target_index,
                 &ability.id,
                 DamageType::from(*damage_type),
                 raw_damage,
                 trace.clone(),
+                (item_drain || wonder_drain).then_some(ResistanceLevel::Normal),
+                true,
+                false,
                 events,
                 changed,
                 removed_entities,
@@ -1899,17 +1987,20 @@ impl Game {
                 self.add_virtue(VirtueKindDto::Sacrifice, -1);
                 self.add_virtue(VirtueKindDto::Vitality, -1);
             }
-            let requested = if !*feeds || self.nutrition < hunger::NUTRITION_FULL {
+            let requested = if wonder_drain {
+                0
+            } else if !*feeds || self.nutrition < hunger::NUTRITION_FULL {
                 damage.applied.min(hp_before)
             } else {
                 0
             };
-            let outcome = if matches!(
-                ability.id.as_str(),
-                "rfb.ability.race.vampirism"
-                    | "rfb.ability.mutation.vampirism"
-                    | DEATH_VAMPIRISM_TRUE_ABILITY_ID
-            ) {
+            let outcome = if item_drain
+                || matches!(
+                    ability.id.as_str(),
+                    "rfb.ability.race.vampirism"
+                        | "rfb.ability.mutation.vampirism"
+                        | DEATH_VAMPIRISM_TRUE_ABILITY_ID
+                ) {
                 self.apply_player_vampiric_healing(requested)
             } else {
                 self.apply_player_healing(requested)

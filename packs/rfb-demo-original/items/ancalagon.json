@@ -1,0 +1,74 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ancalagon",
+  "nameKey": "item-demo-ancalagon-name",
+  "descriptionKey": "item-demo-ancalagon-description",
+  "glyph": "|",
+  "generationLevel": 60,
+  "weightTenthsPound": 20,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 281,
+    "baseItemKindId": "demo.item.dragon-fang",
+    "instant": false,
+    "rarityOneIn": 50,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance",
+      "rfb-legacy.affix.artifact-extra-res-or-power"
+    ]
+  },
+  "weaponProficiencyBaseItemId": "demo.item.dragon-fang",
+  "rfbValue": {
+    "flags": [
+      "BLOWS",
+      "BRAND_ACID",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_ACID",
+      "STR",
+      "XTRA_H_RES",
+      "XTRA_RES_OR_POWER"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 9,
+    "toHit": 16,
+    "toDamage": 16
+  },
+  "modifiers": {
+    "strength": 4,
+    "dexterity": 4
+  },
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 200
+  },
+  "resistances": {
+    "acid": "immune"
+  },
+  "brands": [
+    "acid"
+  ]
+}

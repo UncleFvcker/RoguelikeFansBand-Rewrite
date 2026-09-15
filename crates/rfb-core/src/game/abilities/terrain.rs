@@ -252,6 +252,34 @@ impl Game {
         damage.applied
     }
 
+    pub(super) fn resolve_player_adjacent_trap_door_destruction(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        for (position, target_id) in self.adjacent_trap_door_replacements() {
+            let source_id = self.terrain[self.index(position).expect("planned neighbor")].clone();
+            self.replace_terrain_from_source(
+                position,
+                &target_id,
+                TerrainChangeSource::Magic,
+                events,
+                changed,
+            );
+            events.push(DomainEvent::AbilityTerrainTransformed {
+                ability_id: ability.id.clone(),
+                resolution: AbilityTerrainTransformResolutionDto {
+                    center: self.player.position,
+                    radius: 1,
+                    source_terrain_ids: vec![source_id],
+                    target_terrain_id: target_id,
+                    transformed_positions: vec![position],
+                },
+            });
+        }
+    }
+
     pub(super) fn resolve_player_terrain_beam_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -294,6 +322,21 @@ impl Game {
         if trace.impact != trace.landing && self.index(trace.impact).is_some() {
             affected_positions.push(trace.impact);
         }
+        if operation == AbilityTerrainBeamOperationDefinition::DisarmTraps {
+            let chest_ids = self.items.iter().filter(|item| {
+                matches!(item.location, ItemLocation::Ground(p) if affected_positions.contains(&p))
+                    && item.chest.is_some_and(|chest| chest.difficulty > 0)
+            }).map(|item| item.id.clone()).collect::<Vec<_>>();
+            for id in chest_ids {
+                let item = self.items.iter_mut().find(|item| item.id == id).unwrap();
+                let chest = item.chest.as_mut().unwrap();
+                chest.difficulty = -chest.difficulty;
+                if let ItemLocation::Ground(p) = item.location {
+                    changed.insert(p);
+                }
+                self.identify_item_instance(&id, ItemIdentificationRequest::new(false));
+            }
+        }
         let mut replacements = Vec::new();
         for position in affected_positions {
             let Some(index) = self.index(position) else {
@@ -303,31 +346,50 @@ impl Game {
                 continue;
             };
             let target_id = match operation {
+                AbilityTerrainBeamOperationDefinition::DisarmTraps => terrain
+                    .trap
+                    .as_ref()
+                    .map(|t| t.disarm_to_terrain_id.as_str())
+                    .or_else(|| {
+                        terrain
+                            .tags
+                            .iter()
+                            .any(|t| t == "monster-trap")
+                            .then_some("demo.terrain.floor")
+                    })
+                    .or_else(|| {
+                        (terrain.open_to_terrain_id.is_some()
+                            && terrain
+                                .tags
+                                .iter()
+                                .any(|t| t == "door-locked" || t == "secret"))
+                        .then_some("demo.terrain.door-closed")
+                    }),
                 AbilityTerrainBeamOperationDefinition::JamDoors => {
-                    terrain.jam_to_terrain_id.as_ref()
+                    terrain.jam_to_terrain_id.as_deref()
                 }
                 AbilityTerrainBeamOperationDefinition::DestroyTrapsAndDoors => terrain
                     .trap
                     .as_ref()
-                    .map(|trap| &trap.disarm_to_terrain_id)
+                    .map(|trap| trap.disarm_to_terrain_id.as_str())
                     .or_else(|| {
                         terrain
                             .tags
                             .iter()
                             .any(|tag| tag == "door")
-                            .then_some(terrain.bash_to_terrain_id.as_ref())
+                            .then_some(terrain.bash_to_terrain_id.as_deref())
                             .flatten()
                     }),
                 AbilityTerrainBeamOperationDefinition::StoneToMud => terrain
                     .digging
                     .as_ref()
                     .filter(|digging| digging.resolution != TerrainDiggingResolution::Permanent)
-                    .and_then(|digging| digging.result_terrain_id.as_ref()),
+                    .and_then(|digging| digging.result_terrain_id.as_deref()),
             };
             if let Some(target_id) = target_id
-                && target_id != &terrain.id
+                && target_id != terrain.id
             {
-                replacements.push((position, terrain.id.clone(), target_id.clone()));
+                replacements.push((position, terrain.id.clone(), target_id.to_owned()));
             }
         }
 
@@ -794,6 +856,20 @@ impl Game {
             removed_items,
             removed_gold_piles,
         ) = if self.area_destruction_allowed() {
+            let power = match ability.id.as_str() {
+                "demo.ability.chaos-word-of-destruction" => {
+                    Some(super::super::ability_scaling::spell_power_value(
+                        u64::from(self.progress.level) * 4,
+                        self.effective_player_spell_power_bonus(),
+                    ) as u16)
+                }
+                "demo.ability.rage-shatter-device" => Some(self.progress.level * 4),
+                "demo.ability.chaos-wonder" => Some(self.progress.level * 2),
+                _ => None,
+            };
+            if power.is_some() {
+                changed.extend(self.entities.iter().map(|a| a.position));
+            }
             let plan = self.plan_area_destruction(
                 minimum_radius,
                 maximum_radius,
@@ -801,6 +877,7 @@ impl Game {
                 wall_terrain_id,
                 quartz_terrain_id,
                 magma_terrain_id,
+                power,
             );
             let outcome = self.apply_area_destruction_plan(plan, events, changed, removed_entities);
             (
@@ -1062,6 +1139,7 @@ impl Game {
                     damage,
                     FatalityPolicy::AtOrBelowZero,
                 );
+                self.rage_blood_lust(application.damage.applied);
                 commit_damage_application(&mut self.entities[actor_index], &application);
                 self.entities[actor_index].alerted = true;
                 let trace = ProjectileTrace {

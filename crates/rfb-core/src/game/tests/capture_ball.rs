@@ -182,6 +182,7 @@ fn blocked_release_keeps_the_ball_and_drop_uses_the_exact_hostility_roll() {
     let ball_index = equipped_capture_ball(&mut game);
     game.items[ball_index].captured_actor = Some(CapturedActor {
         custom_name: None,
+        burglary_drops_remaining: None,
         kind_id: "demo.actor.horse".to_owned(),
         speed: 117,
         hp: 3,
@@ -229,6 +230,7 @@ fn drop_and_destruction_release_the_actor_before_finishing_the_item_lifecycle() 
     base.items[ball_index].location = ItemLocation::Inventory;
     base.items[ball_index].captured_actor = Some(CapturedActor {
         custom_name: None,
+        burglary_drops_remaining: None,
         kind_id: "demo.actor.horse".to_owned(),
         speed: 115,
         hp: 4,
@@ -280,6 +282,7 @@ fn captured_state_round_trips_projects_details_and_regenerates_on_schedule() {
     let ball_index = equipped_capture_ball(&mut game);
     game.items[ball_index].captured_actor = Some(CapturedActor {
         custom_name: None,
+        burglary_drops_remaining: None,
         kind_id: "demo.actor.horse".to_owned(),
         speed: 118,
         hp: 50,

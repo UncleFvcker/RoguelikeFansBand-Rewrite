@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.musashi-katana",
+  "nameKey": "item-demo-musashi-katana-name",
+  "descriptionKey": "item-demo-musashi-katana-description",
+  "glyph": "|",
+  "generationLevel": 50,
+  "weightTenthsPound": 120,
+  "baseValue": 60000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 171,
+    "baseItemKindId": "demo.item.katana",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "weaponProficiencyBaseItemId": "demo.item.katana",
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SHOW_MODS",
+      "SUST_DEX"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 5,
+    "toHit": 28,
+    "toDamage": 17
+  },
+  "modifiers": {
+    "dexterity": 3
+  },
+  "passives": [
+    "sustain-dexterity"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.hex-curse-weapon",
+  "nameKey": "ability-demo-hex-curse-weapon-name",
+  "descriptionKey": "ability-demo-hex-curse-weapon-description",
+  "abilityProgramId": "demo.ability-program.hex-curse-weapon",
+  "target": {
+    "modes": [
+      "item"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "hex",
+    "spell"
+  ],
+  "affectsGroundItems": false
+}

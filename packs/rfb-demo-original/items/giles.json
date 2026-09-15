@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.giles",
+  "nameKey": "item-demo-giles-name",
+  "descriptionKey": "item-demo-giles-description",
+  "glyph": "[",
+  "generationLevel": 20,
+  "weightTenthsPound": 200,
+  "baseValue": 30000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": ["artifact", "equipment", "armor"],
+  "artifactGeneration": {"sourceIndex": 168, "baseItemKindId": "demo.item.ring-mail", "instant": false, "rarityOneIn": 20},
+  "rfbValue": {"flags": ["DEC_STEALTH", "HIDE_TYPE", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "RES_CHAOS", "RES_COLD", "RES_FIRE", "RES_NEXUS"], "pval": 2, "toArmor": 18},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "modifiers": {"defense": 30},
+  "equipmentBonuses": {"stealthSkill": -2, "meleeSkill": -2},
+  "resistances": {"fire": "resistant", "chaos": "resistant", "nexus": "resistant", "cold": "resistant"}
+}

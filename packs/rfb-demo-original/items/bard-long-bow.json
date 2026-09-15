@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.bard-long-bow",
+  "nameKey": "item-demo-bard-long-bow-name",
+  "descriptionKey": "item-demo-bard-long-bow-description",
+  "glyph": "}",
+  "generationLevel": 60,
+  "weightTenthsPound": 40,
+  "baseValue": 40000,
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 125,
+    "baseItemKindId": "demo.item.long-bow",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SHOW_MODS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "projectileProfile": {
+    "ammunitionType": "arrow",
+    "damageMultiplierPercent": 400,
+    "range": 18,
+    "shotEnergy": 10000,
+    "toDamage": 29,
+    "toHit": 17
+  },
+  "modifiers": {
+    "dexterity": 3
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

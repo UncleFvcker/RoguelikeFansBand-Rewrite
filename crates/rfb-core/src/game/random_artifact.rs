@@ -396,11 +396,13 @@ impl Generator<'_, '_> {
         if self.bias == None && creation.scroll && self.one(4) {
             let (bias, chance) = match self.class_id {
                 "demo.class.mage"
+                | "demo.class.necromancer"
                 | "demo.class.high-mage"
                 | "demo.class.warrior-mage"
                 | "demo.class.magic-eater" => (Mage, 20),
                 "demo.class.mindcrafter" => (Priestly, 20),
                 "demo.class.priest" => (Priestly, 30),
+                "demo.class.bard" => (Priestly, 20),
                 "demo.class.sniper" | "demo.class.ranger" => (Ranger, 30),
                 "demo.class.paladin" => (Priestly, 60),
                 _ => (Warrior, 0),

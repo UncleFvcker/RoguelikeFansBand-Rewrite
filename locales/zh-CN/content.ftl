@@ -1272,6 +1272,14 @@ item-demo-mirror-shield-name = 镜之盾
 item-demo-mirror-shield-description = 一面能反射来袭魔法弹的光洁盾牌。
 item-demo-leather-gloves-name = 皮手套
 item-demo-leather-gloves-description = 轻便的手部护具，在保护双手的同时不妨碍握持武器。
+item-demo-dog-collar-of-fang-name = 牙（Fang）的狗项圈
+item-demo-dog-collar-of-fang-description = 牙（Fang）的狗项圈
+item-demo-dog-collar-of-wolf-name = 狼（Wolf）的狗项圈
+item-demo-dog-collar-of-wolf-description = 狼（Wolf）的狗项圈
+item-demo-dog-collar-of-grip-name = 紧咬（Grip）的狗项圈
+item-demo-dog-collar-of-grip-description = 紧咬（Grip）的狗项圈
+item-demo-multi-hued-centipede-name = 多彩蜈蚣的软皮靴
+item-demo-multi-hued-centipede-description = 多彩蜈蚣的软皮靴
 item-demo-soft-leather-boots-name = 软皮靴
 item-demo-soft-leather-boots-description = 一双以系带固定的柔软及胫皮靴。
 item-demo-hard-leather-cap-name = 硬皮帽
@@ -4322,6 +4330,30 @@ actor-demo-shimmering-vortex-description = 一根会刺痛你眼睛的发光奇�
 actor-demo-weird-fume-name = 怪异烟雾
 actor-demo-weird-fume-description = 一团旋转的螺旋状雾气，不断改变着它的外观。
 item-demo-amulet-name = 护身符
+item-demo-necklace-of-the-dwarves-name = 矮人项链
+item-demo-necklace-of-the-dwarves-description = 诺格莱迷尔；一条镶嵌着无数闪耀的维林诺宝石的金项链，更衬托出一颗光芒四射的精灵宝钻。曾在山脉铁匠铺中长期劳作的矮人工匠们坚韧的灵魂依然留存于其中，而它戴在佩戴者身上却轻如游丝。
+item-demo-gogo-name = 格格的护身符
+item-demo-gogo-description = 格格的护身符
+item-demo-corwin-name = 科温的铁护手
+item-demo-corwin-description = 科温的铁护手
+item-demo-jack-of-shadows-name = 暗影杰克的披风
+item-demo-jack-of-shadows-description = 暗影杰克的披风
+item-demo-giles-name = 吉尔斯的环甲
+item-demo-giles-description = 哈姆的吉尔斯的坚固环甲，他凭借着这些神器的力量，从一个不起眼的农夫变成了一位伟大的领主和英雄。
+item-demo-padre-name = 神父的金属扎甲
+item-demo-padre-description = 神父的金属扎甲
+item-demo-balli-stonehand-name = 石手巴林的战斧
+item-demo-balli-stonehand-description = 这把武器的双刃是在贝莱格斯特锻造的，那些将会再次挥舞它的人，将获得它所蕴含的能够抵抗和忍耐的强大力量。
+item-demo-kamui-name = 逃亡者卡姆依的忍者刀
+item-demo-kamui-description = 逃亡者卡姆依的忍者刀
+item-demo-jing-ke-name = 荆轲的短刀
+item-demo-jing-ke-description = 荆轲的短刀
+item-demo-yositsune-helm-name = 义经的龙盔
+item-demo-yositsune-helm-description = 这是源义经的头盔。它保护了他的头部免受敌人无数箭矢和刀剑的伤害。
+item-demo-black-belet-name = 『黑色贝雷帽』针织帽
+item-demo-black-belet-description = 海象艾杰姆（Aijem）传说中的黑帽子，在时间的迷雾中缝制而成，据说能保持其主人身心永远年轻。
+item-demo-dunce-cap-name = 『笨蛋帽』尖帽子
+item-demo-dunce-cap-description = 它能产生一种特殊的感觉。
 item-demo-boromir-name = 波罗莫的护身符
 item-demo-boromir-description = 一个巨大的金色项圈，由无数根金线和钢线交织而成，两端镶嵌着巨大的金色猎犬。
 item-demo-amulet-description = 一枚等待获得魔法属性的普通护身符。
@@ -10197,3 +10229,1544 @@ terrain-demo-glass-door-jammed-name = 卡住的玻璃门
 terrain-demo-glass-door-jammed-description = 用铁蒺藜加固的玻璃门，仍可透视。
 terrain-demo-glass-door-broken-name = 破损的玻璃门
 terrain-demo-glass-door-broken-description = 已被撞坏的玻璃门。
+item-demo-ubbo-sathla-name = 乌波·萨斯拉的皮夹克
+item-demo-ubbo-sathla-description = 乌波·萨斯拉的皮夹克
+item-demo-dragonkind-name = 龙族的金王冠
+item-demo-dragonkind-description = 龙族的金王冠
+item-demo-emperor-lich-name = 巫妖皇帝的金王冠
+item-demo-emperor-lich-description = 巫妖皇帝的金王冠
+item-demo-dog-collar-of-carcharoth-name = 卡哈洛斯的狗项圈
+item-demo-dog-collar-of-carcharoth-description = 卡哈洛斯的狗项圈
+item-demo-ymir-name = 尤弥尔的双手剑
+item-demo-ymir-description = 尤弥尔的双手剑
+item-demo-ariel-name = 空气女王，爱丽儿的空灵披风
+item-demo-ariel-description = 空气女王，爱丽儿的空灵披风
+item-demo-moire-name = 蕾布玛女王，墨伊蕾的金王冠
+item-demo-moire-description = 蕾布玛女王，墨伊蕾的金王冠
+item-demo-quaker-name = 大地大师，震地者的皮手套
+item-demo-quaker-description = 大地大师，震地者的皮手套
+item-demo-emperor-quylthulg-name = 克尔苏格皇帝的金王冠
+item-demo-emperor-quylthulg-description = 克尔苏格皇帝的金王冠
+item-demo-cyberdemon-lord-name = 赛博恶魔领主的全身板甲
+item-demo-cyberdemon-lord-description = 赛博恶魔领主的全身板甲
+item-demo-ulik-name = 乌里克的木棒
+item-demo-ulik-description = 乌里克的木棒
+item-demo-eyes-name = 百眼之镶钻王冠
+item-demo-eyes-description = 百眼之镶钻王冠
+item-demo-kundry-name = 孔德里的护身符
+item-demo-kundry-description = 孔德里的护身符
+item-demo-loge-name = 火之精灵，洛格的长剑
+item-demo-loge-description = 火之精灵，洛格的长剑
+item-demo-pumpkin-lamp-of-jack-of-lanterns-name = 杰克灯笼的南瓜灯
+item-demo-pumpkin-lamp-of-jack-of-lanterns-description = 杰克灯笼的南瓜灯
+item-demo-master-tonberry-name = 冬贝利大师的镶钉皮手套
+item-demo-master-tonberry-description = 冬贝利大师的镶钉皮手套
+item-demo-twilight-name = 双手剑『暮光』
+item-demo-twilight-description = 双手剑『暮光』
+item-demo-stormbringer-name = 混沌之刃『风暴使者』
+item-demo-stormbringer-description = 混沌之刃『风暴使者』
+item-demo-gothmog-name = 勾斯魔格的鞭子
+item-demo-gothmog-description = 勾斯魔格的鞭子
+item-demo-devouring-darkness-name = 吞噬黑暗的戒指
+item-demo-devouring-darkness-description = 吞噬黑暗的戒指
+item-demo-unlight-cloak-of-ungoliant-name = 乌苟立安特的非光披风
+item-demo-unlight-cloak-of-ungoliant-description = 乌苟立安特的非光披风
+item-demo-mephistopheles-name = 墨菲斯托费勒斯的皮手套
+item-demo-mephistopheles-description = 墨菲斯托费勒斯的皮手套
+item-demo-typhoeus-name = 堤丰的双手剑
+item-demo-typhoeus-description = 堤丰的双手剑
+item-demo-kronos-name = 克洛诺斯的镰刀
+item-demo-kronos-description = 克洛诺斯的镰刀
+item-demo-mighty-hammer-name = 神力之锤
+item-demo-mighty-hammer-description = 神力之锤
+item-demo-eye-name = 眼睛
+item-demo-eye-description = 眼睛
+item-activation-demo-eye-of-the-hydra-name = 治疗
+item-demo-eye-of-the-hydra-name = 九头蛇的眼睛
+item-demo-eye-of-the-hydra-description = 九头蛇的眼睛
+item-demo-atlas-name = 阿特拉斯的神力之锤
+item-demo-atlas-description = 阿特拉斯的神力之锤
+item-demo-phial-626-name = 玻璃瓶
+item-demo-phial-626-description = 玻璃瓶
+item-demo-sting-name = 小剑『刺针』
+item-demo-sting-description = 小剑『刺针』
+item-demo-lava-lamp-of-telmora-name = 特尔莫拉的熔岩灯
+item-demo-lava-lamp-of-telmora-description = 特尔莫拉的熔岩灯
+task-demo-telmora-vault-name = 金库 (泰尔莫拉)
+task-demo-telmora-vault-description = 镇外的金库曾经被用作一座小型堡垒，并储存了许多贵重物品。自那以后它被攻占了。请找到那把被称为刺针（Sting）的短剑并把它带回给我们！当你找到这把剑的那一刻，你的任务就完成了。虽然这把剑可能在任何一个房间里，但你一次只能探索一间。那里的怪物很强大，而且我们也留下了许多需要当心的陷阱。
+task-demo-telmora-vault-completed-description = 请保留这把剑吧，它会在你未来的任务中帮助你。
+task-demo-telmora-vault-failed-description = 你没找到那把剑？好吧，怪物们可能已经把它带走了。太遗憾了，刺针本来能对驱除我们镇上的邪恶大有帮助。
+task-demo-telmora-volcano-name = 火山 (泰尔莫拉)
+task-demo-telmora-volcano-description = 我们领地东部的一座火山一直在轰隆作响。但是，我们不认为这是自然现象。现在，是时候消灭所有在这座火山中安家的生物了。如果我们想避免熔岩毁掉我们的庄稼，你必须把它们全部消灭干净！
+task-demo-telmora-volcano-completed-description = 这是对你出色工作的奖励。
+task-demo-telmora-volcano-failed-description = 你让我失望了，小心别再这样了！
+task-demo-telmora-thing-under-the-mountain-name = 山下的东西 (泰尔莫拉)
+task-demo-telmora-thing-under-the-mountain-description = 我们领地东部的一座山脉曾经是矮人采矿社区的所在地；但在他们的隧道开始喷出岩浆后，他们匆忙搬走了。起初我们以为那只是一座休眠了几个世纪的普通火山，但现在看来，他们的挖掘惊醒了某种更危险的东西的沉睡。有传言说，一个披着火焰的暗影骇魔一直住在那座旧矿井下面；我们偶尔会在夜间听到山脉轰隆作响，就好像有什么巨大的怪物正试图挖出一条路来。我们希望你能它到达地表之前让它重新陷入沉睡。
+task-demo-telmora-thing-under-the-mountain-completed-description = 谢谢你！这是对你出色工作的奖励。
+task-demo-telmora-thing-under-the-mountain-failed-description = 真是个可怕的消息。
+town-facility-demo-telmora-castle-name = 城堡
+town-facility-demo-telmora-castle-description = 请求任务
+town-facility-demo-telmora-castle-owner-name = 丹内戈三世
+item-demo-flute-name = 长笛
+item-demo-flute-description = 把长笛
+item-demo-jewel-629-name = 宝石
+item-demo-jewel-629-description = 颗宝石
+item-demo-gada-of-hanuman-name = 哈努曼的金刚杵
+item-demo-gada-of-hanuman-description = 哈努曼的金刚杵
+item-demo-murugan-name = 穆鲁干的长矛
+item-demo-murugan-description = 穆鲁干的长矛
+item-demo-rama-name = 罗摩的长弓
+item-demo-rama-description = 罗摩的长弓
+item-demo-krishna-name = 黑天的把长笛
+item-demo-krishna-description = 黑天的把长笛
+item-demo-kaumodaki-name = 权杖『高莫达纪』
+item-demo-kaumodaki-description = 权杖『高莫达纪』
+item-demo-shiva-name = 湿婆的三叉戟
+item-demo-shiva-description = 湿婆的三叉戟
+item-demo-kaustubha-name = 颗宝石『考斯杜巴』
+item-demo-kaustubha-description = 颗宝石『考斯杜巴』
+item-demo-kali-name = 迦梨的新月弯刀
+item-demo-kali-description = 迦梨的新月弯刀
+item-demo-brahmastra-name = 箭『梵天法宝』
+item-demo-brahmastra-description = 箭『梵天法宝』
+item-demo-saraswati-name = 辩才天女的硬皮帽
+item-demo-saraswati-description = 辩才天女的硬皮帽
+item-demo-lakshmi-name = 吉祥天女的护身符
+item-demo-lakshmi-description = 吉祥天女的护身符
+item-demo-space-suit-of-vayu-name = 伐由的宇航服
+item-demo-space-suit-of-vayu-description = 伐由的宇航服
+item-demo-shiva-avatar-jacket-name = 湿婆化身的皮夹克
+item-demo-shiva-avatar-jacket-description = 湿婆化身的皮夹克
+item-demo-shiva-avatar-boots-name = 湿婆化身的软皮靴
+item-demo-shiva-avatar-boots-description = 湿婆化身的软皮靴
+device-activation-e5-rama-arrow-name = 强力之箭
+floor-demo-mount-meru-depth-name = 须弥山
+terrain-demo-mount-meru-entrance-name = 须弥山
+terrain-demo-mount-meru-entrance-description = 通向须弥山的小径
+
+item-demo-beruthiel-name = 贝露西尔的铁王冠
+item-demo-beruthiel-description = 巫师女王贝露西尔的午夜色钢铁头冠，它以可怕的肉体代价赋予了极其非凡的视觉和感知能力。
+
+item-demo-thanos-name = 灭霸的铁护手
+item-demo-thanos-description = 原版固定神器。
+
+item-demo-calris-name = 『卡尔利斯』一手半剑
+item-demo-calris-description = 这把剑的华丽剑柄上刻有力量符文，当你握住这把充满危险的强大武器时，它那唯一的一条血槽会闪烁着冰冷的蓝光。
+
+item-demo-grayswandir-name = 『灰杖』军刀
+item-demo-grayswandir-description = 科温的强大剑刃，装饰有部分“图案（Pattern）”，对混沌生物极其致命；它是布兰德的剑“维尔温德尔（Werewindle）”的双生剑。
+
+item-demo-zarcuthra-name = 『扎尔库斯拉』双手剑
+item-demo-zarcuthra-description = 黑暗而致命的符文在这把可怕武器裸露的钢铁上显得格外显眼，当你缓慢靠近时，你能感受到一股令人震惊的杀戮与撕裂的力量。
+
+item-demo-aglarang-name = 『阿格拉兰』打刀
+item-demo-aglarang-description = 一把极其完美、轮廓分明的剑，其锋利的边缘能毫不费力地切开岩石与骨头，还带有能让佩戴者变得轻盈敏捷的法术。它就是战斗的化身。
+
+item-demo-careth-asdriag-name = 『卡瑞斯·阿斯德里亚格』军刀
+item-demo-careth-asdriag-description = 远东鲁恩（Rhun）领主的传家宝，这个名字令所有自然与非自然的生物都感到恐慌。
+
+item-demo-merlin-name = 梅林的短剑
+item-demo-merlin-description = 原版固定神器。
+
+item-demo-doomcaller-name = 『末日召唤者』混沌之刃
+item-demo-doomcaller-description = 这把愤怒的武器，被狂暴的愤怒所诅咒，如饥似渴地刺入敌人的血肉之中。当它造成永远无法愈合的伤口时，它会将死亡的阴影汇聚到其主人身上。
+
+item-demo-buckland-name = 雄鹿地的投石索
+item-demo-buckland-description = 一把在黑暗和混乱中赋予非凡的头脑清晰度的投石索，它能以致命的速度投掷弹丸。
+
+item-demo-goln-nova-name = 『戈恩·诺瓦』阔剑
+item-demo-goln-nova-description = 原版固定神器。
+
+item-demo-silver-chariot-name = 『银色战车』细剑
+item-demo-silver-chariot-description = 原版固定神器。
+
+item-demo-worpal-blade-name = 『崭首剑』长剑
+item-demo-worpal-blade-description = 这把剑看起来很像那把最强的剑！
+
+item-demo-soulcrusher-name = 『灵魂粉碎者』混沌之刃
+item-demo-soulcrusher-description = 原版固定神器。
+
+item-demo-falis-name = 法利斯的长剑
+item-demo-falis-description = 原版固定神器。
+
+item-demo-hrunting-name = 『赫伦汀』双手剑
+item-demo-hrunting-description = 原版固定神器。
+
+item-demo-anubis-name = 阿努比斯的打刀
+item-demo-anubis-description = 原版固定神器。
+
+item-demo-gurenki-name = 『红莲骑』长剑
+item-demo-gurenki-description = 原版固定神器。
+
+item-demo-tonbo-giri-name = 『蜻蛉切』阔刃长矛
+item-demo-tonbo-giri-description = 原版固定神器。
+
+item-demo-glass-slippers-name = 水晶鞋
+item-demo-glass-slippers-description = 原版固定神器。
+
+item-demo-tailbiter-name = 『咬尾者』阔剑
+item-demo-tailbiter-description = 屠龙者贝洛马利乌斯（Bellomarius）的剑，后来属于吉尔斯。在它不起眼的剑刃中隐藏着探测和屠杀巨龙的强大魔法。
+
+item-demo-excalibur-name = 『王者之剑』长剑
+item-demo-excalibur-description = 原版固定神器。
+
+item-demo-destruction-name = 毁灭之猎鹰之剑
+item-demo-destruction-description = 原版固定神器。
+
+item-demo-narsil-name = 『纳西尔』断折的剑
+item-demo-narsil-description = 这是埃兰迪尔的剑，当他在巴拉督尔的台阶上与索伦战斗而倒下时，它被折断了。
+
+item-demo-guan-yu-name = 关羽的短弯刀
+item-demo-guan-yu-description = 原版固定神器。
+
+item-demo-dasai-name = 『打碎』犀牛皮甲
+item-demo-dasai-description = 原版固定神器。
+
+item-demo-tetsu-geta-of-flame-name = 『火焰铁下驮』秘银铁头靴
+item-demo-tetsu-geta-of-flame-description = 原版固定神器。
+
+item-demo-eowyn-name = 伊欧温的一手半剑
+item-demo-eowyn-description = 原版固定神器。
+
+item-demo-robin-hood-name = 罗宾汉的短弓
+item-demo-robin-hood-description = 这属于生活在密林深处的罗宾汉。
+
+item-demo-hellfire-name = 地狱火的轻弩
+item-demo-hellfire-description = 这把弩能赋予它发射的弩箭火焰能量。
+
+item-demo-wilhelm-tell-crossbow-name = 威廉·泰尔的轻弩
+item-demo-wilhelm-tell-crossbow-description = 瑞士英雄泰尔用这把弩精准地射中了一颗苹果，尽管那颗苹果放在他儿子的头上，之后他还击败了邪恶的行政官盖斯勒（Gessler）。
+
+item-demo-wilhelm-tell-bolt-name = 威廉·泰尔的弩箭
+item-demo-wilhelm-tell-bolt-description = 据说威廉·泰尔射出这支弩箭时，它刺穿了盖斯勒的心脏。
+
+item-demo-elmi-name = 杀人犯埃尔米的短斧
+item-demo-elmi-description = 这是拉夫诺（Raffnor）可怕的杀人犯，埃尔米（Elmi）的短斧。
+
+item-demo-taro-dachi-name = 『太郎太刀』野太刀
+item-demo-taro-dachi-description = 朝仓家的将领真柄直隆（Naotaka Magara）用这把大太刀击败了无数的士兵。
+
+item-demo-maggot-name = 马各特的镰刀
+item-demo-maggot-description = 这是农夫马各特的镰刀。他把它落在自己的农场里了。
+
+item-demo-kaschei-name = 科谢伊的巫师法杖
+item-demo-kaschei-description = 原版固定神器。
+
+item-demo-rygar-name = 阿尔戈斯战士的晨星锤
+item-demo-rygar-description = 这件有着超大头部的奇特武器似乎能极其轻松地向外猛击。事实上，不用你费力，它似乎就能自己跳出去攻击好几次。
+
+item-demo-big-punch-name = 『大锤』灌铅权杖
+item-demo-big-punch-description = 据说这把巨大、暗灰色的权杖是一位古代矮人国王赠送给一名冒险者的礼物，以感谢他从一个可怕的恶魔手中拯救了他的人民。
+
+item-demo-ages-name = 永恒岁月的戒指
+item-demo-ages-description = 你不知道它是什么时候锻造的，但这枚戒指似乎经受住了时间的考验。
+
+item-demo-ancalagon-name = 安卡拉刚的龙牙
+item-demo-ancalagon-description = 原版固定神器。
+
+item-demo-david-name = 大卫的铁弹丸
+item-demo-david-description = 原版固定神器。
+
+item-demo-khazad-dum-name = 卡扎督姆的鹤嘴锄
+item-demo-khazad-dum-description = “矮人们挖得太贪婪，也太深了。你知道他们在卡扎督姆的黑暗中唤醒了什么：暗影与火焰！”
+
+item-demo-undertaker-name = 送葬者的铁锹
+item-demo-undertaker-description = 原版固定神器。
+
+item-demo-kaladanda-name = 『卡拉丹达』巨锤
+item-demo-kaladanda-description = 死亡之杖，这把强大、致命的锤子曾被神明阎摩（Yama）使用，它是终极的武器。无人能抵挡它的愤怒！
+
+item-demo-heracles-name = 赫拉克勒斯的长弓
+item-demo-heracles-description = 这把弓曾属于最伟大的希腊英雄。它的箭矢上涂有勒拿九头蛇的毒液。
+
+item-demo-sword-of-the-winds-name = 风之剑
+item-demo-sword-of-the-winds-description = 这把剑轻如鸿毛。当你挥舞它时，空气都在呼啸。
+
+item-demo-vainglory-name = 『虚荣』晨星锤
+item-demo-vainglory-description = 当你挥舞这把带刺的钉头锤时，你充满了骄傲。
+
+item-demo-mr-shine-name = 闪耀先生的镜之盾
+item-demo-mr-shine-description = 你几乎能相信它是用钻石做的。
+
+item-demo-nogudil-name = 『诺古迪尔』卢塞恩长戟
+item-demo-nogudil-description = 当你举起这把巨锤时，你所有的疑虑都烟消云散了：是时候出发把你的敌人砸成肉酱了。
+
+item-demo-curiosity-name = 『好奇心』短剑
+item-demo-curiosity-description = 非常锋利，很适合把流浪猫切开来检查。
+
+item-demo-tweutox-name = 吐托克斯的长矛
+item-demo-tweutox-description = 提奥图洛，吐托克斯（Tweutox）的长矛，由斯普米斯树（Seepumis）的木头雕刻而成。当你握住它时，它似乎因为充满了能量而悸动。
+
+item-demo-angrist-name = 『安格瑞斯特』匕首
+item-demo-angrist-description = 由最伟大的矮人铁匠铁尔哈（Telchar）锻造，曾被贝伦用来从魔苟斯的王冠上剜出一颗精灵宝钻。这把适合劈砍的长匕首切开普通金属就像它的名字“斩铁剑”所暗示的那样容易。
+
+item-demo-liweris-name = 利维里斯的秘银长矛
+item-demo-liweris-description = 它是用偷来的秘银为邪恶的利维里斯国王锻造的，里面充满了黑暗力量，使其成为一切美好事物的死敌，并且对龙族来说是致命的。消息一传出，利维里斯城就立刻被巨龙夷为平地，国王也死于火海；但他的长矛却保存了下来。
+
+item-demo-carlammas-name = 卡拉马斯之护身符
+item-demo-carlammas-description = 一个燃烧的青铜圆环，带有驱逐邪恶的强大法术。
+
+item-demo-frakir-name = 『弗拉基尔』戒指
+item-demo-frakir-description = 原版固定神器。
+
+item-demo-tulkas-name = 托卡斯的戒指
+item-demo-tulkas-description = 维拉中最迅捷、最愤怒的托卡斯的宝物。
+
+item-demo-narya-name = 力量之 (纳雅)戒指
+item-demo-narya-description = 火之戒，镶嵌着一颗如火焰般发光的红宝石。纳雅是精灵所铸造并向索伦隐藏的三枚力量之戒之一。
+
+item-demo-nenya-name = 力量之 (南雅)戒指
+item-demo-nenya-description = 精金之戒，镶嵌着一颗纯白色的宝石。南雅是精灵所铸造并向索伦隐藏的三枚力量之戒之一。
+
+item-demo-vilya-name = 力量之 (维雅)戒指
+item-demo-vilya-description = 蓝宝石之戒，镶有一颗清澈如星光般闪耀的蓝宝石，无论魔苟斯造成怎样的破坏，它都闪耀着不可触犯的光芒。维雅是精灵所铸造并向索伦隐藏的三枚力量之戒之一。
+
+item-demo-faramir-name = 法拉米尔的护身符
+item-demo-faramir-description = 一条纤细的真银项链，附有伊西利安的宁静法术，用来援助和保护佩戴者。
+
+item-demo-julian-name = 朱利安的金属鳞甲
+item-demo-julian-description = 原版固定神器。
+
+item-demo-caspanion-name = 卡斯帕尼安的强化链甲
+item-demo-caspanion-description = 由相互锁合的钢环组成的锁子甲、护腿和袖子，在关键部位战略性地加固了第二层锁链。其内部蕴含着增强身心的魔法，并且没有任何门能阻挡佩戴者的去路。
+
+item-demo-holhenneth-name = 『霍尔亨尼斯』铁盔
+item-demo-holhenneth-description = 一顶著名的锻铁头盔，赋予佩戴者非凡的心智和感知能力。
+
+item-demo-colluin-name = 『科鲁因』披风
+item-demo-colluin-description = 由来自维林诺的英雄所穿戴的披风，那是一片完全超越了元素纷争的土地。
+
+item-demo-colannon-name = 『科兰农』披风
+item-demo-colannon-description = 一件水晶蓝色的精美丝绸披风，曾被律法势力的无声信使所穿戴。不知何故，它的佩戴者总能逃脱麻烦。
+
+item-demo-flora-name = 弗洛拉的软皮靴
+item-demo-flora-description = 原版固定神器。
+
+item-demo-ringil-name = 『凛吉尔』长剑
+item-demo-ringil-description = 诺多精灵至高王芬国昐的武器；它闪耀起来就像一根被不灭之光照亮的冰柱。魔苟斯曾极不情愿地去面对它；他那瘸了的脚会提醒他，如果再次遇到它，它的威力有多么可怕。
+
+item-demo-anduril-name = 『安都瑞尔』长剑
+item-demo-anduril-description = 著名的“西方之焰”，这把断折的剑被重新锻造。它闪烁着火焰的精华，其佩戴者在战斗中无比强大，没有哪个索伦的生物能抵挡它。即使在失败中，它也永远不会被玷污或折断。
+
+item-demo-werewindle-name = 『维尔温德尔』长剑
+item-demo-werewindle-description = 布兰德强大的“图案”剑，是科温的“灰杖（Grayswandir）”的双生剑。
+
+item-demo-theoden-name = 希优顿的鸟喙斧
+item-demo-theoden-description = 这把武器狭窄的斧头被一个像乌鸦嘴一样的尖头完美平衡，甚至能刺穿史矛革的盔甲，挥舞它的人能感知到敌人的思想。
+
+item-demo-destiny-name = 命运之阔刃长矛
+item-demo-destiny-description = 原版固定神器。
+
+item-demo-ulmo-name = 乌欧牟的三叉戟
+item-demo-ulmo-description = 水之主，维拉乌欧牟的可怕武器。作为除了曼威本人之外最强大的善良力量，乌欧牟嘲笑着不死生物可怕的力量，并且完全掌控着水元素。
+
+item-demo-firestar-name = 『火星』晨星锤
+item-demo-firestar-description = 古代著名的战斗领主，它那带有红色的头部，颜色如同还能在愤怒中重新燃起的余烬一样。
+
+item-demo-taratol-name = 『塔拉托尔』权杖
+item-demo-taratol-description = 一把巨大的脊状权杖，它会在你周围召唤出一圈活跃的闪电光环；即使粗大的火花在你手指和眉毛周围划过，你也完全不受影响。
+
+item-demo-eriril-name = 『艾利瑞尔』铁头木棍
+item-demo-eriril-description = 传奇伊斯塔（Istar）的耀眼金色法杖，这件巫师的伴侣赋予了敏锐的视觉和许多隐藏事物的知识。
+
+item-demo-turmil-name = 『图尔米尔』卢塞恩长戟
+item-demo-turmil-description = 曾被米涅尔塔玛（Meneltarma）大祭司所挥舞，这把巨大的权杖闪烁着如月光般冰冷的光芒，它在精神上和物理上都能发动极其强大的打击。
+
+item-demo-himring-name = 希姆林之硬皮甲
+item-demo-himring-description = 这件由柔韧皮革制成的镶钉胸甲中，蕴含着关于未被征服的希姆林的记忆，那是一座被魔苟斯军团包围却依然屹立不倒的堡垒。
+
+item-demo-kusanagi-no-tsurugi-name = 『草薙剑』打刀
+item-demo-kusanagi-no-tsurugi-description = 原版固定神器。
+
+item-demo-incanus-name = 因卡努斯的长袍
+item-demo-incanus-description = 伟大巫师甘道夫的长袍，他在南方也被称为因卡努斯。它是抵御元素的证明，因为无论是南方的酷热、北方的严寒，还是多尔哥多（Dol Guldur）的酸液坑，都无法阻挡这位无畏的迈雅去追求他的使命。
+
+item-demo-hurin-name = 胡林的鸟喙斧
+item-demo-hurin-description = “胡林[...]双手挥舞着斧头，据说那把斧头在勾斯魔格巨魔卫队的黑色鲜血中冒着烟，直到它枯萎，每次杀戮时，胡林都会高喊‘Aure entuluva！新的白昼必将来临！’。他喊了七十次，但在魔苟斯的命令下，他们最终还是活捉了他……”
+
+item-demo-yasaka-no-magatama-name = 『八尺琼勾玉』护身符
+item-demo-yasaka-no-magatama-description = 原版固定神器。
+
+item-demo-taikobo-name = 太公望的钓鱼竿
+item-demo-taikobo-description = 原版固定神器。
+
+item-demo-matoi-name = 『缠』短杖
+item-demo-matoi-description = 原版固定神器。
+
+item-demo-aranruth-name = 『雅兰露斯』阔剑
+item-demo-aranruth-description = 辛葛的美丽佩剑，正如其名“国王之怒”。它闪烁的光芒冰冷得足以冻结恶魔的心脏。当你紧握它那镶嵌着金银的剑柄时，你会感到身体柔软且步履轻盈。
+
+item-demo-bolshoi-name = 莫斯科大剧院的鞭子
+item-demo-bolshoi-description = 原版固定神器。
+
+item-demo-ama-no-numahoko-name = 『天沼矛』破甲锥
+item-demo-ama-no-numahoko-description = 原版固定神器。
+
+item-demo-mook-name = 慕克的毛皮披风
+item-demo-mook-description = 原版固定神器。
+
+item-demo-dragonic-sword-name = 『龙之剑』双手剑
+item-demo-dragonic-sword-description = 原版固定神器。
+
+item-demo-hermits-purple-name = 『隐者之紫』鞭子
+item-demo-hermits-purple-description = 原版固定神器。
+
+item-demo-nain-name = 内恩的鹤嘴锄
+item-demo-nain-description = 在阿扎努比扎（Azanulbizar）战役中，铁丘陵的内恩曾挥舞过这把巨大的鹤嘴锄，为矮人战胜阿索格的半兽人带来了胜利——尽管内恩自己最后倒下了，即使胜利已成定局。
+
+item-demo-fundin-bluecloak-name = 蓝袍富丁的流星锤
+item-demo-fundin-bluecloak-description = 伟大的矮人牧师之一的武器，拥有保护肉体和灵魂的力量，并且是那些在死后寻求生命者的克星。
+
+item-demo-harness-of-the-hell-name = 地狱挽具
+item-demo-harness-of-the-hell-description = 原版固定神器。
+
+item-demo-asclepius-name = 阿斯克勒庇俄斯的武术棍
+item-demo-asclepius-description = 这是希腊医神阿斯克勒庇俄斯的法杖。
+
+item-demo-defender-of-the-crown-name = 皇冠守卫者的流星锤
+item-demo-defender-of-the-crown-description = 一个相当笨拙但体积巨大的铁制流星锤。当你用它击打敌人时，它会发出一种奇怪的、沉闷的铃铛般的声音。
+
+item-demo-stomper-name = 『重踏者』秘银铁头靴
+item-demo-stomper-description = 原版固定神器。
+
+item-demo-sword-of-tengri-name = 腾格里之剑
+item-demo-sword-of-tengri-description = 这把剑是上天赐予一位注定要征服世界的战士的礼物。
+
+item-demo-bubo-name = 布博的硬皮靴
+item-demo-bubo-description = 一双旧皮靴，舒适却坚固耐穿，这是布博在前往北方冰冻之地的旅途中所穿戴的。
+
+item-demo-barnaby-name = 巴纳比的绒球帽
+item-demo-barnaby-description = 一顶用羊毛编织的迷彩绒球帽，曾被伟大的冒险家巴纳比戴过。
+
+item-demo-efki-name = 吊坠『埃夫基』
+item-demo-efki-description = 这件保护性的护身符上刻有强大的速度符文。当你脖子上挂着它令人安心的重量时，你会感到平静，不再畏惧危险，因为你知道几乎没有哪个敌人能跑得过你。
+
+item-demo-surveillance-name = 监视之护身符
+item-demo-surveillance-description = 这个护身符能揭示世界上所有的秘密。你很高兴它没有落入不太负责任的人手中……
+
+item-demo-black-arrow-name = 黑箭
+item-demo-black-arrow-description = 专用于固定神器的黑箭。
+
+item-demo-feanor-name = 费诺的硬皮靴
+item-demo-feanor-description = 这双神奇的皮靴曾加速了费诺——精灵宝钻的创造者，也是最强大的艾尔达精灵——让他跨过坚冰阵（Grinding Ice），最终抵达中土世界。
+
+item-demo-nothung-name = 『诺统』阔剑
+item-demo-nothung-description = 原版固定神器。
+
+item-demo-chainsword-name = 『链锯剑』阔剑
+item-demo-chainsword-description = 原版固定神器。
+
+item-demo-vorpal-blade-name = 『斩首剑』长剑
+item-demo-vorpal-blade-description = “一，二！一，二！斩首剑，进又出，咔嚓咔嚓响！”
+
+item-demo-bard-long-bow-name = 巴德的长弓
+item-demo-bard-long-bow-description = 面容冷峻的巴德使用的巨大紫杉木弓，他射出了歌曲中所记载的最强大的一箭。
+
+item-demo-winblows-name = 『温不倒』连枷
+item-demo-winblows-description = 原版固定神器。
+
+item-demo-zantetsuken-name = 『斩铁剑』打刀
+item-demo-zantetsuken-description = 原版固定神器。
+
+item-demo-bard-black-arrow-name = 巴德的支黑箭
+item-demo-bard-black-arrow-description = 最致命的箭矢，注入了元素力量，这支箭特别令龙族感到恐惧。
+
+item-demo-musashi-katana-name = 武藏的打刀
+item-demo-musashi-katana-description = 这是著名的二刀流剑术创造者宫本武藏的打刀，他在战斗中用右手挥舞它。
+
+item-demo-musashi-wakizashi-name = 武藏的胁差
+item-demo-musashi-wakizashi-description = 这是著名的二刀流剑术创造者宫本武藏的胁差，他在战斗中用左手挥舞它。
+
+item-demo-iron-ball-name = 『铁球』流星锤
+item-demo-iron-ball-description = 原版固定神器。
+
+item-demo-littlethorn-name = 『小刺』左手短剑
+item-demo-littlethorn-description = 原版固定神器。
+
+item-demo-excalibur-jr-name = 『王者之剑二世』小剑
+item-demo-excalibur-jr-description = 由一位传奇巫师打造，并由英雄皮普（Pip）挥舞了很长一段时间，这把剑具有强大的魔力，但它对蜘蛛的极度恐惧也是出了名的……
+
+item-demo-golden-hammer-name = 『金锤』巨锤
+item-demo-golden-hammer-description = 原版固定神器。
+
+item-demo-aegis-fang-name = 『神盾之牙』战锤
+item-demo-aegis-fang-description = 原版固定神器。
+
+item-demo-cupids-arrow-name = 『丘比特之箭』箭
+item-demo-cupids-arrow-description = 传统上，这支箭只能由胖胖的、衣着暴露的婴儿射出。
+
+item-demo-kamikaze-warrior-name = 神风武士的长袍
+item-demo-kamikaze-warrior-description = 这件长袍上沾满了许多倒下英雄的鲜血。这么多的死亡。这么大的破坏。到底是什么造成了这一切？
+
+item-demo-assassinator-name = 『暗杀者』匕首
+item-demo-assassinator-description = 它是喜欢在敌人熟睡时解决他们的刺客的终极武器。
+
+item-demo-great-maul-of-vice-name = 『罪恶巨锤』巨锤
+item-demo-great-maul-of-vice-description = 这件奇特的物品是各个种族许多女性的最爱。那些发现自己靠近它的人，似乎会不断地失去金钱，而且似乎无法离开它的存在。
+
+item-demo-eternal-blade-name = 『永恒之刃』钻石刃
+item-demo-eternal-blade-description = 原版固定神器。
+
+item-demo-microsoft-edge-name = 『微软 Edge』钻石刃
+item-demo-microsoft-edge-description = 它感觉太锋利（Edge）了，你可能会割伤自己。
+
+item-demo-silver-hammer-name = 『银锤』巨锤
+item-demo-silver-hammer-description = 你还以为那是他们瞎编的呢！
+
+item-demo-skynail-name = 『天之钉』阔剑
+item-demo-skynail-description = 一把极其坚固的闪亮剑刃，它甚至能把星星钉在原位。
+
+item-demo-dragonchip-name = 『幼龙碎片』护身符
+item-demo-dragonchip-description = 一个工艺无双的金色护身符，形状像一条飞龙，上面镶嵌着珍贵的宝石。它上面刻有强大的符文，无论是佩戴者的魔法还是敌人的魔法，在它附近都无法正常发挥作用。
+
+item-demo-moms-sniper-crossbow-name = 妈妈充满爱的模块化狙击弩
+item-demo-moms-sniper-crossbow-description = “老妈充满爱之武器公司（Mom's Loving Arms Company）”的伟大杰作，它能够发射任何弹药。
+
+item-zantetsuken-elastic = 你无法切开如此有弹性的东西！
+item-zantetsuken-arrow = 你斩断了箭矢！
+item-skynail-refuses = 一想到要伤害鸟类，你就退缩了！
+item-vorpal-blade-snicker = 你的斩首剑发出咔嚓咔嚓的声音！
+item-vice-low-gold = ***金币不足警告！！！***
+item-vice-gold-draining = 你感觉你的财富正在流失！
+item-vice-blasted = 可怕的黑色光环冲击了你的罪恶巨锤！
+monster-dawn-successor = 一位新的战士站了出来！
+item-cupid-charmed = 目标被魅惑了！
+item-cupid-friendly = 目标突然变得友好了。
+item-artifact-arrow-stuck = 箭矢粘在了目标身上！
+item-chainsword-noise-1 = KILL, KILL, KILL!
+item-chainsword-noise-2 = The Chainsword roars noisily!
+item-chainsword-noise-3 = VROOM! VROOM!
+item-chainsword-noise-4 = Kill, kill, kill, kill, kill, kill!
+item-chainsword-noise-5 = Blood, blood, blood!
+item-chainsword-noise-6 = Bloodbath!
+
+build-demo-mage-life-craft-name = 法师 · 生命／工艺
+build-demo-mage-life-craft-description = 以生命为第一领域、工艺为第二领域，出生携带两册入门书。
+build-demo-mage-sorcery-craft-name = 法师 · 咒术／工艺
+build-demo-mage-sorcery-craft-description = 以咒术为第一领域、工艺为第二领域，出生携带两册入门书。
+build-demo-mage-nature-craft-name = 法师 · 自然／工艺
+build-demo-mage-nature-craft-description = 以自然为第一领域、工艺为第二领域，出生携带两册入门书。
+build-demo-mage-death-craft-name = 法师 · 死亡／工艺
+build-demo-mage-death-craft-description = 以死亡为第一领域、工艺为第二领域，出生携带两册入门书。
+build-demo-mage-arcane-craft-name = 法师 · 奥秘／工艺
+build-demo-mage-arcane-craft-description = 以奥秘为第一领域、工艺为第二领域，出生携带两册入门书。
+build-demo-mage-craft-life-name = 法师 · 工艺／生命
+build-demo-mage-craft-life-description = 以工艺为第一领域、生命为第二领域，出生携带两册入门书。
+build-demo-mage-craft-sorcery-name = 法师 · 工艺／咒术
+build-demo-mage-craft-sorcery-description = 以工艺为第一领域、咒术为第二领域，出生携带两册入门书。
+build-demo-mage-craft-nature-name = 法师 · 工艺／自然
+build-demo-mage-craft-nature-description = 以工艺为第一领域、自然为第二领域，出生携带两册入门书。
+build-demo-mage-craft-death-name = 法师 · 工艺／死亡
+build-demo-mage-craft-death-description = 以工艺为第一领域、死亡为第二领域，出生携带两册入门书。
+build-demo-mage-craft-arcane-name = 法师 · 工艺／奥秘
+build-demo-mage-craft-arcane-description = 以工艺为第一领域、奥秘为第二领域，出生携带两册入门书。
+build-demo-mage-craft-daemon-name = 法师 · 工艺／恶魔
+build-demo-mage-craft-daemon-description = 以工艺为第一领域、恶魔为第二领域，出生携带两册入门书。
+build-demo-mage-craft-crusade-name = 法师 · 工艺／圣战
+build-demo-mage-craft-crusade-description = 以工艺为第一领域、圣战为第二领域，出生携带两册入门书。
+build-demo-mage-craft-armageddon-name = 法师 · 工艺／毁灭
+build-demo-mage-craft-armageddon-description = 以工艺为第一领域、毁灭为第二领域，出生携带两册入门书。
+build-demo-mage-daemon-craft-name = 法师 · 恶魔／工艺
+build-demo-mage-daemon-craft-description = 以恶魔为第一领域、工艺为第二领域，出生携带两册入门书。
+build-demo-mage-crusade-craft-name = 法师 · 圣战／工艺
+build-demo-mage-crusade-craft-description = 以圣战为第一领域、工艺为第二领域，出生携带两册入门书。
+build-demo-mage-armageddon-craft-name = 法师 · 毁灭／工艺
+build-demo-mage-armageddon-craft-description = 以毁灭为第一领域、工艺为第二领域，出生携带两册入门书。
+build-demo-paladin-life-name = 圣骑士 · 生命
+build-demo-paladin-life-description = 研习生命领域，以随机祈祷学习法术。
+build-demo-paladin-crusade-name = 圣骑士 · 圣战
+build-demo-paladin-crusade-description = 研习圣战领域，以随机祈祷学习法术。
+build-demo-paladin-daemon-name = 圣骑士 · 恶魔
+build-demo-paladin-daemon-description = 研习恶魔领域，以随机祈祷学习法术。
+ability-demo-paladin-holy-lance-name = 神圣长枪
+ability-demo-paladin-holy-lance-description = 发射一道纯粹的神圣射线。
+
+ability-demo-chaos-magic-missile-name = 魔法飞弹
+ability-demo-chaos-magic-missile-description = 发射一道微弱的魔法弹。
+ability-demo-chaos-trap-door-destruction-name = 陷阱/门破坏
+ability-demo-chaos-trap-door-destruction-description = 摧毁相邻方格内的所有陷阱。
+ability-demo-chaos-flash-of-light-name = 闪光
+ability-demo-chaos-flash-of-light-description = 永久照亮附近区域和房间内部。
+ability-demo-chaos-confusing-touch-name = 混乱之触
+ability-demo-chaos-confusing-touch-description = 尝试使你下一个击中的怪物混乱。
+ability-demo-chaos-mana-burst-name = 法力爆发
+ability-demo-chaos-mana-burst-description = 发射一颗魔法球。
+ability-demo-chaos-fire-bolt-name = 火之矢
+ability-demo-chaos-fire-bolt-description = 发射一道火焰魔法弹或射线。
+ability-demo-chaos-fist-of-force-name = 力场之拳
+ability-demo-chaos-fist-of-force-description = 发射一颗微小的分解球。
+ability-demo-chaos-teleport-self-name = 传送自身
+ability-demo-chaos-teleport-self-description = 长距离传送。
+ability-book-demo-sign-of-chaos-name = [混沌的标志]
+ability-book-demo-sign-of-chaos-description = [混沌的标志]
+item-demo-sign-of-chaos-name = [混沌的标志]
+item-demo-sign-of-chaos-description = [混沌的标志]
+
+ability-demo-chaos-wonder-name = 奇迹
+ability-demo-chaos-wonder-description = 发射某种带有随机效果的投射物。
+ability-demo-chaos-chaos-bolt-name = 混沌之矢
+ability-demo-chaos-chaos-bolt-description = 发射一道混沌魔法弹或射线。
+ability-demo-chaos-sonic-boom-name = 音爆
+ability-demo-chaos-sonic-boom-description = 以你为中心生成一颗声波球。
+ability-demo-chaos-doom-bolt-name = 毁灭之矢
+ability-demo-chaos-doom-bolt-description = 发射一道纯净法力射线。
+ability-demo-chaos-fireball-name = 火球
+ability-demo-chaos-fireball-description = 发射一颗火球。
+ability-demo-chaos-teleport-other-name = 传送他人
+ability-demo-chaos-teleport-other-description = 除非被抵抗，否则将射线路径上的所有怪物传送走。
+ability-demo-chaos-word-of-destruction-name = 毁灭之语
+ability-demo-chaos-word-of-destruction-description = 摧毁附近区域内的一切。
+ability-demo-chaos-invoke-logrus-name = 唤起洛格鲁斯
+ability-demo-chaos-invoke-logrus-description = 发射一颗巨大的混沌球。
+ability-book-demo-chaos-mastery-name = [混沌精通]
+ability-book-demo-chaos-mastery-description = 混沌领域第二册。
+item-demo-chaos-mastery-name = [混沌精通]
+item-demo-chaos-mastery-description = 混沌领域第二册。
+
+item-demo-chaos-channels-name = [混沌通道]
+item-demo-chaos-channels-description = 记载混沌领域第三册法术。
+ability-book-demo-chaos-channels-name = [混沌通道]
+ability-book-demo-chaos-channels-description = 记载混沌领域第三册法术。
+ability-demo-chaos-polymorph-other-name = 变形他人
+ability-demo-chaos-polymorph-other-description = 尝试使一个怪物变形。
+ability-demo-chaos-chain-lightning-name = 连锁闪电
+ability-demo-chaos-chain-lightning-description = 向所有方向发射闪电射线。
+ability-demo-chaos-arcane-binding-name = 奥术绑定
+ability-demo-chaos-arcane-binding-description = 它尝试使用你的法力为一件装置充能。
+ability-demo-chaos-disintegrate-name = 解离
+ability-demo-chaos-disintegrate-description = 发射一颗巨大的分解球。
+ability-demo-chaos-alter-reality-name = 改变现实
+ability-demo-chaos-alter-reality-description = 重新生成当前的地下城楼层（改变楼层）。
+ability-demo-chaos-magic-rocket-name = 魔法火箭
+ability-demo-chaos-magic-rocket-description = 发射一枚魔法火箭。
+ability-demo-chaos-chaos-branding-name = 混沌烙印
+ability-demo-chaos-chaos-branding-description = 使当前武器变成混沌(Chaotic)武器。
+ability-demo-chaos-summon-demon-name = 召唤恶魔
+ability-demo-chaos-summon-demon-description = 召唤一只恶魔。
+
+ability-book-demo-armageddon-tome-name = [末日巨著]
+ability-book-demo-armageddon-tome-description = 记载混沌领域第四册法术。
+ability-demo-chaos-gravity-beam-name = 重力射线
+ability-demo-chaos-gravity-beam-description = 发射一道重力射线。
+ability-demo-chaos-meteor-swarm-name = 陨石雨
+ability-demo-chaos-meteor-swarm-description = 使陨石球坠落到附近的随机位置。
+ability-demo-chaos-flame-strike-name = 烈焰打击
+ability-demo-chaos-flame-strike-description = 以你为中心生成一颗巨大的火球。
+ability-demo-chaos-call-chaos-name = 召唤混沌
+ability-demo-chaos-call-chaos-description = 生成随机类型的魔法球或射线。
+ability-demo-chaos-polymorph-self-name = 变形自身
+ability-demo-chaos-polymorph-self-description = 将你自己变形为一个新的形态。
+ability-demo-chaos-mana-storm-name = 法力风暴
+ability-demo-chaos-mana-storm-description = 发射一颗威力极其强大的纯净法力巨球。
+ability-demo-chaos-breathe-logrus-name = 喷吐洛格鲁斯
+ability-demo-chaos-breathe-logrus-description = 发射一颗威力极其强大的混沌球。
+ability-demo-chaos-call-the-void-name = 呼唤虚空
+ability-demo-chaos-call-the-void-description = 除非你不与任何墙壁相邻，否则向所有方向发射火箭、法力球和核废料球。否则将*摧毁*巨大的区域。
+
+build-demo-mage-chaos-life-name = 法师 · 混沌 / 生命
+build-demo-mage-chaos-life-description = 主领域为混沌，副领域为生命；携带对应第一册法术书开始冒险。
+
+build-demo-mage-life-chaos-name = 法师 · 生命 / 混沌
+build-demo-mage-life-chaos-description = 主领域为生命，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-sorcery-name = 法师 · 混沌 / 咒术
+build-demo-mage-chaos-sorcery-description = 主领域为混沌，副领域为咒术；携带对应第一册法术书开始冒险。
+
+build-demo-mage-sorcery-chaos-name = 法师 · 咒术 / 混沌
+build-demo-mage-sorcery-chaos-description = 主领域为咒术，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-nature-name = 法师 · 混沌 / 自然
+build-demo-mage-chaos-nature-description = 主领域为混沌，副领域为自然；携带对应第一册法术书开始冒险。
+
+build-demo-mage-nature-chaos-name = 法师 · 自然 / 混沌
+build-demo-mage-nature-chaos-description = 主领域为自然，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-death-name = 法师 · 混沌 / 死亡
+build-demo-mage-chaos-death-description = 主领域为混沌，副领域为死亡；携带对应第一册法术书开始冒险。
+
+build-demo-mage-death-chaos-name = 法师 · 死亡 / 混沌
+build-demo-mage-death-chaos-description = 主领域为死亡，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-arcane-name = 法师 · 混沌 / 奥秘
+build-demo-mage-chaos-arcane-description = 主领域为混沌，副领域为奥秘；携带对应第一册法术书开始冒险。
+
+build-demo-mage-arcane-chaos-name = 法师 · 奥秘 / 混沌
+build-demo-mage-arcane-chaos-description = 主领域为奥秘，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-craft-name = 法师 · 混沌 / 工艺
+build-demo-mage-chaos-craft-description = 主领域为混沌，副领域为工艺；携带对应第一册法术书开始冒险。
+
+build-demo-mage-craft-chaos-name = 法师 · 工艺 / 混沌
+build-demo-mage-craft-chaos-description = 主领域为工艺，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-daemon-name = 法师 · 混沌 / 恶魔
+build-demo-mage-chaos-daemon-description = 主领域为混沌，副领域为恶魔；携带对应第一册法术书开始冒险。
+
+build-demo-mage-daemon-chaos-name = 法师 · 恶魔 / 混沌
+build-demo-mage-daemon-chaos-description = 主领域为恶魔，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-crusade-name = 法师 · 混沌 / 圣战
+build-demo-mage-chaos-crusade-description = 主领域为混沌，副领域为圣战；携带对应第一册法术书开始冒险。
+
+build-demo-mage-crusade-chaos-name = 法师 · 圣战 / 混沌
+build-demo-mage-crusade-chaos-description = 主领域为圣战，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-mage-chaos-armageddon-name = 法师 · 混沌 / 毁灭
+build-demo-mage-chaos-armageddon-description = 主领域为混沌，副领域为毁灭；携带对应第一册法术书开始冒险。
+
+build-demo-mage-armageddon-chaos-name = 法师 · 毁灭 / 混沌
+build-demo-mage-armageddon-chaos-description = 主领域为毁灭，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-high-mage-chaos-name = 高阶法师 · 混沌
+build-demo-high-mage-chaos-description = 主领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-priest-life-chaos-name = 牧师 · 生命 / 混沌
+build-demo-priest-life-chaos-description = 主领域为生命，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-priest-crusade-chaos-name = 牧师 · 圣战 / 混沌
+build-demo-priest-crusade-chaos-description = 主领域为圣战，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-priest-death-chaos-name = 牧师 · 死亡 / 混沌
+build-demo-priest-death-chaos-description = 主领域为死亡，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-priest-daemon-chaos-name = 牧师 · 恶魔 / 混沌
+build-demo-priest-daemon-chaos-description = 主领域为恶魔，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-warrior-mage-arcane-chaos-name = 战法师 · 奥秘 / 混沌
+build-demo-warrior-mage-arcane-chaos-description = 主领域为奥秘，副领域为混沌；携带对应第一册法术书开始冒险。
+
+build-demo-ranger-nature-chaos-name = 游侠 · 自然 / 混沌
+build-demo-ranger-nature-chaos-description = 主领域为自然，副领域为混沌；携带对应第一册法术书开始冒险。
+
+ability-demo-trump-phase-door-name = 相位门
+ability-demo-trump-phase-door-description = 短距离传送。
+ability-demo-trump-spiders-name = 王牌蜘蛛
+ability-demo-trump-spiders-description = 召唤蜘蛛。
+ability-demo-trump-shuffle-name = 洗牌
+ability-demo-trump-shuffle-description = 引发随机效果。
+ability-demo-trump-reset-recall-name = 重置召回
+ability-demo-trump-reset-recall-description = 重置召回法术的目标“最深”层数。
+ability-demo-trump-teleport-name = 传送
+ability-demo-trump-teleport-description = 长距离传送。
+ability-demo-trump-spying-name = 王牌探知
+ability-demo-trump-spying-description = 在一段时间内赋予心灵感应。
+ability-demo-trump-teleport-away-name = 传送离开
+ability-demo-trump-teleport-away-description = 除非被抵抗，否则将射线路径上的所有怪物传送走。
+ability-demo-trump-animals-name = 王牌动物
+ability-demo-trump-animals-description = 召唤一只动物。
+ability-demo-trump-reach-name = 王牌触及
+ability-demo-trump-reach-description = 将远处的物品拉到你身边。
+ability-demo-trump-kamikaze-name = 王牌神风特攻
+ability-demo-trump-kamikaze-description = 召唤会自爆的怪物。
+ability-demo-trump-phantasmal-servant-name = 幻影仆从
+ability-demo-trump-phantasmal-servant-description = 召唤一只幽灵。
+ability-demo-trump-haste-monster-name = 加速怪物
+ability-demo-trump-haste-monster-description = 使一个怪物加速。
+ability-demo-trump-teleport-level-name = 传送楼层
+ability-demo-trump-teleport-level-description = 立刻传送到向上或向下的楼梯处。
+ability-demo-trump-dimension-door-name = 任意门
+ability-demo-trump-dimension-door-description = 传送到指定位置。
+ability-demo-trump-word-of-recall-name = 召回之语
+ability-demo-trump-word-of-recall-description = 将玩家从地下城召回城镇，或从城镇送回地下城的最深层。
+ability-demo-trump-banish-name = 驱逐
+ability-demo-trump-banish-description = 除非被抵抗，否则将视线内所有的怪物传送走。
+ability-demo-trump-swap-position-name = 交换位置
+ability-demo-trump-swap-position-description = 与一个怪物交换位置。
+ability-demo-trump-undead-name = 王牌不死生物
+ability-demo-trump-undead-description = 召唤一只不死怪物。
+ability-demo-trump-reptiles-name = 王牌爬行动物
+ability-demo-trump-reptiles-description = 召唤一只九头蛇。
+ability-demo-trump-monsters-name = 王牌怪物
+ability-demo-trump-monsters-description = 召唤一些怪物。
+ability-demo-trump-hounds-name = 王牌猎犬
+ability-demo-trump-hounds-description = 召唤一群猎犬。
+ability-demo-trump-branding-name = 王牌烙印
+ability-demo-trump-branding-description = 使当前武器变成王牌(Trump)武器。
+ability-demo-trump-living-trump-name = 活体王牌
+ability-demo-trump-living-trump-description = 赋予使你随机传送或能够随意传送的变异。
+ability-demo-trump-cyberdemon-name = 王牌机械恶魔
+ability-demo-trump-cyberdemon-description = 召唤一只赛博恶魔(cyber demon)。
+ability-demo-trump-divination-name = 王牌占卜
+ability-demo-trump-divination-description = 探测你附近所有的怪物、陷阱、门、楼梯、宝藏和物品。
+ability-demo-trump-lore-name = 王牌学识
+ability-demo-trump-lore-description = *鉴定*一件物品（全面鉴定）。
+ability-demo-trump-heal-monster-name = 治疗怪物
+ability-demo-trump-heal-monster-description = 治愈一个怪物。
+ability-demo-trump-dragon-name = 王牌龙
+ability-demo-trump-dragon-description = 召唤一只龙。
+ability-demo-trump-meteors-name = 王牌陨石
+ability-demo-trump-meteors-description = 使陨石球坠落到附近的随机位置。
+ability-demo-trump-demon-name = 王牌恶魔
+ability-demo-trump-demon-description = 召唤一只恶魔。
+ability-demo-trump-greater-undead-name = 王牌高阶不死生物
+ability-demo-trump-greater-undead-description = 召唤一只高等不死生物。
+ability-demo-trump-ancient-dragon-name = 王牌上古龙
+ability-demo-trump-ancient-dragon-description = 召唤一只上古龙。
+item-demo-conjurings-and-tricks-name = [戏法与把戏]
+item-demo-conjurings-and-tricks-description = [戏法与把戏]
+ability-book-demo-conjurings-and-tricks-name = [戏法与把戏]
+ability-book-demo-conjurings-and-tricks-description = [戏法与把戏]
+item-demo-deck-of-many-things-name = [万象无常牌]
+item-demo-deck-of-many-things-description = [万象无常牌]
+ability-book-demo-deck-of-many-things-name = [万象无常牌]
+ability-book-demo-deck-of-many-things-description = [万象无常牌]
+item-demo-trumps-of-doom-name = [末日王牌]
+item-demo-trumps-of-doom-description = [末日王牌]
+ability-book-demo-trumps-of-doom-name = [末日王牌]
+ability-book-demo-trumps-of-doom-description = [末日王牌]
+item-demo-five-aces-name = [五张王牌]
+item-demo-five-aces-description = [五张王牌]
+ability-book-demo-five-aces-name = [五张王牌]
+ability-book-demo-five-aces-description = [五张王牌]
+build-demo-high-mage-trump-name = 高阶法师（王牌）
+build-demo-high-mage-trump-description = 高阶法师（王牌）
+build-demo-mage-arcane-trump-name = 法师（奥秘／王牌）
+build-demo-mage-arcane-trump-description = 法师（奥秘／王牌）
+build-demo-mage-armageddon-trump-name = 法师（末日／王牌）
+build-demo-mage-armageddon-trump-description = 法师（末日／王牌）
+build-demo-mage-trump-arcane-name = 法师（王牌／奥秘）
+build-demo-mage-trump-arcane-description = 法师（王牌／奥秘）
+build-demo-mage-trump-armageddon-name = 法师（王牌／末日）
+build-demo-mage-trump-armageddon-description = 法师（王牌／末日）
+build-demo-mage-trump-craft-name = 法师（王牌／工艺）
+build-demo-mage-trump-craft-description = 法师（王牌／工艺）
+build-demo-mage-trump-crusade-name = 法师（王牌／圣战）
+build-demo-mage-trump-crusade-description = 法师（王牌／圣战）
+build-demo-mage-trump-daemon-name = 法师（王牌／恶魔）
+build-demo-mage-trump-daemon-description = 法师（王牌／恶魔）
+build-demo-mage-trump-death-name = 法师（王牌／死亡）
+build-demo-mage-trump-death-description = 法师（王牌／死亡）
+build-demo-mage-trump-life-name = 法师（王牌／生命）
+build-demo-mage-trump-life-description = 法师（王牌／生命）
+build-demo-mage-trump-nature-name = 法师（王牌／自然）
+build-demo-mage-trump-nature-description = 法师（王牌／自然）
+build-demo-mage-trump-sorcery-name = 法师（王牌／咒术）
+build-demo-mage-trump-sorcery-description = 法师（王牌／咒术）
+build-demo-mage-craft-trump-name = 法师（工艺／王牌）
+build-demo-mage-craft-trump-description = 法师（工艺／王牌）
+build-demo-mage-crusade-trump-name = 法师（圣战／王牌）
+build-demo-mage-crusade-trump-description = 法师（圣战／王牌）
+build-demo-mage-daemon-trump-name = 法师（恶魔／王牌）
+build-demo-mage-daemon-trump-description = 法师（恶魔／王牌）
+build-demo-mage-death-trump-name = 法师（死亡／王牌）
+build-demo-mage-death-trump-description = 法师（死亡／王牌）
+build-demo-mage-life-trump-name = 法师（生命／王牌）
+build-demo-mage-life-trump-description = 法师（生命／王牌）
+build-demo-mage-nature-trump-name = 法师（自然／王牌）
+build-demo-mage-nature-trump-description = 法师（自然／王牌）
+build-demo-mage-sorcery-trump-name = 法师（咒术／王牌）
+build-demo-mage-sorcery-trump-description = 法师（咒术／王牌）
+build-demo-priest-crusade-trump-name = 牧师（圣战／王牌）
+build-demo-priest-crusade-trump-description = 牧师（圣战／王牌）
+build-demo-priest-daemon-trump-name = 牧师（恶魔／王牌）
+build-demo-priest-daemon-trump-description = 牧师（恶魔／王牌）
+build-demo-priest-death-trump-name = 牧师（死亡／王牌）
+build-demo-priest-death-trump-description = 牧师（死亡／王牌）
+build-demo-priest-life-trump-name = 牧师（生命／王牌）
+build-demo-priest-life-trump-description = 牧师（生命／王牌）
+build-demo-ranger-nature-trump-name = 游侠（自然／王牌）
+build-demo-ranger-nature-trump-description = 游侠（自然／王牌）
+build-demo-warrior-mage-arcane-trump-name = 战法师（奥秘／王牌）
+build-demo-warrior-mage-arcane-trump-description = 战法师（奥秘／王牌）
+build-demo-mage-trump-chaos-name = 法师（王牌／混沌）
+build-demo-mage-trump-chaos-description = 法师（王牌／混沌）
+build-demo-mage-chaos-trump-name = 法师（混沌／王牌）
+build-demo-mage-chaos-trump-description = 法师（混沌／王牌）
+
+# Necromancy — RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c
+ability-demo-necromancy-cold-touch-name = 寒冷之触
+ability-demo-necromancy-cold-touch-description = 用冰寒之触伤害一个相邻的怪物。
+ability-demo-necromancy-summon-rat-name = 召唤老鼠
+ability-demo-necromancy-summon-rat-description = 召唤一只老鼠来吞食死者！
+ability-demo-necromancy-detect-life-name = 侦测生命
+ability-demo-necromancy-detect-life-description = 探测你附近所有活着的怪物。
+ability-demo-necromancy-detect-unlife-name = 侦测不死生物
+ability-demo-necromancy-detect-unlife-description = 探测你附近所有无生命的怪物。
+ability-demo-necromancy-poison-touch-name = 毒素之触
+ability-demo-necromancy-poison-touch-description = 用剧毒之触伤害一个相邻的怪物。
+ability-demo-necromancy-summon-bats-name = 召唤蝙蝠
+ability-demo-necromancy-summon-bats-description = 召唤蝙蝠来吞食生者！
+ability-demo-necromancy-eldritch-howl-name = 诡异嚎叫
+ability-demo-necromancy-eldritch-howl-description = 发出震慑人心的嚎叫。
+ability-demo-necromancy-dark-touch-name = 黑暗之触
+ability-demo-necromancy-dark-touch-description = 用黑暗之触伤害一个相邻的怪物。
+ability-demo-necromancy-summon-wolves-name = 召唤狼
+ability-demo-necromancy-summon-wolves-description = 召唤狼群来吞食生者！
+ability-demo-necromancy-black-cloak-name = 黑色斗篷
+ability-demo-necromancy-black-cloak-description = 你被黑暗所笼罩。
+ability-demo-necromancy-undead-sight-name = 亡灵视界
+ability-demo-necromancy-undead-sight-description = 通过与死者沟通来了解周围的环境。
+ability-demo-necromancy-undead-lore-name = 亡灵学识
+ability-demo-necromancy-undead-lore-description = 让死者为你鉴定一件物品。
+ability-demo-necromancy-repelling-touch-name = 排斥之触
+ability-demo-necromancy-repelling-touch-description = 召唤一阵恶臭的风，将相邻的怪物吹走。
+ability-demo-necromancy-vampiric-touch-name = 吸血之触
+ability-demo-necromancy-vampiric-touch-description = 从相邻的敌人身上窃取生命。
+ability-demo-necromancy-dread-of-night-name = 黑夜恐惧
+ability-demo-necromancy-dread-of-night-description = 召唤一只恐魔 (Dread) 为你效命。小心施法失败的反噬！
+ability-demo-necromancy-entomb-name = 活埋
+ability-demo-necromancy-entomb-description = 将选定的敌人活埋在坟墓中。
+ability-demo-necromancy-summon-zombies-name = 召唤僵尸
+ability-demo-necromancy-summon-zombies-description = 死者归来，渴望着大脑！
+ability-demo-necromancy-summon-skeletons-name = 召唤骷髅
+ability-demo-necromancy-summon-skeletons-description = 召唤骷髅作为助手。
+ability-demo-necromancy-summon-ghosts-name = 召唤幽灵
+ability-demo-necromancy-summon-ghosts-description = 唤回阵亡战士的灵魂，进行邪恶的奴役。
+ability-demo-necromancy-summon-vampires-name = 召唤吸血鬼
+ability-demo-necromancy-summon-vampires-description = 是时候指挥指挥官了！
+ability-demo-necromancy-summon-wights-name = 召唤怨灵
+ability-demo-necromancy-summon-wights-description = 召唤尸妖和妖鬼为你效命。
+ability-demo-necromancy-summon-liches-name = 召唤巫妖
+ability-demo-necromancy-summon-liches-description = 召唤昔日的死灵法师。
+ability-demo-necromancy-unholy-word-name = 邪恶真言
+ability-demo-necromancy-unholy-word-description = 念出一个不可名状的词语。你视野内所有邪恶宠物的士气都会暂时提升，并怀着新的狂热为你效劳。
+ability-demo-necromancy-hopeless-endeavor-name = 无望之争
+ability-demo-necromancy-hopeless-endeavor-description = 为了胜利，发动最后的自杀式袭击！
+ability-demo-necromancy-draining-touch-name = 汲取之触
+ability-demo-necromancy-draining-touch-description = 从相邻的敌人身上窃取法力。
+ability-demo-necromancy-unhallow-ground-name = 亵渎圣地
+ability-demo-necromancy-unhallow-ground-description = 使当前的方格充满邪恶气息。
+ability-demo-necromancy-shield-of-the-dead-name = 亡者之盾
+ability-demo-necromancy-shield-of-the-dead-description = 暂时提供护甲(AC)加成，以及对冰寒、毒素和虚空的抗性。
+ability-demo-necromancy-rending-touch-name = 撕裂之触
+ability-demo-necromancy-rending-touch-description = 用分解之触伤害一个相邻的怪物。
+ability-demo-necromancy-repose-of-the-dead-name = 亡者安息
+ability-demo-necromancy-repose-of-the-dead-description = 像死人一样沉睡几个回合，期间除了死亡外没有任何东西能唤醒你。当你（如果？）醒来时，你将彻底恢复精力！
+ability-demo-necromancy-sepulchral-wind-name = 阴墓之风
+ability-demo-necromancy-sepulchral-wind-description = 你呼唤死者之风。附近所有的怪物都会被吹飞！
+ability-demo-necromancy-deadly-touch-name = 致命之触
+ability-demo-necromancy-deadly-touch-description = 尝试秒杀一个相邻的怪物。
+ability-demo-necromancy-necromancy-name = 死灵法术
+ability-demo-necromancy-necromancy-description = Bridge the world of the living with the world of the dead!  Vast hordes of undead will come forth to serve the one true necromancer!
+ability-book-demo-stench-of-death-name = [死亡之恶臭]
+ability-book-demo-stench-of-death-description = [死亡之恶臭]：死灵法术。
+item-demo-stench-of-death-name = [死亡之恶臭]
+item-demo-stench-of-death-description = [死亡之恶臭]：死灵法术。
+ability-book-demo-sepulchral-ways-name = [坟茔之道]
+ability-book-demo-sepulchral-ways-description = [坟茔之道]：死灵法术。
+item-demo-sepulchral-ways-name = [坟茔之道]
+item-demo-sepulchral-ways-description = [坟茔之道]：死灵法术。
+ability-book-demo-return-of-the-dead-name = [死者归来]
+ability-book-demo-return-of-the-dead-description = [死者归来]：死灵法术。
+item-demo-return-of-the-dead-name = [死者归来]
+item-demo-return-of-the-dead-description = [死者归来]：死灵法术。
+ability-book-demo-necromatic-tome-name = [死灵巨著]
+ability-book-demo-necromatic-tome-description = [死灵巨著]：死灵法术。
+item-demo-necromatic-tome-name = [死灵巨著]
+item-demo-necromatic-tome-description = [死灵巨著]：死灵法术。
+ability-demo-necromancer-animate-dead-name = 操纵死尸
+ability-demo-necromancer-animate-dead-description = 消耗附近尸体，唤起永久受控的不死仆从。
+ability-demo-necromancer-enslave-undead-name = 奴役死灵
+ability-demo-necromancer-enslave-undead-description = 尝试将一个亡灵生物置于你的控制之下。
+class-demo-necromancer-name = 死灵法师
+class-demo-necromancer-description = 死灵法师试图通过与死者的交流来获取力量和知识。他们依赖于死灵法术这个特殊的领域，从死者那里召唤援助，无论是直接驱使不死生物仆从，还是间接通过超凡的知识。死灵法术还提供了许多邪恶的攻击法术；但所有这些都需要直接的身体接触，因此需要一只空着的、不戴手套的手来施展。然而，对于能够一击致命杀死敌人的能力来说，这个弱点不过是廉价的代价！  死灵法师永远在寻找传说中的“维克那之眼”和“维克那之手”来完善他们的力量。
+build-demo-necromancer-name = 死灵法师
+build-demo-necromancer-description = 死灵法师试图通过与死者的交流来获取力量和知识。他们依赖于死灵法术这个特殊的领域，从死者那里召唤援助，无论是直接驱使不死生物仆从，还是间接通过超凡的知识。死灵法术还提供了许多邪恶的攻击法术；但所有这些都需要直接的身体接触，因此需要一只空着的、不戴手套的手来施展。然而，对于能够一击致命杀死敌人的能力来说，这个弱点不过是廉价的代价！  死灵法师永远在寻找传说中的“维克那之眼”和“维克那之手”来完善他们的力量。
+actor-demo-necromancer-player-name = 死灵法师
+actor-demo-necromancer-player-description = 死灵法师试图通过与死者的交流来获取力量和知识。他们依赖于死灵法术这个特殊的领域，从死者那里召唤援助，无论是直接驱使不死生物仆从，还是间接通过超凡的知识。死灵法术还提供了许多邪恶的攻击法术；但所有这些都需要直接的身体接触，因此需要一只空着的、不戴手套的手来施展。然而，对于能够一击致命杀死敌人的能力来说，这个弱点不过是廉价的代价！  死灵法师永远在寻找传说中的“维克那之眼”和“维克那之手”来完善他们的力量。
+realm-necromancy-name = 死灵
+
+ability-demo-law-detect-money-name = 探测金钱
+ability-demo-law-detect-money-description = 探测你附近的所有财宝。
+ability-demo-law-detect-traps-name = 探测陷阱
+ability-demo-law-detect-traps-description = 探测附近的陷阱。
+ability-demo-law-satisfy-hunger-name = 满足饥饿
+ability-demo-law-satisfy-hunger-description = 满足饥饿感。
+ability-demo-law-detect-objects-name = 探测物品
+ability-demo-law-detect-objects-description = 探测你附近的所有物品。
+ability-demo-law-basic-trap-name = 基础陷阱
+ability-demo-law-basic-trap-description = 在你脚下设置一个陷阱。该陷阱会对触发它的怪物产生随机的微弱效果。
+ability-demo-law-disarm-traps-name = 解除陷阱
+ability-demo-law-disarm-traps-description = 发射一束能够解除陷阱的光束。
+ability-demo-law-identify-name = 鉴定
+ability-demo-law-identify-description = 鉴定一件物品；有律法适性的角色在45级时完全鉴定。
+ability-demo-law-dig-name = 挖掘
+ability-demo-law-dig-description = 将一格岩石转化为泥土。
+ability-demo-law-detect-monsters-name = 探测怪物
+ability-demo-law-detect-monsters-description = 探测附近的怪物；25级起也能探测隐形怪物。
+ability-demo-law-slow-monster-name = 减速怪物
+ability-demo-law-slow-monster-description = 尝试减缓一只怪物的速度。
+ability-demo-law-confuse-monster-name = 混乱怪物
+ability-demo-law-confuse-monster-description = 尝试使一只怪物混乱。
+ability-demo-law-scare-monster-name = 恐吓怪物
+ability-demo-law-scare-monster-description = 尝试惊吓一只怪物。
+ability-demo-law-semicolon-of-punishment-name = 惩戒分号
+ability-demo-law-semicolon-of-punishment-description = 在你脚下的地板上铭刻一个惩罚分号 (;) 。
+ability-demo-law-confuse-everybody-name = 群体混乱
+ability-demo-law-confuse-everybody-description = 尝试使视野内的所有怪物混乱。
+ability-demo-law-create-doors-name = 创造门
+ability-demo-law-create-doors-description = 在周围所有格子创造门。
+ability-demo-law-semicolon-of-warding-name = 守护分号
+ability-demo-law-semicolon-of-warding-description = 在你脚下的地板上铭刻一个结界分号 (;) 。
+ability-demo-law-charm-monster-name = 魅惑怪物
+ability-demo-law-charm-monster-description = 尝试魅惑一只怪物。
+ability-demo-law-expert-trap-name = 专家陷阱
+ability-demo-law-expert-trap-description = 在你脚下设置一个陷阱。该陷阱会对触发它的怪物产生随机效果。
+ability-demo-law-getaway-name = 逃之夭夭
+ability-demo-law-getaway-description = 提供一种随机的逃脱手段。
+ability-demo-law-blame-undead-name = 嫁祸死灵
+ability-demo-law-blame-undead-description = 伤害视野内的所有不死怪物。
+ability-demo-law-probe-name = 探测术
+ability-demo-law-probe-description = 揭示有关附近怪物的信息。
+ability-demo-law-spin-name = 扭曲事实
+ability-demo-law-spin-description = 提供暂时的虚空 (nether) 抗性，并使魅惑效果更强大。
+ability-demo-law-advanced-bloodsucking-name = 高级吸血
+ability-demo-law-advanced-bloodsucking-description = 从附近的活体生物身上吸取生命。
+ability-demo-law-alter-reality-name = 改变现实
+ability-demo-law-alter-reality-description = 重新生成当前的地下城楼层。
+ability-demo-law-blink-name = 闪烁
+ability-demo-law-blink-description = 短距离传送。
+ability-demo-law-tread-softly-name = 轻声潜行
+ability-demo-law-tread-softly-description = 暂时提供增强的潜行。
+ability-demo-law-map-surroundings-name = 测绘周围
+ability-demo-law-map-surroundings-description = 测绘周围；有律法适性的角色在48级时同时探测。
+ability-demo-law-dig-deep-name = 深度挖掘
+ability-demo-law-dig-deep-description = 发射一束解离光束。
+ability-demo-law-unholy-rage-name = 邪恶狂暴
+ability-demo-law-unholy-rage-description = 使你进入暂时的狂暴状态，并恢复 75 点生命值。
+ability-demo-law-subpoena-name = 传票
+ability-demo-law-subpoena-description = 将一只视野内的怪物传送到你身边。
+ability-demo-law-teleport-name = 传送
+ability-demo-law-teleport-description = 长距离传送。
+ability-demo-law-dazzle-name = 致盲
+ability-demo-law-dazzle-description = 尝试减速、震慑、使混乱、惊吓并冻结附近的怪物。
+item-demo-attractions-of-law-name = [律法之引力]
+item-demo-attractions-of-law-description = 律法领域第1册。
+item-demo-obstacle-coursebook-name = [障碍课程教材]
+item-demo-obstacle-coursebook-description = 律法领域第2册。
+item-demo-building-alternative-realities-name = [构建多重现实]
+item-demo-building-alternative-realities-description = 律法领域第3册。
+item-demo-acquiris-quodcumque-rapis-name = [夺你所欲]
+item-demo-acquiris-quodcumque-rapis-description = 律法领域第4册。
+build-demo-high-mage-law-name = 高阶法师（律法）
+build-demo-high-mage-law-description = 使用律法领域的正式构筑。
+build-demo-paladin-law-name = 圣骑士 · 律法
+build-demo-paladin-law-description = 使用律法领域的正式构筑。
+build-demo-warrior-mage-arcane-law-name = 战法师（奥秘／律法）
+build-demo-warrior-mage-arcane-law-description = 使用律法领域的正式构筑。
+build-demo-priest-life-law-name = 牧师（生命／律法）
+build-demo-priest-life-law-description = 使用律法领域的正式构筑。
+build-demo-priest-crusade-law-name = 牧师（圣战／律法）
+build-demo-priest-crusade-law-description = 使用律法领域的正式构筑。
+build-demo-priest-death-law-name = 牧师（死亡／律法）
+build-demo-priest-death-law-description = 使用律法领域的正式构筑。
+build-demo-priest-daemon-law-name = 牧师（恶魔／律法）
+build-demo-priest-daemon-law-description = 使用律法领域的正式构筑。
+build-demo-mage-law-life-name = 法师（律法／生命）
+build-demo-mage-law-life-description = 使用律法领域的正式构筑。
+build-demo-mage-life-law-name = 法师（生命／律法）
+build-demo-mage-life-law-description = 使用律法领域的正式构筑。
+build-demo-mage-law-sorcery-name = 法师（律法／咒术）
+build-demo-mage-law-sorcery-description = 使用律法领域的正式构筑。
+build-demo-mage-sorcery-law-name = 法师（咒术／律法）
+build-demo-mage-sorcery-law-description = 使用律法领域的正式构筑。
+build-demo-mage-law-nature-name = 法师（律法／自然）
+build-demo-mage-law-nature-description = 使用律法领域的正式构筑。
+build-demo-mage-nature-law-name = 法师（自然／律法）
+build-demo-mage-nature-law-description = 使用律法领域的正式构筑。
+build-demo-mage-law-chaos-name = 法师（律法／混沌）
+build-demo-mage-law-chaos-description = 使用律法领域的正式构筑。
+build-demo-mage-chaos-law-name = 法师（混沌／律法）
+build-demo-mage-chaos-law-description = 使用律法领域的正式构筑。
+build-demo-mage-law-trump-name = 法师（律法／王牌）
+build-demo-mage-law-trump-description = 使用律法领域的正式构筑。
+build-demo-mage-trump-law-name = 法师（王牌／律法）
+build-demo-mage-trump-law-description = 使用律法领域的正式构筑。
+build-demo-mage-law-death-name = 法师（律法／死亡）
+build-demo-mage-law-death-description = 使用律法领域的正式构筑。
+build-demo-mage-death-law-name = 法师（死亡／律法）
+build-demo-mage-death-law-description = 使用律法领域的正式构筑。
+build-demo-mage-law-arcane-name = 法师（律法／奥秘）
+build-demo-mage-law-arcane-description = 使用律法领域的正式构筑。
+build-demo-mage-arcane-law-name = 法师（奥秘／律法）
+build-demo-mage-arcane-law-description = 使用律法领域的正式构筑。
+build-demo-mage-law-craft-name = 法师（律法／工艺）
+build-demo-mage-law-craft-description = 使用律法领域的正式构筑。
+build-demo-mage-craft-law-name = 法师（工艺／律法）
+build-demo-mage-craft-law-description = 使用律法领域的正式构筑。
+build-demo-mage-law-daemon-name = 法师（律法／恶魔）
+build-demo-mage-law-daemon-description = 使用律法领域的正式构筑。
+build-demo-mage-daemon-law-name = 法师（恶魔／律法）
+build-demo-mage-daemon-law-description = 使用律法领域的正式构筑。
+build-demo-mage-law-crusade-name = 法师（律法／圣战）
+build-demo-mage-law-crusade-description = 使用律法领域的正式构筑。
+build-demo-mage-crusade-law-name = 法师（圣战／律法）
+build-demo-mage-crusade-law-description = 使用律法领域的正式构筑。
+build-demo-mage-law-armageddon-name = 法师（律法／末日）
+build-demo-mage-law-armageddon-description = 使用律法领域的正式构筑。
+build-demo-mage-armageddon-law-name = 法师（末日／律法）
+build-demo-mage-armageddon-law-description = 使用律法领域的正式构筑。
+
+terrain-demo-law-basic-trap-name = 次级陷阱
+terrain-demo-law-basic-trap-description = 怪物踏入时触发的一次性陷阱。
+
+terrain-demo-law-expert-trap-name = 高级陷阱
+terrain-demo-law-expert-trap-description = 怪物踏入时触发的一次性陷阱。
+
+terrain-demo-law-semicolon-name = 惩罚分号
+terrain-demo-law-semicolon-description = 怪物踏入时触发的一次性陷阱。
+
+ability-demo-music-holding-name = 定身之歌
+ability-demo-music-holding-description = 尝试使视线内的所有怪物减速。
+ability-demo-music-blessing-name = 祝福之歌
+ability-demo-music-blessing-description = 在几个回合内提供命中和防御(AC)加值。
+ability-demo-music-wrecking-note-name = 破坏音符
+ability-demo-music-wrecking-note-description = 发射一道声波弹。
+ability-demo-music-stunning-pattern-name = 震慑旋律
+ability-demo-music-stunning-pattern-description = 尝试震慑视线内所有的怪物。
+ability-demo-music-flow-of-life-name = 生命之流
+ability-demo-music-flow-of-life-description = 轻微恢复生命值。
+ability-demo-music-song-of-the-sun-name = 太阳之歌
+ability-demo-music-song-of-the-sun-description = 永久照亮附近区域和房间内部。
+ability-demo-music-song-of-fear-name = 恐惧之歌
+ability-demo-music-song-of-fear-description = 尝试恐吓视线内所有的怪物。
+ability-demo-music-heroic-ballad-name = 英雄战歌
+ability-demo-music-heroic-ballad-description = 消除恐惧，并在一段时间内提供命中加值和 10 点额外生命值。
+ability-demo-music-clairaudience-name = 顺风耳
+ability-demo-music-clairaudience-description = 探测你附近的陷阱、门和楼梯。在15级时能探测所有怪物，20级时探测宝藏和物品，25级时绘制附近区域地图，40级时照亮并知晓整个楼层。只要这首歌继续演唱，这些效果就会逐回合发生。
+ability-demo-music-soul-shriek-name = 灵魂尖啸
+ability-demo-music-soul-shriek-description = 对视线内所有的怪物造成灵能伤害。
+ability-demo-music-lore-name = 学识之歌
+ability-demo-music-lore-description = 鉴定所有相邻方格内的物品。
+ability-demo-music-hiding-tune-name = 隐匿曲调
+ability-demo-music-hiding-tune-description = 赋予提升的潜行能力。
+ability-demo-music-illusion-pattern-name = 幻象旋律
+ability-demo-music-illusion-pattern-description = 尝试使视线内所有的怪物陷入混乱。
+ability-demo-music-doomcall-name = 厄运召唤
+ability-demo-music-doomcall-description = 用轰鸣的声波对视线内所有的怪物造成伤害。
+ability-demo-music-firiel-song-name = 菲瑞尔之歌
+ability-demo-music-firiel-song-description = 复活附近的尸体和骸骨，并让它们成为你的宠物。
+ability-demo-music-fellowship-name = 团契圣歌
+ability-demo-music-fellowship-description = 尝试魅惑视线内所有的怪物。
+ability-demo-music-sound-of-disintegration-name = 解离之音
+ability-demo-music-sound-of-disintegration-description = 使你能够挖掘(burrow)进入墙壁。你脚下的物品会蒸发消失。
+ability-demo-music-finrod-resistance-name = 芬罗德的抵抗
+ability-demo-music-finrod-resistance-description = 赋予火焰、寒冷、闪电、酸液和毒素抗性。
+ability-demo-music-hobbit-melodies-name = 霍比特旋律
+ability-demo-music-hobbit-melodies-description = 使你加速。
+ability-demo-music-world-contortion-name = 世界扭曲
+ability-demo-music-world-contortion-description = 除非被抵抗，否则将附近所有的怪物传送走。
+ability-demo-music-dispelling-chant-name = 驱散圣歌
+ability-demo-music-dispelling-chant-description = 对视线内所有的怪物造成伤害。对邪恶阵营的怪物造成巨大伤害。
+ability-demo-music-saruman-voice-name = 萨鲁曼之声
+ability-demo-music-saruman-voice-description = 尝试使视线内所有的怪物减速并催眠它们。
+ability-demo-music-tempest-song-name = 风暴之歌
+ability-demo-music-tempest-song-description = 发射一道声波射线。
+ability-demo-music-ambarkanta-name = 安巴坎塔
+ability-demo-music-ambarkanta-description = 重新生成当前的地下城楼层（改变楼层）。
+ability-demo-music-wrecking-pattern-name = 破坏旋律
+ability-demo-music-wrecking-pattern-description = 震动地下城结构，导致地板和墙壁随机交换。
+ability-demo-music-station-still-name = 停滞尖啸
+ability-demo-music-station-still-description = 尝试冻结视线内所有的怪物。
+ability-demo-music-endurance-name = 耐力
+ability-demo-music-endurance-description = 在你脚下的地板上设置一个结界符文。当你在结界上时怪物无法攻击你，但它们会尝试破坏结界。
+ability-demo-music-heroic-poem-name = 英雄诗篇
+ability-demo-music-heroic-poem-description = 使你加速。赋予英雄气概。对视线内所有的怪物造成伤害。
+ability-demo-music-yavanna-comfort-name = 雅凡娜的慰藉
+ability-demo-music-yavanna-comfort-description = 强大的治疗之歌。同时完全治愈割伤与震慑。
+ability-demo-music-goddess-rebirth-name = 女神重生
+ability-demo-music-goddess-rebirth-description = 恢复所有属性与经验值。
+ability-demo-music-wizardry-of-sauron-name = 索伦的巫术
+ability-demo-music-wizardry-of-sauron-description = 发射一颗威力极其强大的微小声波球。
+ability-demo-music-fingolfin-challenge-name = 芬国昐的挑战
+ability-demo-music-fingolfin-challenge-description = 使你暂时对绝大多数攻击无敌。当无敌状态结束时会消耗一个额外的回合。
+item-demo-apprentice-handbook-name = [学徒手册]
+item-demo-apprentice-handbook-description = 音乐歌谱，收录八首歌曲。
+item-demo-minstrels-music-name = [游吟诗人之乐]
+item-demo-minstrels-music-description = 音乐歌谱，收录八首歌曲。
+item-demo-harps-of-rivendell-name = [瑞文戴尔的竖琴]
+item-demo-harps-of-rivendell-description = 音乐歌谱，收录八首歌曲。
+item-demo-lays-of-beleriand-name = [贝尔兰的诗歌]
+item-demo-lays-of-beleriand-description = 音乐歌谱，收录八首歌曲。
+class-demo-bard-name = 吟游诗人
+class-demo-bard-description = 以魅力施展音乐魔法，一次持续演唱一首歌曲。
+actor-demo-bard-player-name = 吟游诗人
+actor-demo-bard-player-description = 以魅力施展音乐魔法，一次持续演唱一首歌曲。
+build-demo-bard-name = 吟游诗人
+build-demo-bard-description = 以魅力施展音乐魔法，一次持续演唱一首歌曲。
+ability-demo-bard-stop-singing-name = 停止唱歌
+ability-demo-bard-stop-singing-description = 停止当前正在演唱的歌曲。
+status-music-name = 演唱
+
+ability-demo-hissatsu-tobi-izuna-name = 飞饭纲
+ability-demo-hissatsu-tobi-izuna-description = 攻击距离两格的怪物。
+ability-demo-hissatsu-three-way-attack-name = 三向攻击
+ability-demo-hissatsu-three-way-attack-description = 一次向 3 个方向进行攻击。
+ability-demo-hissatsu-boomerang-name = 回旋镖
+ability-demo-hissatsu-boomerang-description = 投掷当前武器。除非失败，否则它将飞回到你手中。
+ability-demo-hissatsu-burning-strike-name = 燃烧打击
+ability-demo-hissatsu-burning-strike-description = 除非怪物对火焰有抗性，否则将对其造成更高的伤害。
+ability-demo-hissatsu-detect-ferocity-name = 探测凶意
+ability-demo-hissatsu-detect-ferocity-description = 探测你附近除无心智以外的所有怪物。
+ability-demo-hissatsu-stunning-strike-name = 震慑打击
+ability-demo-hissatsu-stunning-strike-description = 尝试震慑一个相邻的怪物。
+ability-demo-hissatsu-counter-name = 反击
+ability-demo-hissatsu-counter-description = 准备反击，在下个回合消耗 SP 反击怪物的任何近战攻击。
+ability-demo-hissatsu-harainuke-name = 拂拔
+ability-demo-hissatsu-harainuke-description = 用武器正常攻击怪物，然后穿透移动到怪物的另一侧。
+ability-demo-hissatsu-serpents-tongue-name = 毒蛇之舌
+ability-demo-hissatsu-serpents-tongue-description = 对怪物造成更高伤害，除非其对毒素有抗性。
+ability-demo-hissatsu-zammaken-name = 斩魔剑
+ability-demo-hissatsu-zammaken-description = 对邪恶的非活物怪物造成巨大伤害。对其他怪物无效。
+ability-demo-hissatsu-wind-blast-name = 风之冲击
+ability-demo-hissatsu-wind-blast-description = 攻击一个相邻的怪物，并将其击退。
+ability-demo-hissatsu-judge-name = 判定
+ability-demo-hissatsu-judge-description = 鉴定一件武器或盔甲。在 45 级时改为对其进行*全面鉴定*。
+ability-demo-hissatsu-rock-smash-name = 碎岩击
+ability-demo-hissatsu-rock-smash-description = 破坏岩石，或对岩石构成的怪物造成巨大伤害。
+ability-demo-hissatsu-midare-setsugekka-name = 乱雪月花
+ability-demo-hissatsu-midare-setsugekka-description = 增加攻击次数，并对怪物造成更高伤害，除非其对冰寒有抗性。
+ability-demo-hissatsu-spot-aiming-name = 弱点瞄准
+ability-demo-hissatsu-spot-aiming-description = 尝试秒杀一个怪物。如果失败，只造成 1 点伤害。
+ability-demo-hissatsu-majin-giri-name = 魔神斩
+ability-demo-hissatsu-majin-giri-description = 尝试进行必定暴击的攻击。但此攻击很容易被怪物闪避。
+ability-demo-hissatsu-sutemi-name = 舍身一击
+ability-demo-hissatsu-sutemi-description = 倾尽全力进行攻击。但在一回合内，你受到的所有伤害都会翻倍。
+ability-demo-hissatsu-raigeki-name = 雷鹰斩
+ability-demo-hissatsu-raigeki-description = 对怪物造成更高伤害，除非其对闪电有抗性。
+ability-demo-hissatsu-rush-name = 突进攻击
+ability-demo-hissatsu-rush-description = 靠近怪物并同时发动攻击。
+ability-demo-hissatsu-blood-whirlwind-name = 鲜血漩涡
+ability-demo-hissatsu-blood-whirlwind-description = 严重割伤你自己，然后用与你的割伤状态相对应的威力攻击所有相邻的怪物。对非活物怪物无效。
+ability-demo-hissatsu-earthquake-strike-name = 地震击
+ability-demo-hissatsu-earthquake-strike-description = 震动地下城结构，导致地板和墙壁随机交换。
+ability-demo-hissatsu-cracking-strike-name = 裂地击
+ability-demo-hissatsu-cracking-strike-description = 发射一道冲击波射线。
+ability-demo-hissatsu-war-cry-name = 战吼
+ability-demo-hissatsu-war-cry-description = 用声波伤害视线内的所有怪物。激怒附近的怪物。
+ability-demo-hissatsu-musou-sandan-name = 无双三段
+ability-demo-hissatsu-musou-sandan-description = 发动强力的三连击。
+ability-demo-hissatsu-vampiric-fang-name = 吸血鬼之牙
+ability-demo-hissatsu-vampiric-fang-description = 发动吸血打击，从怪物身上吸收生命值并转化为你的生命。对非活物怪物无效。
+ability-demo-hissatsu-moon-dazzling-name = 幻月
+ability-demo-hissatsu-moon-dazzling-description = 尝试震慑、混乱并催眠所有清醒的怪物。
+ability-demo-hissatsu-hundred-slaughter-name = 百人斩
+ability-demo-hissatsu-hundred-slaughter-description = 发动一系列突进攻击。只要每次能击杀怪物且还有剩余 SP，连击就会继续。
+ability-demo-hissatsu-dragonic-flash-name = 龙闪
+ability-demo-hissatsu-dragonic-flash-description = 向指定位置奔跑，同时攻击路径上的所有怪物。
+ability-demo-hissatsu-twin-slash-name = 双重斩
+ability-demo-hissatsu-twin-slash-description = 同时发动双重攻击。
+ability-demo-hissatsu-kofu-zettousei-name = 降伏绝刀势
+ability-demo-hissatsu-kofu-zettousei-description = 发动一次强力攻击，甚至会波及附近的怪物。
+ability-demo-hissatsu-keiun-kininken-name = 庆云鬼忍剑
+ability-demo-hissatsu-keiun-kininken-description = 对怪物发动极其强力的打击，但也会使你承受 100+d100 点伤害。对不死怪物造成极大伤害。
+ability-demo-hissatsu-harakiri-name = 切腹
+ability-demo-hissatsu-harakiri-description = '武士道乃求死之道'
+item-demo-bugei-shofu-name = [武艺小傅]
+item-demo-bugei-shofu-description = 剑道书，研读可学会本册当前等级允许的全部招式。
+item-demo-yagyuu-bugeichou-name = [柳生武艺帐]
+item-demo-yagyuu-bugeichou-description = 剑道书，研读可学会本册当前等级允许的全部招式。
+item-demo-gorinnosho-name = [五轮书]
+item-demo-gorinnosho-description = 剑道书，研读可学会本册当前等级允许的全部招式。
+item-demo-hokusin-ittouryuu-kaiden-name = [北辰一刀流皆传]
+item-demo-hokusin-ittouryuu-kaiden-description = 剑道书，研读可学会本册当前等级允许的全部招式。
+ability-demo-samurai-concentration-name = 气合
+ability-demo-samurai-concentration-description = 集中精神，回复一部分法力。照看宠物或维持架势时无法使用。
+ability-demo-samurai-no-posture-name = 无型
+ability-demo-samurai-no-posture-description = 选择武士守备架势；使用剑道会解除架势。
+ability-demo-samurai-iai-name = 居合之型
+ability-demo-samurai-iai-description = 选择武士守备架势；使用剑道会解除架势。
+ability-demo-samurai-fuujin-name = 风神之型
+ability-demo-samurai-fuujin-description = 选择武士守备架势；使用剑道会解除架势。
+ability-demo-samurai-koukijin-name = 光气之型
+ability-demo-samurai-koukijin-description = 选择武士守备架势；使用剑道会解除架势。
+ability-demo-samurai-musou-name = 无双之型
+ability-demo-samurai-musou-description = 选择武士守备架势；使用剑道会解除架势。
+class-demo-samurai-name = 武士
+class-demo-samurai-description = 持械施展剑道，以感知决定法力，通过气合蓄力。
+actor-demo-samurai-player-name = 武士
+actor-demo-samurai-player-description = 持械施展剑道，以感知决定法力，通过气合蓄力。
+build-demo-samurai-name = 武士
+build-demo-samurai-description = 持械施展剑道，以感知决定法力，通过气合蓄力。
+
+ability-demo-hex-evil-blessing-name = 邪恶祝福
+ability-demo-hex-evil-blessing-description = 尝试增加武器的命中加值和防御(AC)加值。
+ability-demo-hex-cure-light-wounds-name = 治疗轻伤
+ability-demo-hex-cure-light-wounds-description = 轻微治愈割伤并恢复少量生命值。
+ability-demo-hex-demon-aura-name = 恶魔光环
+ability-demo-hex-demon-aura-description = 赋予火焰光环和生命再生能力。
+ability-demo-hex-stinking-mist-name = 恶臭迷雾
+ability-demo-hex-stinking-mist-description = 对视线内所有的怪物造成少量的毒素伤害。
+ability-demo-hex-extra-might-name = 额外力量
+ability-demo-hex-extra-might-description = 尝试提升你的力量。
+ability-demo-hex-curse-weapon-name = 诅咒武器
+ability-demo-hex-curse-weapon-description = 诅咒你的武器。
+ability-demo-hex-detect-evil-name = 邪恶探测
+ability-demo-hex-detect-evil-description = 探测邪恶怪物。
+ability-demo-hex-patience-name = 忍耐
+ability-demo-hex-patience-description = 在承受伤害后的几回合内爆发出强烈的地狱火。
+ability-demo-hex-ice-armor-name = 寒冰装甲
+ability-demo-hex-ice-armor-description = 赋予寒冰光环和防御(AC)加值。
+ability-demo-hex-cure-serious-wounds-name = 治疗重伤
+ability-demo-hex-cure-serious-wounds-description = 较多地治愈割伤并恢复生命值。
+ability-demo-hex-inhale-potion-name = 吸入药水
+ability-demo-hex-inhale-potion-description = 喝下药水而不会中断施法。
+ability-demo-hex-vampiric-mist-name = 吸血迷雾
+ability-demo-hex-vampiric-mist-description = 对视线内所有的怪物造成少量的吸血(drain life)伤害。
+ability-demo-hex-runesword-name = 武器化为符文剑
+ability-demo-hex-runesword-description = 赋予你的武器斩首(vorpal)能力。根据你武器上的诅咒来增加武器的伤害。
+ability-demo-hex-confusing-touch-name = 混乱之触
+ability-demo-hex-confusing-touch-description = 当你攻击时使一个怪物混乱。
+ability-demo-hex-building-up-name = 强化体格
+ability-demo-hex-building-up-description = 尝试提升你的力量、敏捷和体质。
+ability-demo-hex-anti-teleport-name = 反传送结界
+ability-demo-hex-anti-teleport-description = 阻止视线内所有怪物的传送。
+ability-demo-hex-shock-cloak-name = 冲击斗篷
+ability-demo-hex-shock-cloak-description = 赋予闪电光环和速度加值。
+ability-demo-hex-cure-critical-wounds-name = 治疗致命伤
+ability-demo-hex-cure-critical-wounds-description = 极大地治愈割伤并恢复生命值。
+ability-demo-hex-recharge-name = 充能
+ability-demo-hex-recharge-description = 它尝试消耗你的法力为一件装置充能。
+ability-demo-hex-animate-dead-name = 操纵死尸
+ability-demo-hex-animate-dead-description = 从死亡中复活尸体和骸骨。
+ability-demo-hex-curse-armor-name = 诅咒防具
+ability-demo-hex-curse-armor-description = 诅咒一件你所穿戴的护甲。
+ability-demo-hex-shadow-cloak-name = 阴影斗篷
+ability-demo-hex-shadow-cloak-description = 赋予暗影光环。
+ability-demo-hex-pain-to-mana-name = 痛苦化法
+ability-demo-hex-pain-to-mana-description = 对视线内所有的怪物造成精神伤害，并吸取一些法力。
+ability-demo-hex-eye-for-eye-name = 以眼还眼
+ability-demo-hex-eye-for-eye-description = 将你受到的等量伤害反弹给伤害你的怪物。
+ability-demo-hex-anti-multiply-name = 反繁殖结界
+ability-demo-hex-anti-multiply-description = 阻止整个楼层内所有怪物的繁殖。
+ability-demo-hex-restore-life-name = 恢复生命
+ability-demo-hex-restore-life-description = 恢复生命能量和状态。
+ability-demo-hex-drain-curse-name = 吸取诅咒力量
+ability-demo-hex-drain-curse-description = 吸收你武器上的诅咒，并恢复少量的法力值(SP)。
+ability-demo-hex-vampiric-blade-name = 武器化为吸血剑
+ability-demo-hex-vampiric-blade-description = 赋予你武器吸血能力。
+ability-demo-hex-word-of-stun-name = 震慑之语
+ability-demo-hex-word-of-stun-description = 震慑视线内所有的怪物。
+ability-demo-hex-shadow-move-name = 潜入暗影
+ability-demo-hex-shadow-move-description = 将你传送到一个怪物附近（突脸传送）。
+ability-demo-hex-anti-magic-name = 反魔法结界
+ability-demo-hex-anti-magic-description = 阻碍你视线内怪物的施法。
+ability-demo-hex-revenge-name = 复仇宣言
+ability-demo-hex-revenge-description = Fires  a ball of hell fire to try revenging after few turns.
+item-demo-handbook-of-hex-name = [诅咒手册]
+item-demo-handbook-of-hex-description = 诅咒书，收录八项诅咒。
+item-demo-high-curse-name = [高等诅咒]
+item-demo-high-curse-description = 诅咒书，收录八项诅咒。
+item-demo-curse-and-spelling-name = [诅咒与拼写]
+item-demo-curse-and-spelling-description = 诅咒书，收录八项诅咒。
+item-demo-forbidden-cursebook-name = [禁忌诅咒书]
+item-demo-forbidden-cursebook-description = 诅咒书，收录八项诅咒。
+ability-demo-hex-stop-name = 停止施法
+ability-demo-hex-stop-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-evil-blessing-name = 停止施法：邪恶祝福
+ability-demo-hex-stop-evil-blessing-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-cure-light-wounds-name = 停止施法：治疗轻伤
+ability-demo-hex-stop-cure-light-wounds-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-demon-aura-name = 停止施法：恶魔光环
+ability-demo-hex-stop-demon-aura-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-stinking-mist-name = 停止施法：恶臭迷雾
+ability-demo-hex-stop-stinking-mist-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-extra-might-name = 停止施法：额外力量
+ability-demo-hex-stop-extra-might-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-detect-evil-name = 停止施法：邪恶探测
+ability-demo-hex-stop-detect-evil-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-ice-armor-name = 停止施法：寒冰装甲
+ability-demo-hex-stop-ice-armor-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-cure-serious-wounds-name = 停止施法：治疗重伤
+ability-demo-hex-stop-cure-serious-wounds-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-vampiric-mist-name = 停止施法：吸血迷雾
+ability-demo-hex-stop-vampiric-mist-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-runesword-name = 停止施法：武器化为符文剑
+ability-demo-hex-stop-runesword-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-confusing-touch-name = 停止施法：混乱之触
+ability-demo-hex-stop-confusing-touch-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-building-up-name = 停止施法：强化体格
+ability-demo-hex-stop-building-up-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-anti-teleport-name = 停止施法：反传送结界
+ability-demo-hex-stop-anti-teleport-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-shock-cloak-name = 停止施法：冲击斗篷
+ability-demo-hex-stop-shock-cloak-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-cure-critical-wounds-name = 停止施法：治疗致命伤
+ability-demo-hex-stop-cure-critical-wounds-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-animate-dead-name = 停止施法：操纵死尸
+ability-demo-hex-stop-animate-dead-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-shadow-cloak-name = 停止施法：阴影斗篷
+ability-demo-hex-stop-shadow-cloak-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-pain-to-mana-name = 停止施法：痛苦化法
+ability-demo-hex-stop-pain-to-mana-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-eye-for-eye-name = 停止施法：以眼还眼
+ability-demo-hex-stop-eye-for-eye-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-anti-multiply-name = 停止施法：反繁殖结界
+ability-demo-hex-stop-anti-multiply-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-restore-life-name = 停止施法：恢复生命
+ability-demo-hex-stop-restore-life-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-vampiric-blade-name = 停止施法：武器化为吸血剑
+ability-demo-hex-stop-vampiric-blade-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-word-of-stun-name = 停止施法：震慑之语
+ability-demo-hex-stop-word-of-stun-description = 停止当前正在持续施放的诅咒。
+ability-demo-hex-stop-anti-magic-name = 停止施法：反魔法结界
+ability-demo-hex-stop-anti-magic-description = 停止当前正在持续施放的诅咒。
+build-demo-high-mage-hex-name = 高阶法师（诅咒）
+build-demo-high-mage-hex-description = 以智力施展诅咒，可同时维持多个法术。
+
+ability-demo-rage-shout-name = 怒吼
+ability-demo-rage-shout-description = 向选定的敌人投射一个锥形的声波。
+ability-demo-rage-detect-magical-foes-name = 探测魔法敌人
+ability-demo-rage-detect-magical-foes-description = 探测附近的魔法使用者。
+ability-demo-rage-smash-name = 猛击
+ability-demo-rage-smash-description = 摧毁相邻的门、陷阱或墙壁。
+ability-demo-rage-evasive-leap-name = 规避跳跃
+ability-demo-rage-evasive-leap-description = 闪烁到当前视线内的一个新位置。
+ability-demo-rage-light-area-name = 照亮区域
+ability-demo-rage-light-area-description = 永久照亮附近区域和房间内部。
+ability-demo-rage-focus-rage-name = 专注狂怒
+ability-demo-rage-focus-rage-description = 伤害你自己并恢复法力值。
+ability-demo-rage-rage-sustenance-name = 狂怒维持
+ability-demo-rage-rage-sustenance-description = 用纯粹的美味填饱你的肚子。
+ability-demo-rage-veterans-blessing-name = 老兵祝福
+ability-demo-rage-veterans-blessing-description = 暂时提高战斗能力并赋予极大的勇气。
+ability-demo-rage-crude-mapping-name = 粗略绘图
+ability-demo-rage-crude-mapping-description = 绘制你附近的地牢地图。
+ability-demo-rage-resist-disenchantment-name = 抵抗解除附魔
+ability-demo-rage-resist-disenchantment-description = 赋予临时的抵抗解除附魔能力。
+ability-demo-rage-awesome-blow-name = 惊骇一击
+ability-demo-rage-awesome-blow-description = 用单次近战攻击打击怪物。如果命中，将造成正常的近战伤害，并将怪物向后击退。
+ability-demo-rage-spell-reaction-name = 法术反击
+ability-demo-rage-spell-reaction-description = 每当你成为魔法攻击的目标时，赋予临时的速度加成。
+ability-demo-rage-greater-shout-name = 高等怒吼
+ability-demo-rage-greater-shout-description = 向选定的敌人投射一个锥形的声波。
+ability-demo-rage-whirlwind-attack-name = 旋风攻击
+ability-demo-rage-whirlwind-attack-description = 在一种狂野、无法控制的愤怒中攻击所有相邻的怪物。
+ability-demo-rage-resist-curses-name = 抵抗诅咒
+ability-demo-rage-resist-curses-description = 赋予临时的魔法抗性。
+ability-demo-rage-detect-magic-name = 探测魔法
+ability-demo-rage-detect-magic-description = 探测附近的魔法使用者和物品。
+ability-demo-rage-berserk-name = 狂暴
+ability-demo-rage-berserk-description = 进入狂暴状态，获得极大的战斗加成，但失去清醒思考的能力。
+ability-demo-rage-sterility-name = 绝育术
+ability-demo-rage-sterility-description = 阻止可繁殖的怪物去……嗯……做那种羞羞的事。
+ability-demo-rage-barbaric-resistance-name = 野蛮抗性
+ability-demo-rage-barbaric-resistance-description = 赋予免受元素伤害的临时保护。
+ability-demo-rage-summon-horde-name = 召唤部落
+ability-demo-rage-summon-horde-description = 召唤黎明战士来协助。
+ability-demo-rage-armor-of-fury-name = 狂怒之甲
+ability-demo-rage-armor-of-fury-description = 每当怪物用魔法攻击你时，它们可能会被减速并被震慑。
+ability-demo-rage-force-brand-name = 原力附魔
+ability-demo-rage-force-brand-description = 暂时为你的武器附魔上原力。
+ability-demo-rage-dispel-magic-name = 驱散魔法
+ability-demo-rage-dispel-magic-description = 对单只怪物进行驱散，抵消其无敌护盾和暂时的加速效果。
+ability-demo-rage-mana-clash-name = 法力碰撞
+ability-demo-rage-mana-clash-description = 向选定目标发射一个能量球。只有施法者才会受到伤害。
+ability-demo-rage-barbarian-lore-name = 野蛮人传说
+ability-demo-rage-barbarian-lore-description = 鉴定单件物品。
+ability-demo-rage-earthquake-name = 地震术
+ability-demo-rage-earthquake-description = 墙壁会颤抖，大地会震动。
+ability-demo-rage-greater-focus-rage-name = 专注*狂怒*
+ability-demo-rage-greater-focus-rage-description = 伤害你自己并恢复法力值。
+ability-demo-rage-spell-turning-name = 法术反转
+ability-demo-rage-spell-turning-description = 每当你成为魔法的目标时，都有几率将法术反弹给施法者。
+ability-demo-rage-shatter-device-name = 粉碎装置
+ability-demo-rage-shatter-device-description = 摧毁你物品栏中的一个魔法装置以获得各种效果。
+ability-demo-rage-dispel-curse-name = 驱散诅咒
+ability-demo-rage-dispel-curse-description = 驱散你装备上的任何弱诅咒，并有几率驱散强诅咒。
+ability-demo-rage-anti-magic-ray-name = 反魔法射线
+ability-demo-rage-anti-magic-ray-description = 封锁选定敌人的法术。
+ability-demo-rage-rage-strike-name = 狂怒打击
+ability-demo-rage-rage-strike-description = 向选定的敌人发射一个纯粹由狂怒构成的能量球，用你所有的一切进行打击！
+item-demo-anger-management-name = [愤怒管理]
+item-demo-anger-management-description = 学习一项狂怒技艺会消耗一本书；学会后无需携书。
+item-demo-northern-frights-name = [北方惊魂]
+item-demo-northern-frights-description = 学习一项狂怒技艺会消耗一本书；学会后无需携书。
+item-demo-the-sound-and-the-fury-name = [喧哗与骚动]
+item-demo-the-sound-and-the-fury-description = 学习一项狂怒技艺会消耗一本书；学会后无需携书。
+item-demo-dire-ire-name = [极度怒火]
+item-demo-dire-ire-description = 学习一项狂怒技艺会消耗一本书；学会后无需携书。
+class-demo-rage-mage-name = 狂怒法师
+class-demo-rage-mage-description = 以力量施展狂怒，学习消耗书籍，战斗补充法力，行动消耗狂怒。
+actor-demo-rage-mage-player-name = 狂怒法师
+actor-demo-rage-mage-player-description = 以力量施展狂怒，学习消耗书籍，战斗补充法力，行动消耗狂怒。
+build-demo-rage-mage-name = 狂怒法师
+build-demo-rage-mage-description = 以力量施展狂怒，学习消耗书籍，战斗补充法力，行动消耗狂怒。
+
+ability-demo-burglary-detect-traps-name = 探测陷阱
+ability-demo-burglary-detect-traps-description = 探测附近的陷阱。
+ability-demo-burglary-disarm-traps-name = 解除陷阱
+ability-demo-burglary-disarm-traps-description = 发射一道解除陷阱的射线。
+ability-demo-burglary-detect-treasure-name = 探测财宝
+ability-demo-burglary-detect-treasure-description = 探测你附近的所有财宝。
+ability-demo-burglary-detect-objects-name = 探测物品
+ability-demo-burglary-detect-objects-description = 探测你附近的所有物品。
+ability-demo-burglary-see-in-the-dark-name = 黑暗视觉
+ability-demo-burglary-see-in-the-dark-description = 暂时提供红外视觉。
+ability-demo-burglary-tread-softly-name = 轻声行走
+ability-demo-burglary-tread-softly-description = 短时间内大幅提升潜行能力。
+ability-demo-burglary-minor-getaway-name = 小型逃遁
+ability-demo-burglary-minor-getaway-description = 进行中等距离的传送。
+ability-demo-burglary-minor-trap-name = 设置小型陷阱
+ability-demo-burglary-minor-trap-description = 在脚下设置一个微弱的陷阱。经过该陷阱的怪物会受到各种较弱的效果影响。
+ability-demo-burglary-map-escape-route-name = 标记逃跑路线
+ability-demo-burglary-map-escape-route-description = 映射附近区域。
+ability-demo-burglary-pick-pocket-name = 妙手空空
+ability-demo-burglary-pick-pocket-description = 尝试从相邻的怪物身上偷取物品或财宝。
+ability-demo-burglary-negotiate-name = 谈判
+ability-demo-burglary-negotiate-description = 尝试花钱雇佣附近的窃贼为你服务。
+ability-demo-burglary-fetch-name = 取回物品
+ability-demo-burglary-fetch-description = 将远处的物品拉到你身边。
+ability-demo-burglary-sense-danger-name = 危险感知
+ability-demo-burglary-sense-danger-description = 暂时提供心灵感应能力。
+ability-demo-burglary-examine-loot-name = 检查战利品
+ability-demo-burglary-examine-loot-description = 鉴定一件物品。
+ability-demo-burglary-major-trap-name = 设置大型陷阱
+ability-demo-burglary-major-trap-description = 在脚下设置一个陷阱。经过该陷阱的怪物会受到各种效果影响。
+ability-demo-burglary-haste-self-name = 加速
+ability-demo-burglary-haste-self-description = 暂时为你提供加速效果。
+ability-demo-burglary-create-stairs-name = 创造楼梯
+ability-demo-burglary-create-stairs-description = 在你的正下方创造一阶楼梯。
+ability-demo-burglary-panic-hit-name = 恐慌打击
+ability-demo-burglary-panic-hit-description = 攻击相邻的怪物并试图逃跑。
+ability-demo-burglary-panic-shot-name = 恐慌射击
+ability-demo-burglary-panic-shot-description = 射击附近的怪物并试图逃跑。
+ability-demo-burglary-panic-summons-name = 恐慌召唤
+ability-demo-burglary-panic-summons-description = 召唤援助并试图逃跑。
+ability-demo-burglary-panic-traps-name = 恐慌陷阱
+ability-demo-burglary-panic-traps-description = 设置多个微弱的陷阱并试图逃跑。
+ability-demo-burglary-flee-level-name = 逃离楼层
+ability-demo-burglary-flee-level-description = 毫无延迟地逃离你当前的楼层。
+ability-demo-burglary-new-beginnings-name = 新的开始
+ability-demo-burglary-new-beginnings-description = 在短暂的延迟后重新生成当前的地下城楼层。
+ability-demo-burglary-major-getaway-name = 大型逃遁
+ability-demo-burglary-major-getaway-description = 消耗极少的能量进行远距离传送。
+ability-demo-burglary-protect-loot-name = 保护战利品
+ability-demo-burglary-protect-loot-description = 在很长一段时间内，你物品栏中的物品将有几率抵抗损坏。
+ability-demo-burglary-teleport-to-name = 传送到
+ability-demo-burglary-teleport-to-description = 将一个可见怪物传送到你身边而不惊动它。
+ability-demo-burglary-master-thievery-name = 大师级盗窃
+ability-demo-burglary-master-thievery-description = 盗窃的终极境界。只需轻轻一触，你就能试图顺走怪物的财物。
+ability-demo-burglary-darkness-storm-name = 暗影风暴
+ability-demo-burglary-darkness-storm-description = 发射一个巨大的黑暗球。
+ability-demo-burglary-hide-in-shadows-name = 隐匿于阴影
+ability-demo-burglary-hide-in-shadows-description = 你被黑暗笼罩，你的火把光芒被魔法般地调暗了。
+ability-demo-burglary-thieves-den-name = 盗贼巢穴
+ability-demo-burglary-thieves-den-description = 作为盗贼领主，你可以随意召唤你的喽啰来提供援助。
+ability-demo-burglary-ultimate-trap-name = 设置终极陷阱
+ability-demo-burglary-ultimate-trap-description = 在脚下设置一个极其强大的陷阱。经过该陷阱的怪物会受到各种强力效果影响。
+ability-demo-burglary-assassination-name = 暗杀
+ability-demo-burglary-assassination-description = 尝试秒杀一个正在沉睡的怪物。
+item-demo-burglars-handbook-name = [窃贼手册]
+item-demo-burglars-handbook-description = 记载行窃技艺的书籍。
+item-demo-thieving-ways-name = [偷道]
+item-demo-thieving-ways-description = 记载行窃技艺的书籍。
+item-demo-great-escapes-name = [大逃亡]
+item-demo-great-escapes-description = 记载行窃技艺的书籍。
+item-demo-book-of-shadows-name = [暗影之书]
+item-demo-book-of-shadows-description = 记载行窃技艺的书籍。
+class-demo-rogue-name = 盗贼
+class-demo-rogue-description = 以敏捷施展行窃技艺，设置陷阱、偷窃、谈判并从困境中逃脱。
+actor-demo-rogue-player-name = 盗贼
+actor-demo-rogue-player-description = 以敏捷施展行窃技艺，设置陷阱、偷窃、谈判并从困境中逃脱。
+build-demo-rogue-name = 盗贼
+build-demo-rogue-description = 以敏捷施展行窃技艺，设置陷阱、偷窃、谈判并从困境中逃脱。
+
+terrain-demo-burglary-minor-trap-name = 次级陷阱
+terrain-demo-burglary-minor-trap-description = 怪物经过时触发的一次性陷阱。
+
+terrain-demo-burglary-major-trap-name = 高级陷阱
+terrain-demo-burglary-major-trap-description = 怪物经过时触发的一次性陷阱。
+
+terrain-demo-burglary-ultimate-trap-name = 终极陷阱
+terrain-demo-burglary-ultimate-trap-description = 怪物经过时触发的一次性陷阱。

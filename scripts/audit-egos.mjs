@@ -41,7 +41,7 @@ assert.equal(source.unresolvedChineseNameCount, 0);
 assert.equal(pool.rfbEgoPolicy, "weapon-digger");
 assert.equal(pool.affixWeights?.length ?? 0, 0, "formal pool must not retain a generic fallback");
 const naturalTables = (await definitions("lootTables")).filter(table => table.qualityPolicy?.kind === "rfb-depth");
-assert.equal(naturalTables.length, 14);
+assert.equal(naturalTables.length, 15);
 for (const table of naturalTables) {
   assert.equal(table.rfbEgoPolicy, "weapon-digger", table.id);
   assert.equal(table.affixWeights?.length ?? 0, 0, table.id);
@@ -121,7 +121,7 @@ for (const file of ["src/ego.c", "src/object2.c", "src/artifact.c"]) {
   }
 }
 const specialArtifactIndices = [41, 78, 144, 145, 146, 162, 190, 212, 320, 322];
-assert.deepEqual(items.filter(item => specialArtifactIndices.includes(item.artifactGeneration?.sourceIndex)).map(item => item.artifactGeneration.sourceIndex).sort((a, b) => a - b), [41, 145, 162, 322], "new identity-sensitive artifact requires applicability implementation/review");
+assert.deepEqual(items.filter(item => specialArtifactIndices.includes(item.artifactGeneration?.sourceIndex)).map(item => item.artifactGeneration.sourceIndex).sort((a, b) => a - b), [41, 78, 145, 162, 190, 212, 322], "new identity-sensitive artifact requires applicability implementation/review");
 const terror = items.find(item => item.artifactGeneration?.sourceIndex === 41);
 assert.equal(terror.artifactGeneration.baseItemKindId, "demo.item.iron-helm");
 assert.equal(terror.artifactGeneration.rarityOneIn, 7);

@@ -32,10 +32,11 @@ fn sniper_explosion_radius(concentration: u8) -> u8 {
     (concentration.saturating_add(1) / 2).saturating_add(1)
 }
 
-fn mana_brand_cost(damage_dice: u16, damage_sides: u16) -> u32 {
+fn mana_brand_cost(damage_dice: u16, damage_sides: u16, samurai: bool) -> u32 {
     1_u32.saturating_add(
         u32::from(damage_dice)
             .saturating_mul(u32::from(damage_sides))
+            .saturating_mul(if samurai { 2 } else { 1 })
             .saturating_div(7),
     )
 }
@@ -326,6 +327,7 @@ fn sniper_alignment_slay_bonus(slays: &BTreeMap<SlayTarget, SlayLevel>, target: 
 pub(super) enum ProjectileMode {
     Normal,
     Piercing,
+    Rama,
     Sniper(SniperShotModeDefinition),
 }
 
@@ -361,6 +363,7 @@ struct ProjectileShotOutcome {
     trace: ProjectileTrace,
     hit_body: bool,
     fatal: bool,
+    hit_actor_id: Option<String>,
 }
 
 #[derive(Default)]
@@ -376,6 +379,13 @@ pub(super) struct PlayerMeleeOutcome {
     pub(super) attacks_available: u16,
     pub(super) killed: bool,
     pub(super) energy_cost_on_kill: Option<i32>,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum WeaponAttackMode {
+    Normal,
+    Single,
+    Assassinate,
 }
 
 impl Game {
@@ -721,18 +731,75 @@ impl Game {
                 changed,
                 removed_entities,
             )?;
-            if let Some(ammunition) = ammunition {
-                let break_chance_percent = mode.break_chance_override().unwrap_or_else(|| {
-                    if profile.ammunition_endurance {
-                        0
-                    } else if profile.ammunition_behavior
-                        == Some(AmmunitionBehaviorDefinition::Exploding)
+            if let Some(mut ammunition) = ammunition {
+                if (self.item_is_fixed_artifact(&ammunition, 153)
+                    || self.item_is_fixed_artifact(&ammunition, 270))
+                    && let Some(index) = outcome
+                        .hit_actor_id
+                        .as_ref()
+                        .and_then(|id| self.entities.iter().position(|actor| &actor.id == id))
+                {
+                    let mut stick = self.rng.bounded(2) == 0;
+                    let unique = self
+                        .actor_runtime_definition(&self.entities[index])
+                        .unwrap()
+                        .tags
+                        .iter()
+                        .any(|tag| tag == "unique");
+                    if self.item_is_fixed_artifact(&ammunition, 270)
+                        && !unique
+                        && !self.monster_saves_against_attribute(
+                            index,
+                            crate::stats::AttributeKind::Charisma,
+                        )
                     {
-                        100
-                    } else {
-                        profile.ammo_break_chance_percent
+                        let second_save = self.monster_saves_against_attribute(
+                            index,
+                            crate::stats::AttributeKind::Charisma,
+                        );
+                        let actor = &mut self.entities[index];
+                        if !second_save && actor.controller_id.as_deref() != Some(&self.player.id) {
+                            actor.controller_id = Some(self.player.id.clone());
+                            actor.pack = None;
+                            stick = false;
+                            events.push(DomainEvent::ItemSpecialMessage {
+                                message_key: "item-cupid-charmed".to_owned(),
+                            });
+                        } else if !actor.friendly && (!second_save || actor.controller_id.is_none())
+                        {
+                            actor.friendly = true;
+                            stick = false;
+                            events.push(DomainEvent::ItemSpecialMessage {
+                                message_key: "item-cupid-friendly".to_owned(),
+                            });
+                        }
                     }
-                });
+                    if stick {
+                        ammunition.location = ItemLocation::CarriedBy {
+                            actor_id: self.entities[index].id.clone(),
+                        };
+                        self.items.push(ammunition);
+                        events.push(DomainEvent::ItemSpecialMessage {
+                            message_key: "item-artifact-arrow-stuck".to_owned(),
+                        });
+                        continue;
+                    }
+                }
+                let break_chance_percent = if ammunition.is_artifact(&self.content) {
+                    0
+                } else {
+                    mode.break_chance_override().unwrap_or_else(|| {
+                        if profile.ammunition_endurance {
+                            0
+                        } else if profile.ammunition_behavior
+                            == Some(AmmunitionBehaviorDefinition::Exploding)
+                        {
+                            100
+                        } else {
+                            profile.ammo_break_chance_percent
+                        }
+                    })
+                };
                 self.settle_projectile_ammunition(
                     ammunition,
                     outcome.trace.landing,
@@ -788,6 +855,7 @@ impl Game {
         let mut collided = false;
         let mut broke_wall = false;
         let mut fatal = false;
+        let mut hit_actor_id = None;
         for (path_index, position) in path.iter().copied().enumerate() {
             impact = position;
             let Some(terrain_index) = self.index(position) else {
@@ -861,6 +929,7 @@ impl Game {
                 landing,
                 traversed: traversed.clone(),
             };
+            let target_entity_id = self.entities[target_index].id.clone();
             let outcome = self.resolve_player_projectile_collision(
                 target_index,
                 profile,
@@ -877,6 +946,9 @@ impl Game {
                 landing = knockback_landing;
             }
             fatal = outcome.fatal;
+            if outcome.hit && !outcome.fatal {
+                hit_actor_id = Some(target_entity_id);
+            }
             if self.player_is_dead()
                 || (outcome.hit
                     && profile.ammunition_behavior == Some(AmmunitionBehaviorDefinition::Exploding))
@@ -912,6 +984,7 @@ impl Game {
             trace,
             hit_body: collided || broke_wall,
             fatal,
+            hit_actor_id,
         })
     }
 
@@ -953,7 +1026,7 @@ impl Game {
         let mut ranged_skill = attacker.ranged_skill.with_modifier(
             StatLayer::Equipment,
             profile.ammo_kind_id.clone(),
-            profile.to_hit,
+            profile.to_hit + if mode == ProjectileMode::Rama { 20 } else { 0 },
             StatBounds::NON_NEGATIVE,
         );
         if let Some((base_item_id, modifier)) = proficiency_modifier
@@ -1089,6 +1162,11 @@ impl Game {
             profile.launcher_to_damage,
         )
         .max(0);
+        let raw_damage = if mode == ProjectileMode::Rama {
+            raw_damage.saturating_mul(3)
+        } else {
+            raw_damage
+        };
         if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Exploding) {
             return self.resolve_sniper_explosion(
                 self.entities[index].position,
@@ -1149,6 +1227,7 @@ impl Game {
         let damage = self.apply_metal_monster_resistance(index, damage);
         let application =
             plan_damage_application(&self.entities[index], damage, FatalityPolicy::AtOrBelowZero);
+        self.rage_blood_lust(application.damage.applied);
         commit_damage_application(&mut self.entities[index], &application);
         events.push(DomainEvent::ProjectileHit {
             target_kind_id: target_kind_id.clone(),
@@ -1243,6 +1322,7 @@ impl Game {
                 damage,
                 FatalityPolicy::AtOrBelowZero,
             );
+            self.rage_blood_lust(application.damage.applied);
             commit_damage_application(&mut self.entities[index], &application);
             events.push(DomainEvent::ProjectileHit {
                 target_kind_id: definition.id.clone(),
@@ -1276,7 +1356,7 @@ impl Game {
         })
     }
 
-    fn knockback_projectile_target(
+    pub(in crate::game) fn knockback_projectile_target(
         &mut self,
         actor_id: &str,
         remaining_path: &[Position],
@@ -1318,11 +1398,24 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<DamageOutcome, CoreError> {
+        let raw_damage = if ability_id == "demo.ability.rage-mana-clash" {
+            raw_damage
+                * i32::from(
+                    self.actor_runtime_definition(&self.entities[index])
+                        .and_then(|d| d.monster_casting.as_ref())
+                        .map_or(0, |c| c.frequency_percent.min(66)),
+                )
+                / 100
+        } else {
+            raw_damage
+        };
         // GF_MISSILE and GF_DISP_ALL bypass armor and physical resistance.
         let resistance = ((damage_type == DamageType::Physical
             && matches!(
                 ability_id,
                 "demo.item-activation.one-ring"
+                    | "demo.ability.rage-rage-strike"
+                    | "demo.ability.rage-mana-clash"
                     | "rfb.ability.race.android-ray-gun"
                     | "rfb.ability.race.android-blaster"
                     | "rfb.ability.race.android-bazooka"
@@ -1471,6 +1564,7 @@ impl Game {
         );
         let application =
             plan_damage_application(&self.entities[index], damage, FatalityPolicy::AtOrBelowZero);
+        self.rage_blood_lust(application.damage.applied);
         commit_damage_application(&mut self.entities[index], &application);
         events.push(DomainEvent::AbilityHit {
             ability_id: ability_id.to_owned(),
@@ -1553,7 +1647,8 @@ impl Game {
         item.quantity > 0
             && (item.location == ItemLocation::Inventory
                 || (matches!(item.location, ItemLocation::Equipped { .. })
-                    && self.item_is_fixed_artifact(item, 136)))
+                    && (self.item_is_fixed_artifact(item, 136)
+                        || self.item_is_fixed_artifact(item, 208))))
     }
 
     pub(super) fn item_throw_target_spec(
@@ -1576,11 +1671,28 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        let Some(item_index) = self
-            .items
-            .iter()
-            .position(|item| item.id == item_id && self.item_can_be_thrown(item))
-        else {
+        self.throw_hissatsu_weapon(item_id, direction, 0, events, changed, removed_entities)
+    }
+
+    pub(in crate::game) fn throw_hissatsu_weapon(
+        &mut self,
+        item_id: &str,
+        direction: rfb_protocol::Direction,
+        return_chance: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let samurai = self.player_is_samurai();
+        let Some(item_index) = self.items.iter().position(|item| {
+            item.id == item_id
+                && (self.item_can_be_thrown(item)
+                    || return_chance > 0
+                        && self
+                            .equipped_melee_weapons()
+                            .iter()
+                            .any(|w| w.id == item.id))
+        }) else {
             events.push(DomainEvent::ItemThrowUnavailable);
             return Ok(());
         };
@@ -1593,7 +1705,9 @@ impl Game {
             return Ok(());
         }
         let item = &self.items[item_index];
-        let boomerang = self.item_is_fixed_artifact(item, 136);
+        let boomerang = return_chance > 0
+            || self.item_is_fixed_artifact(item, 136)
+            || self.item_is_fixed_artifact(item, 208);
         let (range, damage_multiplier) = self.item_throw_parameters(item);
         let profile = self
             .item_throw_profile(item)
@@ -1623,7 +1737,9 @@ impl Game {
         let (trace, target_index) = self.trace_projectile_path(path);
         let landing = trace.landing;
         let (comes_back, caught) = if boomerang {
-            let chance = 20 + self.player_dexterity_to_hit() + (self.rng.bounded(30) + 1) as i32;
+            let chance = (if return_chance > 0 { return_chance } else { 20 })
+                + self.player_dexterity_to_hit()
+                + (self.rng.bounded(30) + 1) as i32;
             let comes_back = chance > 30 && self.rng.bounded(100) != 0;
             let caught = comes_back
                 && !self.player_has_status_kind(STATUS_BLINDNESS)
@@ -1698,7 +1814,8 @@ impl Game {
                         .map(|profile| profile.resource_id.clone())
                     && let Some(pool) = self.resources.get_mut(&resource_id)
                 {
-                    let cost = mana_brand_cost(profile.damage_dice, profile.damage_sides);
+                    let cost = mana_brand_cost(profile.damage_dice, profile.damage_sides, samurai)
+                        .saturating_mul(if return_chance > 0 { 3 } else { 1 });
                     if pool.current >= cost {
                         pool.current -= cost;
                         item_multiplier = mana_brand_multiplier(item_multiplier);
@@ -1751,6 +1868,7 @@ impl Game {
                     damage,
                     FatalityPolicy::AtOrBelowZero,
                 );
+                self.rage_blood_lust(application.damage.applied);
                 commit_damage_application(&mut self.entities[index], &application);
                 events.push(DomainEvent::ItemThrowHit {
                     source_kind_id: source_kind_id.clone(),
@@ -1983,6 +2101,161 @@ impl Game {
         });
     }
 
+    pub(in crate::game) fn resolve_hissatsu_melee(
+        &mut self,
+        index: usize,
+        spell: u8,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed: &mut Vec<String>,
+    ) -> Result<PlayerMeleeOutcome, CoreError> {
+        let energy = self.player.energy_need;
+        let result = self.resolve_player_melee_with_draconian_strike(
+            index,
+            true,
+            None,
+            false,
+            Some(spell),
+            WeaponAttackMode::Normal,
+            events,
+            changed,
+            removed,
+        );
+        self.player.energy_need = energy;
+        result
+    }
+
+    pub(in crate::game) fn resolve_rage_single_blow(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed: &mut Vec<String>,
+    ) -> Result<PlayerMeleeOutcome, CoreError> {
+        let energy = self.player.energy_need;
+        let result = self.resolve_player_melee_with_draconian_strike(
+            index,
+            true,
+            None,
+            false,
+            None,
+            WeaponAttackMode::Single,
+            events,
+            changed,
+            removed,
+        );
+        self.player.energy_need = energy;
+        result
+    }
+
+    pub(in crate::game) fn resolve_burglary_assassination(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed: &mut Vec<String>,
+    ) -> Result<PlayerMeleeOutcome, CoreError> {
+        self.resolve_player_melee_with_draconian_strike(
+            index,
+            true,
+            None,
+            false,
+            None,
+            WeaponAttackMode::Assassinate,
+            events,
+            changed,
+            removed,
+        )
+    }
+
+    fn hissatsu_damage_multiplier(
+        &self,
+        index: usize,
+        spell: Option<u8>,
+        profile: &super::player_stats::ResolvedAttackProfile,
+        base: i32,
+    ) -> i32 {
+        let Some(spell) = spell else {
+            return base;
+        };
+        let actor = &self.entities[index];
+        let definition = self
+            .actor_runtime_definition(actor)
+            .expect("target definition");
+        let elemental = match spell {
+            3 => Some(DamageType::Fire),
+            8 => Some(DamageType::Poison),
+            13 => Some(DamageType::Cold),
+            17 => Some(DamageType::Electricity),
+            _ => None,
+        };
+        if let Some(d) = elemental {
+            if actor.resistances.level(d) == ResistanceLevel::Immune {
+                return base;
+            }
+            let flag = match spell {
+                3 => "BRAND_FIRE",
+                8 => "BRAND_POIS",
+                13 => "BRAND_COLD",
+                _ => "BRAND_ELEC",
+            };
+            let own_brand = profile
+                .source_item_id
+                .as_ref()
+                .and_then(|id| self.items.iter().find(|i| &i.id == id))
+                .is_some_and(|i| self.item_has_rfb_flag(i, flag));
+            let brand = if own_brand { 24 } else { 10 };
+            let mult = if spell == 17 {
+                brand + 35
+            } else {
+                (brand + (brand - 10) / 2).max(24)
+            };
+            return base.max(
+                if actor.resistances.level(d) == ResistanceLevel::Vulnerable {
+                    mult * 2
+                } else {
+                    mult
+                },
+            );
+        }
+        match spell {
+            9 if actor_matches_category(definition, "nonliving")
+                && actor_matches_category(definition, "evil") =>
+            {
+                if base < 15 {
+                    25
+                } else {
+                    base.max((base + 19).min(45))
+                }
+            }
+            12 if definition.tags.iter().any(|t| t == "hurt-rock") => {
+                if base == 10 {
+                    37
+                } else {
+                    base.max(56)
+                }
+            }
+            19 if actor_matches_category(definition, "living") => {
+                let cut = self
+                    .player
+                    .statuses
+                    .iter()
+                    .find(|s| s.kind_id == "rfb.status.bleeding")
+                    .map_or(0, |s| s.remaining_ticks as i32);
+                base.max(((cut + 300) / 10).max(cut / 5).min(95))
+            }
+            30 => {
+                let undead = actor_matches_category(definition, "undead");
+                if base == 10 {
+                    if undead { 60 } else { 36 }
+                } else {
+                    base.max((base + if undead { 50 } else { 25 }).min(120))
+                }
+            }
+            _ => base,
+        }
+    }
+
     pub(super) fn resolve_player_melee(
         &mut self,
         index: usize,
@@ -1991,11 +2264,16 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<PlayerMeleeOutcome, CoreError> {
+        if self.samurai.posture == 1 {
+            self.samurai.posture = 0;
+        }
         self.resolve_player_melee_with_draconian_strike(
             index,
             train_weapon,
             None,
             false,
+            None,
+            WeaponAttackMode::Normal,
             events,
             changed,
             removed_entities,
@@ -2015,6 +2293,8 @@ impl Game {
             false,
             Some(mode),
             false,
+            None,
+            WeaponAttackMode::Normal,
             events,
             changed,
             removed_entities,
@@ -2033,6 +2313,8 @@ impl Game {
             false,
             None,
             true,
+            None,
+            WeaponAttackMode::Normal,
             events,
             changed,
             removed_entities,
@@ -2046,10 +2328,13 @@ impl Game {
         train_weapon: bool,
         strike_mode: Option<DraconianStrikeModeDefinition>,
         revenge: bool,
+        hissatsu: Option<u8>,
+        weapon_attack_mode: WeaponAttackMode,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<PlayerMeleeOutcome, CoreError> {
+        let samurai = self.player_is_samurai();
         // py_attack rejects without refunding the action's energy. Do this before
         // proficiency, attack rolls, contact effects, or retaliation.
         if self.dungeon_blocks_melee() {
@@ -2065,6 +2350,32 @@ impl Game {
             .actor_runtime_definition(&self.entities[index])
             .expect("monster actor definition must remain available")
             .clone();
+        // cmd1.c:3859-3873: Stormbringer's deliberate ally attack has the same
+        // virtue cost for movement and ability callers, after melee rejection.
+        if self.actor_is_player_side(&self.entities[index])
+            && self.entity_is_visible_to_player(&self.entities[index])
+            && ![
+                STATUS_STUN,
+                STATUS_CONFUSION,
+                STATUS_HALLUCINATION,
+                STATUS_BERSERK,
+            ]
+            .iter()
+            .any(|status| self.player_has_status_kind(status))
+            && self
+                .equipped_melee_weapons()
+                .iter()
+                .any(|item| self.item_is_fixed_artifact(item, 190))
+        {
+            self.add_virtue(rfb_protocol::VirtueKindDto::Individualism, 1);
+            for virtue in [
+                rfb_protocol::VirtueKindDto::Honour,
+                rfb_protocol::VirtueKindDto::Justice,
+                rfb_protocol::VirtueKindDto::Compassion,
+            ] {
+                self.add_virtue(virtue, -1);
+            }
+        }
         let target_entity_id = self.entities[index].id.clone();
         let target_kind = self.entities[index].kind_id.clone();
         self.entities[index].alerted = true;
@@ -2092,11 +2403,33 @@ impl Game {
         } else {
             self.player_melee_profiles(&attacker)
         };
-        profiles.extend(self.player_mutation_innate_attack_profiles(&attacker));
+        if let Some(spell) = hissatsu {
+            profiles.retain(|p| p.source_item_id.is_some());
+            for p in &mut profiles {
+                if matches!(spell, 0 | 5 | 14 | 23 | 99) {
+                    p.attacks = 1;
+                    p.extra_attack_chance_percent = 0;
+                }
+                if spell == 13 {
+                    p.attacks += 2;
+                }
+                if spell == 14 {
+                    p.poison_needle = true;
+                }
+                if spell == 99 {
+                    p.melee_skill.value += 60;
+                }
+            }
+        } else {
+            profiles.extend(self.player_mutation_innate_attack_profiles(&attacker));
+        }
         if train_weapon && self.equipped_melee_weapons().len() >= 2 {
             self.train_dual_wielding(definition.level);
         }
-        if revenge {
+        if weapon_attack_mode != WeaponAttackMode::Normal {
+            profiles.retain(|p| p.source_item_id.is_some());
+        }
+        if revenge || weapon_attack_mode != WeaponAttackMode::Normal {
             profiles.truncate(1);
             for profile in &mut profiles {
                 profile.attacks = 1;
@@ -2126,7 +2459,28 @@ impl Game {
         let mut touched_surviving_target = false;
         let mut allow_criticals = true;
         let mut impact_earthquake_item_id = None;
+        let sleeping_at_start = self.entity_is_visible_to_player(&self.entities[index])
+            && self.entities[index]
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_SLEEP);
         'profiles: for (hand, (profile, profile_attacks)) in profiles.into_iter().enumerate() {
+            let artifact_index = profile
+                .source_item_id
+                .as_ref()
+                .and_then(|id| self.items.iter().find(|item| &item.id == id))
+                .and_then(|item| self.content.item(&item.kind_id))
+                .and_then(|item| item.artifact_generation.as_ref())
+                .map(|artifact| artifact.source_index);
+            if artifact_index == Some(341) && definition.glyph == "B" {
+                events.push(DomainEvent::ItemSpecialMessage {
+                    message_key: "item-skynail-refuses".to_owned(),
+                });
+                continue;
+            }
+            let assassination = (artifact_index == Some(275)
+                || weapon_attack_mode == WeaponAttackMode::Assassinate)
+                && sleeping_at_start;
             if (profile_attacks > 0 || profile.source_item_id.is_none())
                 && self.duelist_auto_challenge(
                     index,
@@ -2143,7 +2497,7 @@ impl Game {
             if profile.attack_name.as_deref() == Some("马蹄") {
                 self.train_centaur_hooves(definition.level, events);
             }
-            let vampiric_weapon =
+            let vampiric_weapon = (profile.source_item_id.is_some() && self.hexing(27)) || hissatsu == Some(24) ||
                 matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
                     || (profile.source_item_id.is_some() && self.items.iter().any(|item| {
                         matches!(&item.location, ItemLocation::Equipped { slot_id }
@@ -2166,8 +2520,14 @@ impl Game {
                 &definition,
                 strike_mode,
             );
+            let base_damage_multiplier =
+                self.hissatsu_damage_multiplier(index, hissatsu, &profile, base_damage_multiplier);
             let mut stop_attacking = false;
-            for attack_number in 1..=profile_attacks {
+            for attack_number in 1..=if assassination {
+                profile_attacks.min(1)
+            } else {
+                profile_attacks
+            } {
                 attacks_used = attacks_used.saturating_add(1);
                 self.apply_easy_tiring_fatigue(50);
                 let perfect_strike = duelist_attack && self.rng.bounded(2) == 0;
@@ -2196,6 +2556,7 @@ impl Game {
                                 })
                                 .succeeded())
                 };
+                let hit = hit && (hissatsu != Some(15) || self.rng.bounded(2) == 0);
                 if !hit {
                     events.push(profile.miss_event(&target_kind));
                     if let Some(item) = profile
@@ -2232,12 +2593,23 @@ impl Game {
                     })
                 };
                 let order = has_trait(WeaponTraitDto::Order);
-                let impact = has_trait(WeaponTraitDto::Impact);
+                // master:equip.c::_weapon_info_flag grants Quaker's glove
+                // IMPACT to both wielded weapons, without altering the items.
+                let impact = hissatsu == Some(20)
+                    || has_trait(WeaponTraitDto::Impact)
+                    || (source_weapon_index.is_some()
+                        && self.items.iter().any(|item| {
+                            matches!(&item.location, ItemLocation::Equipped { slot_id }
+                                if self.body_slot_type(slot_id) == Some("gloves"))
+                                && self.item_has_rfb_flag(item, "IMPACT")
+                        }));
                 let stun = has_trait(WeaponTraitDto::Stun);
                 let wild = has_trait(WeaponTraitDto::Wild);
-                let vorpal_chance = if has_trait(WeaponTraitDto::Vorpal2) {
+                let vorpal_chance = if artifact_index == Some(150) && definition.glyph == "j" {
+                    None
+                } else if has_trait(WeaponTraitDto::Vorpal2) {
                     Some(2_u64)
-                } else if has_trait(WeaponTraitDto::Vorpal) {
+                } else if has_trait(WeaponTraitDto::Vorpal) || self.hexing(12) {
                     Some(4_u64)
                 } else {
                     None
@@ -2251,7 +2623,7 @@ impl Game {
                         .map(|profile| profile.resource_id.clone())
                     && let Some(pool) = self.resources.get_mut(&resource_id)
                 {
-                    let cost = mana_brand_cost(profile.damage_dice, profile.damage_sides);
+                    let cost = mana_brand_cost(profile.damage_dice, profile.damage_sides, samurai);
                     if pool.current >= cost {
                         pool.current -= cost;
                         damage_multiplier = mana_brand_multiplier(damage_multiplier);
@@ -2270,27 +2642,86 @@ impl Game {
                     && let Some(weight) = profile.critical_weight_tenths_pound
                 {
                     base_damage = base_damage
-                        .saturating_mul(self.roll_player_melee_critical_multiplier(
-                            weight,
-                            profile.to_hit,
-                            &mut allow_criticals,
-                        ))
+                        .saturating_mul(if matches!(hissatsu, Some(15 | 23)) {
+                            let quality = u32::from(weight) + self.rng.bounded(650) as u32 + 1;
+                            if quality < 400 {
+                                200
+                            } else if quality < 700 {
+                                250
+                            } else if quality < 900 {
+                                300
+                            } else if quality < 1300 {
+                                350
+                            } else {
+                                400
+                            }
+                        } else {
+                            self.roll_player_melee_critical_multiplier(
+                                weight,
+                                profile.to_hit,
+                                &mut allow_criticals,
+                            )
+                        })
                         .saturating_div(100);
                 }
                 let impact_triggered = impact && (base_damage > 50 || self.rng.bounded(7) == 0);
                 if impact_triggered {
                     impact_earthquake_item_id = profile.source_item_id.clone();
                 }
-                let weapon_stun = impact_triggered && base_damage > 50
+                let time_brand_damage = base_damage;
+                let weapon_stun = (artifact_index == Some(335)
+                    && matches!(
+                        target_kind.as_str(),
+                        "demo.actor.werewolf"
+                            | "demo.actor.draugluin-sire-of-all-werewolves"
+                            | "demo.actor.carcharoth-the-jaws-of-thirst"
+                    ))
+                    || impact_triggered && base_damage > 50
                     || stun
                         && self.rng.bounded(100) + 1
                             < u64::try_from(base_damage.max(0)).unwrap_or(u64::MAX);
+                if self.player_is_rogue() && profile.source_item_id.is_some() && attack_number == 1
+                {
+                    if sleeping_at_start {
+                        base_damage *= 3 + i32::from(self.progress.level / 20);
+                    } else if self.entities[index]
+                        .statuses
+                        .iter()
+                        .any(|s| s.kind_id == STATUS_FEAR)
+                    {
+                        base_damage = base_damage * 3 / 2;
+                    } else if self.player_has_status_kind("rfb.status.burglary-shadows")
+                        && !self.position_is_lit(self.player.position)
+                        && !definition.tags.iter().any(|t| t == "resist-all")
+                    {
+                        let mut power = i32::from(self.progress.level) * 6
+                            + (self.player_derived_stats().stealth_skill.value + 10) * 4;
+                        if self.player_has_equipped_aggravation() {
+                            power /= 2;
+                        }
+                        if definition.level > u32::from(self.progress.level).pow(2) / 20 + 10 {
+                            power /= 3;
+                        }
+                        if self.rng.bounded(power.max(1) as u64) > u64::from(definition.level + 20)
+                        {
+                            base_damage =
+                                base_damage * (5 + i32::from(self.progress.level) * 2 / 25) / 2;
+                        }
+                    }
+                }
                 let mut ordinary_drain = base_damage;
                 // cmd1.c applies VORPAL to the weapon dice before adding to_d.
                 // Fixed kinds and rolled weapon traits share this branch.
                 if let Some(chance) = vorpal_chance
                     && self.rng.bounded(chance.saturating_mul(3).saturating_div(2)) == 0
                 {
+                    if artifact_index == Some(85) && self.rng.bounded(2) != 0 {
+                        self.chainsword_noise(events);
+                    } else if artifact_index == Some(92) {
+                        events.push(DomainEvent::ItemSpecialMessage {
+                            message_key: "item-vorpal-blade-snicker".to_owned(),
+                        });
+                    }
                     let mut multiplier = 2;
                     while self.rng.bounded(chance) == 0 {
                         multiplier += 1;
@@ -2299,6 +2730,40 @@ impl Game {
                     ordinary_drain = ordinary_drain.saturating_mul(3) / 2;
                 }
                 let mut rolled_damage = base_damage.saturating_add(profile.to_damage).max(0);
+                if matches!(hissatsu, Some(16 | 23)) {
+                    rolled_damage = rolled_damage.saturating_mul(2);
+                }
+                if hissatsu == Some(5) {
+                    rolled_damage = 0;
+                    if !self.actor_has_status_immunity(index, STATUS_STUN) {
+                        let mut duration = 10
+                            + self.rng.bounded(15) as u32
+                            + 1
+                            + u32::from(self.progress.level / 5);
+                        if self.entities[index]
+                            .statuses
+                            .iter()
+                            .any(|s| s.kind_id == STATUS_STUN)
+                        {
+                            duration /= 2;
+                        }
+                        apply_status(
+                            &mut self.entities[index].statuses,
+                            super::monster_combat::melee_status(
+                                STATUS_STUN,
+                                duration,
+                                "demo.ability.hissatsu-stunning-strike",
+                            ),
+                        );
+                    }
+                }
+                if hissatsu == Some(9)
+                    && !(actor_matches_category(&definition, "nonliving")
+                        && actor_matches_category(&definition, "evil"))
+                    || hissatsu == Some(19) && !actor_matches_category(&definition, "living")
+                {
+                    rolled_damage = 0;
+                }
                 if matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vorpal))
                     && self.rng.bounded(6) == 0
                 {
@@ -2321,6 +2786,28 @@ impl Game {
                         },
                         events,
                     );
+                }
+                if assassination {
+                    rolled_damage = if definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
+                        || self.duelist_monster_saves(index)
+                    {
+                        rolled_damage
+                            .saturating_mul(5)
+                            .max(self.entities[index].hp / 2)
+                    } else {
+                        self.entities[index].hp.saturating_add(1)
+                    };
+                }
+                if artifact_index == Some(150) && definition.glyph == "j" {
+                    rolled_damage = 0;
+                    events.push(DomainEvent::ItemSpecialMessage {
+                        message_key: "item-zantetsuken-elastic".to_owned(),
+                    });
+                } else if artifact_index == Some(179) && definition.glyph == "S" {
+                    rolled_damage /= 2;
                 }
                 let rolled_damage = if duelist_attack {
                     rolled_damage
@@ -2404,6 +2891,7 @@ impl Game {
                     damage,
                     FatalityPolicy::AtOrBelowZero,
                 );
+                self.rage_blood_lust(application.damage.applied);
                 commit_damage_application(&mut self.entities[index], &application);
                 events.push(profile.hit_event(&target_kind, damage));
                 self.wake_entity_after_damage(index, damage.applied, events);
@@ -2522,6 +3010,29 @@ impl Game {
                     break;
                 }
                 touched_surviving_target = true;
+                if artifact_index == Some(294) {
+                    let position = self.entities[index].position;
+                    self.resolve_ability_damage_to_entity(
+                        index, "demo.item.eternal-blade", DamageType::Time, time_brand_damage,
+                        ProjectileTrace { origin: self.player.position, impact: position, landing: position, traversed: vec![position] },
+                        events, changed, removed_entities,
+                    )?;
+                    if !self.entities.iter().any(|actor| actor.id == target_entity_id) {
+                        killed = true;
+                        break 'profiles;
+                    }
+                } else if artifact_index == Some(195)
+                    && let Some(held) = self.items.iter().position(|item| {
+                        matches!(&item.location, ItemLocation::CarriedBy { actor_id } if actor_id == &target_entity_id)
+                    })
+                {
+                    // pack_carry transfers the real held object; a full pack leaves it at our feet.
+                    let item_id = self.items[held].id.clone();
+                    self.items[held].location = ItemLocation::Ground(self.player.position);
+                    changed.insert(self.player.position);
+                    let outcome = self.pick_up_item_at_player(Some(&item_id))?;
+                    self.record_pick_up_outcome(outcome, events, changed);
+                }
                 self.resolve_confusing_strike(index, &definition, events);
                 // cmd1.c returns on a slain target before this Duelist branch.
                 if self.player_is_duelist()
@@ -2909,7 +3420,7 @@ impl Game {
         definition: &rfb_content::ActorDefinition,
         events: &mut Vec<DomainEvent>,
     ) {
-        if !self.confusing_strike_ready {
+        if !self.confusing_strike_ready && !self.hexing(13) {
             return;
         }
         self.confusing_strike_ready = false;
@@ -3322,6 +3833,7 @@ impl Game {
                     damage,
                     FatalityPolicy::AtOrBelowZero,
                 );
+                self.rage_blood_lust(application.damage.applied);
                 commit_damage_application(&mut self.entities[target_index], &application);
                 changed.insert(target_position);
                 self.wake_entity_after_damage(target_index, damage.applied, events);

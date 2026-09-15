@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.curse-and-spelling",
+  "nameKey": "item-demo-curse-and-spelling-name",
+  "descriptionKey": "item-demo-curse-and-spelling-description",
+  "abilityBookId": "demo.ability-book.curse-and-spelling",
+  "rfbBaseKind": {
+    "sourceIndex": 562,
+    "tval": 107,
+    "sval": 2
+  },
+  "baseValue": 15000,
+  "generationLevel": 45,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "hex",
+    "book",
+    "spellbook"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

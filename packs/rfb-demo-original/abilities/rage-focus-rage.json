@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.rage-focus-rage",
+  "nameKey": "ability-demo-rage-focus-rage-name",
+  "descriptionKey": "ability-demo-rage-focus-rage-description",
+  "abilityProgramId": "demo.ability-program.rage-focus-rage",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "rage",
+    "technique",
+    "usable-while-berserk"
+  ],
+  "affectsGroundItems": false
+}

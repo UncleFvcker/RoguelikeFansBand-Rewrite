@@ -115,7 +115,25 @@ impl Game {
             .position(|actor| actor.position == target)
         {
             changed.insert(target);
-            if self.actor_is_player_side(&self.entities[index]) && !self.player_is_berserker() {
+            // cmd1.c:4951-4971: only a clear-headed, visible ally reaches the
+            // displacement roll. An unrecognized ally is attacked directly.
+            let recognizes_ally = self.entity_is_visible_to_player(&self.entities[index])
+                && ![STATUS_CONFUSION, STATUS_HALLUCINATION, STATUS_STUN]
+                    .iter()
+                    .any(|status| self.player_has_status_kind(status))
+                && !(self.player_has_mutation("rfb.mutation.bers-rage")
+                    && self.player_has_status_kind(STATUS_BERSERK));
+            let stormbringer_attack = self.actor_is_player_side(&self.entities[index])
+                && self.items.iter().any(|item| {
+                    matches!(&item.location, ItemLocation::Equipped { slot_id }
+                        if self.body_slot_type(slot_id) != Some("tool"))
+                        && self.item_is_fixed_artifact(item, 190)
+                })
+                && (!recognizes_ally || self.rng.bounded(1000) >= 666);
+            if self.actor_is_player_side(&self.entities[index])
+                && !stormbringer_attack
+                && !self.player_is_berserker()
+            {
                 events.push(DomainEvent::MoveBlocked);
             } else if self.player_fear_blocks_melee(index) {
                 events.push(DomainEvent::PlayerFearBlocked {
@@ -253,9 +271,10 @@ impl Game {
 
     pub(super) fn player_wall_destruction_target(&self, position: Position) -> Option<&str> {
         // RFB cmd1.c: kill_wall uses FF_HURT_DISI, before entry; it is not pass_wall.
-        let destroys_walls = self
-            .character_definitions()
-            .is_some_and(|(_, race, _, _)| race.id == "demo.race.demon-lord")
+        let destroys_walls = self.singing(16)
+            || self
+                .character_definitions()
+                .is_some_and(|(_, race, _, _)| race.id == "demo.race.demon-lord")
             || (self.riding_actor_id.is_some()
                 && self
                     .active_traveler_definition()
@@ -588,10 +607,12 @@ impl Game {
     ) -> bool {
         !terrain.allows_wall_passage
             && (terrain.walkable || !terrain.movement_modes.is_empty())
-            && !terrain
-                .tags
-                .iter()
-                .any(|tag| matches!(tag.as_str(), "warding-glyph" | "explosive-rune"))
+            && !terrain.tags.iter().any(|tag| {
+                matches!(
+                    tag.as_str(),
+                    "warding-glyph" | "explosive-rune" | "monster-trap"
+                )
+            })
     }
 
     pub(super) fn actor_kind_can_enter_position(&self, kind_id: &str, position: Position) -> bool {

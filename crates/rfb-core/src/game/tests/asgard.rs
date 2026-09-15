@@ -252,6 +252,7 @@ fn asgard_fishing_start_block_save_cancel_and_ecology_resume() {
     game.rng = RfbRng::seeded(seed);
     activate(&mut game, &id, Some(&east()));
     assert_eq!(game.fishing_direction, Some(Direction::East));
+    game.reveal_current_visibility();
     assert!(!game.searching);
     let mut saved = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     let mut invalid_modes = game.to_save();

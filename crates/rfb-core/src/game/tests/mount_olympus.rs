@@ -429,6 +429,9 @@ fn mount_olympus_guardians_use_real_melee_and_quest_artifacts_skip_normal_genera
             actor_id: "test.natural".into(),
         },
     };
+    // Ulmo is an ordinary trident candidate; exclude the already-created
+    // artifact so this assertion isolates Poseidon's QUESTITEM rejection.
+    game.generated_artifact_ids.insert("demo.item.ulmo".into());
     let draws = game.rng_draw_counter();
     assert!(
         game.roll_fixed_artifact_kind_id(&context, Some("demo.item.trident"), false)
@@ -655,12 +658,20 @@ fn mount_olympus_artifacts_equip_activate_and_round_trip() {
         }
         game.player.hp = 1;
         game.nutrition = 1_000;
+        let charge_before = game
+            .items
+            .iter()
+            .find(|i| i.id == id)
+            .unwrap()
+            .charges
+            .unwrap()
+            .current;
         let events = ol3_activate(&mut game, &id, target.as_ref());
         match name {
             "zeus" => assert!(game.entities[0].hp < 10_000, "{events:?}"),
             "poseidon" => {
                 assert!(game.terrain.iter().any(|t| t != "demo.terrain.floor"));
-                assert_eq!(game.items.iter().find(|i| i.id == id).unwrap().charges.unwrap().current, 1);
+                assert_eq!(game.items.iter().find(|i| i.id == id).unwrap().charges.unwrap().current, charge_before);
                 ol3_activate(&mut game, &id, None);
             }
             "hades" => assert_eq!(game.progress.attributes.strength, game.progress.maximum_attributes.strength),
@@ -1015,6 +1026,7 @@ fn mount_olympus_ambrosia_is_local_and_preserves_satiated_nutrition() {
         );
         assert!(!game.items.iter().any(|i| i.id == "test.food"));
     }
+    game.reveal_current_visibility();
     let restored = Game::from_save_with_content(
         game.to_save(),
         game.content.clone(),

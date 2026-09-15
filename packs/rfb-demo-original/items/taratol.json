@@ -1,0 +1,94 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.taratol",
+  "nameKey": "item-demo-taratol-name",
+  "descriptionKey": "item-demo-taratol-description",
+  "glyph": "\\",
+  "generationLevel": 35,
+  "weightTenthsPound": 200,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 116,
+    "baseItemKindId": "demo.item.mace",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "weaponProficiencyBaseItemId": "demo.item.mace",
+  "rfbValue": {
+    "flags": [
+      "BRAND_ELEC",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_ELEC",
+      "KILL_DRAGON",
+      "SHOW_MODS"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 5,
+    "toHit": 12,
+    "toDamage": 12
+  },
+  "resistances": {
+    "electricity": "immune"
+  },
+  "slays": {
+    "dragon": "kill"
+  },
+  "brands": [
+    "electricity"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.taratol",
+        "nameKey": "device-activation-e5-speed-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 20,
+        "rfbValue": 3000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.bubo-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1000
+    }
+  }
+}

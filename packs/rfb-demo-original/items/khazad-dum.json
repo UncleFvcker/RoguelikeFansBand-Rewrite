@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.khazad-dum",
+  "nameKey": "item-demo-khazad-dum-name",
+  "descriptionKey": "item-demo-khazad-dum-description",
+  "glyph": "\\",
+  "generationLevel": 60,
+  "weightTenthsPound": 400,
+  "baseValue": 80000,
+  "maxStack": 1,
+  "equipmentSlot": "tool",
+  "tags": [
+    "artifact",
+    "equipment",
+    "tool",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 295,
+    "baseItemKindId": "demo.item.mattock",
+    "instant": false,
+    "rarityOneIn": 25
+  },
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "DEC_STEALTH",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "REGEN",
+      "RES_BLIND",
+      "RES_DISEN",
+      "SLAY_EVIL",
+      "STR",
+      "TUNNEL"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "tunnelingPval": 4,
+  "modifiers": {
+    "strength": 4,
+    "constitution": 4
+  },
+  "equipmentBonuses": {
+    "stealthSkill": -4,
+    "infravision": 4
+  },
+  "passives": [
+    "regeneration"
+  ],
+  "resistances": {
+    "disenchant": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.blindness"
+  ],
+  "slays": {
+    "evil": "slay"
+  },
+  "weaponProficiencyBaseItemId": "demo.item.mattock",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 8,
+    "toHit": 12,
+    "toDamage": 12
+  }
+}

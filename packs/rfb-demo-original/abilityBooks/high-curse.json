@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.high-curse",
+  "nameKey": "item-demo-high-curse-name",
+  "descriptionKey": "ability-book-demo-deck-of-many-things-description",
+  "realmId": "hex",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.hex-ice-armor",
+    "demo.ability.hex-cure-serious-wounds",
+    "demo.ability.hex-inhale-potion",
+    "demo.ability.hex-vampiric-mist",
+    "demo.ability.hex-runesword",
+    "demo.ability.hex-confusing-touch",
+    "demo.ability.hex-building-up",
+    "demo.ability.hex-anti-teleport"
+  ],
+  "tags": [
+    "hex",
+    "spellbook"
+  ]
+}

@@ -874,11 +874,15 @@ fn elvish_waybread_uses_normal_and_intolerant_branches() {
     );
 
     assert_eq!(normal.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
-    assert!(
-        (4..=33).contains(&normal.player.hp),
-        "Waybread left the player at {} HP",
-        normal.player.hp
-    );
+    let healed = update
+        .events
+        .iter()
+        .find(|e| e.kind == "item.use-heal")
+        .expect("Waybread heals before the world tick");
+    let amount: i32 = healed.args["amount"].parse().unwrap();
+    assert!((4..=32).contains(&amount));
+    // Remaining poison can deal damage during the same scheduled action.
+    assert!(normal.player.hp > 0 && normal.player.hp <= 1 + amount);
     let poison_reduction = update
         .events
         .iter()
@@ -1185,7 +1189,7 @@ fn golem_slow_digestion_and_food_magic_follow_construct_metabolism() {
         "test.item.golem-waybread",
         "demo.item.piece-of-elvish-waybread",
     );
-    dispatch_next(
+    let update = dispatch_next(
         &mut waybread,
         GameCommand::UseItem {
             item_id: "test.item.golem-waybread".to_owned(),
@@ -1193,7 +1197,12 @@ fn golem_slow_digestion_and_food_magic_follow_construct_metabolism() {
         },
     );
     assert_eq!(waybread.nutrition, 9_375);
-    assert!(waybread.player.hp > 1);
+    let healed = update
+        .events
+        .iter()
+        .find(|event| event.kind == "item.use-heal")
+        .expect("Waybread heals before the poison tick");
+    assert!((4..=32).contains(&healed.args["amount"].parse::<i32>().unwrap()));
     assert_eq!(
         waybread
             .player

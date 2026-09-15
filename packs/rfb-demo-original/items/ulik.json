@@ -1,0 +1,61 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ulik",
+  "nameKey": "item-demo-ulik-name",
+  "descriptionKey": "item-demo-ulik-description",
+  "glyph": "\\",
+  "generationLevel": 50,
+  "weightTenthsPound": 400,
+  "baseValue": 150000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 314,
+    "baseItemKindId": "demo.item.club",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_TROLL",
+      "QUESTITEM",
+      "STR"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 4,
+    "constitution": 4
+  },
+  "weaponProficiencyBaseItemId": "demo.item.club",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 5,
+    "damageSides": 8,
+    "toHit": 0,
+    "toDamage": 25
+  },
+  "slays": {
+    "troll": "kill"
+  }
+}

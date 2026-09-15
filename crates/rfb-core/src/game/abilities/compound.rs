@@ -70,6 +70,7 @@ impl Game {
                     | AbilityEffectDefinition::HealDice { .. }
                     | AbilityEffectDefinition::ReduceStatus { .. }
                     | AbilityEffectDefinition::RestoreVitality { .. }
+                    | AbilityEffectDefinition::AnimateDead { .. }
                     | AbilityEffectDefinition::LightArea { .. }
                     | AbilityEffectDefinition::ApplyStatus { .. }
                     | AbilityEffectDefinition::RemoveStatus { .. }

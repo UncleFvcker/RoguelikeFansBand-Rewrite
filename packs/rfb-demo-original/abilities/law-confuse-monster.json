@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.law-confuse-monster",
+  "nameKey": "ability-demo-law-confuse-monster-name",
+  "descriptionKey": "ability-demo-law-confuse-monster-description",
+  "abilityProgramId": "demo.ability-program.law-confuse-monster",
+  "target": {
+    "modes": [
+      "direction",
+      "entity",
+      "position"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "law",
+    "spell"
+  ]
+}

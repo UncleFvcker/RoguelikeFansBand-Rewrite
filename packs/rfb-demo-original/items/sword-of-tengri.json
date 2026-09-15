@@ -1,0 +1,109 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.sword-of-tengri",
+  "nameKey": "item-demo-sword-of-tengri-name",
+  "descriptionKey": "item-demo-sword-of-tengri-description",
+  "glyph": "|",
+  "generationLevel": 30,
+  "weightTenthsPound": 130,
+  "baseValue": 40000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 333,
+    "baseItemKindId": "demo.item.tulwar",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "weaponProficiencyBaseItemId": "demo.item.tulwar",
+  "rfbValue": {
+    "flags": [
+      "BRAND_ELEC",
+      "BRAND_FIRE",
+      "CHR",
+      "FREE_ACT",
+      "FULL_NAME",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "RES_FEAR",
+      "SHOW_MODS",
+      "SLAY_HUMAN",
+      "STR"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 5,
+    "toHit": 16,
+    "toDamage": 18
+  },
+  "modifiers": {
+    "strength": 3,
+    "charisma": 3
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "statusImmunities": [
+    "rfb.status.fear",
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "human": "slay"
+  },
+  "brands": [
+    "electricity",
+    "fire"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.sword-of-tengri",
+        "nameKey": "device-activation-e5-heroism-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 25,
+        "rfbValue": 2125,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.tyr"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 350
+    }
+  }
+}

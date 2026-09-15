@@ -337,7 +337,11 @@ fn anti_cave_round_trip(seed: u64, slug: &str, suppressed: &str, world_position:
                 game.content.actor(&actor.kind_id).unwrap(),
                 false
             ));
-            assert!(!game.actor_kind_is_dungeon_guardian(&actor.kind_id));
+            assert!(
+                !game.actor_kind_is_dungeon_guardian(&actor.kind_id),
+                "unexpected guardian {} at depth {depth}",
+                actor.kind_id
+            );
         }
         clear_monsters(&mut game);
         if depth < 50 {
@@ -1116,6 +1120,7 @@ fn game_with_second_town(seed: u64) -> (Game, Position) {
     floor.abandoned_entry_terrain_id = None;
     floor.task_id = None;
     floor.inline_map = Some(rfb_content::InlineFloorMapDefinition {
+        symbol_groups: Vec::new(),
         friend_group_leader_ids: Vec::new(),
         vault_positions: Vec::new(),
         task_terrain_overrides: Vec::new(),

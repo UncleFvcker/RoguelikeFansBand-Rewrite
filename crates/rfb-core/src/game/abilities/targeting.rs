@@ -12,6 +12,21 @@ use std::collections::BTreeSet;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(in crate::game) enum AbilityTargetPlan {
+    Burglary {
+        target: TargetSelection,
+    },
+    Rage {
+        target: TargetSelection,
+    },
+    Hissatsu {
+        target: TargetSelection,
+    },
+    LawSubpoena {
+        target_entity_id: String,
+    },
+    TrumpSummoning {
+        center: Position,
+    },
     DuelistChallenge {
         target_entity_id: String,
     },
@@ -117,6 +132,59 @@ impl Game {
         target: &TargetSelection,
     ) -> Option<AbilityTargetPlan> {
         match ability.effect {
+            AbilityEffectDefinition::Burglary { spell } => {
+                self.burglary_target_plan(ability, spell, target)
+            }
+            AbilityEffectDefinition::Rage { spell } => {
+                self.rage_target_plan(ability, spell, target)
+            }
+            AbilityEffectDefinition::Hex { spell } => self.hex_target_plan(ability, spell, target),
+            AbilityEffectDefinition::StopHex { .. } => {
+                matches!(target, TargetSelection::SelfTarget)
+                    .then_some(AbilityTargetPlan::SelfTarget)
+            }
+            AbilityEffectDefinition::Hissatsu { spell } => {
+                self.hissatsu_target_plan(ability, spell, target)
+            }
+            AbilityEffectDefinition::SamuraiConcentration
+            | AbilityEffectDefinition::SamuraiPosture { .. } => {
+                matches!(target, TargetSelection::SelfTarget)
+                    .then_some(AbilityTargetPlan::SelfTarget)
+            }
+            AbilityEffectDefinition::StopSinging => Some(AbilityTargetPlan::SelfTarget),
+            AbilityEffectDefinition::Music { spell } => {
+                self.music_target_plan(ability, spell, target)
+            }
+            AbilityEffectDefinition::Law { spell } => self.law_target_plan(ability, spell, target),
+            AbilityEffectDefinition::Necromancy { spell } => {
+                self.necromancy_target_plan(ability, spell, target)
+            }
+            AbilityEffectDefinition::ResetRecall => (matches!(target, TargetSelection::SelfTarget)
+                && self.recall_reset_plan().is_some())
+            .then_some(AbilityTargetPlan::SelfTarget),
+            AbilityEffectDefinition::TrumpSummoning { ref category } => {
+                let center = match target {
+                    TargetSelection::SelfTarget if category != "kamikaze" => self.player.position,
+                    TargetSelection::Position { position } => *position,
+                    TargetSelection::Entity { entity_id } => {
+                        self.entities
+                            .iter()
+                            .find(|a| a.id == *entity_id && self.entity_is_visible_to_player(a))?
+                            .position
+                    }
+                    _ => return None,
+                };
+                (self.index(center).is_some()
+                    && self.is_visible(center)
+                    && super::super::projectile_geometry::has_line_of_effect(
+                        self,
+                        self.player.position,
+                        center,
+                    )
+                    && super::super::chebyshev_distance(self.player.position, center)
+                        <= u32::from(ability.target.range))
+                .then_some(AbilityTargetPlan::TrumpSummoning { center })
+            }
             AbilityEffectDefinition::ElementalBrand
             | AbilityEffectDefinition::ElementalImmunity { .. } => {
                 let TargetSelection::Element { element } = target else {
@@ -828,6 +896,12 @@ impl Game {
                 }
             }
             AbilityEffectDefinition::BrandWeapon { .. } => {
+                // do_chaos_spell(22) ignores brand_weapon's cancellation result.
+                if ability.id == "demo.ability.chaos-chaos-branding"
+                    && matches!(target, TargetSelection::SelfTarget)
+                {
+                    return Some(AbilityTargetPlan::SelfTarget);
+                }
                 let TargetSelection::Item { item_id } = target else {
                     return None;
                 };
@@ -935,6 +1009,12 @@ impl Game {
             | AbilityEffectDefinition::CureMutation
             | AbilityEffectDefinition::CreateCurrentTerrain { .. }
             | AbilityEffectDefinition::NatureGate { .. }
+            | AbilityEffectDefinition::ChainLightning
+            | AbilityEffectDefinition::ChaosMeteorSwarm
+            | AbilityEffectDefinition::CallChaos
+            | AbilityEffectDefinition::TrumpShuffle
+            | AbilityEffectDefinition::ChaosPolymorphSelf
+            | AbilityEffectDefinition::CallVoid
             | AbilityEffectDefinition::DemonSummoning
             | AbilityEffectDefinition::AngelSummoning
             | AbilityEffectDefinition::BanishEvil
@@ -944,6 +1024,8 @@ impl Game {
             | AbilityEffectDefinition::InsanityCircle { .. }
             | AbilityEffectDefinition::ExplodePets
             | AbilityEffectDefinition::ReduceStatus { .. }
+            | AbilityEffectDefinition::PrepareConfusingStrike
+            | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::DevourFlesh { .. }
             | AbilityEffectDefinition::Vomit
@@ -1011,6 +1093,9 @@ impl Game {
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::DoomHand
             | AbilityEffectDefinition::Hellfire { .. }
+            | AbilityEffectDefinition::CloneTarget
+            | AbilityEffectDefinition::HasteTarget
+            | AbilityEffectDefinition::HealTarget
             | AbilityEffectDefinition::PolymorphTarget => {
                 self.ability_path(ability, target)
                     .map(|path| AbilityTargetPlan::Projectile {
@@ -1033,7 +1118,8 @@ impl Game {
                     self.ability_path(ability, target)
                         .map(|path| AbilityTargetPlan::Projectile {
                             path,
-                            stop_at_actor: matches!(target, TargetSelection::Direction { .. }),
+                            stop_at_actor: ability.id == "demo.ability.chaos-magic-rocket"
+                                || matches!(target, TargetSelection::Direction { .. }),
                         })
                 }
             }

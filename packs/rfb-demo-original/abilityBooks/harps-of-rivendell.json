@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.harps-of-rivendell",
+  "nameKey": "item-demo-harps-of-rivendell-name",
+  "descriptionKey": "ability-book-demo-trumps-of-doom-description",
+  "realmId": "music",
+  "rank": 3,
+  "abilityIds": [
+    "demo.ability.music-sound-of-disintegration",
+    "demo.ability.music-finrod-resistance",
+    "demo.ability.music-hobbit-melodies",
+    "demo.ability.music-world-contortion",
+    "demo.ability.music-dispelling-chant",
+    "demo.ability.music-saruman-voice",
+    "demo.ability.music-tempest-song",
+    "demo.ability.music-ambarkanta"
+  ],
+  "tags": [
+    "music",
+    "spellbook"
+  ]
+}

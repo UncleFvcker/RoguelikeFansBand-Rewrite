@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.law-teleport",
+  "minimumLevel": 40,
+  "resourceCost": 35,
+  "baseFailurePercent": 55,
+  "firstSuccessExperience": 3000,
+  "resourceId": "demo.resource.mana"
+}

@@ -442,6 +442,17 @@ fn vampire_daylight_and_lamps_burn_independently_even_without_fuel() {
     assert!(!game.process_vampire_light_damage(&mut events));
     assert_eq!(game.player_light_radius(), None);
     game.items.retain(|item| item.id != "test.light");
+    give_inventory_item(&mut game, "test.q3.eye", "demo.item.eye-of-the-hydra");
+    game.equip_inventory_item("test.q3.eye", None).unwrap();
+    assert_eq!(game.player_light_radius(), None);
+    let before_eye = game.player.hp;
+    assert!(game.process_vampire_light_damage(&mut events));
+    assert_eq!(
+        game.player.hp,
+        before_eye - 1,
+        "negative light without DARKNESS still burns"
+    );
+    game.items.retain(|item| item.id != "test.q3.eye");
     assert_eq!(game.player_light_radius(), Some(1));
     game.world_tick = 10;
     form(&mut game, HUMAN);

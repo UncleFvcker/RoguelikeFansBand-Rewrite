@@ -18,7 +18,17 @@ use super::shared::{
 
 fn effect_can_affect_ground_items(effect: &AbilityEffectDefinition) -> bool {
     match effect {
-        AbilityEffectDefinition::Damage { .. }
+        AbilityEffectDefinition::ChainLightning
+        | AbilityEffectDefinition::Law { spell: 27 }
+        | AbilityEffectDefinition::Burglary { spell: 27 }
+        | AbilityEffectDefinition::Music {
+            spell: 2 | 16 | 22 | 30,
+        }
+        | AbilityEffectDefinition::ChaosMeteorSwarm
+        | AbilityEffectDefinition::CallChaos
+        | AbilityEffectDefinition::CallVoid
+        | AbilityEffectDefinition::AreaDestruction { .. }
+        | AbilityEffectDefinition::Damage { .. }
         | AbilityEffectDefinition::Malediction { .. }
         | AbilityEffectDefinition::AreaDamage { .. }
         | AbilityEffectDefinition::BeamDamage { .. }
@@ -181,7 +191,11 @@ pub(super) fn validate_abilities(
                     ..
                 } => {
                     (((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides))
-                        || (*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0))
+                        || (*damage_dice == 0
+                            && *damage_sides == 0
+                            && (*damage_bonus > 0
+                                // The casting boundary supplies 3/4 of current HP.
+                                || ability.id == "demo.ability.chaos-breathe-logrus")))
                         && *damage_bonus <= 10_000
                         && *radius <= 16
                         && target_category.as_ref().is_none_or(|category| {
@@ -506,6 +520,9 @@ pub(super) fn validate_abilities(
                 }
                 AbilityEffectDefinition::ReportMagic
                 | AbilityEffectDefinition::PolymorphSelf
+                | AbilityEffectDefinition::CloneTarget
+                | AbilityEffectDefinition::HasteTarget
+                | AbilityEffectDefinition::HealTarget
                 | AbilityEffectDefinition::PolymorphTarget => true,
                 AbilityEffectDefinition::Earthquake {
                     radius,
@@ -573,6 +590,31 @@ pub(super) fn validate_abilities(
                         && (1..=1_000_000).contains(duration_sides)
                         && *duration_bonus <= 1_000_000
                 }
+                AbilityEffectDefinition::Necromancy { spell }
+                | AbilityEffectDefinition::Law { spell }
+                | AbilityEffectDefinition::Music { spell }
+                | AbilityEffectDefinition::Hissatsu { spell }
+                | AbilityEffectDefinition::Hex { spell }
+                | AbilityEffectDefinition::Rage { spell }
+                | AbilityEffectDefinition::Burglary { spell } => *spell < 32,
+                AbilityEffectDefinition::StopHex { spell } => spell.is_none_or(|s| s < 32),
+                AbilityEffectDefinition::SamuraiPosture { posture } => *posture <= 4,
+                AbilityEffectDefinition::TrumpSummoning { category } => matches!(
+                    category.as_str(),
+                    "spider"
+                        | "animal"
+                        | "kamikaze"
+                        | "phantom"
+                        | "undead"
+                        | "hydra"
+                        | "any-monster"
+                        | "hound"
+                        | "cyber"
+                        | "dragon"
+                        | "demon"
+                        | "high-undead"
+                        | "high-dragon"
+                ),
                 AbilityEffectDefinition::Summon {
                     actor_kind_id,
                     count,
@@ -680,7 +722,14 @@ pub(super) fn validate_abilities(
                         && (1..=64).contains(radius)
                         && *duration_turns == 0
                 }
-                AbilityEffectDefinition::DemonSummoning
+                AbilityEffectDefinition::ChainLightning
+                | AbilityEffectDefinition::TrumpShuffle
+                | AbilityEffectDefinition::ResetRecall
+                | AbilityEffectDefinition::ChaosMeteorSwarm
+                | AbilityEffectDefinition::CallChaos
+                | AbilityEffectDefinition::ChaosPolymorphSelf
+                | AbilityEffectDefinition::CallVoid
+                | AbilityEffectDefinition::DemonSummoning
                 | AbilityEffectDefinition::AngelSummoning
                 | AbilityEffectDefinition::BanishEvil
                 | AbilityEffectDefinition::Evocation
@@ -970,7 +1019,11 @@ pub(super) fn validate_abilities(
                         && !(current_divisor.is_some() && remaining_divisor.is_some())
                         && (remaining_divisor.is_none() || status_kind_id == "rfb.status.bleeding")
                 }
-                AbilityEffectDefinition::SatisfyHunger => true,
+                AbilityEffectDefinition::PrepareConfusingStrike
+                | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
+                | AbilityEffectDefinition::StopSinging
+                | AbilityEffectDefinition::SamuraiConcentration
+                | AbilityEffectDefinition::SatisfyHunger => true,
                 AbilityEffectDefinition::DevourFlesh {
                     maximum_hp_divisor,
                     bleeding_amount,
@@ -1173,7 +1226,10 @@ pub(super) fn validate_abilities(
                                                 | AbilityEffectDefinition::ApplyStatus { .. }
                                                 | AbilityEffectDefinition::DrainLife { .. }
                                                 | AbilityEffectDefinition::Genocide { .. }
-                                                | AbilityEffectDefinition::PolymorphTarget
+                                                | AbilityEffectDefinition::CloneTarget
+                | AbilityEffectDefinition::HasteTarget
+                | AbilityEffectDefinition::HealTarget
+                | AbilityEffectDefinition::PolymorphTarget
                                                 | AbilityEffectDefinition::NoOp { .. }
                                         )
                                 }
@@ -1267,6 +1323,9 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::BirdDrop
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
+            | AbilityEffectDefinition::CloneTarget
+            | AbilityEffectDefinition::HasteTarget
+            | AbilityEffectDefinition::HealTarget
             | AbilityEffectDefinition::PolymorphTarget
             | AbilityEffectDefinition::DrainLife { .. }
             | AbilityEffectDefinition::DeathRay { .. }
@@ -1369,7 +1428,11 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::Rodeo => projectile_target_rule && ability.target.range == 1,
             AbilityEffectDefinition::MeleeAdjacent
             | AbilityEffectDefinition::ProbeMonsters
-            | AbilityEffectDefinition::Concentrate => self_target_rule,
+            | AbilityEffectDefinition::Concentrate
+            | AbilityEffectDefinition::StopHex { .. }
+            | AbilityEffectDefinition::StopSinging
+            | AbilityEffectDefinition::SamuraiConcentration
+            | AbilityEffectDefinition::SamuraiPosture { .. } => self_target_rule,
             AbilityEffectDefinition::BreathDamage { .. } => projectile_target_rule,
             AbilityEffectDefinition::Teleport => {
                 !self_targeted
@@ -1377,9 +1440,114 @@ pub(super) fn validate_abilities(
                     && (1..=64).contains(&ability.target.range)
                     && ability.target.requires_line_of_effect
             }
+            AbilityEffectDefinition::Music { spell } => {
+                if matches!(spell, 2 | 22 | 30) {
+                    ability.target.range > 0
+                        && ability.target.modes.iter().all(|m| {
+                            matches!(
+                                m,
+                                AbilityTargetModeDefinition::Direction
+                                    | AbilityTargetModeDefinition::Entity
+                                    | AbilityTargetModeDefinition::Position
+                            )
+                        })
+                } else {
+                    ability.target.modes == [AbilityTargetModeDefinition::SelfTarget]
+                }
+            }
+            AbilityEffectDefinition::Burglary { spell } => {
+                if matches!(spell, 13) {
+                    item_target_rule
+                } else if matches!(spell, 1 | 9 | 10 | 11 | 17 | 18 | 25 | 26 | 27 | 31) {
+                    projectile_target_rule
+                } else {
+                    self_target_rule
+                }
+            }
+            AbilityEffectDefinition::Rage { spell } => {
+                if matches!(spell, 24 | 28) {
+                    item_target_rule
+                } else if matches!(spell, 0 | 2 | 10 | 12 | 22 | 23 | 30 | 31) {
+                    projectile_target_rule
+                } else {
+                    self_target_rule
+                }
+            }
+            AbilityEffectDefinition::Hex { spell } => {
+                if matches!(spell, 5 | 10 | 18 | 20 | 26) {
+                    item_target_rule
+                } else if *spell == 29 {
+                    ability.target.modes == [AbilityTargetModeDefinition::Position]
+                        && ability.target.range == 52
+                } else {
+                    self_target_rule
+                }
+            }
+            AbilityEffectDefinition::Hissatsu { spell } => {
+                if *spell == 11 {
+                    item_target_rule
+                } else if matches!(spell, 4 | 6 | 19 | 22 | 25 | 31) {
+                    self_target_rule
+                } else {
+                    projectile_target_rule
+                }
+            }
+            AbilityEffectDefinition::Law { spell } => match spell {
+                6 => item_target_rule,
+                29 => {
+                    ability.target.modes == [AbilityTargetModeDefinition::Entity]
+                        && ability.target.range == 18
+                        && ability.target.requires_line_of_effect
+                }
+                5 | 7 | 9..=11 | 16 | 22 | 27 => {
+                    projectile_target_rule && ability.target.range == 18
+                }
+                _ => self_target_rule,
+            },
+            AbilityEffectDefinition::Necromancy { spell } => match spell {
+                11 => item_target_rule,
+                0 | 4 | 7 | 12 | 13 | 24 | 27 | 30 => {
+                    projectile_target_rule && ability.target.range == 1
+                }
+                15 => projectile_target_rule && ability.target.range == 18,
+                1 | 5 | 8 | 14 | 16..=21 => {
+                    ability.target.range == 18
+                        && ability.target.requires_line_of_effect
+                        && ability.target.modes.len() == 3
+                        && ability.target.modes.iter().all(|m| {
+                            matches!(
+                                m,
+                                AbilityTargetModeDefinition::SelfTarget
+                                    | AbilityTargetModeDefinition::Position
+                                    | AbilityTargetModeDefinition::Entity
+                            )
+                        })
+                }
+                _ => self_target_rule,
+            },
+            AbilityEffectDefinition::TrumpSummoning { category } => {
+                ability.target.range == 18
+                    && ability.target.requires_line_of_effect
+                    && ability.target.modes.iter().all(|m| {
+                        matches!(
+                            m,
+                            AbilityTargetModeDefinition::Position
+                                | AbilityTargetModeDefinition::Entity
+                        ) || (*m == AbilityTargetModeDefinition::SelfTarget
+                            && category != "kamikaze")
+                    })
+            }
+            AbilityEffectDefinition::TrumpShuffle | AbilityEffectDefinition::ResetRecall => {
+                self_target_rule
+            }
             AbilityEffectDefinition::Summon { .. }
             | AbilityEffectDefinition::SummonCategory { .. }
             | AbilityEffectDefinition::NatureGate { .. }
+            | AbilityEffectDefinition::ChainLightning
+            | AbilityEffectDefinition::ChaosMeteorSwarm
+            | AbilityEffectDefinition::CallChaos
+            | AbilityEffectDefinition::ChaosPolymorphSelf
+            | AbilityEffectDefinition::CallVoid
             | AbilityEffectDefinition::DemonSummoning
             | AbilityEffectDefinition::AngelSummoning
             | AbilityEffectDefinition::BanishEvil
@@ -1395,6 +1563,8 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::HealDice { .. }
             | AbilityEffectDefinition::Entangle { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
+            | AbilityEffectDefinition::PrepareConfusingStrike
+            | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::DevourFlesh { .. }
             | AbilityEffectDefinition::Vomit
@@ -1498,7 +1668,12 @@ pub(super) fn validate_abilities(
             || ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Direction];
         let valid_player = ability.player.as_ref().is_none_or(|player| {
             (1..=100).contains(&player.minimum_level)
-                && (1..=1_000_000).contains(&player.resource_cost)
+                && (player.resource_cost <= 1_000_000
+                    && (player.resource_cost > 0
+                        || matches!(
+                            ability.effect,
+                            AbilityEffectDefinition::Rage { spell: 5 | 26 | 31 }
+                        )))
                 && player.base_failure_percent <= 95
                 && player.first_success_experience <= 1_000_000
                 && player.proficiency.initial <= player.proficiency.cap
@@ -1569,6 +1744,11 @@ pub(super) fn validate_abilities(
                     ActorRole::Monster,
                     &ability.id,
                 )?;
+            }
+            if matches!(effect, AbilityEffectDefinition::ChaosPolymorphSelf) {
+                for (_, race_id) in crate::CHAOS_POLYMORPH_RACES {
+                    ability_race_ids.push((ability.id.clone(), (*race_id).to_owned()));
+                }
             }
             if let AbilityEffectDefinition::BrandWeapon { affix_id, .. } = effect {
                 require_reference(affix_ids, affix_id, &ability.id)?;
@@ -1758,6 +1938,9 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::DrainResource { .. }
                 | AbilityEffectDefinition::Amnesia
                 | AbilityEffectDefinition::TeleportLevel
+                | AbilityEffectDefinition::CloneTarget
+                | AbilityEffectDefinition::HasteTarget
+                | AbilityEffectDefinition::HealTarget
                 | AbilityEffectDefinition::PolymorphTarget => projectile_target,
                 AbilityEffectDefinition::DoomHand => projectile_target,
                 AbilityEffectDefinition::DarkenRoom => room_target,

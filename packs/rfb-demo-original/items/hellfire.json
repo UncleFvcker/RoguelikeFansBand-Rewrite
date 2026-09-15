@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.hellfire",
+  "nameKey": "item-demo-hellfire-name",
+  "descriptionKey": "item-demo-hellfire-description",
+  "glyph": "}",
+  "generationLevel": 50,
+  "weightTenthsPound": 110,
+  "baseValue": 60000,
+  "maxStack": 1,
+  "equipmentSlot": "launcher",
+  "tags": [
+    "artifact",
+    "equipment",
+    "launcher"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 222,
+    "baseItemKindId": "demo.item.light-crossbow",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "rfbValue": {
+    "flags": [
+      "AURA_FIRE",
+      "BRAND_FIRE",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "RES_FIRE",
+      "SHOW_MODS",
+      "STR"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "projectileProfile": {
+    "ammunitionType": "bolt",
+    "damageMultiplierPercent": 400,
+    "range": 18,
+    "shotEnergy": 12000,
+    "toDamage": 35,
+    "toHit": 10
+  },
+  "modifiers": {
+    "strength": 4
+  },
+  "equipmentBonuses": {
+    "infravision": 4
+  },
+  "passives": [
+    "fire-aura"
+  ],
+  "resistances": {
+    "fire": "resistant"
+  },
+  "brands": [
+    "fire"
+  ]
+}

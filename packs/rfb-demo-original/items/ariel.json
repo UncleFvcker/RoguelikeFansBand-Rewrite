@@ -1,0 +1,70 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ariel",
+  "nameKey": "item-demo-ariel-name",
+  "descriptionKey": "item-demo-ariel-description",
+  "glyph": "(",
+  "generationLevel": 50,
+  "weightTenthsPound": 0,
+  "baseValue": 45000,
+  "maxStack": 1,
+  "equipmentSlot": "cloak",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 316,
+    "baseItemKindId": "demo.item.ethereal-cloak",
+    "instant": false,
+    "rarityOneIn": 3
+  },
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "QUESTITEM",
+      "RES_COLD",
+      "RES_ELEC",
+      "SEE_INVIS",
+      "SPEED"
+    ],
+    "pval": 5,
+    "toArmor": 15
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "dexterity": 5,
+    "defense": 15,
+    "speed": 5
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 17,
+    "meleeDamage": 2
+  },
+  "passives": [
+    "levitation",
+    "see-invisible"
+  ],
+  "resistances": {
+    "electricity": "resistant",
+    "cold": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

@@ -168,6 +168,7 @@ impl Game {
             if let Some((source, poison)) = &waste_exposure {
                 self.apply_player_melee_status(STATUS_POISON, *poison, source);
             }
+            self.decay_samurai_mana();
             self.process_hunger(events);
             if self.player_is_dead() {
                 break;
@@ -225,6 +226,16 @@ impl Game {
             }
         }
         self.finish_player_ready_advance(local_floor_active, events, changed, removed_entities)?;
+        if self.player.energy_need > 0 && !self.player_is_dead() {
+            return self.advance_until_player_ready(
+                resting,
+                local_floor_active,
+                pet_neglect_allowed,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         Ok(())
     }
 
@@ -280,6 +291,9 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        self.advance_hex(events, changed, removed_entities)?;
+        self.advance_samurai();
+        self.advance_music(events, changed, removed_entities)?;
         if local_floor_active {
             self.advance_summon_lifetimes(events, changed, removed_entities);
         }
@@ -656,7 +670,11 @@ impl Game {
     }
 
     pub(super) fn process_natural_hp_regeneration(&mut self, resting: bool) {
+        if self.samurai.posture == 3 {
+            return;
+        }
         if self.wilderness_blocks_regeneration()
+            || (self.player_has_status_kind(STATUS_NO_AIR) && !self.player_ignores_suffocation())
             || !self
                 .world_tick
                 .is_multiple_of(NATURAL_HP_REGENERATION_INTERVAL_TICKS)
@@ -731,7 +749,11 @@ impl Game {
     }
 
     fn process_equipment_regeneration(&mut self, events: &mut Vec<DomainEvent>) {
+        if self.samurai.posture == 3 {
+            return;
+        }
         if self.wilderness_blocks_regeneration()
+            || (self.player_has_status_kind(STATUS_NO_AIR) && !self.player_ignores_suffocation())
             || !self.world_tick.is_multiple_of(
                 EQUIPMENT_REGENERATION_INTERVAL_TICKS
                     * if self.player_has_equipped_curse_effect(ItemCurseEffectDto::SlowRegeneration)
@@ -965,6 +987,15 @@ impl Game {
         removed_entities: &mut Vec<String>,
         process_entities: bool,
     ) -> Result<(), CoreError> {
+        if self.music.spell.is_some() && self.player_has_status_kind(STATUS_CONFUSION) {
+            self.stop_music();
+        }
+        if self.hex.active != 0
+            && (self.player_has_status_kind(STATUS_CONFUSION)
+                || self.player_has_status_kind(STATUS_PARALYSIS))
+        {
+            self.stop_hex(None);
+        }
         let nonliving = self.player_is_nonliving();
         let berserker = self.player_is_berserker();
         let no_stun = berserker && self.progress.level >= 35;
@@ -1008,7 +1039,7 @@ impl Game {
                 status.kind_id == STATUS_INVULNERABILITY && status.remaining_ticks <= 1
             });
         let player_damage_percent = self.player_incoming_damage_percent();
-        let ignores_suffocation = self.player_is_nonliving();
+        let ignores_suffocation = self.player_ignores_suffocation();
         // The current status model recovers one wound tick per turn. Apply
         // dungeon.c's (recovery + game_turn % 3) / 3 without slowing its damage.
         if self.player_has_equipped_curse_effect(ItemCurseEffectDto::OpenWounds)
@@ -1020,14 +1051,26 @@ impl Game {
                 }
             }
         }
+        let rage = self.player_is_rage_mage();
+        let max_hp = self.effective_player_max_hp();
         let transcendence = self.player_has_status_kind(STATUS_TRANSCENDENCE);
         let mut mana = self.resources.get_mut("demo.resource.mana");
+        let necromancy_repose = self.player.statuses.iter().any(|s| {
+            s.kind_id == "rfb.status.paralysis"
+                && s.source_id.as_deref() == Some("demo.ability.necromancy-repose-of-the-dead")
+        });
         let player_tick = process_actor_status_tick_with(
             &mut self.player,
             false,
             player_damage_percent,
             ignores_suffocation,
             |player, damage, fatality_policy| {
+                if rage && let Some(pool) = mana.as_deref_mut() {
+                    pool.current = pool
+                        .current
+                        .saturating_add(Self::rage_damage_mana(damage.applied, player.hp, max_hp))
+                        .min(pool.maximum);
+                }
                 commit_final_player_damage(
                     player,
                     mana.as_deref_mut(),
@@ -1038,6 +1081,14 @@ impl Game {
             },
         );
         let player_status_expired = !player_tick.expired.is_empty();
+        if necromancy_repose
+            && player_tick
+                .expired
+                .iter()
+                .any(|s| s == "rfb.status.paralysis")
+        {
+            self.finish_necromancy_repose(events);
+        }
         let tsuyoshi_expired = player_tick
             .expired
             .iter()
@@ -1069,6 +1120,7 @@ impl Game {
             self.reconcile_player_body_slots_for_current_form();
         }
         if invulnerability_expiring {
+            self.rage_after_action(STANDARD_ACTION_COST);
             spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
         }
         if player_status_expired {

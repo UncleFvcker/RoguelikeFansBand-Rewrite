@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.tailbiter",
+  "nameKey": "item-demo-tailbiter-name",
+  "descriptionKey": "item-demo-tailbiter-description",
+  "glyph": "|",
+  "generationLevel": 40,
+  "weightTenthsPound": 150,
+  "baseValue": 35000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 167,
+    "baseItemKindId": "demo.item.broad-sword",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "weaponProficiencyBaseItemId": "demo.item.broad-sword",
+  "rfbValue": {
+    "flags": [
+      "BLOWS",
+      "CON",
+      "ESP_DRAGON",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_DRAGON",
+      "SEARCH",
+      "SHOW_MODS",
+      "SLAY_EVIL"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 6,
+    "toHit": 18,
+    "toDamage": 9
+  },
+  "modifiers": {
+    "constitution": 3
+  },
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 150,
+    "searchSkill": 15
+  },
+  "passives": [
+    "esp-dragon"
+  ],
+  "slays": {
+    "evil": "slay",
+    "dragon": "kill"
+  }
+}

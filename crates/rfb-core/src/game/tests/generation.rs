@@ -255,7 +255,8 @@ fn arena_dungeon_passages_light_and_reserved_positions_survive_permanent_walls()
 
 #[test]
 fn ordinary_room_and_anywhere_allocations_reach_pickup_and_save() {
-    let mut game = Game::new_with_build(617, "demo.build.warrior").unwrap();
+    // Search the real shared pool for two successful allocation attempts.
+    let mut game = Game::new_with_build(618, "demo.build.warrior").unwrap();
     let mut definition = game
         .content
         .world(DEFAULT_WORLD_ID)
@@ -286,9 +287,20 @@ fn ordinary_room_and_anywhere_allocations_reach_pickup_and_save() {
         .get_mut("demo.dungeon.warrens")
         .unwrap()
         .next_instance_ordinal = 1;
-    let floor = game
-        .generate_procedural_floor(&definition, Some("demo.dungeon.warrens.instance.1".into()))
-        .unwrap();
+    let (selected, floor) = (0..128)
+        .find_map(|seed| {
+            let mut trial = game.clone();
+            trial.rng = RfbRng::seeded(seed);
+            let floor = trial
+                .generate_procedural_floor(
+                    &definition,
+                    Some("demo.dungeon.warrens.instance.1".into()),
+                )
+                .unwrap();
+            (floor.items.len() == 2).then_some((trial, floor))
+        })
+        .expect("room and anywhere allocation should both produce a real item");
+    game = selected;
     assert_eq!(floor.items.len(), 2);
     let items = floor.items.clone();
     game.activate_floor(floor, Vec::new());

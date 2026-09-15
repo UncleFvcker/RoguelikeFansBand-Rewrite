@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.merlin",
+  "nameKey": "item-demo-merlin-name",
+  "descriptionKey": "item-demo-merlin-description",
+  "glyph": "|",
+  "generationLevel": 20,
+  "weightTenthsPound": 80,
+  "baseValue": 35000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 90,
+    "baseItemKindId": "demo.item.short-sword",
+    "instant": false,
+    "rarityOneIn": 8
+  },
+  "weaponProficiencyBaseItemId": "demo.item.short-sword",
+  "rfbValue": {
+    "flags": [
+      "BLOWS",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "REGEN",
+      "RES_DISEN",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLOW_DIGEST"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 8,
+    "toHit": 3,
+    "toDamage": 7
+  },
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 200
+  },
+  "passives": [
+    "regeneration",
+    "see-invisible",
+    "slow-digestion"
+  ],
+  "resistances": {
+    "disenchant": "resistant"
+  },
+  "slays": {
+    "animal": "slay"
+  }
+}

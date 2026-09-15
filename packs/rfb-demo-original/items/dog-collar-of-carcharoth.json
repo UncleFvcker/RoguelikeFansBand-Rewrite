@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dog-collar-of-carcharoth",
+  "nameKey": "item-demo-dog-collar-of-carcharoth-name",
+  "descriptionKey": "item-demo-dog-collar-of-carcharoth-description",
+  "glyph": "\"",
+  "generationLevel": 50,
+  "weightTenthsPound": 30,
+  "baseValue": 66666,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": [
+    "artifact",
+    "equipment",
+    "jewelry"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 302,
+    "baseItemKindId": "demo.item.amulet",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "rfbValue": {
+    "flags": [
+      "FULL_NAME",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_FEAR",
+      "TELEPATHY"
+    ],
+    "pval": 0,
+    "toArmor": 25
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 25
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 3,
+    "meleeDamage": 17
+  },
+  "passives": [
+    "telepathy"
+  ],
+  "statusImmunities": [
+    "rfb.status.fear"
+  ]
+}

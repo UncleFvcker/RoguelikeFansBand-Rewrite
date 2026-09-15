@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.apprentice-handbook",
+  "nameKey": "item-demo-apprentice-handbook-name",
+  "descriptionKey": "ability-book-demo-conjurings-and-tricks-description",
+  "realmId": "music",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.music-holding",
+    "demo.ability.music-blessing",
+    "demo.ability.music-wrecking-note",
+    "demo.ability.music-stunning-pattern",
+    "demo.ability.music-flow-of-life",
+    "demo.ability.music-song-of-the-sun",
+    "demo.ability.music-song-of-fear",
+    "demo.ability.music-heroic-ballad"
+  ],
+  "tags": [
+    "music",
+    "spellbook"
+  ]
+}

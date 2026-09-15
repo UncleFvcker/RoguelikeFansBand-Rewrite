@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.book-of-shadows",
+  "nameKey": "item-demo-book-of-shadows-name",
+  "descriptionKey": "item-demo-book-of-shadows-description",
+  "realmId": "burglary",
+  "rank": 4,
+  "abilityIds": [
+    "demo.ability.burglary-protect-loot",
+    "demo.ability.burglary-teleport-to",
+    "demo.ability.burglary-master-thievery",
+    "demo.ability.burglary-darkness-storm",
+    "demo.ability.burglary-hide-in-shadows",
+    "demo.ability.burglary-thieves-den",
+    "demo.ability.burglary-ultimate-trap",
+    "demo.ability.burglary-assassination"
+  ],
+  "tags": [
+    "burglary",
+    "spellbook"
+  ]
+}

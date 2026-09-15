@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.minstrels-music",
+  "nameKey": "item-demo-minstrels-music-name",
+  "descriptionKey": "item-demo-minstrels-music-description",
+  "abilityBookId": "demo.ability-book.minstrels-music",
+  "rfbBaseKind": {
+    "sourceIndex": 553,
+    "tval": 105,
+    "sval": 1
+  },
+  "baseValue": 1000,
+  "generationLevel": 20,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "music",
+    "book",
+    "spellbook"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ]
+}

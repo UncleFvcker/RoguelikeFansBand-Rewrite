@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ubbo-sathla",
+  "nameKey": "item-demo-ubbo-sathla-name",
+  "descriptionKey": "item-demo-ubbo-sathla-description",
+  "glyph": "(",
+  "generationLevel": 30,
+  "weightTenthsPound": 120,
+  "baseValue": 40000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 298,
+    "baseItemKindId": "demo.item.leather-jacket",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "REGEN",
+      "RES_ACID",
+      "RES_CHAOS",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_ELEC",
+      "RES_FIRE",
+      "SEE_INVIS",
+      "STR"
+    ],
+    "pval": 1,
+    "toArmor": 15
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 1,
+    "constitution": 1,
+    "defense": 27
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 2,
+    "meleeDamage": 3
+  },
+  "passives": [
+    "hold-life",
+    "regeneration",
+    "see-invisible"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "confusion": "resistant",
+    "chaos": "resistant"
+  }
+}

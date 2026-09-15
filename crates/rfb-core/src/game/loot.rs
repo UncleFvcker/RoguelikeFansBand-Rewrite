@@ -301,6 +301,105 @@ impl Game {
         Ok(generated)
     }
 
+    pub(super) fn roll_monster_drop_count(
+        &mut self,
+        actor_definition: &rfb_content::ActorDefinition,
+    ) -> u32 {
+        let Some(drop) = actor_definition.death_drop.as_ref() else {
+            return 0;
+        };
+        let unique = actor_definition.tags.iter().any(|tag| tag == "unique");
+        let mut count = u32::from(drop.base_rolls);
+        for roll in &drop.chance_rolls {
+            if (roll.guaranteed_for_unique && unique)
+                || self.rng.bounded(100) < u64::from(roll.percent)
+            {
+                count = count.saturating_add(1);
+            }
+        }
+        for dice in &drop.count_dice {
+            for _ in 0..dice.dice {
+                count = count.saturating_add(
+                    u32::try_from(self.rng.bounded(u64::from(dice.sides)) + 1)
+                        .expect("validated monster drop die must fit u32"),
+                );
+            }
+        }
+        if count > 2 && !unique && drop.minimum_quality != rfb_content::ItemQuality::Exceptional {
+            count = 2 + (count - 2) / 2;
+        }
+        count
+    }
+
+    pub(super) fn generate_ordinary_monster_drops(
+        &mut self,
+        actor: &Actor,
+        count: u32,
+    ) -> Result<(Vec<ItemInstance>, Vec<GoldPile>), CoreError> {
+        let actor_definition = self.content.actor(&actor.kind_id).unwrap().clone();
+        let drop = actor_definition
+            .death_drop
+            .as_ref()
+            .expect("ordinary drop definition");
+        let floor_id = self.current_floor_id.clone();
+        let depth = self.floor_depth(&floor_id);
+        let mut generated = Vec::new();
+        let mut gold = Vec::new();
+        let object_level = {
+            let actor_level = actor_definition.level.min(u32::from(u16::MAX));
+            let floor_level = u32::from(depth);
+            if actor_level >= floor_level {
+                actor_level
+            } else {
+                (actor_level + floor_level) / 2
+            }
+        };
+        for _ in 0..count {
+            // get_monster_drop chooses the theme before deciding gold/item.
+            let use_theme = drop.theme_table_id.is_some()
+                && self.rng.bounded(100) < u64::from(drop.theme_chance_percent);
+            let drops_gold = match drop.kind {
+                MonsterDropKindDefinition::Gold => true,
+                MonsterDropKindDefinition::Items => false,
+                MonsterDropKindDefinition::ItemsAndGold => self.rng.bounded(100) < 20,
+            };
+            if drops_gold {
+                gold.push(self.generate_gold_pile(
+                    actor.position,
+                    u16::try_from(object_level).expect("bounded gold level must fit u16"),
+                    true,
+                )?);
+                continue;
+            }
+            let table_id = if use_theme {
+                drop.theme_table_id
+                    .as_ref()
+                    .expect("checked monster theme table must exist")
+            } else {
+                drop.item_table_id
+                    .as_ref()
+                    .expect("validated item drop must define a table")
+            };
+            generated.extend(self.generate_one_loot_instance(
+                &LootContext {
+                    table_id: table_id.clone(),
+                    floor_id: floor_id.clone(),
+                    depth: u16::try_from(object_level).expect("bounded monster object level"),
+                    source: LootSource::MonsterDeath {
+                        actor_id: actor.id.clone(),
+                    },
+                },
+                ItemLocation::Ground(actor.position),
+                if drop.great_only {
+                    ItemGenerationMode::GreatOnly
+                } else {
+                    drop.minimum_quality.into()
+                },
+            )?);
+        }
+        Ok((generated, gold))
+    }
+
     pub(super) fn generate_death_loot(
         &mut self,
         actor: &Actor,
@@ -333,7 +432,7 @@ impl Game {
         let depth = self.floor_depth(&floor_id);
         let mut generated = Vec::new();
         let mut gold = Vec::new();
-        generated.extend(self.generate_norse_death_extras(actor, true)?);
+        generated.extend(self.generate_norse_death_extras(actor, !actor.cloned)?);
         // xtra2.c: Osiris's chosen item precedes and supplements ordinary drops.
         if actor.kind_id == "demo.actor.osiris-the-reborn"
             && actor.controller_id.as_deref() != Some(self.player.id.as_str())
@@ -351,15 +450,36 @@ impl Game {
             generated
                 .push(self.commit_generated_item_draft(draft, ItemLocation::Ground(position))?);
         }
-        if let Some(drop) = &actor_definition.special_artifact_drop
+        if !actor.cloned
+            && let Some(drop) = &actor_definition.special_artifact_drop
             && actor.controller_id.as_deref() != Some(self.player.id.as_str())
+            // xtra2.c:1806-1812 tests permanent prace, then one_in_(14),
+            // before the ordinary 99% / Bad Luck / uniqueness sequence.
+            && (actor.kind_id != "demo.actor.master-tonberry"
+                || (self.build.as_ref().is_some_and(|build| {
+                    build.race_id == "rfb-legacy.race.tonberry"
+                }) && self.rng.bounded(14) == 0))
         {
-            let (item_kind_id, mut chance) = if let Some(alternative) = &drop.alternative
+            // xtra2.c: Shiva makes two sequential one-in-four choices, then
+            // applies the common 40% / Bad Luck / uniqueness roll to that choice.
+            let (item_kind_id, mut chance) = if actor.kind_id == "demo.actor.shiva-the-destroyer" {
+                let kind = if self.rng.bounded(4) == 0 {
+                    drop.item_kind_id.as_str()
+                } else if self.rng.bounded(4) == 0 {
+                    "demo.item.shiva-avatar-jacket"
+                } else {
+                    "demo.item.shiva-avatar-boots"
+                };
+                (kind, drop.chance_percent)
+            } else if let Some(alternative) = &drop.alternative
                 && self.rng.bounded(2) != 0
             {
-                (&alternative.item_kind_id, alternative.chance_percent)
+                (
+                    alternative.item_kind_id.as_str(),
+                    alternative.chance_percent,
+                )
             } else {
-                (&drop.item_kind_id, drop.chance_percent)
+                (drop.item_kind_id.as_str(), drop.chance_percent)
             };
             if chance < 100
                 && self
@@ -382,85 +502,18 @@ impl Game {
                         actor_id: actor.id.clone(),
                     },
                 };
-                let draft = self.fixed_item_draft(&context, item_kind_id.clone());
+                let draft = self.fixed_item_draft(&context, item_kind_id.to_owned());
                 generated
                     .push(self.commit_generated_item_draft(draft, ItemLocation::Ground(position))?);
             }
         }
-        if let Some(drop) = actor_definition.death_drop.clone() {
-            let unique = actor_definition.tags.iter().any(|tag| tag == "unique");
-            let mut count = u32::from(drop.base_rolls);
-            for roll in &drop.chance_rolls {
-                if (roll.guaranteed_for_unique && unique)
-                    || self.rng.bounded(100) < u64::from(roll.percent)
-                {
-                    count = count.saturating_add(1);
-                }
-            }
-            for dice in &drop.count_dice {
-                for _ in 0..dice.dice {
-                    count = count.saturating_add(
-                        u32::try_from(self.rng.bounded(u64::from(dice.sides)) + 1)
-                            .expect("validated monster drop die must fit u32"),
-                    );
-                }
-            }
-            if count > 2 && !unique && drop.minimum_quality != rfb_content::ItemQuality::Exceptional
-            {
-                count = 2 + (count - 2) / 2;
-            }
-            let object_level = {
-                let actor_level = actor_definition.level.min(u32::from(u16::MAX));
-                let floor_level = u32::from(depth);
-                if actor_level >= floor_level {
-                    actor_level
-                } else {
-                    (actor_level + floor_level) / 2
-                }
-            };
-            for _ in 0..count {
-                // get_monster_drop chooses the theme before deciding gold/item.
-                let use_theme = drop.theme_table_id.is_some()
-                    && self.rng.bounded(100) < u64::from(drop.theme_chance_percent);
-                let drops_gold = match drop.kind {
-                    MonsterDropKindDefinition::Gold => true,
-                    MonsterDropKindDefinition::Items => false,
-                    MonsterDropKindDefinition::ItemsAndGold => self.rng.bounded(100) < 20,
-                };
-                if drops_gold {
-                    gold.push(self.generate_gold_pile(
-                        actor.position,
-                        u16::try_from(object_level).expect("bounded gold level must fit u16"),
-                        true,
-                    )?);
-                    continue;
-                }
-                let table_id = if use_theme {
-                    drop.theme_table_id
-                        .as_ref()
-                        .expect("checked monster theme table must exist")
-                } else {
-                    drop.item_table_id
-                        .as_ref()
-                        .expect("validated item drop must define a table")
-                };
-                generated.extend(self.generate_one_loot_instance(
-                    &LootContext {
-                        table_id: table_id.clone(),
-                        floor_id: floor_id.clone(),
-                        depth: u16::try_from(object_level).expect("bounded monster object level"),
-                        source: LootSource::MonsterDeath {
-                            actor_id: actor.id.clone(),
-                        },
-                    },
-                    ItemLocation::Ground(actor.position),
-                    if drop.great_only {
-                        ItemGenerationMode::GreatOnly
-                    } else {
-                        drop.minimum_quality.into()
-                    },
-                )?);
-            }
+        if actor_definition.death_drop.is_some() {
+            let count = actor
+                .burglary_drops_remaining
+                .unwrap_or_else(|| self.roll_monster_drop_count(&actor_definition));
+            let (items, piles) = self.generate_ordinary_monster_drops(actor, count)?;
+            generated.extend(items);
+            gold.extend(piles);
         } else if let Some(table_id) = table_id {
             let context = LootContext {
                 table_id,
@@ -1000,9 +1053,15 @@ impl Game {
         if entry.item_kind_id == "demo.item.large-wooden-chest" {
             return Some(self.fixed_item_draft(context, entry.item_kind_id.clone()));
         }
+        let harp_maximum_bonus = if self.player_is_bard() { 2 } else { 1 };
         let mut base_intrinsic_properties =
             self.content.item(&entry.item_kind_id).and_then(|item| {
-                materialize_rfb_harp_intrinsic_with_rng(&mut self.rng, item, generation_depth)
+                materialize_rfb_harp_intrinsic_with_rng(
+                    &mut self.rng,
+                    item,
+                    generation_depth,
+                    harp_maximum_bonus,
+                )
             });
         let preselected_generic_affix_id = (table.rfb_ego_policy
             != Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger))
@@ -1456,8 +1515,14 @@ impl Game {
             .collect::<Vec<_>>();
         candidates.sort_by_key(|candidate| candidate.0);
 
-        for (_, kind_id, artifact_level, base_kind_id, rarity_one_in, candidate_instant) in
-            candidates
+        for (
+            source_index,
+            kind_id,
+            artifact_level,
+            base_kind_id,
+            rarity_one_in,
+            candidate_instant,
+        ) in candidates
         {
             if candidate_instant != instant
                 || self.generated_artifact_ids.contains(&kind_id)
@@ -1477,6 +1542,10 @@ impl Game {
                 }
             }
             if self.rng.bounded(u64::from(rarity_one_in)) != 0 {
+                continue;
+            }
+            // object2.c: Feanor's extra gate follows the ordinary rarity roll.
+            if !instant && source_index == 60 && self.rng.bounded(3) != 0 {
                 continue;
             }
             if instant {
@@ -1562,6 +1631,30 @@ impl Game {
             fuel: initial_item_fuel(&self.content, &kind_id),
             kind_id,
         };
+        // object2.c::apply_magic: fixed artifacts roll each requested curse
+        // after their ordinary construction. Persist the result, not the RNG recipe.
+        if let Some(definition) = self.content.item(&draft.kind_id)
+            && let Some(generation) = &definition.artifact_generation
+            && let Some(value) = &definition.rfb_value
+        {
+            for (power, flag) in [
+                (0, "RANDOM_CURSE0"),
+                (1, "RANDOM_CURSE1"),
+                (2, "RANDOM_CURSE2"),
+            ] {
+                if value.flags.contains(flag) {
+                    let tval = self
+                        .content
+                        .item(&generation.base_item_kind_id)
+                        .and_then(|base| base.rfb_base_kind)
+                        .expect("fixed artifact base must have its source kind")
+                        .tval;
+                    draft
+                        .intrinsic_curse_effects
+                        .insert(super::ego::curses::get_curse(&mut self.rng, power, tval));
+                }
+            }
+        }
         // master:artifact.c::random_artifact_resistance, ART_TERROR. These
         // properties belong to the generated instance, not its later wearer.
         if self
@@ -1597,6 +1690,34 @@ impl Game {
                     .intrinsic_curse_effects
                     .insert(super::ego::curses::get_curse(&mut self.rng, 2, 32));
             }
+        }
+        // artifact.c:3258-3311: all currently playable identities take the
+        // ordinary construction branches. These flags persist on the instance.
+        match self
+            .content
+            .item(&draft.kind_id)
+            .and_then(|item| item.artifact_generation.as_ref())
+            .map(|artifact| artifact.source_index)
+        {
+            Some(78) => {
+                draft.curse = Some(ItemCurseSeverityDto::Heavy);
+                draft
+                    .intrinsic_properties
+                    .rfb_flags
+                    .extend(["AGGRAVATE".into(), "TY_CURSE".into()]);
+                draft
+                    .intrinsic_curse_effects
+                    .insert(super::ego::curses::get_curse(&mut self.rng, 2, 23));
+            }
+            Some(190) => {
+                draft.curse = Some(ItemCurseSeverityDto::Heavy);
+                draft
+                    .intrinsic_properties
+                    .rfb_flags
+                    .extend(["AGGRAVATE".into(), "DRAIN_EXP".into()]);
+            }
+            Some(212) => draft.curse = Some(ItemCurseSeverityDto::Heavy),
+            _ => {}
         }
         draft
     }

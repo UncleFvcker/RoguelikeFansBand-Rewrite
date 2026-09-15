@@ -564,7 +564,15 @@ impl Game {
         for (damage_type, level) in self.maia_resistances() {
             record(damage_type, level);
         }
-        for status in &self.player.statuses {
+        for status in self
+            .player
+            .statuses
+            .iter()
+            .chain(self.music_status().iter())
+            .chain(self.samurai_status().iter())
+            .chain(self.hex_status().iter())
+            .chain(self.rage_status().iter())
+        {
             for (damage_type, level) in &status.granted_resistances {
                 if *level == ResistanceLevel::Resistant
                     && matches!(
@@ -743,12 +751,32 @@ impl Game {
     }
 
     pub(super) fn player_incoming_damage_percent(&self) -> u8 {
-        self.player
+        let percent = self
+            .player
             .statuses
             .iter()
+            .filter(|status| {
+                !self.player_has_equipped_artifact(362)
+                    || !matches!(
+                        status.kind_id.as_str(),
+                        "rfb.status.invulnerability" | "rfb.status.wild-invulnerability"
+                    )
+            })
             .map(|status| status.incoming_damage_percent)
             .min()
-            .unwrap_or(100)
+            .unwrap_or(100);
+        ((u16::from(percent)
+            * if self.samurai.sutemi {
+                200
+            } else if self.samurai.posture == 1 {
+                120
+            } else if self.samurai.posture == 4 {
+                50
+            } else {
+                100
+            })
+            / 100)
+            .min(255) as u8
     }
 
     pub(super) fn adjust_player_resistance_percent(
@@ -868,7 +896,15 @@ impl Game {
         if self.player_is_nonliving() {
             immunities.extend([STATUS_BLEEDING.to_owned(), STATUS_UNWELL.to_owned()]);
         }
-        for status in &self.player.statuses {
+        for status in self
+            .player
+            .statuses
+            .iter()
+            .chain(self.music_status().iter())
+            .chain(self.samurai_status().iter())
+            .chain(self.hex_status().iter())
+            .chain(self.rage_status().iter())
+        {
             immunities.extend(status.granted_status_immunities.iter().cloned());
         }
         if let Some((_, race, _, _)) = self.character_definitions() {
@@ -1187,6 +1223,8 @@ impl Game {
                 EquipmentPassive::SustainCharisma,
             ]);
         }
+        passives.extend(self.samurai_passives());
+        passives.extend(self.hex_passives());
         passives
     }
 
@@ -1213,7 +1251,9 @@ impl Game {
     }
 
     pub(super) fn player_hold_life_sources(&self) -> usize {
-        self.items
+        usize::from(self.player_is_necromancer() && self.progress.level >= 25)
+            + usize::from(self.player_is_necromancer() && self.progress.level >= 45)
+            + self.items
             .iter()
             .filter(|item| {
                 matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
@@ -1256,6 +1296,7 @@ impl Game {
                     .is_some_and(|minimum_level| self.progress.level >= minimum_level)
         });
         equipment_sources
+            + usize::from(self.player_is_necromancer() && self.progress.level >= 15)
             + usize::from(self.player_is_maia() && self.player_is_enlightened_maia())
             + usize::from(race_source)
             + usize::from(self.player.statuses.iter().any(|status| {
@@ -1324,6 +1365,11 @@ impl Game {
         &self,
         definition: &rfb_content::ActorDefinition,
     ) -> bool {
+        if self.player_has_status_kind("rfb.status.rage-detect-magical")
+            && definition.monster_casting.is_some()
+        {
+            return true;
+        }
         if self.player_is_maia()
             && definition
                 .tags
@@ -1454,6 +1500,18 @@ impl Game {
         .filter(|(level, _)| self.player_is_mindcrafter() && self.progress.level >= *level)
         .map(|(_, passive)| passive)
         .collect()
+    }
+
+    pub(super) fn player_ignores_suffocation(&self) -> bool {
+        self.player_is_nonliving()
+            || self.items.iter().any(|item| {
+                matches!(item.location, ItemLocation::Equipped { .. })
+                    && self
+                        .content
+                        .item(&item.kind_id)
+                        .and_then(|kind| kind.artifact_generation.as_ref())
+                        .is_some_and(|artifact| artifact.source_index == 396)
+            })
     }
 
     pub(super) fn player_regeneration_rate_percent(&self) -> u64 {
@@ -1618,9 +1676,11 @@ impl Game {
                     .is_some_and(|value| value.flags.contains("BRAND_MANA"))
             }))
             || item.intrinsic_weapon_traits.contains(&trait_)
+            || (trait_ == WeaponTraitDto::Vorpal2 && self.item_has_rfb_flag(item, "VORPAL2"))
             || (trait_ == WeaponTraitDto::Order && self.item_has_rfb_flag(item, "BRAND_ORDER"))
             || (trait_ == WeaponTraitDto::Blessed && self.item_has_rfb_flag(item, "BLESSED"))
             || (trait_ == WeaponTraitDto::Stun && self.item_has_rfb_flag(item, "STUN"))
+            || (trait_ == WeaponTraitDto::Impact && self.item_has_rfb_flag(item, "IMPACT"))
             || (trait_ == WeaponTraitDto::Vorpal
                 && self
                     .content
@@ -1642,10 +1702,11 @@ impl Game {
             .projectile_profile
             .as_ref()?;
         let ammunition = self.content.item_definitions().find(|definition| {
-            definition
-                .ammunition_profile
-                .as_ref()
-                .is_some_and(|ammo| ammo.ammunition_type == profile.ammunition_type)
+            definition.artifact_generation.is_none()
+                && definition
+                    .ammunition_profile
+                    .as_ref()
+                    .is_some_and(|ammo| ammo.ammunition_type == profile.ammunition_type)
         })?;
         let ammo = ammunition.ammunition_profile.as_ref()?;
         let bonuses = self.item_equipment_bonuses(item);
@@ -1907,7 +1968,7 @@ impl Game {
                                     .item(&ammunition.kind_id)
                                     .and_then(|definition| definition.ammunition_profile.as_ref())
                                     .is_some_and(|ammo| {
-                                        ammo.ammunition_type == profile.ammunition_type
+                                        ammo.ammunition_type == profile.ammunition_type || self.item_is_fixed_artifact(item, 381)
                                     })
                         })
                         .min_by(|left, right| left.id.cmp(&right.id));
@@ -1915,7 +1976,7 @@ impl Game {
                         .and_then(|item| self.content.item(&item.kind_id))
                         .or_else(|| {
                             self.content.item_definitions().find(|definition| {
-                                definition.ammunition_profile.as_ref().is_some_and(|ammo| {
+                                definition.artifact_generation.is_none() && definition.ammunition_profile.as_ref().is_some_and(|ammo| {
                                     ammo.ammunition_type == profile.ammunition_type
                                 })
                             })
@@ -1923,7 +1984,9 @@ impl Game {
                     let ammo_profile = ammo_definition.ammunition_profile.as_ref()?;
                     let mut ammunition_slays = ammo_definition.slays.clone();
                     let mut ammunition_brands = ammo_definition.brands.clone();
-                    let mut ammunition_behavior = None;
+                    let mut ammunition_behavior = ammo_definition.artifact_generation.as_ref()
+                        .filter(|artifact| artifact.source_index == 391)
+                        .map(|_| AmmunitionBehaviorDefinition::Returning);
                     let mut ammunition_endurance = false;
                     if let Some(ammunition) = ammunition {
                         for affix_id in &ammunition.affix_ids {
@@ -1960,6 +2023,20 @@ impl Game {
                             ammunition_brands.extend(rolled.properties.brands.iter().copied());
                         }
                     }
+                    // master object1.c::missile_flags unions the bow with the arrow.
+                    // A bow's SLAY must never overwrite the ammunition's KILL.
+                    let mut merge_launcher = |slays: &BTreeMap<SlayTarget, SlayLevel>, brands: &BTreeSet<WeaponBrand>| {
+                        for (&target, &level) in slays {
+                            ammunition_slays.entry(target).and_modify(|old| *old = (*old).max(level)).or_insert(level);
+                        }
+                        ammunition_brands.extend(brands);
+                    };
+                    merge_launcher(&launcher_definition.slays, &launcher_definition.brands);
+                    for id in &item.affix_ids {
+                        if let Some(affix) = self.content.affix(id) { merge_launcher(&affix.slays, &affix.brands); }
+                    }
+                    merge_launcher(&item.intrinsic_properties.slays, &item.intrinsic_properties.brands);
+                    for roll in &item.rolled_affixes { merge_launcher(&roll.properties.slays, &roll.properties.brands); }
                     let ranged_skill = self.player_derived_stats().ranged_skill.value;
                     let hold = crate::stats::strength_hold_pounds(
                         self.effective_player_attributes().strength,
@@ -2083,7 +2160,7 @@ impl Game {
                         ammo_item_id: ammunition.map(|item| item.id.clone()),
                         ammo_kind_id: ammo_definition.id.clone(),
                         ammunition_weight_tenths_pound: ammunition.map_or(ammo_definition.weight_tenths_pound, |item| self.item_instance_weight(item)),
-                        ammunition_type: profile.ammunition_type,
+                        ammunition_type: ammo_profile.ammunition_type,
                         ammo_break_chance_percent,
                         base_shot,
                         energy_cost,
@@ -2175,6 +2252,13 @@ impl Game {
             .is_some_and(|artifact| artifact.source_index == source_index)
     }
 
+    pub(super) fn player_has_equipped_artifact(&self, source_index: u32) -> bool {
+        self.items.iter().any(|item| {
+            matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+                && self.item_is_fixed_artifact(item, source_index)
+        })
+    }
+
     pub(super) fn player_dexterity_to_hit(&self) -> i32 {
         let index = self
             .effective_player_attributes()
@@ -2243,6 +2327,11 @@ impl Game {
         let dexterity = attributes
             .index(AttributeKind::Dexterity)
             .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP);
+        let (minimum_weight, multiplier) = if self.hexing(4) || self.hexing(14) {
+            (minimum_weight / 2, multiplier + 20)
+        } else {
+            (minimum_weight, multiplier)
+        };
         let weight = self.item_instance_weight(weapon);
         let two_hands = self.weapon_uses_two_hands(weapon);
         let hold = crate::stats::strength_hold_pounds(attributes.value(AttributeKind::Strength))
@@ -2409,6 +2498,24 @@ impl Game {
             );
         }
         let mut to_damage = stats.melee_damage_bonus.value;
+        if let Some(weapon) = self
+            .items
+            .iter()
+            .find(|i| Some(i.id.as_str()) == selected_item_id)
+        {
+            let hit = self.hex_curse_bonus(weapon, true);
+            if hit != 0 {
+                melee_skill = melee_skill.with_modifier(
+                    StatLayer::Class,
+                    "demo.realm.hex",
+                    hit * 3,
+                    StatBounds::NON_NEGATIVE,
+                );
+            }
+            if self.hexing(12) {
+                to_damage += self.hex_curse_bonus(weapon, false);
+            }
+        }
         let weapons = self.equipped_melee_weapons();
         let hand = weapons
             .iter()
@@ -2563,11 +2670,8 @@ impl Game {
             .iter()
             .map(|source| source.amount)
             .sum::<i32>();
-        let extra_blows = if self.player_is_berserker() || self.player_is_duelist() {
-            extra_blows
-        } else {
-            extra_blows.max(0)
-        };
+        // equip.c:1611-1655: DEC_BLOWS applies to every class; negative
+        // glove bonuses apply in full to each wielded hand.
         if extra_blows != 0 {
             attack_sources.extend(extra_sources);
         }
@@ -2580,6 +2684,12 @@ impl Game {
             || self.player_is_berserker()
             || self.player_is_duelist()
             || self.player_is_mage()
+            || self.player_is_necromancer()
+            || self.player_is_bard()
+            || self.player_is_rogue()
+            || self.player_is_samurai()
+            || self.player_uses_hex()
+            || self.player_is_rage_mage()
             || self.player_is_ranger()
             || self.player_is_priest()
             || self.player_is_warrior_mage()
@@ -2607,15 +2717,54 @@ impl Game {
                     self.class_base_blows(weapon, 500, 70, 40),
                     0,
                 )
+            } else if self.player_is_samurai() {
+                (
+                    "demo.class.samurai",
+                    self.class_base_blows(weapon, 550, 70, 45),
+                    0,
+                )
+            } else if self.player_is_rage_mage() {
+                (
+                    "demo.class.rage-mage",
+                    self.class_base_blows(weapon, 300, 70, 30),
+                    0,
+                )
+            } else if self.player_uses_hex() {
+                (
+                    "demo.class.high-mage",
+                    self.class_base_blows(weapon, 400, 100, 20),
+                    0,
+                )
+            } else if self.player_is_rogue() {
+                (
+                    "demo.class.rogue",
+                    self.class_base_blows(
+                        weapon,
+                        (650 - i32::from(self.item_instance_weight(weapon))).max(400),
+                        40,
+                        30,
+                    ),
+                    0,
+                )
+            } else if self.player_is_bard() {
+                (
+                    "demo.class.bard",
+                    self.class_base_blows(weapon, 450, 70, 20),
+                    0,
+                )
             } else if self.player_is_warrior_mage() {
                 (
                     "demo.class.warrior-mage",
                     self.class_base_blows(weapon, 525, 70, 30),
                     0,
                 )
-            } else if self.player_is_mage() {
+            } else if self.player_is_mage() || self.player_is_necromancer() {
                 (
-                    "demo.class.mage",
+                    if self.player_is_necromancer() {
+                        "demo.class.necromancer"
+                    } else {
+                        "demo.class.mage"
+                    },
                     self.class_base_blows(weapon, 400, 100, 20),
                     0,
                 )
@@ -2648,6 +2797,13 @@ impl Game {
             attack_sources.push(rfb_protocol::CharacterStatSourceDto {
                 source_id: weapon.id.clone(),
                 amount: 100,
+            });
+        }
+        if self.samurai.posture == 2 && source_item_id.is_some() {
+            blows -= 100;
+            attack_sources.push(rfb_protocol::CharacterStatSourceDto {
+                source_id: "demo.ability.samurai-fuujin".into(),
+                amount: -100,
             });
         }
         blows = blows.max(0);
@@ -2909,6 +3065,8 @@ impl Game {
                     "demo.class.warrior" => 120,
                     "demo.class.berserker" => 170,
                     "demo.class.paladin" => 110,
+                    "demo.class.rage-mage" => 90,
+                    "demo.class.rogue" => 105,
                     "demo.class.high-mage" | "demo.class.mage" => 80,
                     _ => 100,
                 });
@@ -3061,6 +3219,10 @@ impl Game {
         for rolled in &item.rolled_affixes {
             apply(&rolled.properties.slays, &rolled.properties.brands);
         }
+        if self.item_is_fixed_artifact(item, 74) && definition.id == "demo.actor.fafner-the-dragon"
+        {
+            multiplier = multiplier.max(slay_multiplier(SlayTarget::Dragon, SlayLevel::Kill) * 3);
+        }
         multiplier
     }
 
@@ -3074,6 +3236,9 @@ impl Game {
             return 10;
         }
         let mut multiplier = 10;
+        if self.hexing(12) && slay_target_matches(SlayTarget::Good, definition) {
+            multiplier = slay_multiplier(SlayTarget::Good, SlayLevel::Slay);
+        }
         if self.player_is_maia()
             && self.player_is_enlightened_maia()
             && self.progress.level >= 50
@@ -3090,6 +3255,10 @@ impl Game {
             {
                 continue;
             }
+            if matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("launcher"))
+            {
+                continue;
+            }
             if self
                 .content
                 .item(&item.kind_id)
@@ -3100,7 +3269,15 @@ impl Game {
             }
             multiplier = multiplier.max(self.item_damage_multiplier(item, target, definition));
         }
-        for status in &self.player.statuses {
+        for status in self
+            .player
+            .statuses
+            .iter()
+            .chain(self.music_status().iter())
+            .chain(self.samurai_status().iter())
+            .chain(self.hex_status().iter())
+            .chain(self.rage_status().iter())
+        {
             for brand in &status.granted_brands {
                 if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
                     multiplier = multiplier.max(24);
@@ -3126,6 +3303,12 @@ impl Game {
             if target.resistances.level(brand_damage_type(*brand)) != ResistanceLevel::Immune {
                 multiplier = multiplier.max(24);
             }
+        }
+        if profile.ammo_kind_id == "demo.item.bard-black-arrow"
+            && definition.id == "demo.actor.smaug-the-golden"
+            && self.player_has_equipped_artifact(125)
+        {
+            multiplier = multiplier.max(slay_multiplier(SlayTarget::Dragon, SlayLevel::Kill) * 5);
         }
         multiplier
     }
@@ -3215,6 +3398,24 @@ impl Game {
         let Some((_, race, class, personality)) = self.character_definitions() else {
             return;
         };
+        if self.player_is_rogue()
+            && self.items.iter().any(|item| {
+                matches!(item.location, ItemLocation::Equipped { .. })
+                    && self
+                        .content
+                        .item(&item.kind_id)
+                        .and_then(|d| d.rfb_base_kind)
+                        .is_some_and(|b| b.tval == 19 && b.sval == 2)
+            })
+        {
+            add_nonzero_stat(
+                pipeline,
+                StatKind::RangedSkill,
+                StatLayer::Class,
+                &class.id,
+                20 + i32::from(self.progress.level),
+            );
+        }
         if self.player_is_ranger() && self.items.iter().any(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("launcher"))
         }) {
@@ -3612,6 +3813,18 @@ impl Game {
                 }
             }
             let mut digging_equipment = ("rfb.digging-equipment".to_owned(), 0);
+            if self.equipped_melee_weapons().chunks_exact(2).any(|pair| {
+                self.item_is_fixed_artifact(pair[0], 174)
+                    && self.item_is_fixed_artifact(pair[1], 175)
+            }) {
+                add_equipment_stat(&mut pipeline, StatKind::Speed, "demo.item.littlethorn", 7);
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::ArmorClass,
+                    "demo.item.littlethorn",
+                    10,
+                );
+            }
             for item in self
                 .items
                 .iter()
@@ -3816,7 +4029,18 @@ impl Game {
             }
         }
 
-        for status in &actor.statuses {
+        let music = include_equipment.then(|| self.music_status()).flatten();
+        let samurai = include_equipment.then(|| self.samurai_status()).flatten();
+        let hex = include_equipment.then(|| self.hex_status()).flatten();
+        let rage = include_equipment.then(|| self.rage_status()).flatten();
+        for status in actor
+            .statuses
+            .iter()
+            .chain(music.iter())
+            .chain(samurai.iter())
+            .chain(hex.iter())
+            .chain(rage.iter())
+        {
             if include_equipment && self.player_is_berserker() && status.kind_id == STATUS_BERSERK {
                 continue;
             }

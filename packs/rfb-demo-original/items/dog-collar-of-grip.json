@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dog-collar-of-grip",
+  "nameKey": "item-demo-dog-collar-of-grip-name",
+  "descriptionKey": "item-demo-dog-collar-of-grip-description",
+  "glyph": "\"",
+  "generationLevel": 5,
+  "weightTenthsPound": 30,
+  "baseValue": 5000,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": ["artifact", "equipment", "jewelry"],
+  "artifactGeneration": {"sourceIndex": 310, "baseItemKindId": "demo.item.amulet", "instant": false, "rarityOneIn": 70},
+  "rfbValue": {"flags": ["DEX", "FULL_NAME", "HIDE_TYPE", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "QUESTITEM", "SPEED"], "pval": 1, "toArmor": 0},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "modifiers": {"dexterity": 1, "speed": 1}
+}

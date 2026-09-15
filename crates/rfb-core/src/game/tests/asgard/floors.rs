@@ -76,6 +76,10 @@ fn enter_depth(game: &mut Game, depth: u16) {
 fn traverse(game: &mut Game, terrain: &str, expected: u16) {
     clear_route_monsters(game);
     place_player_on_terrain(game, terrain);
+    // Each connection check starts healed/protected; arrival combat is outside
+    // this route fixture, and prior arrival dispels must not accumulate.
+    game.player.hp = game.effective_player_max_hp();
+    game.apply_player_melee_status(STATUS_INVULNERABILITY, 200_000, "test.asgard.route");
     let update = dispatch_next(game, GameCommand::TraverseStairs);
     assert_eq!(
         update.floor_id,

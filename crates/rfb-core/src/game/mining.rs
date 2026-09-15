@@ -283,10 +283,12 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) -> bool {
-        // FF_HURT_DISI has FAF_NO_DROP, including the kill_wall movement path.
+        // Disintegration and area destruction erase terrain without mining loot.
         if matches!(
             change_source,
-            TerrainChangeSource::Projectile | TerrainChangeSource::Disintegration
+            TerrainChangeSource::Projectile
+                | TerrainChangeSource::Disintegration
+                | TerrainChangeSource::Destruction
         ) {
             return false;
         }
@@ -438,7 +440,18 @@ mod tests {
 
     #[test]
     fn mining_artifact_mode_accepts_a_twentieth_attempt_without_allocating_discarded_drafts() {
-        let template = Game::new(9);
+        let mut template = Game::new(9);
+        // This fixture checks the twenty-attempt boundary, not pool coverage.
+        // Keep one real instant candidate so later content cannot swamp it.
+        template.generated_artifact_ids.extend(
+            template
+                .content
+                .item_definitions()
+                .filter(|item| {
+                    item.artifact_generation.is_some() && item.id != "demo.item.galadriel"
+                })
+                .map(|item| item.id.clone()),
+        );
         let context = artifact_context(&template);
         let seed = (0..100_000)
             .find(|seed| {
@@ -457,7 +470,7 @@ mod tests {
             })
             .expect("a seed with its first fixed artifact on attempt twenty should exist");
 
-        let mut game = Game::new(9);
+        let mut game = template;
         let context = artifact_context(&game);
         game.rng = RfbRng::seeded(seed);
         let serial_before = game.next_item_instance_serial;

@@ -93,7 +93,14 @@ pub(super) fn validate_player_ability_binding_references(
 
 fn valid_player_ability_binding(definition: &PlayerAbilityBindingDefinition) -> bool {
     (1..=100).contains(&definition.minimum_level)
-        && (1..=1_000_000).contains(&definition.resource_cost)
+        && (definition.resource_cost <= 1_000_000
+            && (definition.resource_cost > 0
+                || matches!(
+                    definition.ability_id.as_str(),
+                    "demo.ability.rage-focus-rage"
+                        | "demo.ability.rage-greater-focus-rage"
+                        | "demo.ability.rage-rage-strike"
+                )))
         && definition.base_failure_percent <= 95
         && definition.first_success_experience <= 1_000_000
         && definition.proficiency.initial <= definition.proficiency.cap

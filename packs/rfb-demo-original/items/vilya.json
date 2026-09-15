@@ -1,0 +1,132 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.vilya",
+  "nameKey": "item-demo-vilya-name",
+  "descriptionKey": "item-demo-vilya-description",
+  "glyph": "=",
+  "generationLevel": 90,
+  "weightTenthsPound": 2,
+  "baseValue": 300000,
+  "maxStack": 1,
+  "equipmentSlot": "ring",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 12,
+    "baseItemKindId": "demo.item.ring",
+    "instant": false,
+    "rarityOneIn": 85
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_ELEC",
+      "CHR",
+      "CON",
+      "DEX",
+      "FIXED_ART",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_ELEC",
+      "INT",
+      "LEVITATION",
+      "REGEN",
+      "SEE_INVIS",
+      "SLOW_DIGEST",
+      "SPEED",
+      "STR",
+      "SUST_DEX",
+      "SUST_INT",
+      "SUST_STR",
+      "SUST_WIS",
+      "WEAPONMASTERY",
+      "WIS",
+      "XTRA_POWER",
+      "XTRA_SHOTS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 3,
+    "intelligence": 3,
+    "wisdom": 3,
+    "dexterity": 3,
+    "constitution": 3,
+    "charisma": 3,
+    "speed": 3
+  },
+  "equipmentBonuses": {
+    "weaponDiceBonus": 3,
+    "baseShotDeltaPercent": 45
+  },
+  "passives": [
+    "hold-life",
+    "levitation",
+    "regeneration",
+    "see-invisible",
+    "slow-digestion",
+    "sustain-dexterity",
+    "sustain-intelligence",
+    "sustain-strength",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "electricity": "immune"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "brands": [
+    "electricity"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.vilya",
+        "nameKey": "device-activation-e5-ball-elec-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 15000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.dragonic-sword-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 500
+    }
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.nenya",
+  "nameKey": "item-demo-nenya-name",
+  "descriptionKey": "item-demo-nenya-description",
+  "glyph": "=",
+  "generationLevel": 80,
+  "weightTenthsPound": 2,
+  "baseValue": 200000,
+  "maxStack": 1,
+  "equipmentSlot": "ring",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 11,
+    "baseItemKindId": "demo.item.ring",
+    "instant": false,
+    "rarityOneIn": 70
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_COLD",
+      "CHR",
+      "CON",
+      "DEX",
+      "FIXED_ART",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_COLD",
+      "INT",
+      "LEVITATION",
+      "REGEN",
+      "SEE_INVIS",
+      "SPEED",
+      "STR",
+      "SUST_INT",
+      "SUST_WIS",
+      "WEAPONMASTERY",
+      "WIS",
+      "XTRA_POWER",
+      "XTRA_SHOTS"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 2,
+    "intelligence": 2,
+    "wisdom": 2,
+    "dexterity": 2,
+    "constitution": 2,
+    "charisma": 2,
+    "speed": 2
+  },
+  "equipmentBonuses": {
+    "weaponDiceBonus": 2,
+    "baseShotDeltaPercent": 30
+  },
+  "passives": [
+    "hold-life",
+    "levitation",
+    "regeneration",
+    "see-invisible",
+    "sustain-intelligence",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "cold": "immune"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "brands": [
+    "cold"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.nenya",
+        "nameKey": "device-activation-e5-ball-cold-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 12000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.nenya-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 500
+    }
+  }
+}

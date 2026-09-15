@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.sepulchral-ways",
+  "nameKey": "ability-book-demo-sepulchral-ways-name",
+  "descriptionKey": "ability-book-demo-sepulchral-ways-description",
+  "realmId": "necromancy",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.necromancy-summon-wolves",
+    "demo.ability.necromancy-black-cloak",
+    "demo.ability.necromancy-undead-sight",
+    "demo.ability.necromancy-undead-lore",
+    "demo.ability.necromancy-repelling-touch",
+    "demo.ability.necromancy-vampiric-touch",
+    "demo.ability.necromancy-dread-of-night",
+    "demo.ability.necromancy-entomb"
+  ],
+  "tags": [
+    "necromancy",
+    "spellbook"
+  ]
+}

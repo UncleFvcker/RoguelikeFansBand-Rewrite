@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ages",
+  "nameKey": "item-demo-ages-name",
+  "descriptionKey": "item-demo-ages-description",
+  "glyph": "=",
+  "generationLevel": 70,
+  "weightTenthsPound": 2,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "ring",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 274,
+    "baseItemKindId": "demo.item.ring",
+    "instant": false,
+    "rarityOneIn": 35
+  },
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_TIME",
+      "SUST_CHR",
+      "SUST_CON",
+      "SUST_DEX",
+      "SUST_INT",
+      "SUST_STR",
+      "SUST_WIS"
+    ],
+    "pval": 4,
+    "toArmor": 20
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 20,
+    "constitution": 4
+  },
+  "passives": [
+    "hold-life",
+    "sustain-charisma",
+    "sustain-constitution",
+    "sustain-dexterity",
+    "sustain-intelligence",
+    "sustain-strength",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "time": "resistant"
+  }
+}

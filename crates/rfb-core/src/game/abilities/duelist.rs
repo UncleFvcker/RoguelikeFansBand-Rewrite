@@ -399,6 +399,14 @@ impl Game {
 
     // monster1.c::mon_save_p(A_DEX): draw player power first, then monster power.
     pub(in crate::game) fn duelist_monster_saves(&mut self, index: usize) -> bool {
+        self.monster_saves_against_attribute(index, AttributeKind::Dexterity)
+    }
+
+    pub(in crate::game) fn monster_saves_against_attribute(
+        &mut self,
+        index: usize,
+        attribute: AttributeKind,
+    ) -> bool {
         let actor = self
             .actor_runtime_definition(&self.entities[index])
             .expect("target exists");
@@ -409,11 +417,10 @@ impl Game {
                 0
             })
         .max(1);
-        let dex = self
-            .effective_player_attributes()
-            .index(AttributeKind::Dexterity);
-        let player_power =
-            (self.progress.level as i32 + crate::stats::original_save_adjustment(dex)).max(1);
+        let attribute_index = self.effective_player_attributes().index(attribute);
+        let player_power = (self.progress.level as i32
+            + crate::stats::original_save_adjustment(attribute_index))
+        .max(1);
         self.rng.bounded(player_power as u64) <= self.rng.bounded(u64::from(monster_power))
     }
 

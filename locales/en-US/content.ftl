@@ -1268,6 +1268,14 @@ item-demo-mirror-shield-name = Mirror Shield
 item-demo-mirror-shield-description = A polished shield that reflects incoming bolts.
 item-demo-leather-gloves-name = Set of Leather Gloves
 item-demo-leather-gloves-description = Light hand protection that leaves enough flexibility for a secure weapon grip.
+item-demo-dog-collar-of-fang-name = Dog Collar of Fang
+item-demo-dog-collar-of-fang-description = Dog Collar of Fang
+item-demo-dog-collar-of-wolf-name = Dog Collar of Wolf
+item-demo-dog-collar-of-wolf-description = Dog Collar of Wolf
+item-demo-dog-collar-of-grip-name = Dog Collar of Grip
+item-demo-dog-collar-of-grip-description = Dog Collar of Grip
+item-demo-multi-hued-centipede-name = Pair of Soft Leather Boots of The Multi-hued Centipede
+item-demo-multi-hued-centipede-description = Pair of Soft Leather Boots of The Multi-hued Centipede
 item-demo-soft-leather-boots-name = Pair of Soft Leather Boots
 item-demo-soft-leather-boots-description = Flexible calf-high leather boots secured with simple laces.
 item-demo-hard-leather-cap-name = Hard Leather Cap
@@ -4318,6 +4326,30 @@ actor-demo-shimmering-vortex-description = A strange luminous column whose shift
 actor-demo-weird-fume-name = Weird fume
 actor-demo-weird-fume-description = A rotating spiral cloud that continually changes its appearance.
 item-demo-amulet-name = Amulet
+item-demo-necklace-of-the-dwarves-name = Necklace of the Dwarves
+item-demo-necklace-of-the-dwarves-description = Necklace of the Dwarves
+item-demo-gogo-name = Amulet of Gogo
+item-demo-gogo-description = Amulet of Gogo
+item-demo-corwin-name = Set of Gauntlets of Corwin
+item-demo-corwin-description = Set of Gauntlets of Corwin
+item-demo-jack-of-shadows-name = Cloak of Jack of Shadows
+item-demo-jack-of-shadows-description = Cloak of Jack of Shadows
+item-demo-giles-name = Ring Mail of Giles
+item-demo-giles-description = Ring Mail of Giles
+item-demo-padre-name = Metal Lamellar Armour of The Padre
+item-demo-padre-description = Metal Lamellar Armour of The Padre
+item-demo-balli-stonehand-name = Battle Axe of Balli Stonehand
+item-demo-balli-stonehand-description = Battle Axe of Balli Stonehand
+item-demo-kamui-name = Ninjato of Kamui the Escapee
+item-demo-kamui-description = Ninjato of Kamui the Escapee
+item-demo-jing-ke-name = Tanto of Jing Ke
+item-demo-jing-ke-description = Tanto of Jing Ke
+item-demo-yositsune-helm-name = Dragon Helm of Yositsune
+item-demo-yositsune-helm-description = Dragon Helm of Yositsune
+item-demo-black-belet-name = Knit Cap 'Black Belet'
+item-demo-black-belet-description = Knit Cap 'Black Belet'
+item-demo-dunce-cap-name = Pointy Hat 'Dunce Cap'
+item-demo-dunce-cap-description = Pointy Hat 'Dunce Cap'
 item-demo-boromir-name = Amulet of Boromir
 item-demo-boromir-description = Amulet of Boromir
 item-demo-amulet-description = A plain amulet ready to receive magical properties.
@@ -10166,3 +10198,1544 @@ terrain-demo-glass-door-jammed-name = Jammed glass door
 terrain-demo-glass-door-jammed-description = A glass door jammed with spikes, still transparent.
 terrain-demo-glass-door-broken-name = Broken glass door
 terrain-demo-glass-door-broken-description = A glass door that has been bashed apart.
+item-demo-ubbo-sathla-name = Leather Jacket of Ubbo-Sathla
+item-demo-ubbo-sathla-description = Leather Jacket of Ubbo-Sathla
+item-demo-dragonkind-name = Golden Crown of Dragonkind
+item-demo-dragonkind-description = Golden Crown of Dragonkind
+item-demo-emperor-lich-name = Golden Crown of the Emperor Lich
+item-demo-emperor-lich-description = Golden Crown of the Emperor Lich
+item-demo-dog-collar-of-carcharoth-name = Dog Collar of Carcharoth
+item-demo-dog-collar-of-carcharoth-description = Dog Collar of Carcharoth
+item-demo-ymir-name = Two-Handed Sword of Ymir
+item-demo-ymir-description = Two-Handed Sword of Ymir
+item-demo-ariel-name = Ethereal Cloak of Ariel, Queen of Air
+item-demo-ariel-description = Ethereal Cloak of Ariel, Queen of Air
+item-demo-moire-name = Golden Crown of Moire, Queen of Rebma
+item-demo-moire-description = Golden Crown of Moire, Queen of Rebma
+item-demo-quaker-name = Set of Leather Gloves of Quaker, Master of Earth
+item-demo-quaker-description = Set of Leather Gloves of Quaker, Master of Earth
+item-demo-emperor-quylthulg-name = Golden Crown of the Emperor Quylthulg
+item-demo-emperor-quylthulg-description = Golden Crown of the Emperor Quylthulg
+item-demo-cyberdemon-lord-name = Full Plate Armour of the Cyberdemon Lord
+item-demo-cyberdemon-lord-description = Full Plate Armour of the Cyberdemon Lord
+item-demo-ulik-name = Club of Ulik
+item-demo-ulik-description = Club of Ulik
+item-demo-eyes-name = Jewel Encrusted Crown of Eyes
+item-demo-eyes-description = Jewel Encrusted Crown of Eyes
+item-demo-kundry-name = Amulet of Kundry
+item-demo-kundry-description = Amulet of Kundry
+item-demo-loge-name = Long Sword of Loge, Spirit of Fire
+item-demo-loge-description = Long Sword of Loge, Spirit of Fire
+item-demo-pumpkin-lamp-of-jack-of-lanterns-name = Pumpkin Lamp of Jack of Lanterns
+item-demo-pumpkin-lamp-of-jack-of-lanterns-description = Pumpkin Lamp of Jack of Lanterns
+item-demo-master-tonberry-name = Set of Studded Leather Gloves of the Master Tonberry
+item-demo-master-tonberry-description = Set of Studded Leather Gloves of the Master Tonberry
+item-demo-twilight-name = Two-Handed Sword 'Twilight'
+item-demo-twilight-description = Two-Handed Sword 'Twilight'
+item-demo-stormbringer-name = Blade of Chaos 'Stormbringer'
+item-demo-stormbringer-description = Blade of Chaos 'Stormbringer'
+item-demo-gothmog-name = Whip of Gothmog
+item-demo-gothmog-description = Whip of Gothmog
+item-demo-devouring-darkness-name = Ring of Devouring Darkness
+item-demo-devouring-darkness-description = Ring of Devouring Darkness
+item-demo-unlight-cloak-of-ungoliant-name = Unlight Cloak of Ungoliant
+item-demo-unlight-cloak-of-ungoliant-description = Unlight Cloak of Ungoliant
+item-demo-mephistopheles-name = Set of Leather Gloves of Mephistopheles
+item-demo-mephistopheles-description = Set of Leather Gloves of Mephistopheles
+item-demo-typhoeus-name = Two-Handed Sword of Typhoeus
+item-demo-typhoeus-description = Two-Handed Sword of Typhoeus
+item-demo-kronos-name = Sickle of Kronos
+item-demo-kronos-description = Sickle of Kronos
+item-demo-mighty-hammer-name = Mighty Hammer
+item-demo-mighty-hammer-description = Mighty Hammer
+item-demo-eye-name = Eye
+item-demo-eye-description = Eye
+item-activation-demo-eye-of-the-hydra-name = Healing
+item-demo-eye-of-the-hydra-name = Eye of the Hydra
+item-demo-eye-of-the-hydra-description = Eye of the Hydra
+item-demo-atlas-name = Mighty Hammer of Atlas
+item-demo-atlas-description = Mighty Hammer of Atlas
+item-demo-phial-626-name = Phial
+item-demo-phial-626-description = Phial
+item-demo-sting-name = Small Sword 'Sting'
+item-demo-sting-description = Small Sword 'Sting'
+item-demo-lava-lamp-of-telmora-name = Lava Lamp of Telmora
+item-demo-lava-lamp-of-telmora-description = Lava Lamp of Telmora
+task-demo-telmora-vault-name = The Vault (Telmora)
+task-demo-telmora-vault-description = Recover Sting from the captured vault. Finding and picking up the sword completes the goal; beware the monsters and traps in its four rooms.
+task-demo-telmora-vault-completed-description = Keep the sword. It will help you on your future quests.
+task-demo-telmora-vault-failed-description = The monsters may have carried the sword away. Sting could have helped us drive out the evil threatening our town.
+task-demo-telmora-volcano-name = The Volcano (Telmora)
+task-demo-telmora-volcano-description = Creatures have made their home in the volcano east of our lands. Destroy them all before lava ruins our crops.
+task-demo-telmora-volcano-completed-description = Here is your reward for a job well done.
+task-demo-telmora-volcano-failed-description = You have disappointed me. Take care not to do so again.
+task-demo-telmora-thing-under-the-mountain-name = The Thing under the Mountain (Telmora)
+task-demo-telmora-thing-under-the-mountain-description = The dwarves abandoned their mine when lava broke into its tunnels. Something shrouded in shadow and flame is stirring below. Defeat it before it reaches the surface.
+task-demo-telmora-thing-under-the-mountain-completed-description = Thank you! Here is your reward for a job well done.
+task-demo-telmora-thing-under-the-mountain-failed-description = This is terrible news.
+town-facility-demo-telmora-castle-name = Castle
+town-facility-demo-telmora-castle-description = Request a quest
+town-facility-demo-telmora-castle-owner-name = 丹内戈三世
+item-demo-flute-name = Flute
+item-demo-flute-description = Flute
+item-demo-jewel-629-name = Jewel
+item-demo-jewel-629-description = Jewel
+item-demo-gada-of-hanuman-name = Gada of Hanuman
+item-demo-gada-of-hanuman-description = Gada of Hanuman
+item-demo-murugan-name = Spear of Murugan
+item-demo-murugan-description = Spear of Murugan
+item-demo-rama-name = Long Bow of Rama
+item-demo-rama-description = Long Bow of Rama
+item-demo-krishna-name = Flute of Krishna
+item-demo-krishna-description = Flute of Krishna
+item-demo-kaumodaki-name = Mace 'Kaumodaki'
+item-demo-kaumodaki-description = Mace 'Kaumodaki'
+item-demo-shiva-name = Trident of Shiva
+item-demo-shiva-description = Trident of Shiva
+item-demo-kaustubha-name = Jewel 'Kaustubha'
+item-demo-kaustubha-description = Jewel 'Kaustubha'
+item-demo-kali-name = Scimitar of Kali
+item-demo-kali-description = Scimitar of Kali
+item-demo-brahmastra-name = Arrow 'Brahmastra'
+item-demo-brahmastra-description = Arrow 'Brahmastra'
+item-demo-saraswati-name = Hard Leather Cap of Saraswati
+item-demo-saraswati-description = Hard Leather Cap of Saraswati
+item-demo-lakshmi-name = Amulet of Lakshmi
+item-demo-lakshmi-description = Amulet of Lakshmi
+item-demo-space-suit-of-vayu-name = Space Suit of Vayu
+item-demo-space-suit-of-vayu-description = Space Suit of Vayu
+item-demo-shiva-avatar-jacket-name = Leather Jacket of Shiva's Avatar
+item-demo-shiva-avatar-jacket-description = Leather Jacket of Shiva's Avatar
+item-demo-shiva-avatar-boots-name = Pair of Soft Leather Boots of Shiva's Avatar
+item-demo-shiva-avatar-boots-description = Pair of Soft Leather Boots of Shiva's Avatar
+device-activation-e5-rama-arrow-name = Powerful Arrow
+floor-demo-mount-meru-depth-name = Mount Meru
+terrain-demo-mount-meru-entrance-name = Mount Meru
+terrain-demo-mount-meru-entrance-description = A rainbow bridge to Mount Meru.
+
+item-demo-beruthiel-name = Iron Crown of Beruthiel
+item-demo-beruthiel-description = Fixed artifact 35 from RFB; iron crown.
+
+item-demo-thanos-name = Set of Gauntlets of Thanos
+item-demo-thanos-description = Fixed artifact 58 from RFB; set of gauntlets.
+
+item-demo-calris-name = Bastard Sword 'Calris'
+item-demo-calris-description = Fixed artifact 71 from RFB; bastard sword.
+
+item-demo-grayswandir-name = Sabre 'Grayswandir'
+item-demo-grayswandir-description = Fixed artifact 72 from RFB; sabre.
+
+item-demo-zarcuthra-name = Two-Handed Sword 'Zarcuthra'
+item-demo-zarcuthra-description = Fixed artifact 77 from RFB; two handed sword.
+
+item-demo-aglarang-name = Katana 'Aglarang'
+item-demo-aglarang-description = Fixed artifact 81 from RFB; katana.
+
+item-demo-careth-asdriag-name = Sabre 'Careth Asdriag'
+item-demo-careth-asdriag-description = Fixed artifact 87 from RFB; sabre.
+
+item-demo-merlin-name = Short Sword of Merlin
+item-demo-merlin-description = Fixed artifact 90 from RFB; short sword.
+
+item-demo-doomcaller-name = Blade of Chaos 'Doomcaller'
+item-demo-doomcaller-description = Fixed artifact 91 from RFB; blade of chaos.
+
+item-demo-buckland-name = Sling of Buckland
+item-demo-buckland-description = Fixed artifact 134 from RFB; sling.
+
+item-demo-goln-nova-name = Broad Sword 'Goln Nova'
+item-demo-goln-nova-description = Fixed artifact 137 from RFB; broad sword.
+
+item-demo-silver-chariot-name = Rapier 'Silver Chariot'
+item-demo-silver-chariot-description = Fixed artifact 140 from RFB; rapier.
+
+item-demo-worpal-blade-name = Long Sword 'Worpal Blade'
+item-demo-worpal-blade-description = Fixed artifact 142 from RFB; long sword.
+
+item-demo-soulcrusher-name = Blade of Chaos 'Soulcrusher'
+item-demo-soulcrusher-description = Fixed artifact 154 from RFB; blade of chaos.
+
+item-demo-falis-name = Long Sword of Falis
+item-demo-falis-description = Fixed artifact 155 from RFB; long sword.
+
+item-demo-hrunting-name = Two-Handed Sword 'Hrunting'
+item-demo-hrunting-description = Fixed artifact 156 from RFB; two handed sword.
+
+item-demo-anubis-name = Katana of Anubis
+item-demo-anubis-description = Fixed artifact 158 from RFB; katana.
+
+item-demo-gurenki-name = Long Sword 'Gurenki'
+item-demo-gurenki-description = Fixed artifact 160 from RFB; long sword.
+
+item-demo-tonbo-giri-name = Broad Spear 'Tonbo giri'
+item-demo-tonbo-giri-description = Fixed artifact 161 from RFB; broad spear.
+
+item-demo-glass-slippers-name = Pair of Glass Slippers
+item-demo-glass-slippers-description = Fixed artifact 165 from RFB; soft leather boots.
+
+item-demo-tailbiter-name = Broad Sword 'Tailbiter'
+item-demo-tailbiter-description = Fixed artifact 167 from RFB; broad sword.
+
+item-demo-excalibur-name = Long Sword 'Excalibur'
+item-demo-excalibur-description = Fixed artifact 176 from RFB; long sword.
+
+item-demo-destruction-name = Falcon Sword of Destruction
+item-demo-destruction-description = Fixed artifact 189 from RFB; falcon sword.
+
+item-demo-narsil-name = Broken Sword 'Narsil'
+item-demo-narsil-description = Fixed artifact 191 from RFB; broken sword.
+
+item-demo-guan-yu-name = Falchion of Guan Yu
+item-demo-guan-yu-description = Fixed artifact 193 from RFB; falchion.
+
+item-demo-dasai-name = Rhino Hide Armour 'Dasai'
+item-demo-dasai-description = Fixed artifact 200 from RFB; rhino hide armour.
+
+item-demo-tetsu-geta-of-flame-name = Pair of Mithril Shod Boots 'Tetsu-geta of Flame'
+item-demo-tetsu-geta-of-flame-description = Fixed artifact 210 from RFB; mithril shod boots.
+
+item-demo-eowyn-name = Bastard Sword of Eowyn
+item-demo-eowyn-description = Fixed artifact 216 from RFB; bastard sword.
+
+item-demo-robin-hood-name = Short Bow of Robin Hood
+item-demo-robin-hood-description = Fixed artifact 221 from RFB; short bow.
+
+item-demo-hellfire-name = Light Crossbow of Hellfire
+item-demo-hellfire-description = Fixed artifact 222 from RFB; light crossbow.
+
+item-demo-wilhelm-tell-crossbow-name = Light Crossbow of Wilhelm Tell
+item-demo-wilhelm-tell-crossbow-description = Fixed artifact 223 from RFB; light crossbow.
+
+item-demo-wilhelm-tell-bolt-name = Bolt of Wilhelm Tell
+item-demo-wilhelm-tell-bolt-description = Fixed artifact 224 from RFB; bolt.
+
+item-demo-elmi-name = Hatchet of Elmi the Murderer
+item-demo-elmi-description = Fixed artifact 228 from RFB; hatchet.
+
+item-demo-taro-dachi-name = No-dachi 'Taro Dachi'
+item-demo-taro-dachi-description = Fixed artifact 229 from RFB; no dachi.
+
+item-demo-maggot-name = Sickle of Maggot
+item-demo-maggot-description = Fixed artifact 232 from RFB; sickle.
+
+item-demo-kaschei-name = Wizardstaff of Kaschei
+item-demo-kaschei-description = Fixed artifact 250 from RFB; wizardstaff.
+
+item-demo-rygar-name = Morning Star of Rygar
+item-demo-rygar-description = Fixed artifact 253 from RFB; morning star.
+
+item-demo-big-punch-name = Lead-Filled Mace 'Big Punch'
+item-demo-big-punch-description = Fixed artifact 254 from RFB; lead filled mace.
+
+item-demo-ages-name = Ring of the Ages
+item-demo-ages-description = Fixed artifact 274 from RFB; ring.
+
+item-demo-ancalagon-name = Dragon Fang of Ancalagon
+item-demo-ancalagon-description = Fixed artifact 281 from RFB; dragon fang.
+
+item-demo-david-name = Iron Shot of David
+item-demo-david-description = Fixed artifact 292 from RFB; iron shot.
+
+item-demo-khazad-dum-name = Mattock of Khazad-dum
+item-demo-khazad-dum-description = Fixed artifact 295 from RFB; mattock.
+
+item-demo-undertaker-name = Shovel of the Undertaker
+item-demo-undertaker-description = Fixed artifact 296 from RFB; shovel.
+
+item-demo-kaladanda-name = Great Hammer 'Kaladanda'
+item-demo-kaladanda-description = Fixed artifact 323 from RFB; great hammer.
+
+item-demo-heracles-name = Long Bow of Heracles
+item-demo-heracles-description = Fixed artifact 325 from RFB; long bow.
+
+item-demo-sword-of-the-winds-name = Sword of the Winds
+item-demo-sword-of-the-winds-description = Fixed artifact 330 from RFB; long sword.
+
+item-demo-vainglory-name = Morning Star 'VainGlory'
+item-demo-vainglory-description = Fixed artifact 331 from RFB; morning star.
+
+item-demo-mr-shine-name = Mirror Shield of Mr. Shine
+item-demo-mr-shine-description = Fixed artifact 337 from RFB; mirror shield.
+
+item-demo-nogudil-name = Lucerne Hammer 'Nogudil'
+item-demo-nogudil-description = Fixed artifact 338 from RFB; lucerne hammer.
+
+item-demo-curiosity-name = Short Sword 'Curiosity'
+item-demo-curiosity-description = Fixed artifact 339 from RFB; short sword.
+
+item-demo-tweutox-name = Spear of Tweutox
+item-demo-tweutox-description = Fixed artifact 349 from RFB; spear.
+
+item-demo-angrist-name = Dagger 'Angrist'
+item-demo-angrist-description = Fixed artifact 351 from RFB; dagger.
+
+item-demo-liweris-name = Mithril Spear of Liweris
+item-demo-liweris-description = Fixed artifact 352 from RFB; broad spear.
+
+item-demo-carlammas-name = Amulet of Carlammas
+item-demo-carlammas-description = Fixed artifact 4 from RFB; amulet.
+
+item-demo-frakir-name = Ring 'Frakir'
+item-demo-frakir-description = Fixed artifact 8 from RFB; ring.
+
+item-demo-tulkas-name = Ring of Tulkas
+item-demo-tulkas-description = Fixed artifact 9 from RFB; ring.
+
+item-demo-narya-name = Ring of Power (Narya)
+item-demo-narya-description = Fixed artifact 10 from RFB; ring.
+
+item-demo-nenya-name = Ring of Power (Nenya)
+item-demo-nenya-description = Fixed artifact 11 from RFB; ring.
+
+item-demo-vilya-name = Ring of Power (Vilya)
+item-demo-vilya-description = Fixed artifact 12 from RFB; ring.
+
+item-demo-faramir-name = Amulet of Faramir
+item-demo-faramir-description = Fixed artifact 18 from RFB; amulet.
+
+item-demo-julian-name = Metal Scale Mail of Julian
+item-demo-julian-description = Fixed artifact 23 from RFB; metal scale mail.
+
+item-demo-caspanion-name = Augmented Chain Mail of Caspanion
+item-demo-caspanion-description = Fixed artifact 25 from RFB; augmented chain mail.
+
+item-demo-holhenneth-name = Iron Helm 'Holhenneth'
+item-demo-holhenneth-description = Fixed artifact 40 from RFB; iron helm.
+
+item-demo-colluin-name = Cloak 'Colluin'
+item-demo-colluin-description = Fixed artifact 44 from RFB; cloak.
+
+item-demo-colannon-name = Cloak 'Colannon'
+item-demo-colannon-description = Fixed artifact 48 from RFB; cloak.
+
+item-demo-flora-name = Pair of Soft Leather Boots of Flora
+item-demo-flora-description = Fixed artifact 61 from RFB; soft leather boots.
+
+item-demo-ringil-name = Long Sword 'Ringil'
+item-demo-ringil-description = Fixed artifact 82 from RFB; long sword.
+
+item-demo-anduril-name = Long Sword 'Anduril'
+item-demo-anduril-description = Fixed artifact 83 from RFB; long sword.
+
+item-demo-werewindle-name = Long Sword 'Werewindle'
+item-demo-werewindle-description = Fixed artifact 84 from RFB; long sword.
+
+item-demo-theoden-name = Beaked Axe of Theoden
+item-demo-theoden-description = Fixed artifact 93 from RFB; beaked axe.
+
+item-demo-destiny-name = Broad Spear of Destiny
+item-demo-destiny-description = Fixed artifact 98 from RFB; broad spear.
+
+item-demo-ulmo-name = Trident of Ulmo
+item-demo-ulmo-description = Fixed artifact 108 from RFB; trident.
+
+item-demo-firestar-name = Morning Star 'Firestar'
+item-demo-firestar-description = Fixed artifact 115 from RFB; morning star.
+
+item-demo-taratol-name = Mace 'Taratol'
+item-demo-taratol-description = Fixed artifact 116 from RFB; mace.
+
+item-demo-eriril-name = Quarterstaff 'Eriril'
+item-demo-eriril-description = Fixed artifact 119 from RFB; quarterstaff.
+
+item-demo-turmil-name = Lucerne Hammer 'Turmil'
+item-demo-turmil-description = Fixed artifact 122 from RFB; lucerne hammer.
+
+item-demo-himring-name = Hard Leather Armour of Himring
+item-demo-himring-description = Fixed artifact 127 from RFB; hard leather armour.
+
+item-demo-kusanagi-no-tsurugi-name = Katana 'Kusanagi-no-tsurugi'
+item-demo-kusanagi-no-tsurugi-description = Fixed artifact 128 from RFB; katana.
+
+item-demo-incanus-name = Robe of Incanus
+item-demo-incanus-description = Fixed artifact 131 from RFB; robe.
+
+item-demo-hurin-name = Beaked Axe of Hurin
+item-demo-hurin-description = Fixed artifact 133 from RFB; beaked axe.
+
+item-demo-yasaka-no-magatama-name = Amulet 'Yasaka-no-Magatama'
+item-demo-yasaka-no-magatama-description = Fixed artifact 149 from RFB; amulet.
+
+item-demo-taikobo-name = Fishingpole of Taikobo
+item-demo-taikobo-description = Fixed artifact 159 from RFB; fishingpole.
+
+item-demo-matoi-name = Jo Staff 'Matoi'
+item-demo-matoi-description = Fixed artifact 170 from RFB; jo staff.
+
+item-demo-aranruth-name = Broad Sword 'Aranruth'
+item-demo-aranruth-description = Fixed artifact 184 from RFB; broad sword.
+
+item-demo-bolshoi-name = Whip of Bolshoi
+item-demo-bolshoi-description = Fixed artifact 188 from RFB; whip.
+
+item-demo-ama-no-numahoko-name = Awl-Pike 'Ama-no-NumaHoko'
+item-demo-ama-no-numahoko-description = Fixed artifact 202 from RFB; awl pike.
+
+item-demo-mook-name = Fur Cloak of Mook
+item-demo-mook-description = Fixed artifact 205 from RFB; fur cloak.
+
+item-demo-dragonic-sword-name = Two-Handed Sword 'Dragonic Sword'
+item-demo-dragonic-sword-description = Fixed artifact 207 from RFB; two handed sword.
+
+item-demo-hermits-purple-name = Whip 'hermit's purple'
+item-demo-hermits-purple-description = Fixed artifact 209 from RFB; whip.
+
+item-demo-nain-name = Mattock of Nain
+item-demo-nain-description = Fixed artifact 211 from RFB; mattock.
+
+item-demo-fundin-bluecloak-name = Ball-and-Chain of Fundin Bluecloak
+item-demo-fundin-bluecloak-description = Fixed artifact 214 from RFB; ball and chain.
+
+item-demo-harness-of-the-hell-name = Harness of the Hell
+item-demo-harness-of-the-hell-description = Fixed artifact 218 from RFB; amulet.
+
+item-demo-asclepius-name = Bo Staff of Asclepius
+item-demo-asclepius-description = Fixed artifact 225 from RFB; bo staff.
+
+item-demo-defender-of-the-crown-name = Ball-and-Chain of the Defender of the Crown
+item-demo-defender-of-the-crown-description = Fixed artifact 252 from RFB; ball and chain.
+
+item-demo-stomper-name = Pair of Mithril Shod Boots 'Stomper'
+item-demo-stomper-description = Fixed artifact 277 from RFB; mithril shod boots.
+
+item-demo-sword-of-tengri-name = Sword of Tengri
+item-demo-sword-of-tengri-description = Fixed artifact 333 from RFB; tulwar.
+
+item-demo-bubo-name = Pair of Hard Leather Boots of Bubo
+item-demo-bubo-description = Fixed artifact 336 from RFB; pair of hard leather boots.
+
+item-demo-barnaby-name = Bobble Hat of Barnaby
+item-demo-barnaby-description = Fixed artifact 361 from RFB; knit cap.
+
+item-demo-efki-name = Pendant 'Efki'
+item-demo-efki-description = Fixed artifact 363 from RFB; amulet.
+
+item-demo-surveillance-name = Amulet of Surveillance
+item-demo-surveillance-description = Fixed artifact 367 from RFB; amulet.
+
+item-demo-black-arrow-name = Black Arrow
+item-demo-black-arrow-description = Black arrow base reserved for instant artifacts.
+
+item-demo-feanor-name = Pair of Hard Leather Boots of Feanor
+item-demo-feanor-description = Fixed artifact 60 from RFB; pair of hard leather boots.
+
+item-demo-nothung-name = Broad Sword 'Nothung'
+item-demo-nothung-description = Fixed artifact 74 from RFB; broad sword.
+
+item-demo-chainsword-name = Broad Sword 'Chainsword'
+item-demo-chainsword-description = Fixed artifact 85 from RFB; broad sword.
+
+item-demo-vorpal-blade-name = Long Sword 'Vorpal Blade'
+item-demo-vorpal-blade-description = Fixed artifact 92 from RFB; long sword.
+
+item-demo-bard-long-bow-name = Long Bow of Bard
+item-demo-bard-long-bow-description = Fixed artifact 125 from RFB; long bow.
+
+item-demo-winblows-name = Flail 'Winblows'
+item-demo-winblows-description = Fixed artifact 139 from RFB; flail.
+
+item-demo-zantetsuken-name = Katana 'Zantetsuken'
+item-demo-zantetsuken-description = Fixed artifact 150 from RFB; katana.
+
+item-demo-bard-black-arrow-name = Black Arrow of Bard
+item-demo-bard-black-arrow-description = Fixed artifact 153 from RFB; black arrow.
+
+item-demo-musashi-katana-name = Katana of Musashi
+item-demo-musashi-katana-description = Fixed artifact 171 from RFB; katana.
+
+item-demo-musashi-wakizashi-name = Wakizashi of Musashi
+item-demo-musashi-wakizashi-description = Fixed artifact 172 from RFB; wakizashi.
+
+item-demo-iron-ball-name = Ball-and-Chain 'Iron ball'
+item-demo-iron-ball-description = Fixed artifact 173 from RFB; ball and chain.
+
+item-demo-littlethorn-name = Main Gauche 'Littlethorn'
+item-demo-littlethorn-description = Fixed artifact 175 from RFB; main gauche.
+
+item-demo-excalibur-jr-name = Small Sword 'Excalibur Jr.'
+item-demo-excalibur-jr-description = Fixed artifact 179 from RFB; small sword.
+
+item-demo-golden-hammer-name = Great Hammer 'Golden Hammer'
+item-demo-golden-hammer-description = Fixed artifact 195 from RFB; great hammer.
+
+item-demo-aegis-fang-name = War Hammer 'Aegis Fang'
+item-demo-aegis-fang-description = Fixed artifact 208 from RFB; war hammer.
+
+item-demo-cupids-arrow-name = Arrow 'Cupid's Arrow'
+item-demo-cupids-arrow-description = Fixed artifact 270 from RFB; arrow.
+
+item-demo-kamikaze-warrior-name = Robe of the Kamikaze Warrior
+item-demo-kamikaze-warrior-description = Fixed artifact 272 from RFB; robe.
+
+item-demo-assassinator-name = Dagger 'Assassinator'
+item-demo-assassinator-description = Fixed artifact 275 from RFB; dagger.
+
+item-demo-great-maul-of-vice-name = Great Hammer 'Great Maul of Vice'
+item-demo-great-maul-of-vice-description = Fixed artifact 279 from RFB; great hammer.
+
+item-demo-eternal-blade-name = Diamond Edge 'Eternal Blade'
+item-demo-eternal-blade-description = Fixed artifact 294 from RFB; diamond edge.
+
+item-demo-microsoft-edge-name = Diamond Edge 'Micro$oft Edge'
+item-demo-microsoft-edge-description = Fixed artifact 334 from RFB; diamond edge.
+
+item-demo-silver-hammer-name = Great Hammer 'Silver Hammer'
+item-demo-silver-hammer-description = Fixed artifact 335 from RFB; great hammer.
+
+item-demo-skynail-name = Broad Sword 'Skynail'
+item-demo-skynail-description = Fixed artifact 341 from RFB; broad sword.
+
+item-demo-dragonchip-name = Amulet 'Dragonchip'
+item-demo-dragonchip-description = Fixed artifact 362 from RFB; amulet.
+
+item-demo-moms-sniper-crossbow-name = Mom's Loving Modular Sniper Crossbow
+item-demo-moms-sniper-crossbow-description = Fixed artifact 381 from RFB; light crossbow.
+
+item-zantetsuken-elastic = 你无法切开如此有弹性的东西！
+item-zantetsuken-arrow = 你斩断了箭矢！
+item-skynail-refuses = 你的天之钉不愿攻击这只鸟！
+item-vorpal-blade-snicker = 你的斩首剑发出咔嚓咔嚓的声音！
+item-vice-low-gold = ***金币不足警告！！！***
+item-vice-gold-draining = 你感觉你的财富正在流失！
+item-vice-blasted = 可怕的黑色光环冲击了你的罪恶巨锤！
+monster-dawn-successor = 一位新的战士站了出来！
+item-cupid-charmed = 目标被魅惑了！
+item-cupid-friendly = 目标突然变得友好了。
+item-artifact-arrow-stuck = 箭矢粘在了目标身上！
+item-chainsword-noise-1 = KILL, KILL, KILL!
+item-chainsword-noise-2 = The Chainsword roars noisily!
+item-chainsword-noise-3 = VROOM! VROOM!
+item-chainsword-noise-4 = Kill, kill, kill, kill, kill, kill!
+item-chainsword-noise-5 = Blood, blood, blood!
+item-chainsword-noise-6 = Bloodbath!
+
+build-demo-mage-life-craft-name = mage life craft
+build-demo-mage-life-craft-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-sorcery-craft-name = mage sorcery craft
+build-demo-mage-sorcery-craft-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-nature-craft-name = mage nature craft
+build-demo-mage-nature-craft-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-death-craft-name = mage death craft
+build-demo-mage-death-craft-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-arcane-craft-name = mage arcane craft
+build-demo-mage-arcane-craft-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-craft-life-name = mage craft life
+build-demo-mage-craft-life-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-craft-sorcery-name = mage craft sorcery
+build-demo-mage-craft-sorcery-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-craft-nature-name = mage craft nature
+build-demo-mage-craft-nature-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-craft-death-name = mage craft death
+build-demo-mage-craft-death-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-craft-arcane-name = mage craft arcane
+build-demo-mage-craft-arcane-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-craft-daemon-name = mage craft daemon
+build-demo-mage-craft-daemon-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-craft-crusade-name = mage craft crusade
+build-demo-mage-craft-crusade-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-craft-armageddon-name = mage craft armageddon
+build-demo-mage-craft-armageddon-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-daemon-craft-name = mage daemon craft
+build-demo-mage-daemon-craft-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-crusade-craft-name = mage crusade craft
+build-demo-mage-crusade-craft-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-mage-armageddon-craft-name = mage armageddon craft
+build-demo-mage-armageddon-craft-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-paladin-life-name = paladin life
+build-demo-paladin-life-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-paladin-crusade-name = paladin crusade
+build-demo-paladin-crusade-description = Study the selected realms with their starting books and class spell parameters.
+build-demo-paladin-daemon-name = paladin daemon
+build-demo-paladin-daemon-description = Study the selected realms with their starting books and class spell parameters.
+ability-demo-paladin-holy-lance-name = Holy Lance
+ability-demo-paladin-holy-lance-description = Fires a beam of pure holy energy.
+
+ability-demo-chaos-magic-missile-name = Magic Missile
+ability-demo-chaos-magic-missile-description = Fires a weak magical projectile.
+ability-demo-chaos-trap-door-destruction-name = Trap / Door Destruction
+ability-demo-chaos-trap-door-destruction-description = Destroys adjacent traps and doors.
+ability-demo-chaos-flash-of-light-name = Flash of Light
+ability-demo-chaos-flash-of-light-description = Permanently lights the nearby area and room.
+ability-demo-chaos-confusing-touch-name = Confusing Touch
+ability-demo-chaos-confusing-touch-description = Attempts to confuse the next monster you hit.
+ability-demo-chaos-mana-burst-name = Mana Burst
+ability-demo-chaos-mana-burst-description = Fires a magical ball.
+ability-demo-chaos-fire-bolt-name = Fire Bolt
+ability-demo-chaos-fire-bolt-description = Fires a bolt or beam of fire.
+ability-demo-chaos-fist-of-force-name = Fist of Force
+ability-demo-chaos-fist-of-force-description = Fires a tiny disintegration ball.
+ability-demo-chaos-teleport-self-name = Teleport Self
+ability-demo-chaos-teleport-self-description = Teleports you a long distance.
+ability-book-demo-sign-of-chaos-name = [Sign of Chaos]
+ability-book-demo-sign-of-chaos-description = [Sign of Chaos]
+item-demo-sign-of-chaos-name = [Sign of Chaos]
+item-demo-sign-of-chaos-description = [Sign of Chaos]
+
+ability-demo-chaos-wonder-name = Wonder
+ability-demo-chaos-wonder-description = Invokes an unpredictable wonder, sometimes helping monsters.
+ability-demo-chaos-chaos-bolt-name = Chaos Bolt
+ability-demo-chaos-chaos-bolt-description = Fires a bolt or beam of chaos.
+ability-demo-chaos-sonic-boom-name = Sonic Boom
+ability-demo-chaos-sonic-boom-description = Releases a blast of sound around you.
+ability-demo-chaos-doom-bolt-name = Doom Bolt
+ability-demo-chaos-doom-bolt-description = Fires a beam of mana.
+ability-demo-chaos-fireball-name = Fire Ball
+ability-demo-chaos-fireball-description = Fires a ball of fire.
+ability-demo-chaos-teleport-other-name = Teleport Other
+ability-demo-chaos-teleport-other-description = Teleports monsters along a beam.
+ability-demo-chaos-word-of-destruction-name = Word of Destruction
+ability-demo-chaos-word-of-destruction-description = Destroys the surrounding area.
+ability-demo-chaos-invoke-logrus-name = Invoke Logrus
+ability-demo-chaos-invoke-logrus-description = Fires a powerful ball of chaos.
+ability-book-demo-chaos-mastery-name = [Chaos Mastery]
+ability-book-demo-chaos-mastery-description = The second book of the Chaos realm.
+item-demo-chaos-mastery-name = [Chaos Mastery]
+item-demo-chaos-mastery-description = The second book of the Chaos realm.
+
+item-demo-chaos-channels-name = [Chaos Channels]
+item-demo-chaos-channels-description = The third book of Chaos magic.
+ability-book-demo-chaos-channels-name = [Chaos Channels]
+ability-book-demo-chaos-channels-description = The third book of Chaos magic.
+ability-demo-chaos-polymorph-other-name = Polymorph Other
+ability-demo-chaos-polymorph-other-description = Attempts to polymorph one monster.
+ability-demo-chaos-chain-lightning-name = Chain Lightning
+ability-demo-chaos-chain-lightning-description = Fires lightning beams in every direction.
+ability-demo-chaos-arcane-binding-name = Arcane Binding
+ability-demo-chaos-arcane-binding-description = Attempts to recharge a device using your mana.
+ability-demo-chaos-disintegrate-name = Disintegrate
+ability-demo-chaos-disintegrate-description = Fires a huge ball of disintegration.
+ability-demo-chaos-alter-reality-name = Alter Reality
+ability-demo-chaos-alter-reality-description = Regenerates the current dungeon floor after a delay.
+ability-demo-chaos-magic-rocket-name = Magic Rocket
+ability-demo-chaos-magic-rocket-description = Fires a magic rocket.
+ability-demo-chaos-chaos-branding-name = Chaos Branding
+ability-demo-chaos-chaos-branding-description = Brands a weapon with a Chaos ego.
+ability-demo-chaos-summon-demon-name = Summon Demon
+ability-demo-chaos-summon-demon-description = Summons a demon.
+
+ability-book-demo-armageddon-tome-name = [Armageddon Tome]
+ability-book-demo-armageddon-tome-description = The fourth book of Chaos magic.
+ability-demo-chaos-gravity-beam-name = Gravity Beam
+ability-demo-chaos-gravity-beam-description = Fires a beam of gravity.
+ability-demo-chaos-meteor-swarm-name = Meteor Swarm
+ability-demo-chaos-meteor-swarm-description = Drops meteor balls at random nearby positions.
+ability-demo-chaos-flame-strike-name = Flame Strike
+ability-demo-chaos-flame-strike-description = Creates a huge fireball centered on you.
+ability-demo-chaos-call-chaos-name = Call Chaos
+ability-demo-chaos-call-chaos-description = Creates balls or beams of a random type.
+ability-demo-chaos-polymorph-self-name = Polymorph Self
+ability-demo-chaos-polymorph-self-description = Temporarily transforms you into another race.
+ability-demo-chaos-mana-storm-name = Mana Storm
+ability-demo-chaos-mana-storm-description = Fires a huge ball of pure mana.
+ability-demo-chaos-breathe-logrus-name = Breathe Logrus
+ability-demo-chaos-breathe-logrus-description = Fires a powerful ball of chaos.
+ability-demo-chaos-call-the-void-name = Call the Void
+ability-demo-chaos-call-the-void-description = Calls rockets, mana and nuclear waste in every direction; nearby walls can cause a destructive backlash.
+
+build-demo-mage-chaos-life-name = Mage · Chaos / Life
+build-demo-mage-chaos-life-description = Begin with Chaos and Life and their first spellbooks.
+
+build-demo-mage-life-chaos-name = Mage · Life / Chaos
+build-demo-mage-life-chaos-description = Begin with Life and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-sorcery-name = Mage · Chaos / Sorcery
+build-demo-mage-chaos-sorcery-description = Begin with Chaos and Sorcery and their first spellbooks.
+
+build-demo-mage-sorcery-chaos-name = Mage · Sorcery / Chaos
+build-demo-mage-sorcery-chaos-description = Begin with Sorcery and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-nature-name = Mage · Chaos / Nature
+build-demo-mage-chaos-nature-description = Begin with Chaos and Nature and their first spellbooks.
+
+build-demo-mage-nature-chaos-name = Mage · Nature / Chaos
+build-demo-mage-nature-chaos-description = Begin with Nature and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-death-name = Mage · Chaos / Death
+build-demo-mage-chaos-death-description = Begin with Chaos and Death and their first spellbooks.
+
+build-demo-mage-death-chaos-name = Mage · Death / Chaos
+build-demo-mage-death-chaos-description = Begin with Death and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-arcane-name = Mage · Chaos / Arcane
+build-demo-mage-chaos-arcane-description = Begin with Chaos and Arcane and their first spellbooks.
+
+build-demo-mage-arcane-chaos-name = Mage · Arcane / Chaos
+build-demo-mage-arcane-chaos-description = Begin with Arcane and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-craft-name = Mage · Chaos / Craft
+build-demo-mage-chaos-craft-description = Begin with Chaos and Craft and their first spellbooks.
+
+build-demo-mage-craft-chaos-name = Mage · Craft / Chaos
+build-demo-mage-craft-chaos-description = Begin with Craft and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-daemon-name = Mage · Chaos / Daemon
+build-demo-mage-chaos-daemon-description = Begin with Chaos and Daemon and their first spellbooks.
+
+build-demo-mage-daemon-chaos-name = Mage · Daemon / Chaos
+build-demo-mage-daemon-chaos-description = Begin with Daemon and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-crusade-name = Mage · Chaos / Crusade
+build-demo-mage-chaos-crusade-description = Begin with Chaos and Crusade and their first spellbooks.
+
+build-demo-mage-crusade-chaos-name = Mage · Crusade / Chaos
+build-demo-mage-crusade-chaos-description = Begin with Crusade and Chaos and their first spellbooks.
+
+build-demo-mage-chaos-armageddon-name = Mage · Chaos / Armageddon
+build-demo-mage-chaos-armageddon-description = Begin with Chaos and Armageddon and their first spellbooks.
+
+build-demo-mage-armageddon-chaos-name = Mage · Armageddon / Chaos
+build-demo-mage-armageddon-chaos-description = Begin with Armageddon and Chaos and their first spellbooks.
+
+build-demo-high-mage-chaos-name = High-Mage · Chaos
+build-demo-high-mage-chaos-description = Begin with Chaos and their first spellbooks.
+
+build-demo-priest-life-chaos-name = Priest · Life / Chaos
+build-demo-priest-life-chaos-description = Begin with Life and Chaos and their first spellbooks.
+
+build-demo-priest-crusade-chaos-name = Priest · Crusade / Chaos
+build-demo-priest-crusade-chaos-description = Begin with Crusade and Chaos and their first spellbooks.
+
+build-demo-priest-death-chaos-name = Priest · Death / Chaos
+build-demo-priest-death-chaos-description = Begin with Death and Chaos and their first spellbooks.
+
+build-demo-priest-daemon-chaos-name = Priest · Daemon / Chaos
+build-demo-priest-daemon-chaos-description = Begin with Daemon and Chaos and their first spellbooks.
+
+build-demo-warrior-mage-arcane-chaos-name = Warrior-Mage · Arcane / Chaos
+build-demo-warrior-mage-arcane-chaos-description = Begin with Arcane and Chaos and their first spellbooks.
+
+build-demo-ranger-nature-chaos-name = Ranger · Nature / Chaos
+build-demo-ranger-nature-chaos-description = Begin with Nature and Chaos and their first spellbooks.
+
+ability-demo-trump-phase-door-name = Phase Door
+ability-demo-trump-phase-door-description = Phase Door.
+ability-demo-trump-spiders-name = Spiders
+ability-demo-trump-spiders-description = Spiders.
+ability-demo-trump-shuffle-name = Shuffle
+ability-demo-trump-shuffle-description = Shuffle.
+ability-demo-trump-reset-recall-name = Reset Recall
+ability-demo-trump-reset-recall-description = Reset Recall.
+ability-demo-trump-teleport-name = Teleport
+ability-demo-trump-teleport-description = Teleport.
+ability-demo-trump-spying-name = Spying
+ability-demo-trump-spying-description = Spying.
+ability-demo-trump-teleport-away-name = Teleport Away
+ability-demo-trump-teleport-away-description = Teleport Away.
+ability-demo-trump-animals-name = Animals
+ability-demo-trump-animals-description = Animals.
+ability-demo-trump-reach-name = Reach
+ability-demo-trump-reach-description = Reach.
+ability-demo-trump-kamikaze-name = Kamikaze
+ability-demo-trump-kamikaze-description = Kamikaze.
+ability-demo-trump-phantasmal-servant-name = Phantasmal Servant
+ability-demo-trump-phantasmal-servant-description = Phantasmal Servant.
+ability-demo-trump-haste-monster-name = Haste Monster
+ability-demo-trump-haste-monster-description = Haste Monster.
+ability-demo-trump-teleport-level-name = Teleport Level
+ability-demo-trump-teleport-level-description = Teleport Level.
+ability-demo-trump-dimension-door-name = Dimension Door
+ability-demo-trump-dimension-door-description = Dimension Door.
+ability-demo-trump-word-of-recall-name = Word Of Recall
+ability-demo-trump-word-of-recall-description = Word Of Recall.
+ability-demo-trump-banish-name = Banish
+ability-demo-trump-banish-description = Banish.
+ability-demo-trump-swap-position-name = Swap Position
+ability-demo-trump-swap-position-description = Swap Position.
+ability-demo-trump-undead-name = Undead
+ability-demo-trump-undead-description = Undead.
+ability-demo-trump-reptiles-name = Reptiles
+ability-demo-trump-reptiles-description = Reptiles.
+ability-demo-trump-monsters-name = Monsters
+ability-demo-trump-monsters-description = Monsters.
+ability-demo-trump-hounds-name = Hounds
+ability-demo-trump-hounds-description = Hounds.
+ability-demo-trump-branding-name = Branding
+ability-demo-trump-branding-description = Branding.
+ability-demo-trump-living-trump-name = Living Trump
+ability-demo-trump-living-trump-description = Living Trump.
+ability-demo-trump-cyberdemon-name = Cyberdemon
+ability-demo-trump-cyberdemon-description = Cyberdemon.
+ability-demo-trump-divination-name = Divination
+ability-demo-trump-divination-description = Divination.
+ability-demo-trump-lore-name = Lore
+ability-demo-trump-lore-description = Lore.
+ability-demo-trump-heal-monster-name = Heal Monster
+ability-demo-trump-heal-monster-description = Heal Monster.
+ability-demo-trump-dragon-name = Dragon
+ability-demo-trump-dragon-description = Dragon.
+ability-demo-trump-meteors-name = Meteors
+ability-demo-trump-meteors-description = Meteors.
+ability-demo-trump-demon-name = Demon
+ability-demo-trump-demon-description = Demon.
+ability-demo-trump-greater-undead-name = Greater Undead
+ability-demo-trump-greater-undead-description = Greater Undead.
+ability-demo-trump-ancient-dragon-name = Ancient Dragon
+ability-demo-trump-ancient-dragon-description = Ancient Dragon.
+item-demo-conjurings-and-tricks-name = [Conjurings & Tricks]
+item-demo-conjurings-and-tricks-description = [Conjurings & Tricks]
+ability-book-demo-conjurings-and-tricks-name = [Conjurings & Tricks]
+ability-book-demo-conjurings-and-tricks-description = [Conjurings & Tricks]
+item-demo-deck-of-many-things-name = [Deck of Many Things]
+item-demo-deck-of-many-things-description = [Deck of Many Things]
+ability-book-demo-deck-of-many-things-name = [Deck of Many Things]
+ability-book-demo-deck-of-many-things-description = [Deck of Many Things]
+item-demo-trumps-of-doom-name = [Trumps of Doom]
+item-demo-trumps-of-doom-description = [Trumps of Doom]
+ability-book-demo-trumps-of-doom-name = [Trumps of Doom]
+ability-book-demo-trumps-of-doom-description = [Trumps of Doom]
+item-demo-five-aces-name = [Five Aces]
+item-demo-five-aces-description = [Five Aces]
+ability-book-demo-five-aces-name = [Five Aces]
+ability-book-demo-five-aces-description = [Five Aces]
+build-demo-high-mage-trump-name = High Mage (Trump)
+build-demo-high-mage-trump-description = High Mage (Trump)
+build-demo-mage-arcane-trump-name = Mage (Arcane / Trump)
+build-demo-mage-arcane-trump-description = Mage (Arcane / Trump)
+build-demo-mage-armageddon-trump-name = Mage (Armageddon / Trump)
+build-demo-mage-armageddon-trump-description = Mage (Armageddon / Trump)
+build-demo-mage-trump-arcane-name = Mage (Trump / Arcane)
+build-demo-mage-trump-arcane-description = Mage (Trump / Arcane)
+build-demo-mage-trump-armageddon-name = Mage (Trump / Armageddon)
+build-demo-mage-trump-armageddon-description = Mage (Trump / Armageddon)
+build-demo-mage-trump-craft-name = Mage (Trump / Craft)
+build-demo-mage-trump-craft-description = Mage (Trump / Craft)
+build-demo-mage-trump-crusade-name = Mage (Trump / Crusade)
+build-demo-mage-trump-crusade-description = Mage (Trump / Crusade)
+build-demo-mage-trump-daemon-name = Mage (Trump / Daemon)
+build-demo-mage-trump-daemon-description = Mage (Trump / Daemon)
+build-demo-mage-trump-death-name = Mage (Trump / Death)
+build-demo-mage-trump-death-description = Mage (Trump / Death)
+build-demo-mage-trump-life-name = Mage (Trump / Life)
+build-demo-mage-trump-life-description = Mage (Trump / Life)
+build-demo-mage-trump-nature-name = Mage (Trump / Nature)
+build-demo-mage-trump-nature-description = Mage (Trump / Nature)
+build-demo-mage-trump-sorcery-name = Mage (Trump / Sorcery)
+build-demo-mage-trump-sorcery-description = Mage (Trump / Sorcery)
+build-demo-mage-craft-trump-name = Mage (Craft / Trump)
+build-demo-mage-craft-trump-description = Mage (Craft / Trump)
+build-demo-mage-crusade-trump-name = Mage (Crusade / Trump)
+build-demo-mage-crusade-trump-description = Mage (Crusade / Trump)
+build-demo-mage-daemon-trump-name = Mage (Daemon / Trump)
+build-demo-mage-daemon-trump-description = Mage (Daemon / Trump)
+build-demo-mage-death-trump-name = Mage (Death / Trump)
+build-demo-mage-death-trump-description = Mage (Death / Trump)
+build-demo-mage-life-trump-name = Mage (Life / Trump)
+build-demo-mage-life-trump-description = Mage (Life / Trump)
+build-demo-mage-nature-trump-name = Mage (Nature / Trump)
+build-demo-mage-nature-trump-description = Mage (Nature / Trump)
+build-demo-mage-sorcery-trump-name = Mage (Sorcery / Trump)
+build-demo-mage-sorcery-trump-description = Mage (Sorcery / Trump)
+build-demo-priest-crusade-trump-name = Priest (Crusade / Trump)
+build-demo-priest-crusade-trump-description = Priest (Crusade / Trump)
+build-demo-priest-daemon-trump-name = Priest (Daemon / Trump)
+build-demo-priest-daemon-trump-description = Priest (Daemon / Trump)
+build-demo-priest-death-trump-name = Priest (Death / Trump)
+build-demo-priest-death-trump-description = Priest (Death / Trump)
+build-demo-priest-life-trump-name = Priest (Life / Trump)
+build-demo-priest-life-trump-description = Priest (Life / Trump)
+build-demo-ranger-nature-trump-name = Ranger (Nature / Trump)
+build-demo-ranger-nature-trump-description = Ranger (Nature / Trump)
+build-demo-warrior-mage-arcane-trump-name = Warrior Mage (Arcane / Trump)
+build-demo-warrior-mage-arcane-trump-description = Warrior Mage (Arcane / Trump)
+build-demo-mage-trump-chaos-name = Mage (Trump / Chaos)
+build-demo-mage-trump-chaos-description = Mage (Trump / Chaos)
+build-demo-mage-chaos-trump-name = Mage (Chaos / Trump)
+build-demo-mage-chaos-trump-description = Mage (Chaos / Trump)
+
+# Necromancy — RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c
+ability-demo-necromancy-cold-touch-name = Cold Touch
+ability-demo-necromancy-cold-touch-description = Damage an adjacent foe with cold. Requires a free, ungloved hand.
+ability-demo-necromancy-summon-rat-name = Summon Rat
+ability-demo-necromancy-summon-rat-description = Summon a rat. Failure summons a hostile creature.
+ability-demo-necromancy-detect-life-name = Detect Life
+ability-demo-necromancy-detect-life-description = Detect nearby living monsters.
+ability-demo-necromancy-detect-unlife-name = Detect Unlife
+ability-demo-necromancy-detect-unlife-description = Detect nearby nonliving monsters.
+ability-demo-necromancy-poison-touch-name = Poison Touch
+ability-demo-necromancy-poison-touch-description = Damage an adjacent foe with poison. Requires a free, ungloved hand.
+ability-demo-necromancy-summon-bats-name = Summon Bats
+ability-demo-necromancy-summon-bats-description = Summon bats. Failure summons a hostile creature.
+ability-demo-necromancy-eldritch-howl-name = Eldritch Howl
+ability-demo-necromancy-eldritch-howl-description = Frighten monsters in sight; some freeze in terror.
+ability-demo-necromancy-dark-touch-name = Dark Touch
+ability-demo-necromancy-dark-touch-description = Damage an adjacent foe with darkness. Requires a free, ungloved hand.
+ability-demo-necromancy-summon-wolves-name = Summon Wolves
+ability-demo-necromancy-summon-wolves-description = Summon wolves. Failure summons a hostile creature.
+ability-demo-necromancy-black-cloak-name = Black Cloak
+ability-demo-necromancy-black-cloak-description = Temporarily increase stealth.
+ability-demo-necromancy-undead-sight-name = Undead Sight
+ability-demo-necromancy-undead-sight-description = Map your surroundings and detect traps, doors and stairs.
+ability-demo-necromancy-undead-lore-name = Undead Lore
+ability-demo-necromancy-undead-lore-description = Identify an item.
+ability-demo-necromancy-repelling-touch-name = Repelling Touch
+ability-demo-necromancy-repelling-touch-description = Push an adjacent monster away along a straight line.
+ability-demo-necromancy-vampiric-touch-name = Vampiric Touch
+ability-demo-necromancy-vampiric-touch-description = Drain life from an adjacent living foe to heal yourself.
+ability-demo-necromancy-dread-of-night-name = Dread Of Night
+ability-demo-necromancy-dread-of-night-description = Summon dread. Failure summons a hostile creature.
+ability-demo-necromancy-entomb-name = Entomb
+ability-demo-necromancy-entomb-description = Surround a hostile monster with rubble, or granite from level 45.
+ability-demo-necromancy-summon-zombies-name = Summon Zombies
+ability-demo-necromancy-summon-zombies-description = Summon zombies. Failure summons a hostile creature.
+ability-demo-necromancy-summon-skeletons-name = Summon Skeletons
+ability-demo-necromancy-summon-skeletons-description = Summon skeletons. Failure summons a hostile creature.
+ability-demo-necromancy-summon-ghosts-name = Summon Ghosts
+ability-demo-necromancy-summon-ghosts-description = Summon ghosts. Failure summons a hostile creature.
+ability-demo-necromancy-summon-vampires-name = Summon Vampires
+ability-demo-necromancy-summon-vampires-description = Summon vampires. Failure summons a hostile creature.
+ability-demo-necromancy-summon-wights-name = Summon Wights
+ability-demo-necromancy-summon-wights-description = Summon wights. Failure summons a hostile creature.
+ability-demo-necromancy-summon-liches-name = Summon Liches
+ability-demo-necromancy-summon-liches-description = Summon liches. Failure summons a hostile creature.
+ability-demo-necromancy-unholy-word-name = Unholy Word
+ability-demo-necromancy-unholy-word-description = Heal, cure and hasten evil pets in sight.
+ability-demo-necromancy-hopeless-endeavor-name = Hopeless Endeavor
+ability-demo-necromancy-hopeless-endeavor-description = Discharge your minions in explosive suicide attacks.
+ability-demo-necromancy-draining-touch-name = Draining Touch
+ability-demo-necromancy-draining-touch-description = Damage an adjacent magical foe and regain mana.
+ability-demo-necromancy-unhallow-ground-name = Unhallow Ground
+ability-demo-necromancy-unhallow-ground-description = Place a warding glyph beneath you.
+ability-demo-necromancy-shield-of-the-dead-name = Shield Of The Dead
+ability-demo-necromancy-shield-of-the-dead-description = Gain armor and resistance to cold, poison and nether.
+ability-demo-necromancy-rending-touch-name = Rending Touch
+ability-demo-necromancy-rending-touch-description = Damage an adjacent foe with disintegration.
+ability-demo-necromancy-repose-of-the-dead-name = Repose Of The Dead
+ability-demo-necromancy-repose-of-the-dead-description = Sleep helplessly for several turns, then restore experience, life force, attributes and ailments. This does not refill HP or mana.
+ability-demo-necromancy-sepulchral-wind-name = Sepulchral Wind
+ability-demo-necromancy-sepulchral-wind-description = Teleport monsters in sight away.
+ability-demo-necromancy-deadly-touch-name = Deadly Touch
+ability-demo-necromancy-deadly-touch-description = Attempt to kill an adjacent living foe; it receives two Intelligence saves.
+ability-demo-necromancy-necromancy-name = Necromancy
+ability-demo-necromancy-necromancy-description = Summon hordes of hasted undead and hasten yourself.
+ability-book-demo-stench-of-death-name = [Stench of Death]
+ability-book-demo-stench-of-death-description = [Stench of Death]: Necromancy spells.
+item-demo-stench-of-death-name = [Stench of Death]
+item-demo-stench-of-death-description = [Stench of Death]: Necromancy spells.
+ability-book-demo-sepulchral-ways-name = [Sepulchral Ways]
+ability-book-demo-sepulchral-ways-description = [Sepulchral Ways]: Necromancy spells.
+item-demo-sepulchral-ways-name = [Sepulchral Ways]
+item-demo-sepulchral-ways-description = [Sepulchral Ways]: Necromancy spells.
+ability-book-demo-return-of-the-dead-name = [Return of the Dead]
+ability-book-demo-return-of-the-dead-description = [Return of the Dead]: Necromancy spells.
+item-demo-return-of-the-dead-name = [Return of the Dead]
+item-demo-return-of-the-dead-description = [Return of the Dead]: Necromancy spells.
+ability-book-demo-necromatic-tome-name = [Necromatic Tome]
+ability-book-demo-necromatic-tome-description = [Necromatic Tome]: Necromancy spells.
+item-demo-necromatic-tome-name = [Necromatic Tome]
+item-demo-necromatic-tome-description = [Necromatic Tome]: Necromancy spells.
+ability-demo-necromancer-animate-dead-name = Animate Dead
+ability-demo-necromancer-animate-dead-description = Consumes nearby corpses to raise permanent undead servants.
+ability-demo-necromancer-enslave-undead-name = Enslave Undead
+ability-demo-necromancer-enslave-undead-description = Attempts to place an undead creature under your command.
+class-demo-necromancer-name = Necromancer
+class-demo-necromancer-description = A specialist in death, ungloved touch attacks, and undead servants.
+build-demo-necromancer-name = Necromancer
+build-demo-necromancer-description = A specialist in death, ungloved touch attacks, and undead servants.
+actor-demo-necromancer-player-name = Necromancer
+actor-demo-necromancer-player-description = A specialist in death, ungloved touch attacks, and undead servants.
+realm-necromancy-name = Necromancy
+
+ability-demo-law-detect-money-name = Detect Money
+ability-demo-law-detect-money-description = Detect nearby treasure and gold.
+ability-demo-law-detect-traps-name = Detect Traps
+ability-demo-law-detect-traps-description = Detect nearby traps.
+ability-demo-law-satisfy-hunger-name = Satisfy Hunger
+ability-demo-law-satisfy-hunger-description = Satisfy hunger.
+ability-demo-law-detect-objects-name = Detect Objects
+ability-demo-law-detect-objects-description = Detect nearby objects.
+ability-demo-law-basic-trap-name = Basic Trap
+ability-demo-law-basic-trap-description = Place a minor random monster trap at your feet.
+ability-demo-law-disarm-traps-name = Disarm Traps
+ability-demo-law-disarm-traps-description = Disarm traps and unlock doors along a beam.
+ability-demo-law-identify-name = Identify
+ability-demo-law-identify-description = Identify an item; Law aptitude grants full identification from level 45.
+ability-demo-law-dig-name = Dig
+ability-demo-law-dig-description = Turn rock into mud.
+ability-demo-law-detect-monsters-name = Detect Monsters
+ability-demo-law-detect-monsters-description = Detect monsters; include invisible monsters from level 25.
+ability-demo-law-slow-monster-name = Slow Monster
+ability-demo-law-slow-monster-description = Slow a monster.
+ability-demo-law-confuse-monster-name = Confuse Monster
+ability-demo-law-confuse-monster-description = Confuse a monster.
+ability-demo-law-scare-monster-name = Scare Monster
+ability-demo-law-scare-monster-description = Frighten a monster.
+ability-demo-law-semicolon-of-punishment-name = Semicolon Of Punishment
+ability-demo-law-semicolon-of-punishment-description = Place a single-use force trap.
+ability-demo-law-confuse-everybody-name = Confuse Everybody
+ability-demo-law-confuse-everybody-description = Confuse monsters in sight.
+ability-demo-law-create-doors-name = Create Doors
+ability-demo-law-create-doors-description = Create adjacent doors.
+ability-demo-law-semicolon-of-warding-name = Semicolon Of Warding
+ability-demo-law-semicolon-of-warding-description = Place a protective glyph at your feet.
+ability-demo-law-charm-monster-name = Charm Monster
+ability-demo-law-charm-monster-description = Charm a monster.
+ability-demo-law-expert-trap-name = Expert Trap
+ability-demo-law-expert-trap-description = Place a powerful random monster trap.
+ability-demo-law-getaway-name = Getaway
+ability-demo-law-getaway-description = Randomly blink, teleport, create stairs, or offer a level teleport.
+ability-demo-law-blame-undead-name = Blame Undead
+ability-demo-law-blame-undead-description = Damage undead in sight.
+ability-demo-law-probe-name = Probe
+ability-demo-law-probe-description = Probe visible monsters.
+ability-demo-law-spin-name = Spin
+ability-demo-law-spin-description = Temporarily resist nether and strengthen charm.
+ability-demo-law-advanced-bloodsucking-name = Advanced Bloodsucking
+ability-demo-law-advanced-bloodsucking-description = Drain a living monster to restore health and nutrition.
+ability-demo-law-alter-reality-name = Alter Reality
+ability-demo-law-alter-reality-description = Regenerate the current procedural dungeon after a short delay.
+ability-demo-law-blink-name = Blink
+ability-demo-law-blink-description = Teleport a short distance.
+ability-demo-law-tread-softly-name = Tread Softly
+ability-demo-law-tread-softly-description = Temporarily improve stealth.
+ability-demo-law-map-surroundings-name = Map Surroundings
+ability-demo-law-map-surroundings-description = Map nearby terrain; Law aptitude adds detection from level 48.
+ability-demo-law-dig-deep-name = Dig Deep
+ability-demo-law-dig-deep-description = Fire a short disintegration beam.
+ability-demo-law-unholy-rage-name = Unholy Rage
+ability-demo-law-unholy-rage-description = Become berserk and heal 75 HP.
+ability-demo-law-subpoena-name = Subpoena
+ability-demo-law-subpoena-description = Pull a visible monster toward you, subject to teleport resistance.
+ability-demo-law-teleport-name = Teleport
+ability-demo-law-teleport-description = Teleport a long distance.
+ability-demo-law-dazzle-name = Dazzle
+ability-demo-law-dazzle-description = Slow, stun, confuse, frighten and briefly halt monsters in sight.
+item-demo-attractions-of-law-name = [Attractions of Law]
+item-demo-attractions-of-law-description = Law spellbook 1.
+item-demo-obstacle-coursebook-name = [Obstacle Coursebook]
+item-demo-obstacle-coursebook-description = Law spellbook 2.
+item-demo-building-alternative-realities-name = [Building Alternative Realities]
+item-demo-building-alternative-realities-description = Law spellbook 3.
+item-demo-acquiris-quodcumque-rapis-name = [Acquiris Quodcumque Rapis]
+item-demo-acquiris-quodcumque-rapis-description = Law spellbook 4.
+build-demo-high-mage-law-name = High Mage (Law)
+build-demo-high-mage-law-description = A formal build with the Law realm.
+build-demo-paladin-law-name = Paladin · Law
+build-demo-paladin-law-description = A formal build with the Law realm.
+build-demo-warrior-mage-arcane-law-name = Warrior Mage (Arcane / Law)
+build-demo-warrior-mage-arcane-law-description = A formal build with the Law realm.
+build-demo-priest-life-law-name = Priest (Life / Law)
+build-demo-priest-life-law-description = A formal build with the Law realm.
+build-demo-priest-crusade-law-name = Priest (Crusade / Law)
+build-demo-priest-crusade-law-description = A formal build with the Law realm.
+build-demo-priest-death-law-name = Priest (Death / Law)
+build-demo-priest-death-law-description = A formal build with the Law realm.
+build-demo-priest-daemon-law-name = Priest (Daemon / Law)
+build-demo-priest-daemon-law-description = A formal build with the Law realm.
+build-demo-mage-law-life-name = Mage (Law / Life)
+build-demo-mage-law-life-description = A formal build with the Law realm.
+build-demo-mage-life-law-name = Mage (Life / Law)
+build-demo-mage-life-law-description = A formal build with the Law realm.
+build-demo-mage-law-sorcery-name = Mage (Law / Sorcery)
+build-demo-mage-law-sorcery-description = A formal build with the Law realm.
+build-demo-mage-sorcery-law-name = Mage (Sorcery / Law)
+build-demo-mage-sorcery-law-description = A formal build with the Law realm.
+build-demo-mage-law-nature-name = Mage (Law / Nature)
+build-demo-mage-law-nature-description = A formal build with the Law realm.
+build-demo-mage-nature-law-name = Mage (Nature / Law)
+build-demo-mage-nature-law-description = A formal build with the Law realm.
+build-demo-mage-law-chaos-name = Mage (Law / Chaos)
+build-demo-mage-law-chaos-description = A formal build with the Law realm.
+build-demo-mage-chaos-law-name = Mage (Chaos / Law)
+build-demo-mage-chaos-law-description = A formal build with the Law realm.
+build-demo-mage-law-trump-name = Mage (Law / Trump)
+build-demo-mage-law-trump-description = A formal build with the Law realm.
+build-demo-mage-trump-law-name = Mage (Trump / Law)
+build-demo-mage-trump-law-description = A formal build with the Law realm.
+build-demo-mage-law-death-name = Mage (Law / Death)
+build-demo-mage-law-death-description = A formal build with the Law realm.
+build-demo-mage-death-law-name = Mage (Death / Law)
+build-demo-mage-death-law-description = A formal build with the Law realm.
+build-demo-mage-law-arcane-name = Mage (Law / Arcane)
+build-demo-mage-law-arcane-description = A formal build with the Law realm.
+build-demo-mage-arcane-law-name = Mage (Arcane / Law)
+build-demo-mage-arcane-law-description = A formal build with the Law realm.
+build-demo-mage-law-craft-name = Mage (Law / Craft)
+build-demo-mage-law-craft-description = A formal build with the Law realm.
+build-demo-mage-craft-law-name = Mage (Craft / Law)
+build-demo-mage-craft-law-description = A formal build with the Law realm.
+build-demo-mage-law-daemon-name = Mage (Law / Daemon)
+build-demo-mage-law-daemon-description = A formal build with the Law realm.
+build-demo-mage-daemon-law-name = Mage (Daemon / Law)
+build-demo-mage-daemon-law-description = A formal build with the Law realm.
+build-demo-mage-law-crusade-name = Mage (Law / Crusade)
+build-demo-mage-law-crusade-description = A formal build with the Law realm.
+build-demo-mage-crusade-law-name = Mage (Crusade / Law)
+build-demo-mage-crusade-law-description = A formal build with the Law realm.
+build-demo-mage-law-armageddon-name = Mage (Law / Armageddon)
+build-demo-mage-law-armageddon-description = A formal build with the Law realm.
+build-demo-mage-armageddon-law-name = Mage (Armageddon / Law)
+build-demo-mage-armageddon-law-description = A formal build with the Law realm.
+
+terrain-demo-law-basic-trap-name = Law Basic Trap
+terrain-demo-law-basic-trap-description = A single-use trap triggered by a monster stepping onto it.
+
+terrain-demo-law-expert-trap-name = Law Expert Trap
+terrain-demo-law-expert-trap-description = A single-use trap triggered by a monster stepping onto it.
+
+terrain-demo-law-semicolon-name = Law Semicolon
+terrain-demo-law-semicolon-description = A single-use trap triggered by a monster stepping onto it.
+
+ability-demo-music-holding-name = Holding
+ability-demo-music-holding-description = Slows monsters in sight. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-blessing-name = Blessing
+ability-demo-music-blessing-description = Grants a blessing to accuracy and armor. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-wrecking-note-name = Wrecking Note
+ability-demo-music-wrecking-note-description = Fires a bolt of sound.
+ability-demo-music-stunning-pattern-name = Stunning Pattern
+ability-demo-music-stunning-pattern-description = Stuns monsters in sight. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-flow-of-life-name = Flow Of Life
+ability-demo-music-flow-of-life-description = Heals a small amount of health. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-song-of-the-sun-name = Song Of The Sun
+ability-demo-music-song-of-the-sun-description = Lights the nearby area and rooms permanently.
+ability-demo-music-song-of-fear-name = Song Of Fear
+ability-demo-music-song-of-fear-description = Frightens monsters in sight. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-heroic-ballad-name = Heroic Ballad
+ability-demo-music-heroic-ballad-description = Removes fear and grants heroism, accuracy and ten maximum HP. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-clairaudience-name = Clairaudience
+ability-demo-music-clairaudience-description = Detects traps, doors and stairs; continued singing adds monster and object detection, mapping and full-floor revelation as level permits. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-soul-shriek-name = Soul Shriek
+ability-demo-music-soul-shriek-description = Damages monsters in sight with psychic energy. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-lore-name = Lore
+ability-demo-music-lore-description = Identifies items on adjacent squares. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-hiding-tune-name = Hiding Tune
+ability-demo-music-hiding-tune-description = Greatly increases stealth. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-illusion-pattern-name = Illusion Pattern
+ability-demo-music-illusion-pattern-description = Confuses monsters in sight. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-doomcall-name = Doomcall
+ability-demo-music-doomcall-description = Damages monsters in sight with sound. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-firiel-song-name = Firiel Song
+ability-demo-music-firiel-song-description = Animates nearby corpses and skeletons as pets.
+ability-demo-music-fellowship-name = Fellowship
+ability-demo-music-fellowship-description = Attempts to charm monsters in sight. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-sound-of-disintegration-name = Sound Of Disintegration
+ability-demo-music-sound-of-disintegration-description = Lets you burrow into walls and destroys items underfoot. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-finrod-resistance-name = Finrod Resistance
+ability-demo-music-finrod-resistance-description = Grants resistance to acid, electricity, fire, cold and poison. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-hobbit-melodies-name = Hobbit Melodies
+ability-demo-music-hobbit-melodies-description = Increases speed. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-world-contortion-name = World Contortion
+ability-demo-music-world-contortion-description = Teleports nearby monsters away unless resisted.
+ability-demo-music-dispelling-chant-name = Dispelling Chant
+ability-demo-music-dispelling-chant-description = Damages monsters in sight and deals additional damage to evil monsters. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-saruman-voice-name = Saruman Voice
+ability-demo-music-saruman-voice-description = Slows and sleeps monsters in sight. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-tempest-song-name = Tempest Song
+ability-demo-music-tempest-song-description = Fires a beam of sound.
+ability-demo-music-ambarkanta-name = Ambarkanta
+ability-demo-music-ambarkanta-description = Begins regenerating the current dungeon floor.
+ability-demo-music-wrecking-pattern-name = Wrecking Pattern
+ability-demo-music-wrecking-pattern-description = Causes repeated earthquakes nearby. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-station-still-name = Station Still
+ability-demo-music-station-still-description = Attempts to freeze monsters in sight. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-endurance-name = Endurance
+ability-demo-music-endurance-description = Places a protective glyph underfoot.
+ability-demo-music-heroic-poem-name = Heroic Poem
+ability-demo-music-heroic-poem-description = Grants speed and heroism while damaging monsters in sight. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-yavanna-comfort-name = Yavanna Comfort
+ability-demo-music-yavanna-comfort-description = Heals strongly and removes bleeding and stun. Sustaining the song costs half its current spell cost each turn.
+ability-demo-music-goddess-rebirth-name = Goddess Rebirth
+ability-demo-music-goddess-rebirth-description = Restores drained attributes and experience.
+ability-demo-music-wizardry-of-sauron-name = Wizardry Of Sauron
+ability-demo-music-wizardry-of-sauron-description = Fires a powerful, tiny ball of sound.
+ability-demo-music-fingolfin-challenge-name = Fingolfin Challenge
+ability-demo-music-fingolfin-challenge-description = Grants invulnerability; ending it costs an extra action. Sustaining the song costs half its current spell cost each turn.
+item-demo-apprentice-handbook-name = [Apprentice Handbook]
+item-demo-apprentice-handbook-description = A songbook containing eight songs.
+item-demo-minstrels-music-name = [Minstrels Music]
+item-demo-minstrels-music-description = A songbook containing eight songs.
+item-demo-harps-of-rivendell-name = [Harps Of Rivendell]
+item-demo-harps-of-rivendell-description = A songbook containing eight songs.
+item-demo-lays-of-beleriand-name = [Lays Of Beleriand]
+item-demo-lays-of-beleriand-description = A songbook containing eight songs.
+class-demo-bard-name = Bard
+class-demo-bard-description = A Charisma caster who sustains one song at a time.
+actor-demo-bard-player-name = Bard
+actor-demo-bard-player-description = A Charisma caster who sustains one song at a time.
+build-demo-bard-name = Bard
+build-demo-bard-description = A Charisma caster who sustains one song at a time.
+ability-demo-bard-stop-singing-name = Stop Singing
+ability-demo-bard-stop-singing-description = Stop the current song.
+status-music-name = Singing
+
+ability-demo-hissatsu-tobi-izuna-name = Tobi Izuna
+ability-demo-hissatsu-tobi-izuna-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-three-way-attack-name = Three Way Attack
+ability-demo-hissatsu-three-way-attack-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-boomerang-name = Boomerang
+ability-demo-hissatsu-boomerang-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-burning-strike-name = Burning Strike
+ability-demo-hissatsu-burning-strike-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-detect-ferocity-name = Detect Ferocity
+ability-demo-hissatsu-detect-ferocity-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-stunning-strike-name = Stunning Strike
+ability-demo-hissatsu-stunning-strike-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-counter-name = Counter
+ability-demo-hissatsu-counter-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-harainuke-name = Harainuke
+ability-demo-hissatsu-harainuke-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-serpents-tongue-name = Serpents Tongue
+ability-demo-hissatsu-serpents-tongue-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-zammaken-name = Zammaken
+ability-demo-hissatsu-zammaken-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-wind-blast-name = Wind Blast
+ability-demo-hissatsu-wind-blast-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-judge-name = Judge
+ability-demo-hissatsu-judge-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-rock-smash-name = Rock Smash
+ability-demo-hissatsu-rock-smash-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-midare-setsugekka-name = Midare Setsugekka
+ability-demo-hissatsu-midare-setsugekka-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-spot-aiming-name = Spot Aiming
+ability-demo-hissatsu-spot-aiming-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-majin-giri-name = Majin Giri
+ability-demo-hissatsu-majin-giri-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-sutemi-name = Sutemi
+ability-demo-hissatsu-sutemi-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-raigeki-name = Raigeki
+ability-demo-hissatsu-raigeki-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-rush-name = Rush
+ability-demo-hissatsu-rush-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-blood-whirlwind-name = Blood Whirlwind
+ability-demo-hissatsu-blood-whirlwind-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-earthquake-strike-name = Earthquake Strike
+ability-demo-hissatsu-earthquake-strike-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-cracking-strike-name = Cracking Strike
+ability-demo-hissatsu-cracking-strike-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-war-cry-name = War Cry
+ability-demo-hissatsu-war-cry-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-musou-sandan-name = Musou Sandan
+ability-demo-hissatsu-musou-sandan-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-vampiric-fang-name = Vampiric Fang
+ability-demo-hissatsu-vampiric-fang-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-moon-dazzling-name = Moon Dazzling
+ability-demo-hissatsu-moon-dazzling-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-hundred-slaughter-name = Hundred Slaughter
+ability-demo-hissatsu-hundred-slaughter-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-dragonic-flash-name = Dragonic Flash
+ability-demo-hissatsu-dragonic-flash-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-twin-slash-name = Twin Slash
+ability-demo-hissatsu-twin-slash-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-kofu-zettousei-name = Kofu Zettousei
+ability-demo-hissatsu-kofu-zettousei-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-keiun-kininken-name = Keiun Kininken
+ability-demo-hissatsu-keiun-kininken-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+ability-demo-hissatsu-harakiri-name = Harakiri
+ability-demo-hissatsu-harakiri-description = A weapon technique. Requires an equipped melee weapon; learned techniques do not require carrying the book.
+item-demo-bugei-shofu-name = [Bugei Shofu]
+item-demo-bugei-shofu-description = Study to learn every technique in this book available at your level.
+item-demo-yagyuu-bugeichou-name = [Yagyuu Bugeichou]
+item-demo-yagyuu-bugeichou-description = Study to learn every technique in this book available at your level.
+item-demo-gorinnosho-name = [Gorinnosho]
+item-demo-gorinnosho-description = Study to learn every technique in this book available at your level.
+item-demo-hokusin-ittouryuu-kaiden-name = [Hokusin Ittouryuu Kaiden]
+item-demo-hokusin-ittouryuu-kaiden-description = Study to learn every technique in this book available at your level.
+ability-demo-samurai-concentration-name = Concentration
+ability-demo-samurai-concentration-description = Recover and supercharge SP. Unavailable with pets or a posture.
+ability-demo-samurai-no-posture-name = No Posture
+ability-demo-samurai-no-posture-description = Assume this posture. Hissatsu techniques end it.
+ability-demo-samurai-iai-name = Iai
+ability-demo-samurai-iai-description = Assume this posture. Hissatsu techniques end it.
+ability-demo-samurai-fuujin-name = Fuujin
+ability-demo-samurai-fuujin-description = Assume this posture. Hissatsu techniques end it.
+ability-demo-samurai-koukijin-name = Koukijin
+ability-demo-samurai-koukijin-description = Assume this posture. Hissatsu techniques end it.
+ability-demo-samurai-musou-name = Musou
+ability-demo-samurai-musou-description = Assume this posture. Hissatsu techniques end it.
+class-demo-samurai-name = Samurai
+class-demo-samurai-description = A weapon master who uses Wisdom and concentration to fuel techniques.
+actor-demo-samurai-player-name = Samurai
+actor-demo-samurai-player-description = A weapon master who uses Wisdom and concentration to fuel techniques.
+build-demo-samurai-name = Samurai
+build-demo-samurai-description = A weapon master who uses Wisdom and concentration to fuel techniques.
+
+ability-demo-hex-evil-blessing-name = Evil Blessing
+ability-demo-hex-evil-blessing-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-cure-light-wounds-name = Cure Light Wounds
+ability-demo-hex-cure-light-wounds-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-demon-aura-name = Demon Aura
+ability-demo-hex-demon-aura-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-stinking-mist-name = Stinking Mist
+ability-demo-hex-stinking-mist-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-extra-might-name = Extra Might
+ability-demo-hex-extra-might-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-curse-weapon-name = Curse Weapon
+ability-demo-hex-curse-weapon-description = Cast this hex.
+ability-demo-hex-detect-evil-name = Detect Evil
+ability-demo-hex-detect-evil-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-patience-name = Patience
+ability-demo-hex-patience-description = Cast this hex.
+ability-demo-hex-ice-armor-name = Ice Armor
+ability-demo-hex-ice-armor-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-cure-serious-wounds-name = Cure Serious Wounds
+ability-demo-hex-cure-serious-wounds-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-inhale-potion-name = Inhale Potion
+ability-demo-hex-inhale-potion-description = Cast this hex.
+ability-demo-hex-vampiric-mist-name = Vampiric Mist
+ability-demo-hex-vampiric-mist-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-runesword-name = Runesword
+ability-demo-hex-runesword-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-confusing-touch-name = Confusing Touch
+ability-demo-hex-confusing-touch-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-building-up-name = Building Up
+ability-demo-hex-building-up-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-anti-teleport-name = Anti Teleport
+ability-demo-hex-anti-teleport-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-shock-cloak-name = Shock Cloak
+ability-demo-hex-shock-cloak-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-cure-critical-wounds-name = Cure Critical Wounds
+ability-demo-hex-cure-critical-wounds-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-recharge-name = Recharge
+ability-demo-hex-recharge-description = Cast this hex.
+ability-demo-hex-animate-dead-name = Animate Dead
+ability-demo-hex-animate-dead-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-curse-armor-name = Curse Armor
+ability-demo-hex-curse-armor-description = Cast this hex.
+ability-demo-hex-shadow-cloak-name = Shadow Cloak
+ability-demo-hex-shadow-cloak-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-pain-to-mana-name = Pain To Mana
+ability-demo-hex-pain-to-mana-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-eye-for-eye-name = Eye For Eye
+ability-demo-hex-eye-for-eye-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-anti-multiply-name = Anti Multiply
+ability-demo-hex-anti-multiply-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-restore-life-name = Restore Life
+ability-demo-hex-restore-life-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-drain-curse-name = Drain Curse
+ability-demo-hex-drain-curse-description = Cast this hex.
+ability-demo-hex-vampiric-blade-name = Vampiric Blade
+ability-demo-hex-vampiric-blade-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-word-of-stun-name = Word Of Stun
+ability-demo-hex-word-of-stun-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-shadow-move-name = Shadow Move
+ability-demo-hex-shadow-move-description = Cast this hex.
+ability-demo-hex-anti-magic-name = Anti Magic
+ability-demo-hex-anti-magic-description = A sustained hex. Upkeep combines the costs of active hexes.
+ability-demo-hex-revenge-name = Revenge
+ability-demo-hex-revenge-description = Cast this hex.
+item-demo-handbook-of-hex-name = [Handbook Of Hex]
+item-demo-handbook-of-hex-description = A spellbook containing eight hexes.
+item-demo-high-curse-name = [High Curse]
+item-demo-high-curse-description = A spellbook containing eight hexes.
+item-demo-curse-and-spelling-name = [Curse And Spelling]
+item-demo-curse-and-spelling-description = A spellbook containing eight hexes.
+item-demo-forbidden-cursebook-name = [Forbidden Cursebook]
+item-demo-forbidden-cursebook-description = A spellbook containing eight hexes.
+ability-demo-hex-stop-name = Stop all hexes
+ability-demo-hex-stop-description = Stop sustaining this hex.
+ability-demo-hex-stop-evil-blessing-name = Stop evil blessing
+ability-demo-hex-stop-evil-blessing-description = Stop sustaining this hex.
+ability-demo-hex-stop-cure-light-wounds-name = Stop cure light wounds
+ability-demo-hex-stop-cure-light-wounds-description = Stop sustaining this hex.
+ability-demo-hex-stop-demon-aura-name = Stop demon aura
+ability-demo-hex-stop-demon-aura-description = Stop sustaining this hex.
+ability-demo-hex-stop-stinking-mist-name = Stop stinking mist
+ability-demo-hex-stop-stinking-mist-description = Stop sustaining this hex.
+ability-demo-hex-stop-extra-might-name = Stop extra might
+ability-demo-hex-stop-extra-might-description = Stop sustaining this hex.
+ability-demo-hex-stop-detect-evil-name = Stop detect evil
+ability-demo-hex-stop-detect-evil-description = Stop sustaining this hex.
+ability-demo-hex-stop-ice-armor-name = Stop ice armor
+ability-demo-hex-stop-ice-armor-description = Stop sustaining this hex.
+ability-demo-hex-stop-cure-serious-wounds-name = Stop cure serious wounds
+ability-demo-hex-stop-cure-serious-wounds-description = Stop sustaining this hex.
+ability-demo-hex-stop-vampiric-mist-name = Stop vampiric mist
+ability-demo-hex-stop-vampiric-mist-description = Stop sustaining this hex.
+ability-demo-hex-stop-runesword-name = Stop runesword
+ability-demo-hex-stop-runesword-description = Stop sustaining this hex.
+ability-demo-hex-stop-confusing-touch-name = Stop confusing touch
+ability-demo-hex-stop-confusing-touch-description = Stop sustaining this hex.
+ability-demo-hex-stop-building-up-name = Stop building up
+ability-demo-hex-stop-building-up-description = Stop sustaining this hex.
+ability-demo-hex-stop-anti-teleport-name = Stop anti teleport
+ability-demo-hex-stop-anti-teleport-description = Stop sustaining this hex.
+ability-demo-hex-stop-shock-cloak-name = Stop shock cloak
+ability-demo-hex-stop-shock-cloak-description = Stop sustaining this hex.
+ability-demo-hex-stop-cure-critical-wounds-name = Stop cure critical wounds
+ability-demo-hex-stop-cure-critical-wounds-description = Stop sustaining this hex.
+ability-demo-hex-stop-animate-dead-name = Stop animate dead
+ability-demo-hex-stop-animate-dead-description = Stop sustaining this hex.
+ability-demo-hex-stop-shadow-cloak-name = Stop shadow cloak
+ability-demo-hex-stop-shadow-cloak-description = Stop sustaining this hex.
+ability-demo-hex-stop-pain-to-mana-name = Stop pain to mana
+ability-demo-hex-stop-pain-to-mana-description = Stop sustaining this hex.
+ability-demo-hex-stop-eye-for-eye-name = Stop eye for eye
+ability-demo-hex-stop-eye-for-eye-description = Stop sustaining this hex.
+ability-demo-hex-stop-anti-multiply-name = Stop anti multiply
+ability-demo-hex-stop-anti-multiply-description = Stop sustaining this hex.
+ability-demo-hex-stop-restore-life-name = Stop restore life
+ability-demo-hex-stop-restore-life-description = Stop sustaining this hex.
+ability-demo-hex-stop-vampiric-blade-name = Stop vampiric blade
+ability-demo-hex-stop-vampiric-blade-description = Stop sustaining this hex.
+ability-demo-hex-stop-word-of-stun-name = Stop word of stun
+ability-demo-hex-stop-word-of-stun-description = Stop sustaining this hex.
+ability-demo-hex-stop-anti-magic-name = Stop anti magic
+ability-demo-hex-stop-anti-magic-description = Stop sustaining this hex.
+build-demo-high-mage-hex-name = High Mage (Hex)
+build-demo-high-mage-hex-description = An Intelligence caster who sustains multiple hexes.
+
+ability-demo-rage-shout-name = Shout
+ability-demo-rage-shout-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-detect-magical-foes-name = Detect Magical Foes
+ability-demo-rage-detect-magical-foes-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-smash-name = Smash
+ability-demo-rage-smash-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-evasive-leap-name = Evasive Leap
+ability-demo-rage-evasive-leap-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-light-area-name = Light Area
+ability-demo-rage-light-area-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-focus-rage-name = Focus Rage
+ability-demo-rage-focus-rage-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-rage-sustenance-name = Rage Sustenance
+ability-demo-rage-rage-sustenance-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-veterans-blessing-name = Veterans Blessing
+ability-demo-rage-veterans-blessing-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-crude-mapping-name = Crude Mapping
+ability-demo-rage-crude-mapping-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-resist-disenchantment-name = Resist Disenchantment
+ability-demo-rage-resist-disenchantment-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-awesome-blow-name = Awesome Blow
+ability-demo-rage-awesome-blow-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-spell-reaction-name = Spell Reaction
+ability-demo-rage-spell-reaction-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-greater-shout-name = Greater Shout
+ability-demo-rage-greater-shout-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-whirlwind-attack-name = Whirlwind Attack
+ability-demo-rage-whirlwind-attack-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-resist-curses-name = Resist Curses
+ability-demo-rage-resist-curses-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-detect-magic-name = Detect Magic
+ability-demo-rage-detect-magic-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-berserk-name = Berserk
+ability-demo-rage-berserk-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-sterility-name = Sterility
+ability-demo-rage-sterility-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-barbaric-resistance-name = Barbaric Resistance
+ability-demo-rage-barbaric-resistance-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-summon-horde-name = Summon Horde
+ability-demo-rage-summon-horde-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-armor-of-fury-name = Armor Of Fury
+ability-demo-rage-armor-of-fury-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-force-brand-name = Force Brand
+ability-demo-rage-force-brand-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-dispel-magic-name = Dispel Magic
+ability-demo-rage-dispel-magic-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-mana-clash-name = Mana Clash
+ability-demo-rage-mana-clash-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-barbarian-lore-name = Barbarian Lore
+ability-demo-rage-barbarian-lore-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-earthquake-name = Earthquake
+ability-demo-rage-earthquake-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-greater-focus-rage-name = Greater Focus Rage
+ability-demo-rage-greater-focus-rage-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-spell-turning-name = Spell Turning
+ability-demo-rage-spell-turning-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-shatter-device-name = Shatter Device
+ability-demo-rage-shatter-device-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-dispel-curse-name = Dispel Curse
+ability-demo-rage-dispel-curse-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-anti-magic-ray-name = Anti Magic Ray
+ability-demo-rage-anti-magic-ray-description = A learned Rage technique. No carried book is required.
+ability-demo-rage-rage-strike-name = Rage Strike
+ability-demo-rage-rage-strike-description = A learned Rage technique. No carried book is required.
+item-demo-anger-management-name = [Anger Management]
+item-demo-anger-management-description = Learning one technique consumes one book. Learned techniques do not require a book.
+item-demo-northern-frights-name = [Northern Frights]
+item-demo-northern-frights-description = Learning one technique consumes one book. Learned techniques do not require a book.
+item-demo-the-sound-and-the-fury-name = [The Sound And The Fury]
+item-demo-the-sound-and-the-fury-description = Learning one technique consumes one book. Learned techniques do not require a book.
+item-demo-dire-ire-name = [Dire Ire]
+item-demo-dire-ire-description = Learning one technique consumes one book. Learned techniques do not require a book.
+class-demo-rage-mage-name = Rage-Mage
+class-demo-rage-mage-description = Strength-based techniques learned by consuming books. Damage fuels mana; actions drain it.
+actor-demo-rage-mage-player-name = Rage-Mage
+actor-demo-rage-mage-player-description = Strength-based techniques learned by consuming books. Damage fuels mana; actions drain it.
+build-demo-rage-mage-name = Rage-Mage
+build-demo-rage-mage-description = Strength-based techniques learned by consuming books. Damage fuels mana; actions drain it.
+
+ability-demo-burglary-detect-traps-name = Detect Traps
+ability-demo-burglary-detect-traps-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-disarm-traps-name = Disarm Traps
+ability-demo-burglary-disarm-traps-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-detect-treasure-name = Detect Treasure
+ability-demo-burglary-detect-treasure-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-detect-objects-name = Detect Objects
+ability-demo-burglary-detect-objects-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-see-in-the-dark-name = See In The Dark
+ability-demo-burglary-see-in-the-dark-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-tread-softly-name = Tread Softly
+ability-demo-burglary-tread-softly-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-minor-getaway-name = Minor Getaway
+ability-demo-burglary-minor-getaway-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-minor-trap-name = Minor Trap
+ability-demo-burglary-minor-trap-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-map-escape-route-name = Map Escape Route
+ability-demo-burglary-map-escape-route-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-pick-pocket-name = Pick Pocket
+ability-demo-burglary-pick-pocket-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-negotiate-name = Negotiate
+ability-demo-burglary-negotiate-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-fetch-name = Fetch
+ability-demo-burglary-fetch-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-sense-danger-name = Sense Danger
+ability-demo-burglary-sense-danger-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-examine-loot-name = Examine Loot
+ability-demo-burglary-examine-loot-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-major-trap-name = Major Trap
+ability-demo-burglary-major-trap-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-haste-self-name = Haste Self
+ability-demo-burglary-haste-self-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-create-stairs-name = Create Stairs
+ability-demo-burglary-create-stairs-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-panic-hit-name = Panic Hit
+ability-demo-burglary-panic-hit-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-panic-shot-name = Panic Shot
+ability-demo-burglary-panic-shot-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-panic-summons-name = Panic Summons
+ability-demo-burglary-panic-summons-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-panic-traps-name = Panic Traps
+ability-demo-burglary-panic-traps-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-flee-level-name = Flee Level
+ability-demo-burglary-flee-level-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-new-beginnings-name = New Beginnings
+ability-demo-burglary-new-beginnings-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-major-getaway-name = Major Getaway
+ability-demo-burglary-major-getaway-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-protect-loot-name = Protect Loot
+ability-demo-burglary-protect-loot-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-teleport-to-name = Teleport To
+ability-demo-burglary-teleport-to-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-master-thievery-name = Master Thievery
+ability-demo-burglary-master-thievery-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-darkness-storm-name = Darkness Storm
+ability-demo-burglary-darkness-storm-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-hide-in-shadows-name = Hide In Shadows
+ability-demo-burglary-hide-in-shadows-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-thieves-den-name = Thieves Den
+ability-demo-burglary-thieves-den-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-ultimate-trap-name = Ultimate Trap
+ability-demo-burglary-ultimate-trap-description = A Burglary technique, practiced using Dexterity.
+ability-demo-burglary-assassination-name = Assassination
+ability-demo-burglary-assassination-description = A Burglary technique, practiced using Dexterity.
+item-demo-burglars-handbook-name = [Burglars Handbook]
+item-demo-burglars-handbook-description = A book of Burglary techniques.
+item-demo-thieving-ways-name = [Thieving Ways]
+item-demo-thieving-ways-description = A book of Burglary techniques.
+item-demo-great-escapes-name = [Great Escapes]
+item-demo-great-escapes-description = A book of Burglary techniques.
+item-demo-book-of-shadows-name = [Book Of Shadows]
+item-demo-book-of-shadows-description = A book of Burglary techniques.
+class-demo-rogue-name = Rogue
+class-demo-rogue-description = A Dexterity-based burglar with traps, theft, negotiation and escapes.
+actor-demo-rogue-player-name = Rogue
+actor-demo-rogue-player-description = A Dexterity-based burglar with traps, theft, negotiation and escapes.
+build-demo-rogue-name = Rogue
+build-demo-rogue-description = A Dexterity-based burglar with traps, theft, negotiation and escapes.
+
+terrain-demo-burglary-minor-trap-name = Minor Trap
+terrain-demo-burglary-minor-trap-description = A single-use monster trap.
+
+terrain-demo-burglary-major-trap-name = Major Trap
+terrain-demo-burglary-major-trap-description = A single-use monster trap.
+
+terrain-demo-burglary-ultimate-trap-name = Ultimate Trap
+terrain-demo-burglary-ultimate-trap-description = A single-use monster trap.

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.pumpkin-lamp-of-jack-of-lanterns",
+  "nameKey": "item-demo-pumpkin-lamp-of-jack-of-lanterns-name",
+  "descriptionKey": "item-demo-pumpkin-lamp-of-jack-of-lanterns-description",
+  "glyph": "~",
+  "generationLevel": 50,
+  "weightTenthsPound": 60,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "light",
+  "tags": [
+    "artifact",
+    "equipment",
+    "light-source"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 368,
+    "baseItemKindId": "demo.item.feanorian-lamp",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "ESP_HUMAN",
+      "FULL_NAME",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "QUESTITEM",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "STEALTH"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "charisma": 4
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 4,
+    "lightRadius": 4
+  },
+  "passives": [
+    "esp-human"
+  ],
+  "resistances": {
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant"
+  }
+}

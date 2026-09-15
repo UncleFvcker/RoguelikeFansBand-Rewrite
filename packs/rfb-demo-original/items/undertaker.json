@@ -1,0 +1,73 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.undertaker",
+  "nameKey": "item-demo-undertaker-name",
+  "descriptionKey": "item-demo-undertaker-description",
+  "glyph": "\\",
+  "generationLevel": 50,
+  "weightTenthsPound": 250,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "tool",
+  "tags": [
+    "artifact",
+    "equipment",
+    "tool",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 296,
+    "baseItemKindId": "demo.item.shovel",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_POIS",
+      "BRAND_VAMP",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_DARK",
+      "RES_NETHER",
+      "RES_POIS",
+      "SLAY_HUMAN",
+      "TUNNEL"
+    ],
+    "pval": 5,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "tunnelingPval": 5,
+  "passives": [
+    "vampiric"
+  ],
+  "resistances": {
+    "poison": "resistant",
+    "dark": "resistant",
+    "nether": "resistant"
+  },
+  "slays": {
+    "human": "slay"
+  },
+  "brands": [
+    "poison"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.shovel",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 7,
+    "damageSides": 2,
+    "toHit": 15,
+    "toDamage": 15
+  }
+}

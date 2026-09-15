@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.thanos",
+  "nameKey": "item-demo-thanos-name",
+  "descriptionKey": "item-demo-thanos-description",
+  "glyph": "]",
+  "generationLevel": 66,
+  "weightTenthsPound": 25,
+  "baseValue": 0,
+  "maxStack": 1,
+  "equipmentSlot": "gloves",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 58,
+    "baseItemKindId": "demo.item.set-of-gauntlets",
+    "instant": false,
+    "rarityOneIn": 66
+  },
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "CURSED",
+      "DEX",
+      "HEAVY_CURSE",
+      "HIDE_TYPE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_COLD",
+      "IM_FIRE",
+      "KILL_LIVING",
+      "RANDOM_CURSE1",
+      "RES_CHAOS",
+      "RES_CONF",
+      "RES_DISEN",
+      "RES_NETHER",
+      "RES_NEXUS",
+      "RES_POIS",
+      "SHOW_MODS",
+      "STR",
+      "TELEPORT",
+      "TY_CURSE"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 2,
+    "strength": 2,
+    "dexterity": 2
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -10,
+    "meleeDamage": -12
+  },
+  "passives": [
+    "hold-life"
+  ],
+  "resistances": {
+    "fire": "immune",
+    "cold": "immune",
+    "poison": "resistant",
+    "confusion": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "chaos": "resistant",
+    "disenchant": "resistant"
+  },
+  "slays": {
+    "living": "kill"
+  },
+  "initialCurse": "heavy"
+}

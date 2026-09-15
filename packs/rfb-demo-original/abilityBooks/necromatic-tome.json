@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.necromatic-tome",
+  "nameKey": "ability-book-demo-necromatic-tome-name",
+  "descriptionKey": "ability-book-demo-necromatic-tome-description",
+  "realmId": "necromancy",
+  "rank": 4,
+  "abilityIds": [
+    "demo.ability.necromancy-draining-touch",
+    "demo.ability.necromancy-unhallow-ground",
+    "demo.ability.necromancy-shield-of-the-dead",
+    "demo.ability.necromancy-rending-touch",
+    "demo.ability.necromancy-repose-of-the-dead",
+    "demo.ability.necromancy-sepulchral-wind",
+    "demo.ability.necromancy-deadly-touch",
+    "demo.ability.necromancy-necromancy"
+  ],
+  "tags": [
+    "necromancy",
+    "spellbook"
+  ]
+}

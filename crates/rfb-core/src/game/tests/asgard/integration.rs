@@ -171,6 +171,13 @@ fn asgard_early_odin_death_keeps_conquest_scroll_artifact_and_avenger_independen
     game.player.position = Position { x: 10, y: 10 };
     for y in 6..=16 {
         for x in 6..=18 {
+            if game
+                .floor_connections
+                .iter()
+                .any(|c| c.position == (Position { x, y }))
+            {
+                continue;
+            }
             replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
         }
     }

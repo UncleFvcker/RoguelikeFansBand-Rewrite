@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.deck-of-many-things",
+  "nameKey": "ability-book-demo-deck-of-many-things-name",
+  "descriptionKey": "ability-book-demo-deck-of-many-things-description",
+  "realmId": "trump",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.trump-reach",
+    "demo.ability.trump-kamikaze",
+    "demo.ability.trump-phantasmal-servant",
+    "demo.ability.trump-haste-monster",
+    "demo.ability.trump-teleport-level",
+    "demo.ability.trump-dimension-door",
+    "demo.ability.trump-word-of-recall",
+    "demo.ability.trump-banish"
+  ],
+  "tags": [
+    "trump",
+    "spellbook"
+  ]
+}

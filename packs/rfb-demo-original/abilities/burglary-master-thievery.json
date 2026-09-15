@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.burglary-master-thievery",
+  "nameKey": "ability-demo-burglary-master-thievery-name",
+  "descriptionKey": "ability-demo-burglary-master-thievery-description",
+  "abilityProgramId": "demo.ability-program.burglary-master-thievery",
+  "target": {
+    "modes": [
+      "direction",
+      "entity",
+      "position"
+    ],
+    "range": 1,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "burglary",
+    "technique"
+  ],
+  "affectsGroundItems": false
+}

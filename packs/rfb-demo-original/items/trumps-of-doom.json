@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.trumps-of-doom",
+  "nameKey": "item-demo-trumps-of-doom-name",
+  "descriptionKey": "item-demo-trumps-of-doom-description",
+  "abilityBookId": "demo.ability-book.trumps-of-doom",
+  "rfbBaseKind": {
+    "sourceIndex": 522,
+    "tval": 95,
+    "sval": 2
+  },
+  "baseValue": 15000,
+  "generationLevel": 45,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "book",
+    "trump",
+    "spellbook"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

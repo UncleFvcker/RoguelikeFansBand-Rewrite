@@ -167,7 +167,11 @@ export function targetSelectionAtCursor(
       .sort((left, right) => left.id.localeCompare(right.id))[0];
     if (entity) return { type: "entity", entityId: entity.id };
   }
-  if (samePosition(state.cursor, state.origin)) return undefined;
+  if (samePosition(state.cursor, state.origin)) {
+    return state.spec.modes.includes("self") && state.spec.modes.includes("position")
+      ? { type: "position", position: { ...state.cursor } }
+      : undefined;
+  }
   if (state.spec.modes.includes("position")) {
     return { type: "position", position: { ...state.cursor } };
   }

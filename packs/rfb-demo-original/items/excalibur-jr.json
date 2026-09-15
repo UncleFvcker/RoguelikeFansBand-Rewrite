@@ -1,0 +1,73 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.excalibur-jr",
+  "nameKey": "item-demo-excalibur-jr-name",
+  "descriptionKey": "item-demo-excalibur-jr-description",
+  "glyph": "|",
+  "generationLevel": 25,
+  "weightTenthsPound": 80,
+  "baseValue": 60000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "blessed-weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 179,
+    "baseItemKindId": "demo.item.small-sword",
+    "instant": false,
+    "rarityOneIn": 8
+  },
+  "weaponProficiencyBaseItemId": "demo.item.small-sword",
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "BLOWS",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_FIRE",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_DRAGON",
+      "SLAY_UNDEAD",
+      "SLOW_DIGEST"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 7,
+    "toHit": 3,
+    "toDamage": 5
+  },
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 150
+  },
+  "passives": [
+    "slow-digestion"
+  ],
+  "resistances": {
+    "fire": "resistant"
+  },
+  "slays": {
+    "animal": "slay",
+    "undead": "slay",
+    "dragon": "slay"
+  }
+}

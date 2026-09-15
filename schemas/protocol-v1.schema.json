@@ -523,6 +523,17 @@
         "id": {
           "type": "string"
         },
+        "itemSelectionCancelTarget": {
+          "description": "Submit this target when item selection is cancelled; absence means no cast.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TargetSelection"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "itemTargets": {
           "type": [
             "array",
@@ -1837,6 +1848,35 @@
             "swappedAttributes",
             "hpBefore",
             "hpAfter"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "clonedEntityId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "protected": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "clone-target"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "protected"
           ]
         },
         {
@@ -4339,6 +4379,42 @@
           "properties": {
             "type": {
               "type": "string",
+              "const": "clone-target"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "haste-target"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "heal-target"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
               "const": "swap-position"
             }
           },
@@ -4625,6 +4701,303 @@
             "entActorKindId",
             "radius",
             "durationTurns"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "chain-lightning"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "chaos-meteor-swarm"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "trump-summoning"
+            }
+          },
+          "required": [
+            "type",
+            "category"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "trump-shuffle"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "necromancy"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "music"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "stop-singing"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "burglary"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "rage"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "hex"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "stop-hex"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "hissatsu"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "samurai-concentration"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "posture": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "samurai-posture"
+            }
+          },
+          "required": [
+            "type",
+            "posture"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "spell": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "law"
+            }
+          },
+          "required": [
+            "type",
+            "spell"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "reset-recall"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "call-chaos"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "chaos-polymorph-self"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "call-void"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {
@@ -6255,6 +6628,30 @@
           "properties": {
             "type": {
               "type": "string",
+              "const": "prepare-confusing-strike"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "destroy-adjacent-traps-and-doors"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
               "const": "satisfy-hunger"
             }
           },
@@ -7086,6 +7483,7 @@
       "type": "string",
       "enum": [
         "jam-doors",
+        "disarm-traps",
         "destroy-traps-and-doors",
         "stone-to-mud"
       ]
@@ -9030,6 +9428,52 @@
         {
           "type": "object",
           "properties": {
+            "type": {
+              "type": "string",
+              "const": "law-escape"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "burglary-escape"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "cost": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "targetEntityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "burglary-negotiate"
+            }
+          },
+          "required": [
+            "type",
+            "targetEntityId",
+            "cost"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "abilityId": {
               "type": "string"
             },
@@ -10122,6 +10566,24 @@
             "type": {
               "type": "string",
               "const": "cancel-ability-direction"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "glyph": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "resolve-ability-glyph"
             }
           },
           "required": [
@@ -12755,6 +13217,60 @@
         "applied"
       ]
     },
+    "HexStateDto": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "interrupted": {
+          "type": "boolean"
+        },
+        "manaFraction": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "revengeCast": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AbilityCastResolutionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revengeDamage": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "revengeKind": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "revengeTicks": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "active",
+        "interrupted",
+        "manaFraction",
+        "revengeKind",
+        "revengeTicks",
+        "revengeDamage"
+      ]
+    },
     "HomeDto": {
       "type": "object",
       "properties": {
@@ -14610,6 +15126,37 @@
         "abilityIds"
       ]
     },
+    "MusicStateDto": {
+      "type": "object",
+      "properties": {
+        "beats": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "halfMana": {
+          "type": "boolean"
+        },
+        "interrupted": {
+          "type": "boolean"
+        },
+        "spell": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "beats",
+        "interrupted",
+        "halfMana"
+      ]
+    },
     "MutationRatingDto": {
       "type": "string",
       "enum": [
@@ -14691,6 +15238,17 @@
       "required": [
         "abilityId",
         "branchRoll",
+        "castResolution"
+      ]
+    },
+    "PendingAbilityGlyphDto": {
+      "type": "object",
+      "properties": {
+        "castResolution": {
+          "$ref": "#/$defs/AbilityCastResolutionDto"
+        }
+      },
+      "required": [
         "castResolution"
       ]
     },
@@ -15073,6 +15631,9 @@
           "default": 0,
           "minimum": 0
         },
+        "hex": {
+          "$ref": "#/$defs/HexStateDto"
+        },
         "hp": {
           "type": "integer",
           "format": "int32"
@@ -15188,6 +15749,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/PendingAbilityDirectionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pendingAbilityGlyph": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PendingAbilityGlyphDto"
             },
             {
               "type": "null"

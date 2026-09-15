@@ -47,19 +47,20 @@ function career<const S extends string>(slug: S) {
   return { id: `demo.build.${slug}` as const, nameKey: `class-demo-${slug}-name`, descriptionKey: `class-demo-${slug}-description`, notes: [] };
 }
 
-function deathCaster<const S extends string>(slug: S) {
-  return { ...career(slug), id: slug, children: [{
-    id: `demo.build.${slug}-death` as const, nameKey: "session-career-death-name",
-    descriptionKey: `build-demo-${slug}-death-description`, notes: ["session-career-available-realms"],
-  }] };
+function singleRealmCaster<const S extends string, const R extends readonly string[]>(slug: S, realms: R) {
+  return { ...career(slug), id: slug, children: realms.map(realm => ({
+    id: `demo.build.${slug}-${realm as R[number]}` as const, nameKey: `realm-${realm}-name`,
+    descriptionKey: `build-demo-${slug}-${realm}-description`, notes: [],
+  })) };
 }
 
-export const MAGE_REALMS = ["life", "sorcery", "nature", "death", "arcane", "daemon", "crusade", "armageddon"] as const;
+export const MAGE_REALMS = ["life", "sorcery", "nature", "chaos", "trump", "death", "arcane", "craft", "daemon", "crusade", "armageddon", "law"] as const;
+export const PALADIN_REALMS = ["life", "crusade", "death", "daemon", "law"] as const;
 export const PRIEST_SECOND_REALMS = {
-  life: ["sorcery", "nature", "arcane", "craft", "crusade", "armageddon"],
-  crusade: ["life", "sorcery", "nature", "arcane", "craft", "armageddon"],
-  death: ["sorcery", "nature", "arcane", "craft", "daemon", "armageddon"],
-  daemon: ["sorcery", "nature", "death", "arcane", "craft", "armageddon"],
+  life: ["chaos", "trump", "sorcery", "nature", "arcane", "craft", "crusade", "armageddon", "law"],
+  crusade: ["chaos", "trump", "life", "sorcery", "nature", "arcane", "craft", "armageddon", "law"],
+  death: ["chaos", "trump", "sorcery", "nature", "arcane", "craft", "daemon", "armageddon", "law"],
+  daemon: ["chaos", "trump", "sorcery", "nature", "death", "arcane", "craft", "armageddon", "law"],
 } as const;
 const PRIEST = {
   ...career("priest"), id: "priest", childLabelKey: "session-first-realm-label",
@@ -75,8 +76,8 @@ const PRIEST = {
     })),
   })),
 } as const;
-export const RANGER_SECOND_REALMS = ["sorcery", "death", "arcane", "daemon"] as const;
-export const WARRIOR_MAGE_SECOND_REALMS = ["life", "sorcery", "nature", "death", "craft", "daemon", "crusade", "armageddon"] as const;
+export const RANGER_SECOND_REALMS = ["chaos", "trump", "sorcery", "death", "arcane", "daemon"] as const;
+export const WARRIOR_MAGE_SECOND_REALMS = ["life", "sorcery", "nature", "chaos", "trump", "death", "craft", "daemon", "crusade", "armageddon", "law"] as const;
 const WARRIOR_MAGE = {
   ...career("warrior-mage"), id: "warrior-mage", childLabelKey: "session-second-realm-label",
   notes: ["session-warrior-mage-realms-help"],
@@ -108,15 +109,13 @@ const MAGE = {
 } as const;
 
 export const CAREER_GROUPS = [
-  { id: "melee", options: [career("warrior"), career("berserker"), { ...career("duelist"), notes: ["duelist-auto-challenge-help", "session-duelist-tonberry-unavailable"] }] },
+  { id: "melee", options: [career("warrior"), career("samurai"), career("rage-mage"), career("berserker"), { ...career("duelist"), notes: ["duelist-auto-challenge-help", "session-duelist-tonberry-unavailable"] }] },
+  { id: "stealth", options: [career("rogue")] },
   { id: "archery", options: [career("archer"), career("sniper"), RANGER] },
-  { id: "magic", options: [MAGE, { ...deathCaster("high-mage"), children: [
-    { id: "demo.build.high-mage-death", nameKey: "session-career-death-name", descriptionKey: "build-demo-high-mage-death-description", notes: ["session-high-mage-available-realms"] },
-    { id: "demo.build.high-mage-craft", nameKey: "session-career-craft-name", descriptionKey: "build-demo-high-mage-craft-description", notes: ["session-high-mage-available-realms"] },
-  ] }] },
+  { id: "magic", options: [MAGE, singleRealmCaster("high-mage", [...MAGE_REALMS, "hex"] as const), career("necromancer"), career("bard")] },
   { id: "device", options: [career("magic-eater")] },
   { id: "prayer", options: [PRIEST] },
-  { id: "hybrid", options: [deathCaster("paladin"), WARRIOR_MAGE] },
+  { id: "hybrid", options: [singleRealmCaster("paladin", PALADIN_REALMS), WARRIOR_MAGE] },
   { id: "riding", options: [career("cavalry")] },
   { id: "mind", options: [career("mindcrafter")] },
 ] as const satisfies readonly CreationGroup[];

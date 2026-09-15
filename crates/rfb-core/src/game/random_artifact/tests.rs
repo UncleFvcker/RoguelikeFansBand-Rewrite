@@ -634,6 +634,31 @@ fn random_artifact_throwing_flag_changes_real_throw_range_damage_and_instance_di
         0,
         true,
     ));
+    let mut control = game.clone();
+    control.items[0]
+        .intrinsic_properties
+        .rfb_flags
+        .remove("THROWING");
+    let mut normal_events = Vec::new();
+    control
+        .throw_inventory_item(
+            "test.throwing",
+            Direction::East,
+            &mut normal_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+    let normal_damage = normal_events
+        .iter()
+        .find_map(|e| {
+            if let DomainEvent::ItemThrowHit { damage, .. } = e {
+                Some(damage.raw)
+            } else {
+                None
+            }
+        })
+        .expect("control throw hits");
     let mut events = Vec::new();
     game.throw_inventory_item(
         "test.throwing",
@@ -643,9 +668,8 @@ fn random_artifact_throwing_flag_changes_real_throw_range_damage_and_instance_di
         &mut Vec::new(),
     )
     .unwrap();
-    // Seed85 now reaches the source 150% throwing critical: 2d1 becomes3
-    // before applying the object's THROWING multiplier.
-    assert!(events.iter().any(|event|matches!(event,DomainEvent::ItemThrowHit {damage,..} if damage.raw==3*throwing.1/100)),"{events:?}");
+    // Both throws begin with identical RNG and instance dice; only THROWING differs.
+    assert!(events.iter().any(|event| matches!(event, DomainEvent::ItemThrowHit { damage, .. } if damage.raw == normal_damage * throwing.1 / normal.1)), "{events:?}");
 }
 
 fn give_activation(game: &mut Game, token: &str) {
@@ -821,4 +845,28 @@ fn random_artifact_starlight_activation_casts_multiple_weak_light_beams() {
         .count();
     assert!((5..=15).contains(&beams));
     assert!(game.glow.iter().any(|glow| *glow));
+}
+
+#[test]
+fn music_bard_harp_changes_actual_artifact_value_limits() {
+    let bard = Game::new_with_build(925, "demo.build.bard").unwrap();
+    let mage = Game::new_with_build(925, "demo.build.high-mage-law").unwrap();
+    let object = ValueObject {
+        tval: 19,
+        sval: 70,
+        ..Default::default()
+    };
+    let limits = |g: &Game| {
+        value_limits(
+            &mut RfbRng::seeded(925),
+            &object,
+            &g.character_definitions().unwrap().2.id,
+            70,
+            &mut false,
+            false,
+            0,
+        )
+    };
+    assert_eq!(limits(&bard).maximum, 62_000);
+    assert_eq!(limits(&mage).maximum, 50_000);
 }

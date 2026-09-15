@@ -70,6 +70,16 @@ impl Game {
         if definition.equipment_slot.as_deref() != Some("gloves") {
             return false;
         }
+        // object1.c: the thief glove Ego and Dogram remain cumbersome to Burglary.
+        if self.player_is_rogue()
+            && (ego::item_has_ego(&self.content, item, 136)
+                || self.item_is_fixed_artifact(item, 355))
+            && !self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::EasySpell)
+        {
+            return true;
+        }
         // obj_flags + shared pval, before knowledge filtering. Flag presence
         // matters: MAGIC_MASTERY exempts even a zero/negative pval glove.
         let mut flags = BTreeSet::new();
@@ -249,7 +259,17 @@ impl Game {
     }
 
     pub(super) fn class_power_matches_realm(&self, ability_id: &str) -> bool {
+        if ability_id.starts_with("demo.ability.hex-stop") {
+            return self.player_uses_hex() && self.content.ability(ability_id).is_some_and(|a| matches!(a.effect, AbilityEffectDefinition::StopHex { spell } if spell.is_none_or(|s| self.hex.active & (1 << s) != 0)));
+        }
         match ability_id {
+            "demo.ability.paladin-holy-lance" | "demo.ability.paladin-hell-lance" => self
+                .character_definitions()
+                .is_some_and(|(build, _, class, _)| {
+                    class.id == "demo.class.paladin"
+                        && (ability_id == "demo.ability.paladin-holy-lance")
+                            == matches!(build.first_realm_id.as_deref(), Some("life" | "crusade"))
+                }),
             "demo.ability.priest-bless-weapon" => self.player_is_good_priest(),
             "demo.ability.priest-evocation" => {
                 self.player_is_priest() && !self.player_is_good_priest()
@@ -334,6 +354,17 @@ impl Game {
                 effective.level_scaling.clone_from(&override_.level_scaling);
             }
         }
+        if matches!(ability.effect, AbilityEffectDefinition::Law { .. }) {
+            let aptitude = self.player_has_law_aptitude();
+            let level = u32::from(player.minimum_level) * if aptitude { 110 } else { 120 } / 100;
+            let level = if level >= 58 { 99 } else { level.clamp(1, 50) };
+            player.first_success_experience =
+                player.first_success_experience / u32::from(player.minimum_level) * level;
+            player.minimum_level = level as u16;
+            player.resource_cost =
+                (player.resource_cost * if aptitude { 120 } else { 140 } / 100).min(255);
+            player.base_failure_percent = player.base_failure_percent.saturating_add(10);
+        }
         // lawyer_hack applies these adjustments to every book caster.
         if ability.id == "demo.ability.death-vampirism-true" {
             player.resource_cost =
@@ -352,6 +383,33 @@ impl Game {
             } else {
                 SPELL_EXP_MASTER
             };
+        }
+        // do-spell.c::do_chaos_spell(4): class-dependent base, before to_d_spell
+        // and final spell power. This path is shared by projection and actual casting.
+        if ability.id == "demo.ability.chaos-mana-burst"
+            && let AbilityEffectDefinition::AreaDamage {
+                damage_bonus,
+                radius,
+                ..
+            } = &mut effective.effect
+        {
+            let mage = self
+                .character_definitions()
+                .is_some_and(|(_, _, class, _)| {
+                    matches!(
+                        class.id.as_str(),
+                        "demo.class.mage" | "demo.class.high-mage"
+                    )
+                });
+            let level = self.progress.level;
+            *damage_bonus = level + level / if mage { 2 } else { 4 };
+            *radius = if level < 30 { 2 } else { 3 };
+        }
+        if ability.id == "demo.ability.chaos-breathe-logrus"
+            && let AbilityEffectDefinition::AreaDamage { damage_bonus, .. } = &mut effective.effect
+        {
+            *damage_bonus = u16::try_from(i64::from(self.player.hp.max(0)) * 3 / 4)
+                .expect("player HP based spell damage fits content damage");
         }
         effective
     }
@@ -556,25 +614,33 @@ impl Game {
         ability: &mut AbilityDefinition,
         level: u16,
     ) {
-        let AbilityEffectDefinition::BoltOrBeamDamage {
-            beam_chance_percent,
-            beam_chance_modifier,
-            ..
-        } = &mut ability.effect
-        else {
-            return;
-        };
         if profile.beam_chance_level_multiplier == 0 {
             return;
         }
         let chance = i32::from(level)
             .saturating_mul(i32::from(profile.beam_chance_level_multiplier))
             .saturating_div(i32::from(profile.beam_chance_level_divisor))
-            .saturating_add(i32::from(profile.beam_chance_bonus))
-            .saturating_add(i32::from(*beam_chance_modifier))
-            .clamp(0, 100);
-        *beam_chance_percent =
-            u8::try_from(chance).expect("clamped casting beam chance must fit u8");
+            .saturating_add(i32::from(profile.beam_chance_bonus));
+        let apply = |effect: &mut AbilityEffectDefinition| {
+            if let AbilityEffectDefinition::BoltOrBeamDamage {
+                beam_chance_percent,
+                beam_chance_modifier,
+                ..
+            } = effect
+            {
+                *beam_chance_percent =
+                    (chance + i32::from(*beam_chance_modifier)).clamp(0, 100) as u8;
+            }
+        };
+        if ability.id == "demo.ability.chaos-wonder"
+            && let AbilityEffectDefinition::RandomChoice { branches, .. } = &mut ability.effect
+        {
+            for branch in branches {
+                apply(&mut branch.effect);
+            }
+        } else {
+            apply(&mut ability.effect);
+        }
     }
 
     pub(super) fn apply_casting_profile_damage_bonus(
@@ -635,7 +701,24 @@ impl Game {
                 _ => {}
             }
         }
-        apply(&mut ability.effect, bonus);
+        if ability.id == "demo.ability.chaos-wonder"
+            && let AbilityEffectDefinition::RandomChoice { branches, .. } = &mut ability.effect
+        {
+            for branch in branches {
+                if branch.maximum_roll == 109 {
+                    continue;
+                }
+                if let AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. } =
+                    &mut *branch.effect
+                {
+                    *damage_dice = damage_dice.saturating_add(bonus);
+                } else {
+                    apply(&mut branch.effect, bonus);
+                }
+            }
+        } else {
+            apply(&mut ability.effect, bonus);
+        }
     }
 
     fn profile_failure_percent(
@@ -747,6 +830,14 @@ impl Game {
                     profile.capacity_per_attribute_index,
                 ),
             ),
+            CastingCapacityFormula::RfbMana if self.player_is_samurai() => {
+                let value = (u32::from(RFB_MAGIC_MANA[usize::from(attribute_index)]) + 10) * 2;
+                let adj = self
+                    .character_definitions()
+                    .map_or(0, |(_, r, _, _)| r.modifiers.wisdom)
+                    .clamp(-5, 5);
+                (i64::from(value) + i64::from(value) * i64::from(adj) / 20).max(0) as u32
+            }
             CastingCapacityFormula::RfbMana => {
                 let mut value =
                     u32::from(RFB_MAGIC_MANA[usize::from(attribute_index)]).saturating_mul(
@@ -776,7 +867,9 @@ impl Game {
                 value
             }
         };
-        if let Some(encumbrance) = &profile.encumbrance {
+        if let Some(encumbrance) = &profile.encumbrance
+            && !self.player_is_samurai()
+        {
             let equipped = self.items.iter().filter_map(|item| {
                 let ItemLocation::Equipped { .. } = &item.location else {
                     return None;
@@ -819,6 +912,7 @@ impl Game {
         let capacity_percent = i32::from(profile.capacity_percent)
             .saturating_add(racial_capacity_percent)
             .saturating_add(self.player_equipment_bonuses().spell_capacity_bonus * 5)
+            .saturating_add(if self.player_is_rage_mage() { 15 } else { 0 })
             .max(0);
         maximum.saturating_mul(u32::try_from(capacity_percent).unwrap_or(u32::MAX)) / 100
     }
@@ -1006,6 +1100,9 @@ impl Game {
 
     pub(super) fn apply_player_dynamic_effect(&self, ability: &mut AbilityDefinition) {
         match &mut ability.effect {
+            AbilityEffectDefinition::Law { spell: 27 } => {
+                ability.target.range = self.law_dig_range(ability.spell_power_bonus);
+            }
             AbilityEffectDefinition::CraftEnchant {
                 maximum,
                 level_divisor,
@@ -1080,6 +1177,36 @@ impl Game {
     }
 
     pub(super) fn study_player_ability(
+        &mut self,
+        book_item_id: &str,
+        ability_id: &str,
+    ) -> Result<(), &'static str> {
+        self.study_single_player_ability(book_item_id, ability_id)?;
+        if self.player_is_rage_mage() {
+            self.consume_one_item(book_item_id);
+        }
+        if self.player_is_samurai() {
+            let book = self.study_book_id(book_item_id).expect("validated book");
+            let ids = self
+                .content
+                .ability_book(book)
+                .expect("validated book")
+                .ability_ids
+                .clone();
+            for id in ids {
+                if self.learned_abilities.contains(&id) {
+                    continue;
+                }
+                let ability = self.content.ability(&id).expect("book spell");
+                if self.progress.level >= Self::player_ability_parameters(ability).minimum_level {
+                    self.study_single_player_ability(book_item_id, &id)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn study_single_player_ability(
         &mut self,
         book_item_id: &str,
         ability_id: &str,
@@ -1273,7 +1400,12 @@ impl Game {
     }
 
     pub(super) fn forget_player_ability(&mut self, ability_id: &str) -> Result<(), &'static str> {
-        if self.player_uses_dual_realm_learning() {
+        if self.player_uses_dual_realm_learning()
+            || self.player_is_bard()
+            || self.player_is_samurai()
+            || self.player_uses_hex()
+            || self.player_is_rage_mage()
+        {
             return Err("manual-forgetting-unavailable");
         }
         let Some(profile) = self.casting_profile().cloned() else {
@@ -1499,6 +1631,11 @@ impl Game {
         self.ability_learning_order.clear();
         self.ability_progress.clear();
         self.refresh_player_ability_state();
+        if self.player_is_rage_mage() {
+            for pool in self.resources.values_mut() {
+                pool.current = 0;
+            }
+        }
     }
 
     pub(super) fn refresh_player_ability_state(&mut self) {
@@ -1533,13 +1670,20 @@ impl Game {
     ) -> Result<(), CoreError> {
         self.initialize_player_ability_state();
         let mut seen = BTreeSet::new();
+        let samurai = self.player_is_samurai();
+        let level = self.progress.level;
         for saved in saved_resources {
             let Some(pool) = self.resources.get_mut(&saved.id) else {
                 return Err(CoreError::InvalidSave("player resource ID is invalid"));
             };
             if !seen.insert(saved.id)
                 || saved.maximum != pool.maximum
-                || saved.current > saved.maximum
+                || saved.current
+                    > if samurai {
+                        Self::samurai_mana_limit(saved.maximum, level)
+                    } else {
+                        saved.maximum
+                    }
             {
                 return Err(CoreError::InvalidSave("player resource pool is invalid"));
             }
@@ -1610,11 +1754,16 @@ impl Game {
 
     pub(super) fn refresh_player_resource_maxima(&mut self) {
         let (pool_maxima, _) = self.player_ability_baseline();
+        let samurai = self.player_is_samurai();
         for (resource_id, maximum) in &pool_maxima {
             let initial = initial_resource_pool(*maximum);
             let pool = self.resources.entry(resource_id.clone()).or_insert(initial);
             pool.maximum = *maximum;
-            pool.current = pool.current.min(*maximum);
+            pool.current = pool.current.min(if samurai {
+                Self::samurai_mana_limit(*maximum, self.progress.level)
+            } else {
+                *maximum
+            });
         }
         self.resources.retain(|id, _| pool_maxima.contains_key(id));
         self.refresh_player_spell_memory();
@@ -1692,6 +1841,12 @@ impl Game {
         progress: AbilityProgress,
     ) -> u32 {
         let player = Self::player_ability_parameters(ability);
+        if matches!(
+            ability.effect,
+            AbilityEffectDefinition::Hissatsu { .. } | AbilityEffectDefinition::Rage { .. }
+        ) {
+            return player.resource_cost;
+        }
         let proficiency = u64::from(progress.proficiency.min(SPELL_EXP_MASTER));
         let factor = SPELL_MANA_CONST
             .saturating_add(SPELL_MANA_EXPERT)
@@ -1786,7 +1941,9 @@ impl Game {
         succeeded: bool,
     ) -> AbilityProgress {
         let player = Self::player_ability_parameters(ability).clone();
-        let book_practice = self.player_uses_dual_realm_learning();
+        let book_practice = self.player_uses_dual_realm_learning()
+            || matches!(ability.effect, AbilityEffectDefinition::Hex { spell } if super::abilities::hex::continuous(spell))
+            || matches!(ability.effect, AbilityEffectDefinition::Music { spell } if super::abilities::music::continuous(spell));
         let progress = self
             .ability_progress
             .entry(ability.id.clone())
@@ -1849,6 +2006,38 @@ impl Game {
         profile: &CastingProfileDefinition,
         ability: &AbilityDefinition,
     ) -> u8 {
+        if matches!(ability.effect, AbilityEffectDefinition::Hissatsu { .. }) {
+            return 0;
+        }
+        if matches!(ability.effect, AbilityEffectDefinition::Rage { .. }) {
+            let p = Self::player_ability_parameters(ability);
+            let index = usize::from(
+                self.effective_player_attributes()
+                    .index(AttributeKind::Strength)
+                    .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
+            );
+            let easy = i32::from(
+                self.player_equipment_passives()
+                    .contains(&EquipmentPassive::EasySpell),
+            );
+            let stun = self
+                .player
+                .statuses
+                .iter()
+                .filter(|s| s.kind_id == STATUS_STUN)
+                .map(|s| i32::from(s.intensity).min(100) / 2)
+                .max()
+                .unwrap_or(0);
+            let chance = (i32::from(p.base_failure_percent)
+                - 3 * i32::from(self.progress.level.saturating_sub(p.minimum_level))
+                - 3 * (i32::from(RFB_MAGIC_STAT_ADJUSTMENT[index]) - 1)
+                + self.player_spell_failure_modifier_percent()
+                - 4 * easy)
+                .max(i32::from(RFB_MAGIC_FAILURE_MINIMUM[index]));
+            return ((chance + stun).min(95) - easy)
+                .max(self.player_spell_failure_minimum_percent())
+                .clamp(0, 100) as u8;
+        }
         self.profile_failure_percent(
             profile,
             ability,
@@ -1865,6 +2054,15 @@ impl Game {
         resting: bool,
         events: &mut Vec<DomainEvent>,
     ) {
+        let samurai = self.player_is_samurai();
+        if samurai
+            && resting
+            && self
+                .samurai_ability_unavailable_reason("demo.ability.samurai-concentration")
+                .is_none()
+        {
+            self.samurai_concentrate();
+        }
         let changes = self
             .resources
             .keys()
@@ -1883,7 +2081,11 @@ impl Game {
                 pool.current = pool
                     .current
                     .saturating_add(u32::try_from(change).unwrap_or(u32::MAX))
-                    .min(pool.maximum);
+                    .min(if samurai {
+                        before.max(pool.maximum)
+                    } else {
+                        pool.maximum
+                    });
             } else {
                 pool.current = pool
                     .current
@@ -1924,6 +2126,14 @@ impl Game {
     fn player_has_rest_need(&self, mode: RestMode) -> bool {
         mode == RestMode::Turns
             || self.player.hp < self.effective_player_max_hp()
+            || (self.player_is_samurai()
+                && self
+                    .samurai_ability_unavailable_reason("demo.ability.samurai-concentration")
+                    .is_none()
+                && self
+                    .resources
+                    .values()
+                    .any(|p| p.current < Self::samurai_mana_limit(p.maximum, self.progress.level)))
             || self.player_has_depleted_recoverable_resource(true)
             || self.magic_eater_can_regen()
             // RFB master a0d92b6 dungeon.c:4622-4664, resting == -1 / -2.
@@ -1984,6 +2194,7 @@ impl Game {
                     .map(|actor| actor.id.clone())
                     .collect::<BTreeSet<_>>();
                 let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
+                self.rage_after_action(STANDARD_ACTION_COST);
                 spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
                 self.advance_until_player_ready(
                     true,

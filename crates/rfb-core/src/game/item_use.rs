@@ -1174,7 +1174,7 @@ impl Game {
             .terrain(target_terrain_id)
             .is_some_and(|terrain| {
                 terrain.tags.iter().any(|tag| {
-                    tag == "explosive-rune"
+                    matches!(tag.as_str(), "explosive-rune" | "monster-trap")
                         || (tag == "warding-glyph"
                             && self.character_definitions().is_none_or(|(build, _, _, _)| {
                                 build.first_realm_id.as_deref() != Some("life")
@@ -1184,7 +1184,19 @@ impl Game {
             && self
                 .terrain
                 .iter()
-                .filter(|terrain_id| terrain_id.as_str() == target_terrain_id)
+                .filter(|terrain_id| {
+                    self.content.terrain(terrain_id).is_some_and(|t| {
+                        t.tags.iter().any(|tag| {
+                            matches!(tag.as_str(), "explosive-rune" | "monster-trap")
+                                || (tag == "warding-glyph"
+                                    && self.character_definitions().is_none_or(
+                                        |(build, _, _, _)| {
+                                            build.first_realm_id.as_deref() != Some("life")
+                                        },
+                                    ))
+                        })
+                    })
+                })
                 .count()
                 > 10
         {
@@ -1208,11 +1220,15 @@ impl Game {
         .then(|| (position, target_terrain_id.to_owned()))
     }
 
-    fn adjacent_trap_door_replacements(&self) -> Vec<(Position, String)> {
-        TERRAIN_INTERACTION_DIRECTIONS
-            .iter()
-            .filter_map(|direction| {
-                let position = self.position_in_direction(*direction);
+    pub(super) fn adjacent_trap_door_replacements(&self) -> Vec<(Position, String)> {
+        // destroy_doors_touch projects onto radius one, including the origin.
+        std::iter::once(self.player.position)
+            .chain(
+                TERRAIN_INTERACTION_DIRECTIONS
+                    .iter()
+                    .map(|direction| self.position_in_direction(*direction)),
+            )
+            .filter_map(|position| {
                 let terrain = self
                     .index(position)
                     .and_then(|index| self.content.terrain(&self.terrain[index]))?;
@@ -1356,7 +1372,11 @@ impl Game {
             })
     }
 
-    fn terrain_is_area_destruction_protected(&self, position: Position) -> bool {
+    fn terrain_is_area_destruction_protected(
+        &self,
+        position: Position,
+        protect_monsters: bool,
+    ) -> bool {
         if position == self.player.position
             || self
                 .floor_connections
@@ -1365,16 +1385,18 @@ impl Game {
         {
             return true;
         }
-        if self.entities.iter().any(|entity| {
-            entity.hp > 0
-                && entity.position == position
-                && self.content.actor(&entity.kind_id).is_some_and(|actor| {
-                    actor
-                        .tags
-                        .iter()
-                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
-                })
-        }) {
+        if protect_monsters
+            && self.entities.iter().any(|entity| {
+                entity.hp > 0
+                    && entity.position == position
+                    && self.content.actor(&entity.kind_id).is_some_and(|actor| {
+                        actor
+                            .tags
+                            .iter()
+                            .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
+                    })
+            })
+        {
             return true;
         }
         self.index(position)
@@ -1405,6 +1427,30 @@ impl Game {
         wall_terrain_id: &str,
         quartz_terrain_id: &str,
         magma_terrain_id: &str,
+        power: Option<u16>,
+    ) -> AreaDestructionPlan {
+        let radius_span = u64::from(maximum_radius - minimum_radius) + 1;
+        let radius = minimum_radius
+            + u8::try_from(self.rng.bounded(radius_span))
+                .expect("validated destruction radius span must fit u8");
+        self.plan_area_destruction_with_radius(
+            radius,
+            floor_terrain_id,
+            wall_terrain_id,
+            quartz_terrain_id,
+            magma_terrain_id,
+            power,
+        )
+    }
+
+    pub(super) fn plan_area_destruction_with_radius(
+        &mut self,
+        radius: u8,
+        floor_terrain_id: &str,
+        wall_terrain_id: &str,
+        quartz_terrain_id: &str,
+        magma_terrain_id: &str,
+        power: Option<u16>,
     ) -> AreaDestructionPlan {
         let forest = self.in_forest_dungeon();
         let (floor_terrain_id, wall_terrain_id, quartz_terrain_id, magma_terrain_id) = if forest {
@@ -1422,10 +1468,6 @@ impl Game {
                 magma_terrain_id,
             )
         };
-        let radius_span = u64::from(maximum_radius - minimum_radius) + 1;
-        let radius = minimum_radius
-            + u8::try_from(self.rng.bounded(radius_span))
-                .expect("validated destruction radius span must fit u8");
         let center = self.player.position;
         let radius_limit = u32::from(radius);
         let radius_offset = i32::from(radius);
@@ -1436,7 +1478,7 @@ impl Game {
                 let position = Position { x, y };
                 if self.index(position).is_some()
                     && rfb_distance(center, position) <= radius_limit
-                    && !self.terrain_is_area_destruction_protected(position)
+                    && !self.terrain_is_area_destruction_protected(position, power.is_none())
                     && !(forest
                         && self
                             .content
@@ -1449,6 +1491,48 @@ impl Game {
         }
         positions.sort_by_key(|position| (rfb_distance(center, *position), position.y, position.x));
 
+        if let Some(power) = power {
+            let power = if forest { (power / 3).min(75) } else { power }.max(1);
+            let mut protected_positions = BTreeSet::new();
+            for index in 0..self.entities.len() {
+                let actor = &self.entities[index];
+                if actor.hp <= 0 || !positions.contains(&actor.position) {
+                    continue;
+                }
+                let definition = self.actor_runtime_definition(actor).unwrap();
+                let level = definition.level;
+                let questor = definition
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "guardian" | "questor"))
+                    || definition
+                        .allocation
+                        .as_ref()
+                        .is_some_and(|a| a.task_id.is_some());
+                let multiplies = definition.allocation.as_ref().is_some_and(|a| a.multiplies);
+                let summoned = actor.summon.is_some();
+                let freshly_summoned = summoned && actor.nice;
+                let immune = actor.no_destruction;
+                if questor
+                    || (!freshly_summoned
+                        && (immune || u64::from(level) > self.rng.bounded(u64::from(power))))
+                {
+                    let actor = &mut self.entities[index];
+                    protected_positions.insert(actor.position);
+                    actor.alerted = true;
+                    actor
+                        .statuses
+                        .retain(|status| status.kind_id != crate::effect::STATUS_SLEEP);
+                    if actor.controller_id.is_none() {
+                        actor.friendly = false;
+                    }
+                    if !questor && !multiplies && !summoned && self.rng.bounded(13) == 0 {
+                        actor.no_destruction = true;
+                    }
+                }
+            }
+            positions.retain(|p| !protected_positions.contains(p));
+        }
         let affected = positions.iter().copied().collect::<BTreeSet<_>>();
         let entity_ids = self
             .entities
@@ -1460,9 +1544,10 @@ impl Game {
                         .content
                         .actor(&entity.kind_id)
                         .is_some_and(|definition| {
-                            !definition.tags.iter().any(|tag| {
-                                matches!(tag.as_str(), "unique" | "unique2" | "guardian")
-                            })
+                            power.is_some()
+                                || !definition.tags.iter().any(|tag| {
+                                    matches!(tag.as_str(), "unique" | "unique2" | "guardian")
+                                })
                         })
             })
             .map(|entity| entity.id.clone())
@@ -1535,7 +1620,7 @@ impl Game {
             self.replace_terrain_from_source(
                 position,
                 &terrain_id,
-                super::terrain::TerrainChangeSource::Magic,
+                super::terrain::TerrainChangeSource::Destruction,
                 events,
                 changed,
             );
@@ -1615,6 +1700,7 @@ impl Game {
             wall_terrain_id,
             quartz_terrain_id,
             magma_terrain_id,
+            None,
         );
         let outcome = self.apply_area_destruction_plan(plan, events, changed, removed_entities);
         self.mark_item_aware(source_kind_id);
@@ -2839,6 +2925,14 @@ impl Game {
             return Ok(None);
         };
         let kind_id = self.items[index].kind_id.clone();
+        if self
+            .content
+            .item(&kind_id)
+            .and_then(|k| k.rfb_base_kind)
+            .is_some_and(|k| matches!(k.tval, 70 | 75 | 80))
+        {
+            self.stop_music();
+        }
         if self.items[index].is_artifact_mushroom(&self.content)
             && self.items[index].device_recovery_progress > 0
         {
@@ -3215,6 +3309,62 @@ impl Game {
                     events,
                     changed,
                 );
+            }
+            (
+                mut effect @ (ItemUseEffectDefinition::ApplySpeed { .. }
+                | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
+                | ItemUseEffectDefinition::ApplyBasicResistance { .. }
+                | ItemUseEffectDefinition::ApplyStoneSkin { .. }),
+                ItemUsePlan::SelfTarget,
+            ) if profile_id.is_some() => {
+                // devices.c boosts the one rolled duration, then set_fast/hero/
+                // oppose_base/shield retain the stronger timer. Potions keep their
+                // own timing path. These executors accept world ticks.
+                let (dice, sides, bonus) = match &mut effect {
+                    ItemUseEffectDefinition::ApplySpeed {
+                        duration_dice,
+                        duration_sides,
+                        duration_bonus,
+                    }
+                    | ItemUseEffectDefinition::ApplyHeroicSpeed {
+                        duration_dice,
+                        duration_sides,
+                        duration_bonus,
+                        ..
+                    }
+                    | ItemUseEffectDefinition::ApplyBasicResistance {
+                        duration_dice,
+                        duration_sides,
+                        duration_bonus,
+                    }
+                    | ItemUseEffectDefinition::ApplyStoneSkin {
+                        duration_dice,
+                        duration_sides,
+                        duration_bonus,
+                    } => (duration_dice, duration_sides, duration_bonus),
+                    _ => unreachable!(),
+                };
+                let turns = self.roll_damage(*dice, *sides as u16) as u32 + *bonus;
+                let ticks = (device_power_value(u64::from(turns), device_power_bonus) as u32) * 10;
+                *dice = 0;
+                *sides = 0;
+                *bonus = ticks;
+                if matches!(effect, ItemUseEffectDefinition::ApplySpeed { .. }) {
+                    let mut haste =
+                        super::monster_combat::melee_status(STATUS_HASTE, ticks, &kind_id);
+                    haste.stacking = StatusStacking::KeepStrongest;
+                    noticed = !matches!(
+                        apply_status_application(&mut self.player.statuses, haste).change,
+                        StatusChange::Unchanged
+                    );
+                    events.push(DomainEvent::ItemSpeedResolved {
+                        source_kind_id: kind_id.clone(),
+                        display_name_key: self.item_display_name_key(&kind_id),
+                        duration: ticks,
+                    });
+                } else {
+                    noticed = self.resolve_item_self_effect(&kind_id, &effect, events);
+                }
             }
             (
                 ItemUseEffectDefinition::ApplyStatus {
@@ -3827,10 +3977,18 @@ impl Game {
                 )?;
                 self.mark_item_aware(&kind_id);
             }
-            (ItemUseEffectDefinition::PiercingShot, ItemUsePlan::PiercingShot { target, .. }) => {
+            (
+                effect @ (ItemUseEffectDefinition::PiercingShot
+                | ItemUseEffectDefinition::RamaArrow),
+                ItemUsePlan::PiercingShot { target, .. },
+            ) => {
                 self.resolve_player_projectile(
                     target,
-                    ProjectileMode::Piercing,
+                    if matches!(effect, ItemUseEffectDefinition::RamaArrow) {
+                        ProjectileMode::Rama
+                    } else {
+                        ProjectileMode::Piercing
+                    },
                     events,
                     changed,
                     removed_entities,
@@ -4116,6 +4274,9 @@ impl Game {
                         effect.as_ref(),
                         AbilityEffectDefinition::FetchItem { .. }
                             | AbilityEffectDefinition::ConeDamage { .. }
+                            | AbilityEffectDefinition::DrainLife { .. }
+                            | AbilityEffectDefinition::Control { .. }
+                            | AbilityEffectDefinition::TeleportAway { .. }
                             | AbilityEffectDefinition::RandomChoice { .. }
                     )
                 {
@@ -4227,7 +4388,9 @@ impl Game {
                 if target.is_some() {
                     return None;
                 }
-                let glyph = target_glyph?;
+                let Some(glyph) = target_glyph else {
+                    return target_definition.map(|_| ItemUsePlan::CancelledActivation);
+                };
                 let mut characters = glyph.chars();
                 let character = characters.next()?;
                 (!character.is_control() && characters.next().is_none()).then(|| {
@@ -4300,12 +4463,15 @@ impl Game {
                 Some(ItemUsePlan::Projectile { path })
             }
             ItemUseEffectDefinition::TerrainBeam { .. } => {
+                if target.is_none() {
+                    return Some(ItemUsePlan::CancelledActivation);
+                }
                 let path = target_definition.and_then(|definition| {
                     target.and_then(|target| self.item_effect_path(definition, target))
                 })?;
                 Some(ItemUsePlan::Projectile { path })
             }
-            ItemUseEffectDefinition::PiercingShot => {
+            ItemUseEffectDefinition::PiercingShot | ItemUseEffectDefinition::RamaArrow => {
                 let Some(target) = target else {
                     return Some(ItemUsePlan::CancelledActivation);
                 };
@@ -4318,7 +4484,11 @@ impl Game {
                 self.player_projectile_path_for_mode(
                     target,
                     profile.range,
-                    ProjectileMode::Piercing,
+                    if matches!(effect, ItemUseEffectDefinition::RamaArrow) {
+                        ProjectileMode::Rama
+                    } else {
+                        ProjectileMode::Piercing
+                    },
                 )?;
                 Some(ItemUsePlan::PiercingShot {
                     target: target.clone(),
@@ -4413,7 +4583,7 @@ impl Game {
                         .find(|item| item.id == source_item_id)
                         .and_then(|item| self.content.item(&item.kind_id))
                         .and_then(|definition| definition.device_generation.as_ref())
-                        .is_some_and(|generation| generation.rfb_device.is_some())
+                        .is_some()
                 {
                     return Some(ItemUsePlan::CancelledActivation);
                 }
@@ -4795,6 +4965,9 @@ impl Game {
         request: ResourceRestorationRequest<'_>,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
+        if self.player_is_rage_mage() {
+            return false;
+        }
         let outcome = apply_resource_restoration(&mut self.resources, request);
         if outcome.recovered > 0 {
             self.mark_item_aware(source_kind_id);
@@ -4832,6 +5005,15 @@ impl Game {
         status_kind_id: &str,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
+        if source_kind_id == "demo.item.boldness-potion" && self.player_is_rage_mage() {
+            let pool = self
+                .resources
+                .get_mut("demo.resource.mana")
+                .expect("Rage pool");
+            let amount = pool.current.min(200);
+            pool.current -= amount;
+            self.resolve_item_healing(source_kind_id, amount as i32, events);
+        }
         let outcome = apply_status_removal(
             &mut self.player.statuses,
             StatusRemovalRequest::new(status_kind_id),
@@ -6660,6 +6842,7 @@ impl Game {
             | ItemUseEffectDefinition::TerrainBeam { .. }
             | ItemUseEffectDefinition::RidingCharge
             | ItemUseEffectDefinition::PiercingShot
+            | ItemUseEffectDefinition::RamaArrow
             | ItemUseEffectDefinition::RandomElementConeDamage { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters

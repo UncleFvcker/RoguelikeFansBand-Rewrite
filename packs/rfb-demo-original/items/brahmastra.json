@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.brahmastra",
+  "nameKey": "item-demo-brahmastra-name",
+  "descriptionKey": "item-demo-brahmastra-description",
+  "glyph": "{",
+  "generationLevel": 35,
+  "weightTenthsPound": 15,
+  "baseValue": 5000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "ammunition"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 391,
+    "baseItemKindId": "demo.item.arrow",
+    "instant": true,
+    "rarityOneIn": 35
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "QUESTITEM",
+      "SHOW_MODS",
+      "SLAY_DEMON"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "ammunitionProfile": {
+    "ammunitionType": "arrow",
+    "damageDice": 8,
+    "damageSides": 4,
+    "toDamage": 24,
+    "toHit": 27
+  },
+  "slays": {
+    "demon": "slay"
+  },
+  "brands": [
+    "fire"
+  ]
+}

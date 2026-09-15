@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.necromatic-tome",
+  "nameKey": "item-demo-necromatic-tome-name",
+  "descriptionKey": "item-demo-necromatic-tome-description",
+  "abilityBookId": "demo.ability-book.necromatic-tome",
+  "rfbBaseKind": {
+    "sourceIndex": 543,
+    "tval": 100,
+    "sval": 3
+  },
+  "baseValue": 100000,
+  "generationLevel": 80,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "book",
+    "necromancy",
+    "spellbook"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

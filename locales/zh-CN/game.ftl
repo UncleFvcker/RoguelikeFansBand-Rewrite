@@ -152,6 +152,7 @@ message-mutation-warning-safe = 你感觉还算安全。
 message-mutation-warning-lonely = 你感到孤单。
 message-mutation-direction-required = 魔法能量在你体内流淌！选择一个方向释放它。
 message-ability-direction-required = 为自然之怒选择一个方向。
+message-chaos-direction-required = 为召唤混沌选择一个方向；取消仍会消耗法力和回合。
 message-mutation-fumbled = 你被自己的脚绊倒了，受到 { $damage } 点伤害。
 message-mutation-fumbled-drop = 你被自己的脚绊倒了，受到 { $damage } 点伤害并掉落了{ $target }。
 message-mutation-reality-changed = 你拒绝了这个现实，并用另一个现实取而代之！
@@ -175,6 +176,7 @@ message-ability-cone-damage = { $ability }向前展开半径 { $radius } 的锥�
 message-ability-teleport = { $ability }令你从（{ $fromX }，{ $fromY }）瞬移到（{ $toX }，{ $toY }）。
 message-ability-summon = { $ability } 在附近空地召唤了 { $count } 个{ $actor }。
 message-ability-detect = { $ability }侦测到附近 { $count } 处“{ $category }”地形线索。
+message-ability-detect-monsters = { $ability }探测到附近 { $count } 个怪物。
 message-ability-detect-mind = { $ability }感知到附近 { $count } 个有心智的生物。
 message-ability-monsters-probed = { $ability }探测到 { $count } 个可见怪物。
 message-ability-terrain-transform = { $ability }把 { $count } 个地形格重塑为{ $terrain }。
@@ -779,3 +781,9 @@ riding-moved = 坐骑带着你自行移动。
 rest-stop-displaced = 位置发生变化
 
 message-campaign-abandoned = 你放弃了冒险，最终评分为 { $score }。
+message-ability-glyph-required = 奇迹：输入要灭绝的怪物符号（取消仍消耗本次施法）。
+
+status-necromancy-cloak-name = 黑色斗篷
+status-necromancy-shield-name = 亡者之盾
+
+ability-unavailable-no-active-song = 当前没有正在演唱的歌曲

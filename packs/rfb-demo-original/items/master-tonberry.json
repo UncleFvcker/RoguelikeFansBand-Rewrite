@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.master-tonberry",
+  "nameKey": "item-demo-master-tonberry-name",
+  "descriptionKey": "item-demo-master-tonberry-description",
+  "glyph": "]",
+  "generationLevel": 99,
+  "weightTenthsPound": 25,
+  "baseValue": 200000,
+  "maxStack": 1,
+  "equipmentSlot": "gloves",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 247,
+    "baseItemKindId": "demo.item.set-of-studded-leather-gloves",
+    "instant": false,
+    "rarityOneIn": 150
+  },
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "DEC_BLOWS",
+      "DEC_SPEED",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_DISEN",
+      "RES_TIME",
+      "STR",
+      "SUST_CON",
+      "SUST_STR",
+      "VULN_CONF"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 2,
+    "constitution": 2,
+    "defense": 2,
+    "speed": -2
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 10,
+    "meleeDamage": 100,
+    "meleeAttacksDeltaPercent": -200
+  },
+  "passives": [
+    "sustain-constitution",
+    "sustain-strength"
+  ],
+  "resistances": {
+    "confusion": "vulnerable",
+    "disenchant": "resistant",
+    "time": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ]
+}

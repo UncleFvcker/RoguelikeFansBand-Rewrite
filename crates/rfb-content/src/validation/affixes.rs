@@ -185,7 +185,8 @@ pub(super) fn valid_affix_device_generation(generation: &ItemDeviceGenerationDef
                 | ItemUseEffectDefinition::AreaDestruction { .. }
                 | ItemUseEffectDefinition::RandomTeleport { .. } => self_target,
                 ItemUseEffectDefinition::TerrainBeam { .. }
-                | ItemUseEffectDefinition::PiercingShot => projectile_target,
+                | ItemUseEffectDefinition::PiercingShot
+                | ItemUseEffectDefinition::RamaArrow => projectile_target,
                 ItemUseEffectDefinition::RidingCharge => {
                     activation.target.modes.as_slice()
                         == [

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.doomcaller",
+  "nameKey": "item-demo-doomcaller-name",
+  "descriptionKey": "item-demo-doomcaller-description",
+  "glyph": "|",
+  "generationLevel": 95,
+  "weightTenthsPound": 180,
+  "baseValue": 250000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 91,
+    "baseItemKindId": "demo.item.blade-of-chaos",
+    "instant": false,
+    "rarityOneIn": 25
+  },
+  "weaponProficiencyBaseItemId": "demo.item.blade-of-chaos",
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "BRAND_CHAOS",
+      "BRAND_COLD",
+      "BRAND_FIRE",
+      "BRAND_POIS",
+      "BRAND_VAMP",
+      "DEC_CON",
+      "DEC_LIFE",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_DRAGON",
+      "LITE",
+      "RES_ACID",
+      "RES_CHAOS",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_ELEC",
+      "RES_FIRE",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_EVIL",
+      "SLAY_GOOD",
+      "SLAY_HUMAN",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "TELEPATHY",
+      "VORPAL"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 7,
+    "damageSides": 5,
+    "toHit": 18,
+    "toDamage": 28
+  },
+  "modifiers": {
+    "constitution": -3
+  },
+  "equipmentBonuses": {
+    "lifePercent": -9,
+    "lightRadius": 1
+  },
+  "passives": [
+    "see-invisible",
+    "telepathy",
+    "vampiric"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "confusion": "resistant",
+    "chaos": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "animal": "slay",
+    "evil": "slay",
+    "good": "slay",
+    "human": "slay",
+    "orc": "slay",
+    "troll": "slay",
+    "dragon": "kill"
+  },
+  "brands": [
+    "chaos",
+    "cold",
+    "fire",
+    "poison"
+  ],
+  "vorpal": true
+}

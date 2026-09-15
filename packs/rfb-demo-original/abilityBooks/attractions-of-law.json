@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.attractions-of-law",
+  "nameKey": "item-demo-attractions-of-law-name",
+  "descriptionKey": "ability-book-demo-conjurings-and-tricks-description",
+  "realmId": "law",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.law-detect-money",
+    "demo.ability.law-detect-traps",
+    "demo.ability.law-satisfy-hunger",
+    "demo.ability.law-detect-objects",
+    "demo.ability.law-basic-trap",
+    "demo.ability.law-disarm-traps",
+    "demo.ability.law-identify",
+    "demo.ability.law-dig"
+  ],
+  "tags": [
+    "law",
+    "spellbook"
+  ]
+}

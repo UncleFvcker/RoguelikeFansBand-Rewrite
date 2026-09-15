@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.bugei-shofu",
+  "nameKey": "item-demo-bugei-shofu-name",
+  "descriptionKey": "ability-book-demo-conjurings-and-tricks-description",
+  "realmId": "hissatsu",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.hissatsu-tobi-izuna",
+    "demo.ability.hissatsu-three-way-attack",
+    "demo.ability.hissatsu-boomerang",
+    "demo.ability.hissatsu-burning-strike",
+    "demo.ability.hissatsu-detect-ferocity",
+    "demo.ability.hissatsu-stunning-strike",
+    "demo.ability.hissatsu-counter",
+    "demo.ability.hissatsu-harainuke"
+  ],
+  "tags": [
+    "hissatsu",
+    "spellbook"
+  ]
+}

@@ -1,0 +1,33 @@
+// RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c src/tables.c
+        { REALM_LAW, 0, 1,  1,  10,   2}, /* Detect Money */
+        { REALM_LAW, 1, 2,  1,  10,   2}, /* Detect Traps */
+        { REALM_LAW, 2, 3,  2,  10,   4}, /* Satisfy Hunger */
+        { REALM_LAW, 3, 4,  2,  20,   4}, /* Detect Objects */
+        { REALM_LAW, 4, 6,  3,  20,   8}, /* Basic Trap */
+        { REALM_LAW, 5, 8,  4,  20,   8}, /* Disarm Traps */
+        { REALM_LAW, 6, 10, 5,  30,   12}, /* Identify */
+        { REALM_LAW, 7, 12, 5,  30,   12}, /* Dig */
+        { REALM_LAW, 8, 10,  5,  25,   20}, /* Detect Monsters */
+        { REALM_LAW, 9, 12,  6,  30,   35}, /* Slow Monster */
+        { REALM_LAW, 10, 14,  6,  30,   25}, /* Confuse Monster */
+        { REALM_LAW, 11, 15,  7,  30,   30}, /* Scare Monster */
+        { REALM_LAW, 12, 25, 25,  50,   50}, /* Semicolon of Punishment */
+        { REALM_LAW, 13, 27, 15,  50,   50}, /* Confuse Everybody */
+        { REALM_LAW, 14, 35, 30,  60,   70}, /* Create Doors */
+        { REALM_LAW, 15, 42, 50,  70,   80}, /* Semicolon of Warding */
+        { REALM_LAW, 16, 12,  8,  25,   13}, /* Charm Monster */
+        { REALM_LAW, 17, 18, 18,  30,   45}, /* Expert Trap */
+        { REALM_LAW, 18, 20, 10,  35,   30}, /* Getaway */
+        { REALM_LAW, 19, 30, 20,  40,   35}, /* Blame Undead */
+        { REALM_LAW, 20, 32, 20,  50,   45}, /* Probe */
+        { REALM_LAW, 21, 35, 25,  50,   60}, /* Spin */
+        { REALM_LAW, 22, 40, 40,  60,   70}, /* Advanced Bloodsucking */
+        { REALM_LAW, 23, 50, 125, 65,  200}, /* Alter Reality */
+        { REALM_LAW, 24, 10,  10,  25,   15}, /* Blink */
+        { REALM_LAW, 25, 15,  12,  30,   25}, /* Tread Softly */
+        { REALM_LAW, 26, 20,  18,  35,   35}, /* Map Surroundings */
+        { REALM_LAW, 27, 25,  25,  45,   45}, /* Dig Deep */
+        { REALM_LAW, 28, 30,  30,  45,   55}, /* Unholy Rage */
+        { REALM_LAW, 29, 35,  32,  55,   65}, /* Subpoena */
+        { REALM_LAW, 30, 40,  35,  55,   75}, /* Teleport */
+        { REALM_LAW, 31, 45,  60,  70,   85}  /* Dazzle */

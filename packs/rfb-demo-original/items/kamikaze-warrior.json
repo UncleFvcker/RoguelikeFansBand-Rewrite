@@ -1,0 +1,121 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.kamikaze-warrior",
+  "nameKey": "item-demo-kamikaze-warrior-name",
+  "descriptionKey": "item-demo-kamikaze-warrior-description",
+  "glyph": "(",
+  "generationLevel": 50,
+  "weightTenthsPound": 20,
+  "baseValue": 80000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 272,
+    "baseItemKindId": "demo.item.robe",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "rfbValue": {
+    "flags": [
+      "DEC_WIS",
+      "DEX",
+      "HIDE_TYPE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "NO_ENCHANT",
+      "NO_MAGIC",
+      "RES_CONF",
+      "RES_FEAR",
+      "RES_FIRE",
+      "RES_NETHER",
+      "RES_POIS",
+      "RES_SOUND",
+      "SPEED",
+      "STR",
+      "SUST_DEX",
+      "SUST_STR",
+      "WEAPONMASTERY"
+    ],
+    "pval": 2,
+    "toArmor": -20
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": -18,
+    "strength": 2,
+    "wisdom": -2,
+    "dexterity": 2,
+    "speed": 2
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 10,
+    "meleeDamage": 10,
+    "weaponDiceBonus": 2
+  },
+  "passives": [
+    "anti-magic",
+    "hold-life",
+    "levitation",
+    "no-enchant",
+    "sustain-dexterity",
+    "sustain-strength"
+  ],
+  "resistances": {
+    "fire": "resistant",
+    "poison": "resistant",
+    "confusion": "resistant",
+    "nether": "resistant",
+    "sound": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.kamikaze-warrior",
+        "nameKey": "device-activation-e5-berserk-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 8,
+        "rfbValue": 2125,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.ares"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1000
+    }
+  }
+}

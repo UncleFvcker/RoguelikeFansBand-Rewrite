@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.stormbringer",
+  "nameKey": "item-demo-stormbringer-name",
+  "descriptionKey": "item-demo-stormbringer-description",
+  "glyph": "|",
+  "generationLevel": 45,
+  "weightTenthsPound": 180,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 190,
+    "baseItemKindId": "demo.item.blade-of-chaos",
+    "instant": false,
+    "rarityOneIn": 1
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_VAMP",
+      "CON",
+      "FREE_ACT",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_CHAOS",
+      "RES_CONF",
+      "RES_NETHER",
+      "SLAY_GOOD",
+      "SLAY_HUMAN",
+      "STR"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 2,
+    "constitution": 2
+  },
+  "weaponProficiencyBaseItemId": "demo.item.blade-of-chaos",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 6,
+    "damageSides": 6,
+    "toHit": 16,
+    "toDamage": 16
+  },
+  "passives": [
+    "hold-life",
+    "vampiric"
+  ],
+  "resistances": {
+    "confusion": "resistant",
+    "nether": "resistant",
+    "chaos": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "human": "slay",
+    "good": "slay"
+  }
+}

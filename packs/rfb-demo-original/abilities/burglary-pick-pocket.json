@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.burglary-pick-pocket",
+  "nameKey": "ability-demo-burglary-pick-pocket-name",
+  "descriptionKey": "ability-demo-burglary-pick-pocket-description",
+  "abilityProgramId": "demo.ability-program.burglary-pick-pocket",
+  "target": {
+    "modes": [
+      "direction",
+      "entity",
+      "position"
+    ],
+    "range": 1,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "burglary",
+    "technique"
+  ],
+  "affectsGroundItems": false
+}

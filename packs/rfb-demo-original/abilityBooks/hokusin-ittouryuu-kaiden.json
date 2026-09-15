@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.hokusin-ittouryuu-kaiden",
+  "nameKey": "item-demo-hokusin-ittouryuu-kaiden-name",
+  "descriptionKey": "ability-book-demo-five-aces-description",
+  "realmId": "hissatsu",
+  "rank": 4,
+  "abilityIds": [
+    "demo.ability.hissatsu-vampiric-fang",
+    "demo.ability.hissatsu-moon-dazzling",
+    "demo.ability.hissatsu-hundred-slaughter",
+    "demo.ability.hissatsu-dragonic-flash",
+    "demo.ability.hissatsu-twin-slash",
+    "demo.ability.hissatsu-kofu-zettousei",
+    "demo.ability.hissatsu-keiun-kininken",
+    "demo.ability.hissatsu-harakiri"
+  ],
+  "tags": [
+    "hissatsu",
+    "spellbook"
+  ]
+}

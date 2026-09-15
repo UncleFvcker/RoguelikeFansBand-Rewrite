@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.hissatsu-rush",
+  "nameKey": "ability-demo-hissatsu-rush-name",
+  "descriptionKey": "ability-demo-hissatsu-rush-description",
+  "abilityProgramId": "demo.ability-program.hissatsu-rush",
+  "target": {
+    "modes": [
+      "direction",
+      "entity",
+      "position"
+    ],
+    "range": 5,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "hissatsu",
+    "technique"
+  ]
+}

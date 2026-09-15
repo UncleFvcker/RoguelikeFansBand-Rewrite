@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.gogo",
+  "nameKey": "item-demo-gogo-name",
+  "descriptionKey": "item-demo-gogo-description",
+  "glyph": "\"",
+  "generationLevel": 50,
+  "weightTenthsPound": 2,
+  "baseValue": 55555,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": ["artifact", "equipment", "jewelry"],
+  "artifactGeneration": {"sourceIndex": 220, "baseItemKindId": "demo.item.amulet", "instant": false, "rarityOneIn": 50},
+  "rfbValue": {"flags": ["DEX", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "INT", "LITE", "SEE_INVIS", "WIS"], "pval": 4, "toArmor": 0},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "modifiers": {"intelligence": 4, "wisdom": 4, "dexterity": 4},
+  "equipmentBonuses": {"lightRadius": 1},
+  "passives": ["see-invisible"]
+}

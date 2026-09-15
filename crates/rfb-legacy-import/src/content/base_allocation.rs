@@ -295,10 +295,22 @@ mod tests {
             ));
             let book: Value = serde_json::from_slice(&fs::read(book_path).unwrap()).unwrap();
             let base = &item["rfbBaseKind"];
-            // Craft is authored in the formal pack; the bulk legacy importer
-            // does not emit its executable books. Source TV_CRAFT_BOOK is 97.
-            if base["tval"] == 97 {
-                assert_eq!(book["realmId"], "craft");
+            // These executable books are authored in the formal pack.
+            let authored_realm = match base["tval"].as_u64().unwrap() {
+                93 => Some("chaos"),
+                95 => Some("trump"),
+                97 => Some("craft"),
+                100 => Some("necromancy"),
+                104 => Some("law"),
+                105 => Some("music"),
+                106 => Some("hissatsu"),
+                107 => Some("hex"),
+                108 => Some("rage"),
+                109 => Some("burglary"),
+                _ => None,
+            };
+            if let Some(realm) = authored_realm {
+                assert_eq!(book["realmId"], realm);
                 assert!(base["sval"].as_u64().unwrap() < 4);
             } else {
                 let source_book = player_ability_book_for_item(&LegacyItemEntry {

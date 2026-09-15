@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.chaos-call-the-void",
+  "minimumLevel": 49,
+  "resourceCost": 100,
+  "baseFailurePercent": 85,
+  "firstSuccessExperience": 12250,
+  "resourceId": "demo.resource.mana"
+}

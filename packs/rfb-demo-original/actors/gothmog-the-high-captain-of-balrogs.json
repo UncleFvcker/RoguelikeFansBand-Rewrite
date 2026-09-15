@@ -190,6 +190,7 @@
     "nether": "resistant"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.gothmog", "chancePercent": 5},
   "speed": 135,
   "statusImmunities": [
     "rfb.status.confusion",

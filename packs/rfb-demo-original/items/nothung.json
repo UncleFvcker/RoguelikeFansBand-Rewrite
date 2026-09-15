@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.nothung",
+  "nameKey": "item-demo-nothung-name",
+  "descriptionKey": "item-demo-nothung-description",
+  "glyph": "|",
+  "generationLevel": 30,
+  "weightTenthsPound": 150,
+  "baseValue": 95000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 74,
+    "baseItemKindId": "demo.item.broad-sword",
+    "instant": false,
+    "rarityOneIn": 90
+  },
+  "weaponProficiencyBaseItemId": "demo.item.broad-sword",
+  "rfbValue": {
+    "flags": [
+      "BRAND_ELEC",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_DRAGON",
+      "LITE",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_POIS",
+      "RIDING",
+      "SEARCH",
+      "SHOW_MODS",
+      "SLAY_ORC",
+      "SLOW_DIGEST"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 6,
+    "toHit": 12,
+    "toDamage": 16
+  },
+  "equipmentBonuses": {
+    "searchSkill": 20,
+    "lightRadius": 1
+  },
+  "passives": [
+    "slow-digestion"
+  ],
+  "resistances": {
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "slays": {
+    "orc": "slay",
+    "dragon": "kill"
+  },
+  "brands": [
+    "electricity"
+  ],
+  "ridingWeaponKind": "compatible"
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.guan-yu",
+  "nameKey": "item-demo-guan-yu-name",
+  "descriptionKey": "item-demo-guan-yu-description",
+  "glyph": "|",
+  "generationLevel": 60,
+  "weightTenthsPound": 320,
+  "baseValue": 200000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 193,
+    "baseItemKindId": "demo.item.falchion",
+    "instant": false,
+    "rarityOneIn": 60
+  },
+  "weaponProficiencyBaseItemId": "demo.item.falchion",
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SHOW_MODS",
+      "SLAY_EVIL",
+      "SLAY_HUMAN",
+      "STR",
+      "VORPAL"
+    ],
+    "pval": 3,
+    "toArmor": 5
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 6,
+    "toHit": 20,
+    "toDamage": 20
+  },
+  "modifiers": {
+    "defense": 5,
+    "strength": 3,
+    "dexterity": 3,
+    "constitution": 3
+  },
+  "slays": {
+    "evil": "slay",
+    "human": "slay"
+  },
+  "vorpal": true
+}

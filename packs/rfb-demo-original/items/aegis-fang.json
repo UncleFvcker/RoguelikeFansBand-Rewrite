@@ -1,0 +1,115 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.aegis-fang",
+  "nameKey": "item-demo-aegis-fang-name",
+  "descriptionKey": "item-demo-aegis-fang-description",
+  "glyph": "\\",
+  "generationLevel": 30,
+  "weightTenthsPound": 100,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "blessed-weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 208,
+    "baseItemKindId": "demo.item.war-hammer",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "weaponProficiencyBaseItemId": "demo.item.war-hammer",
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "CHR",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "REGEN",
+      "RES_COLD",
+      "SEE_INVIS",
+      "SLAY_DEMON",
+      "SLAY_DRAGON",
+      "SLAY_EVIL",
+      "SLAY_GIANT",
+      "SLAY_ORC",
+      "STR",
+      "TUNNEL"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 4,
+    "toHit": 11,
+    "toDamage": 22
+  },
+  "tunnelingPval": 2,
+  "modifiers": {
+    "strength": 2,
+    "dexterity": 2,
+    "charisma": 2
+  },
+  "passives": [
+    "regeneration",
+    "see-invisible"
+  ],
+  "resistances": {
+    "cold": "resistant"
+  },
+  "slays": {
+    "evil": "slay",
+    "demon": "slay",
+    "orc": "slay",
+    "giant": "slay",
+    "dragon": "slay"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.aegis-fang",
+        "nameKey": "device-activation-e5-heroism-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 30,
+        "rfbValue": 2125,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.tyr"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 450
+    }
+  }
+}

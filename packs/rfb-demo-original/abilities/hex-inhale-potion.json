@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.hex-inhale-potion",
+  "nameKey": "ability-demo-hex-inhale-potion-name",
+  "descriptionKey": "ability-demo-hex-inhale-potion-description",
+  "abilityProgramId": "demo.ability-program.hex-inhale-potion",
+  "target": {
+    "modes": [
+      "item"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "hex",
+    "spell"
+  ],
+  "affectsGroundItems": false
+}

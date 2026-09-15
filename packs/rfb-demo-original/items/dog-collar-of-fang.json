@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dog-collar-of-fang",
+  "nameKey": "item-demo-dog-collar-of-fang-name",
+  "descriptionKey": "item-demo-dog-collar-of-fang-description",
+  "glyph": "\"",
+  "generationLevel": 5,
+  "weightTenthsPound": 30,
+  "baseValue": 5000,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": ["artifact", "equipment", "jewelry"],
+  "artifactGeneration": {"sourceIndex": 308, "baseItemKindId": "demo.item.amulet", "instant": false, "rarityOneIn": 70},
+  "rfbValue": {"flags": ["FULL_NAME", "HIDE_TYPE", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "QUESTITEM", "RES_FEAR", "STR"], "pval": 1, "toArmor": 0},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "modifiers": {"strength": 1},
+  "equipmentBonuses": {"meleeSkill": 2, "meleeDamage": 3},
+  "statusImmunities": ["rfb.status.fear"]
+}

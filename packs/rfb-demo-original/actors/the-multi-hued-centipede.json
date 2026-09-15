@@ -106,6 +106,7 @@
     "skeletonWeight": 0
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.multi-hued-centipede", "chancePercent": 5},
   "speed": 130,
   "statusImmunities": [
     "rfb.status.confusion",

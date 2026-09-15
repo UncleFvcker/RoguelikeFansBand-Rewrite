@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.stench-of-death",
+  "nameKey": "ability-book-demo-stench-of-death-name",
+  "descriptionKey": "ability-book-demo-stench-of-death-description",
+  "realmId": "necromancy",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.necromancy-cold-touch",
+    "demo.ability.necromancy-summon-rat",
+    "demo.ability.necromancy-detect-life",
+    "demo.ability.necromancy-detect-unlife",
+    "demo.ability.necromancy-poison-touch",
+    "demo.ability.necromancy-summon-bats",
+    "demo.ability.necromancy-eldritch-howl",
+    "demo.ability.necromancy-dark-touch"
+  ],
+  "tags": [
+    "necromancy",
+    "spellbook"
+  ]
+}

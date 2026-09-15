@@ -1,0 +1,53 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.bard-black-arrow",
+  "nameKey": "item-demo-bard-black-arrow-name",
+  "descriptionKey": "item-demo-bard-black-arrow-description",
+  "glyph": "{",
+  "generationLevel": 35,
+  "weightTenthsPound": 2,
+  "baseValue": 5000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "ammunition"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 153,
+    "baseItemKindId": "demo.item.black-arrow",
+    "instant": true,
+    "rarityOneIn": 35
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "KILL_DRAGON",
+      "SHOW_MODS"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "ammunitionProfile": {
+    "ammunitionType": "arrow",
+    "damageDice": 8,
+    "damageSides": 4,
+    "toDamage": 19,
+    "toHit": 30
+  },
+  "slays": {
+    "dragon": "kill"
+  }
+}

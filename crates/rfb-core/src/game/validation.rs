@@ -200,7 +200,11 @@ pub(super) fn item_creation_state_is_valid(
         return false;
     }
     let discounted_equipment = item.discount_percent == 99
-        && definition.artifact_generation.is_none()
+        && (definition.artifact_generation.is_none()
+            || item
+                .intrinsic_weapon_traits
+                .contains(&rfb_protocol::WeaponTraitDto::Blessed)
+                && (definition.melee_profile.is_some() || definition.projectile_profile.is_some()))
         && (definition.melee_profile.is_some()
             || definition
                 .tags
@@ -1767,7 +1771,13 @@ impl Game {
             let pools_valid = self.resources.len() == expected_pool_maxima.len()
                 && expected_pool_maxima.iter().all(|(id, expected_maximum)| {
                     self.resources.get(id).is_some_and(|pool| {
-                        pool.maximum == *expected_maximum && pool.current <= pool.maximum
+                        pool.maximum == *expected_maximum
+                            && pool.current
+                                <= if self.player_is_samurai() {
+                                    Self::samurai_mana_limit(pool.maximum, self.progress.level)
+                                } else {
+                                    pool.maximum
+                                }
                     })
                 });
             let learned_valid = match &casting_profile {
@@ -1785,7 +1795,92 @@ impl Game {
                 }
                 None => self.learned_abilities.is_empty(),
             };
+            if let Some(pending) = &self.pending_ability_glyph {
+                let cast = &pending.cast_resolution;
+                if cast.ability_id != "demo.ability.chaos-wonder"
+                    || !cast.succeeded
+                    || !self.learned_abilities.contains(&cast.ability_id)
+                    || self.map_scale != rfb_protocol::MapScaleDto::Local
+                    || self.pending_ability_direction.is_some()
+                    || self.pending_mutation_direction.is_some()
+                    || self.pending_duelist.is_some()
+                    || self.pending_realm_change_book().is_some()
+                    || self.ability_progress.get(&cast.ability_id).is_none_or(|p| {
+                        p.cast_count != cast.cast_count
+                            || p.fail_count != cast.fail_count
+                            || p.proficiency != cast.proficiency_after
+                    })
+                    || cast.resource_id.as_deref() != Some("demo.resource.mana")
+                    || cast.resource_paid != cast.resource_cost
+                    || cast.resource_before.checked_sub(cast.resource_paid)
+                        != Some(cast.resource_after)
+                    || self
+                        .resources
+                        .get("demo.resource.mana")
+                        .is_none_or(|p| p.current != cast.resource_after)
+                {
+                    return Err(CoreError::InvalidSave("pending spell glyph is invalid"));
+                }
+            }
+            if let Some(pending) = &self.pending_ability_direction
+                && matches!(
+                    pending.ability_id.as_str(),
+                    "demo.ability.chaos-call-chaos"
+                        | "demo.ability.trump-shuffle"
+                        | "demo.ability.hissatsu-hundred-slaughter"
+                        | "demo.ability.hex-revenge"
+                )
+            {
+                let cast = &pending.cast_resolution;
+                if !(if matches!(
+                    pending.ability_id.as_str(),
+                    "demo.ability.trump-shuffle"
+                        | "demo.ability.hissatsu-hundred-slaughter"
+                        | "demo.ability.hex-revenge"
+                ) {
+                    pending.branch_roll == 1
+                } else {
+                    (1..=62).contains(&pending.branch_roll)
+                }) || cast.ability_id != pending.ability_id
+                    || !cast.succeeded
+                    || cast.cast_count == 0
+                    || !self.learned_abilities.contains(&pending.ability_id)
+                    || self.pending_ability_glyph.is_some()
+                    || self.pending_mutation_direction.is_some()
+                    || self.pending_duelist.is_some()
+                    || self.pending_realm_change_book().is_some()
+                    || self.map_scale != rfb_protocol::MapScaleDto::Local
+                    || self
+                        .ability_progress
+                        .get(&pending.ability_id)
+                        .is_none_or(|p| {
+                            p.cast_count != cast.cast_count
+                                || p.fail_count != cast.fail_count
+                                || p.proficiency != cast.proficiency_after
+                        })
+                    || cast.resource_id.as_deref() != Some("demo.resource.mana")
+                    || cast.hp_paid != 0
+                    || cast.resource_paid != cast.resource_cost
+                    || cast.resource_before.checked_sub(cast.resource_paid)
+                        != Some(cast.resource_after)
+                    || self
+                        .resources
+                        .get("demo.resource.mana")
+                        .is_none_or(|p| p.current != cast.resource_after)
+                {
+                    return Err(CoreError::InvalidSave("pending Chaos direction is invalid"));
+                }
+            }
             if self.player_uses_dual_realm_learning()
+                && self.pending_ability_direction.as_ref().is_some_and(|p| {
+                    !matches!(
+                        p.ability_id.as_str(),
+                        "demo.ability.chaos-call-chaos"
+                            | "demo.ability.trump-shuffle"
+                            | "demo.ability.hissatsu-hundred-slaughter"
+                            | "demo.ability.hex-revenge"
+                    )
+                })
                 && self
                     .pending_ability_direction
                     .as_ref()
@@ -1817,6 +1912,7 @@ impl Game {
             if self.pending_realm_change_book().is_some_and(|id| {
                 self.realm_change_book(id).is_err()
                     || self.pending_ability_direction.is_some()
+                    || self.pending_ability_glyph.is_some()
                     || self.pending_mutation_direction.is_some()
                     || self.pending_duelist.is_some()
                     || self.casino.is_some()

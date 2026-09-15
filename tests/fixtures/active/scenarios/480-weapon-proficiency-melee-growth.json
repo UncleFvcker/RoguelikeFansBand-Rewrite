@@ -4,7 +4,7 @@
   "category": "progression",
   "legacyCommit": "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9",
   "determinism": "exact",
-  "seed": "0x4d454c4545",
+  "seed": "0x4d454c455b",
   "preconditions": {
     "world": "demo.world.middle-earth",
     "playerBuildId": "demo.build.warrior",
@@ -34,6 +34,8 @@
         "friendly": false,
         "noPet": false,
         "noGenocide": false,
+        "cloned": false,
+        "noDestruction": false,
         "castingCooldownRemaining": 0
       }
     ]

@@ -1,0 +1,106 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.kaustubha",
+  "nameKey": "item-demo-kaustubha-name",
+  "descriptionKey": "item-demo-kaustubha-description",
+  "glyph": "*",
+  "generationLevel": 70,
+  "weightTenthsPound": 5,
+  "baseValue": 150000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "equipment",
+    "light-source",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 388,
+    "baseItemKindId": "demo.item.jewel-629",
+    "instant": true,
+    "rarityOneIn": 90
+  },
+  "rfbValue": {
+    "flags": [
+      "ESP_DEMON",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INSTA_ART",
+      "INT",
+      "LORE2",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "RES_DARK",
+      "RES_DISEN",
+      "SEE_INVIS",
+      "SPEED",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "light",
+  "modifiers": {
+    "intelligence": 3,
+    "wisdom": 3,
+    "speed": 3
+  },
+  "equipmentBonuses": {
+    "lightRadius": 3
+  },
+  "passives": [
+    "auto-identify",
+    "esp-demon",
+    "hold-life",
+    "see-invisible"
+  ],
+  "resistances": {
+    "dark": "resistant",
+    "disenchant": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.kaustubha",
+        "nameKey": "device-activation-e5-ball-lite-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 40,
+        "rfbValue": 15000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.kaustubha-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1000
+    }
+  },
+  "initialCurse": "permanent"
+}

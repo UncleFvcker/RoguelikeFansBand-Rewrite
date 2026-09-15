@@ -1,0 +1,210 @@
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c
+
+N:60:of Feanor
+I:30:3:15
+W:40:120:40:300000
+P:3:1d1:0:0:20
+F:SPEED |
+F:RES_NEXUS
+E:SPEED:30:200
+E:你的靴子闪耀着明亮的绿光……
+D:这双神奇的皮靴曾加速了费诺——精灵宝钻的创造者，也是
+D:最强大的艾尔达精灵——让他跨过坚冰阵（Grinding Ice），最终
+D:抵达中土世界。
+
+N:74:'Nothung'
+I:23:16:4
+W:30:90:150:95000
+P:0:2d6:12:16:0
+F:SEARCH | BRAND_ELEC | SLAY_ORC | KILL_DRAGON |
+F:RES_ELEC | LITE | RES_FIRE | RES_POIS |
+F:SLOW_DIGEST | SHOW_MODS | RIDING
+
+N:85:'Chainsword'
+I:23:16:2
+W:50:50:130:66666
+P:0:9d6:-30:7:0
+F:DEC_DEX | DEC_CHR | HIDE_TYPE | AGGRAVATE | VORPAL2 | VORPAL
+F:SLAY_HUMAN | SLAY_TROLL | SLAY_ORC | SEE_INVIS | SHOW_MODS |
+F:ESP_ORC | ESP_TROLL | ESP_HUMAN
+
+N:92:'Vorpal Blade'
+I:23:17:2
+W:90:240:150:250000
+P:0:5d6:32:32:0
+F:VORPAL2 | SLAY_EVIL | HIDE_TYPE | VORPAL |
+F:FREE_ACT | LITE | SEE_INVIS | SLOW_DIGEST | REGEN | SPEED | STR | DEX | CHR
+D:“一，二！一，二！斩首剑，进又出，
+D:咔嚓咔嚓响！”
+
+N:125:of Bard
+I:19:13:3
+W:60:20:40:40000
+P:0:x4.00:17:29:0
+F:DEX | HIDE_TYPE | FREE_ACT | SHOW_MODS
+D:面容冷峻的巴德使用的巨大紫杉木弓，他射出了
+D:歌曲中所记载的最强大的一箭。
+
+N:139:'Winblows'
+I:21:13:4
+W:30:20:500:0
+P:0:8d7:0:30:0
+F:DEC_STEALTH | DEC_INT | DEC_WIS | AGGRAVATE | CURSED | HEAVY_CURSE |
+F:SHOW_MODS | BRAND_CHAOS | IMPACT | DEC_SPEED
+F:RANDOM_CURSE0
+
+N:150:'Zantetsuken'
+I:23:20:2
+W:50:25:120:80000
+P:0:8d5:17:21:0
+F:STR | DEX | VORPAL | TUNNEL | SHOW_MODS
+
+N:153:of Bard
+I:17:10:0
+W:35:35:2:5000
+P:0:8d4:30:19:0
+F:KILL_DRAGON | INSTA_ART | SHOW_MODS
+D:最致命的箭矢，注入了元素力量，这支箭
+D:特别令龙族感到恐惧。
+
+N:171:of Musashi
+I:23:20:3
+W:50:15:120:60000
+P:0:3d5:28:17:0
+F:DEX | HIDE_TYPE | SUST_DEX | SHOW_MODS
+D:这是著名的二刀流剑术创造者
+D:宫本武藏的打刀，他在战斗中用右手挥舞它。
+
+N:172:of Musashi
+I:23:13:3
+W:50:5:90:60000
+P:0:2d5:28:17:0
+F:DEX | HIDE_TYPE | SUST_DEX | SHOW_MODS
+D:这是著名的二刀流剑术创造者
+D:宫本武藏的胁差，他在战斗中用左手挥舞它。
+
+N:173:'Iron ball'
+I:21:6:6
+W:66:40:666:66666
+P:0:22d5:-30:0:20
+F:DEC_SPEED | DEC_STEALTH | DEC_WIS | STR | IMPACT | SHOW_MODS | HIDE_TYPE |
+F:CURSED | HEAVY_CURSE
+
+N:175:'Littlethorn'
+I:23:5:3
+W:20:6:30:22500
+P:0:1d6:18:6:0
+F:INT | CHR | REGEN | SLAY_EVIL |
+F:RES_NEXUS | FREE_ACT | SEE_INVIS | SHOW_MODS |
+
+N:179:'Excalibur Jr.'
+I:23:8:3
+W:25:8:80:60000
+P:0:2d7:3:5:0
+F:BLOWS
+F:SLAY_UNDEAD | SLAY_DRAGON | SLAY_ANIMAL |
+F:RES_FIRE | BLESSED |
+F:SLOW_DIGEST | SHOW_MODS
+D:由一位传奇巫师打造，并由英雄皮普（Pip）挥舞了很长一段时间，
+D:这把剑具有强大的魔力，但它对蜘蛛的极度恐惧也是出了名的……
+
+N:195:'Golden Hammer'
+I:21:19:0
+W:45:5:50:300000
+P:0:2d7:0:0:0
+
+N:208:'Aegis Fang'
+I:21:8:2
+W:30:40:100:100000
+P:0:3d4:11:22:0
+F:STR | DEX | CHR | TUNNEL | BLESSED |
+F:SLAY_EVIL | SLAY_DRAGON | SLAY_ORC | SLAY_GIANT | SLAY_DEMON |
+F:RES_COLD | SEE_INVIS | REGEN
+E:HEROISM:30:45:25
+
+N:270:'Cupid's Arrow'
+I:17:1:0
+W:35:35:2:2000
+P:0:1d4:0:0:0
+F:SHOW_MODS
+D:传统上，这支箭只能由胖胖的、衣着暴露的婴儿射出。
+
+N:272:of the Kamikaze Warrior
+I:36:2:2
+W:50:40:20:80000
+P:2:0d0:10:10:-20
+F:STR | DEX | DEC_WIS | SPEED | HIDE_TYPE
+F:SUST_STR | SUST_DEX | HOLD_LIFE | LEVITATION
+F:RES_FIRE | RES_POIS | RES_CONF | RES_SOUND | RES_NETHER | RES_FEAR
+F:NO_MAGIC | WEAPONMASTERY | NO_ENCHANT
+E:BERSERK:8:100
+E:你的长袍闪耀着深红色的光芒……
+D:这件长袍上沾满了许多倒下英雄的鲜血。
+D:这么多的死亡。这么大的破坏。到底是什么造成了这一切？
+
+N:275:'Assassinator'
+I:23:4:4
+W:44:250:12:110000
+P:0:1d5:44:4:0
+F:VORPAL | STEALTH | DEX
+D:它是喜欢在敌人熟睡时解决他们的刺客的
+D:终极武器。
+
+N:279:'Great Maul of Vice'
+I:21:19:2
+W:60:88:700:500000
+P:0:8d8:8:8:8
+F:CON | CHR | BRAND_VAMP | BRAND_ELEC | BRAND_POIS
+F:FREE_ACT | HOLD_LIFE | RES_NETHER | RES_NEXUS | RES_FEAR
+E:LIGHT_SPEED:40:888
+E:你的巨锤撕裂了时空的结构……
+D:这件奇特的物品是各个种族许多女性的最爱。
+D:那些发现自己靠近它的人，似乎会
+D:不断地失去金钱，而且似乎无法离开它的存在。
+
+N:294:'Eternal Blade'
+I:23:31:2
+W:90:50:130:120000
+P:0:7d7:32:32:0
+F:STR | CON | HIDE_TYPE | REGEN | SPEED | RES_TIME | VORPAL
+
+N:334:'Micro$oft Edge'
+I:23:31:6
+W:50:20:480:0
+P:0:6d6:6:36:-18
+F:DEC_INT | DEC_WIS | AGGRAVATE | CURSED | HEAVY_CURSE | VORPAL2
+F:BRAND_VAMP | BRAND_CHAOS | DEC_SPEED | SLAY_GOOD | DRAIN_EXP
+F:RANDOM_CURSE0
+D:它感觉太锋利（Edge）了，你可能会割伤自己。
+
+N:335:'Silver Hammer'
+I:21:19:2
+W:45:25:150:100000
+P:0:4d7:14:11:0
+F:BLOWS | STEALTH | SLAY_HUMAN | FREE_ACT | RES_FEAR | RES_ELEC | BRAND_ELEC
+D:你还以为那是他们瞎编的呢！
+
+N:341:'Skynail'
+I:23:16:3
+W:60:50:150:150000
+P:0:4d6:19:14:0
+F:SLAY_EVIL | BRAND_FIRE | RES_COLD | RES_DARK | LITE | SHOW_MODS | RIDING |
+F:XTRA_RES_OR_POWER | SPEED | STR | DEX | RES_CHAOS | VORPAL | BLESSED |
+D:一把极其坚固的闪亮剑刃，它甚至能把星星钉在原位。
+
+N:362:'Dragonchip'
+I:40:0:3
+W:65:90:3:70000
+F:CHR | NO_MAGIC | MAGIC_RESISTANCE | IGNORE_INVULN
+D:一个工艺无双的金色护身符，形状像一条飞龙，
+D:上面镶嵌着珍贵的宝石。它上面刻有强大的符文，
+D:无论是佩戴者的魔法还是敌人的魔法，在它附近都无法
+D:正常发挥作用。
+
+N:381:Mom's Loving Modular Sniper Crossbow
+I:19:23:0
+W:50:225:110:100000
+P:0:x5.05:48:44:0
+F:HIDE_TYPE | SHOW_MODS | FULL_NAME
+D:“老妈充满爱之武器公司（Mom's Loving Arms Company）”的伟大杰作，它能够
+D:发射任何弹药。

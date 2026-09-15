@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.destruction",
+  "nameKey": "item-demo-destruction-name",
+  "descriptionKey": "item-demo-destruction-description",
+  "glyph": "|",
+  "generationLevel": 70,
+  "weightTenthsPound": 30,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 189,
+    "baseItemKindId": "demo.item.falcon-sword",
+    "instant": false,
+    "rarityOneIn": 8
+  },
+  "weaponProficiencyBaseItemId": "demo.item.falcon-sword",
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "BLOWS",
+      "BRAND_ACID",
+      "BRAND_CHAOS",
+      "BRAND_COLD",
+      "BRAND_ELEC",
+      "BRAND_FIRE",
+      "BRAND_POIS",
+      "CURSED",
+      "DEX",
+      "HEAVY_CURSE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SPEED",
+      "STR",
+      "TY_CURSE"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 7,
+    "toHit": -25,
+    "toDamage": 25
+  },
+  "modifiers": {
+    "strength": 4,
+    "dexterity": 4,
+    "speed": 4
+  },
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 200
+  },
+  "brands": [
+    "acid",
+    "chaos",
+    "cold",
+    "electricity",
+    "fire",
+    "poison"
+  ],
+  "initialCurse": "heavy"
+}

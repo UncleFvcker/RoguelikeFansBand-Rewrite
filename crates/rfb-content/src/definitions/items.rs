@@ -984,6 +984,7 @@ pub enum ItemUseEffectDefinition {
         amount: u8,
     },
     PiercingShot,
+    RamaArrow,
     RemoveStatus {
         status_kind_id: String,
     },

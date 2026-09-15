@@ -3,7 +3,7 @@
 
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { CREATION_RACES, DRACONIAN_RACES, RACE_GROUPS, CAREER_GROUPS, CREATION_BUILDS, MAGE_REALMS, PRIEST_SECOND_REALMS, RANGER_SECOND_REALMS, WARRIOR_MAGE_SECOND_REALMS, creationLeaves } from "./character-creation.ts";
+import { CREATION_RACES, DRACONIAN_RACES, RACE_GROUPS, CAREER_GROUPS, CREATION_BUILDS, MAGE_REALMS, PALADIN_REALMS, PRIEST_SECOND_REALMS, RANGER_SECOND_REALMS, WARRIOR_MAGE_SECOND_REALMS, creationLeaves } from "./character-creation.ts";
 import test from "node:test";
 
 test("the main window explicitly permits the close command used by both exit buttons", () => {
@@ -31,13 +31,18 @@ test("character names are trimmed and bounded", () => {
 test("new character creation exposes all formal class slices", () => {
   assert.deepEqual([...PLAYTEST_BUILD_IDS].sort(), [
     "demo.build.warrior",
-    "demo.build.high-mage-death",
-    "demo.build.high-mage-craft",
+    ...MAGE_REALMS.map(realm => `demo.build.high-mage-${realm}`),
+    "demo.build.high-mage-hex",
     "demo.build.archer",
-    "demo.build.paladin-death",
+    ...PALADIN_REALMS.map(realm => `demo.build.paladin-${realm}`),
     "demo.build.cavalry",
     "demo.build.sniper",
     "demo.build.mindcrafter",
+    "demo.build.necromancer",
+    "demo.build.bard",
+    "demo.build.samurai",
+    "demo.build.rage-mage",
+    "demo.build.rogue",
     "demo.build.magic-eater",
     "demo.build.berserker",
     "demo.build.duelist",
@@ -122,10 +127,10 @@ test("random session seeds combine two entropy words without truncation", () => 
 });
 
 test("career leaves retain the existing class and realm mapping", () => {
-  assert.equal(CAREER_GROUPS.length, 8);
-  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 103);
+  assert.equal(CAREER_GROUPS.length, 9);
+  assert.equal(new Set(PLAYTEST_BUILD_IDS).size, 216);
   assert.equal(CAREER_GROUPS.find(group => group.id === "device").options[0].id, "demo.build.magic-eater");
-  assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.berserker", "demo.build.duelist"]);
+  assert.deepEqual(CAREER_GROUPS.find(group => group.id === "melee").options.map(entry => entry.id), ["demo.build.warrior", "demo.build.samurai", "demo.build.rage-mage", "demo.build.berserker", "demo.build.duelist"]);
   assert.equal(CAREER_GROUPS.find(group => group.id === "mind").options[0].id, "demo.build.mindcrafter");
   assert.deepEqual(createNewSessionRequest("83", "demo.build.mindcrafter", "demo.race.rfb-human", "心灵术士"), {
     seed: "83", buildId: "demo.build.mindcrafter", raceId: "demo.race.rfb-human", playerName: "心灵术士",
@@ -139,7 +144,7 @@ test("career leaves retain the existing class and realm mapping", () => {
       assert.equal(entry.nameKey, cls.nameKey);
       assert.equal(entry.descriptionKey, cls.descriptionKey);
       if ("children" in entry) {
-        assert.equal(leaves.length, entry.id === "mage" ? 56 : entry.id === "priest" ? 24 : entry.id === "warrior-mage" ? 8 : entry.id === "ranger" ? 4 : entry.id === "high-mage" ? 2 : 1);
+        assert.equal(leaves.length, entry.id === "mage" ? 132 : entry.id === "priest" ? 36 : entry.id === "warrior-mage" ? 11 : entry.id === "ranger" ? 6 : entry.id === "high-mage" ? 13 : entry.id === "paladin" ? 5 : 1);
         if (entry.id === "mage") {
           assert.ok(MAGE_REALMS.includes(build.firstRealmId));
           assert.ok(MAGE_REALMS.includes(build.secondRealmId));
@@ -157,10 +162,10 @@ test("career leaves retain the existing class and realm mapping", () => {
           assert.ok(RANGER_SECOND_REALMS.includes(build.secondRealmId));
           assert.equal(entry.childLabelKey, "session-second-realm-label");
           assert.equal(createNewSessionRequest("83", leaf.id, "rfb-legacy.race.tonberry", "游侠").buildId, leaf.id);
-        } else assert.equal(build.firstRealmId, leaf.id.endsWith("-craft") ? "craft" : "death");
+        } else assert.equal(build.firstRealmId, leaf.id.split("-").at(-1));
         assert.equal(leaf.descriptionKey, build.descriptionKey);
         assert.ok(!PLAYTEST_BUILD_IDS.includes(entry.id));
-      } else assert.equal(build.firstRealmId, undefined);
+      } else assert.equal(build.firstRealmId, leaf.id === "demo.build.necromancer" ? "necromancy" : leaf.id === "demo.build.bard" ? "music" : leaf.id === "demo.build.samurai" ? "hissatsu" : leaf.id === "demo.build.rage-mage" ? "rage" : leaf.id === "demo.build.rogue" ? "burglary" : undefined);
     }
   }
 });
@@ -169,25 +174,25 @@ test("Warrior-Mage hybrid menu matches all formal fixed-Arcane builds including 
   const entry = CAREER_GROUPS.find(group => group.id === "hybrid").options.find(entry => entry.id === "warrior-mage");
   const directory = new URL("../../packs/rfb-demo-original/builds/", import.meta.url);
   const formal = readdirSync(directory).filter(file => file.startsWith("warrior-mage-")).map(file => JSON.parse(readFileSync(new URL(file, directory), "utf8")));
-  assert.equal(formal.length, 8);
+  assert.equal(formal.length, 11);
   assert.deepEqual(creationLeaves([entry]).map(leaf => leaf.id).sort(), formal.map(build => build.id).sort());
-  for (const second of ["arcane", "chaos", "trump", "law"]) assert.equal(PLAYTEST_BUILD_IDS.includes(`demo.build.warrior-mage-arcane-${second}`), false);
+  for (const second of ["arcane", "necromancy"]) assert.equal(PLAYTEST_BUILD_IDS.includes(`demo.build.warrior-mage-arcane-${second}`), false);
 });
 
-test("Priest menu exposes exactly the 24 formal pairs and excludes absent, repeated and opposing realms", () => {
+test("Priest menu exposes exactly the 36 formal pairs and excludes absent, repeated and opposing realms", () => {
   const priest = CAREER_GROUPS.find(group => group.id === "prayer").options[0];
   const directory = new URL("../../packs/rfb-demo-original/builds/", import.meta.url);
   const formal = readdirSync(directory).filter(file => file.startsWith("priest-")).map(file => JSON.parse(readFileSync(new URL(file, directory), "utf8")));
-  assert.equal(formal.length, 24);
+  assert.equal(formal.length, 36);
   assert.deepEqual(creationLeaves([priest]).map(leaf => leaf.id).sort(), formal.map(build => build.id).sort());
   for (const branch of priest.children) {
-    assert.equal(branch.children.length, 6);
+    assert.equal(branch.children.length, 9);
     for (const locale of ["en-US", "zh-CN"]) {
       const ui = readFileSync(new URL(`../../locales/${locale}/ui.ftl`, import.meta.url), "utf8");
       for (const key of [branch.nameKey, branch.descriptionKey, branch.childLabelKey, ...branch.notes]) assert.ok(ui.includes(`${key} =`));
     }
   }
-  for (const pair of ["life-life", "life-death", "crusade-daemon", "death-life", "daemon-crusade", "nature-sorcery", "life-chaos", "death-trump", "daemon-law"]) {
+  for (const pair of ["life-life", "life-death", "crusade-daemon", "death-life", "daemon-crusade", "nature-sorcery", "life-necromancy", "death-necromancy"]) {
     assert.equal(PLAYTEST_BUILD_IDS.includes(`demo.build.priest-${pair}`), false);
   }
 });
@@ -196,9 +201,9 @@ test("Mage realm branches exclude repeats and match every formal ordered Build",
   const mage = CAREER_GROUPS.find(group => group.id === "magic").options.find(entry => entry.id === "mage");
   const sourceClass = JSON.parse(readFileSync(new URL("../../packs/rfb-demo-original/classes/mage.json", import.meta.url), "utf8"));
   assert.deepEqual([...MAGE_REALMS].sort(), sourceClass.castingProfile.realmProfiles.map(realm => realm.realmId).sort());
-  assert.equal(mage.children.length, 8);
+  assert.equal(mage.children.length, 12);
   for (const first of mage.children) {
-    assert.equal(first.children.length, 7);
+    assert.equal(first.children.length, 11);
     const firstId = first.id.slice("mage-".length);
     assert.deepEqual(first.children.map(second => second.id), MAGE_REALMS.filter(second => second !== firstId).map(second => `demo.build.mage-${firstId}-${second}`));
     for (const locale of ["en-US", "zh-CN"]) {

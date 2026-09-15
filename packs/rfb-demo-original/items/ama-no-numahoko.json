@@ -1,0 +1,125 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.ama-no-numahoko",
+  "nameKey": "item-demo-ama-no-numahoko-name",
+  "descriptionKey": "item-demo-ama-no-numahoko-description",
+  "glyph": "/",
+  "generationLevel": 50,
+  "weightTenthsPound": 240,
+  "baseValue": 150000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "blessed-weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 202,
+    "baseItemKindId": "demo.item.awl-pike",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "weaponProficiencyBaseItemId": "demo.item.awl-pike",
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "CHR",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "RES_ACID",
+      "RES_BLIND",
+      "RES_CHAOS",
+      "RES_COLD",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLAY_EVIL",
+      "SLAY_UNDEAD",
+      "SUST_CHR",
+      "SUST_WIS",
+      "WIS"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 10,
+    "toHit": 16,
+    "toDamage": 20
+  },
+  "modifiers": {
+    "wisdom": 4,
+    "charisma": 4
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "passives": [
+    "see-invisible",
+    "sustain-charisma",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "chaos": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.blindness"
+  ],
+  "slays": {
+    "evil": "slay",
+    "undead": "slay",
+    "demon": "slay"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.ama-no-numahoko",
+        "nameKey": "device-activation-e5-ball-water-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 9000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.ama-no-numahoko-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 2500
+    }
+  }
+}

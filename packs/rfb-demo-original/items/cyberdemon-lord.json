@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.cyberdemon-lord",
+  "nameKey": "item-demo-cyberdemon-lord-name",
+  "descriptionKey": "item-demo-cyberdemon-lord-description",
+  "glyph": "[",
+  "generationLevel": 90,
+  "weightTenthsPound": 700,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 311,
+    "baseItemKindId": "demo.item.full-plate-armour",
+    "instant": false,
+    "rarityOneIn": 3
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "CON",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_POIS",
+      "RES_SHARDS",
+      "STR"
+    ],
+    "pval": 3,
+    "toArmor": 40
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 3,
+    "constitution": 3,
+    "charisma": 3,
+    "defense": 90
+  },
+  "equipmentBonuses": {
+    "meleeSkill": -5,
+    "meleeDamage": 15
+  },
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant",
+    "poison": "resistant",
+    "confusion": "resistant",
+    "shards": "resistant"
+  }
+}

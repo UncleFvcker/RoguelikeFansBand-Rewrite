@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.necromancy-dark-touch",
+  "minimumLevel": 13,
+  "resourceCost": 8,
+  "baseFailurePercent": 45,
+  "firstSuccessExperience": 39,
+  "resourceId": "demo.resource.mana"
+}

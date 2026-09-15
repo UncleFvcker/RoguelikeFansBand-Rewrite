@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.return-of-the-dead",
+  "nameKey": "ability-book-demo-return-of-the-dead-name",
+  "descriptionKey": "ability-book-demo-return-of-the-dead-description",
+  "realmId": "necromancy",
+  "rank": 3,
+  "abilityIds": [
+    "demo.ability.necromancy-summon-zombies",
+    "demo.ability.necromancy-summon-skeletons",
+    "demo.ability.necromancy-summon-ghosts",
+    "demo.ability.necromancy-summon-vampires",
+    "demo.ability.necromancy-summon-wights",
+    "demo.ability.necromancy-summon-liches",
+    "demo.ability.necromancy-unholy-word",
+    "demo.ability.necromancy-hopeless-endeavor"
+  ],
+  "tags": [
+    "necromancy",
+    "spellbook"
+  ]
+}

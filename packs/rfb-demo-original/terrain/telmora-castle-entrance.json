@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.telmora-castle-entrance",
+  "nameKey": "town-facility-demo-telmora-castle-name",
+  "descriptionKey": "town-facility-demo-telmora-castle-description",
+  "glyph": "0",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": [
+    "surface",
+    "town-facility-entrance"
+  ]
+}

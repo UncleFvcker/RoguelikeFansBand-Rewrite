@@ -548,6 +548,16 @@
             "null"
           ]
         },
+        "symbolGroups": {
+          "description": "RFB legend payloads: each group permutes symbols, preserving each symbol's cells.\nA singleton supplies an unshuffled random monster/object legend.",
+          "items": {
+            "items": {
+              "$ref": "#/$defs/InlineFloorSymbolDefinition"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
         "taskTerrainOverrides": {
           "default": [],
           "items": {
@@ -572,6 +582,66 @@
       "required": [
         "playerPosition",
         "terrainOverrides"
+      ],
+      "type": "object"
+    },
+    "InlineFloorSymbolDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "actorDepth": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "actorKindId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "itemDepth": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "itemKindId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lootTableId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "positions": {
+          "items": {
+            "$ref": "#/$defs/ContentPosition"
+          },
+          "type": "array"
+        },
+        "terrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "positions",
+        "terrainId"
       ],
       "type": "object"
     },

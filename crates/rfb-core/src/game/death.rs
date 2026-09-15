@@ -205,6 +205,51 @@ impl Game {
         }
     }
 
+    fn summon_dawn_successor(
+        &mut self,
+        actor: &Actor,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        if actor.kind_id != "demo.actor.warrior-of-the-dawn"
+            || self.rng.bounded(5) == 0
+            || self.player_has_equipped_artifact(335)
+        {
+            return;
+        }
+        let terrain = self.terrain.clone();
+        for _ in 0..100 {
+            let position = self.original_scatter_position(
+                &terrain,
+                self.width,
+                self.height,
+                actor.position,
+                20,
+            );
+            if position == self.player.position
+                || self
+                    .entities
+                    .iter()
+                    .any(|entity| entity.position == position)
+                || !self.actor_kind_can_enter_position(&actor.kind_id, position)
+            {
+                continue;
+            }
+            let id = self.summon_entity_id(&actor.kind_id, 0);
+            let mut successor = self.generated_actor(id, &actor.kind_id, position);
+            successor.controller_id = actor.controller_id.clone();
+            successor.alerted = true;
+            self.entities.push(successor);
+            changed.insert(position);
+            if self.is_visible(position) {
+                events.push(DomainEvent::ItemSpecialMessage {
+                    message_key: "monster-dawn-successor".to_owned(),
+                });
+            }
+            break;
+        }
+    }
+
     fn apply_death_explosion_slow(&mut self, actor: &Actor, cells: &[(u32, Position)]) {
         if cells
             .iter()
@@ -546,7 +591,9 @@ impl Game {
             .expect("living actor definition must remain available")
             .clone();
         let (generated_loot, generated_gold) = self.generate_death_loot(&actor)?;
-        let corpse_kind_id = if let Some(kind_id) = actor_definition.corpse_item_kind_id {
+        let corpse_kind_id = if actor.cloned {
+            None
+        } else if let Some(kind_id) = actor_definition.corpse_item_kind_id {
             Some(kind_id)
         } else if let Some(remains) = actor_definition.remains {
             if self.rng.bounded(u64::from(remains.chance_denominator)) != 0 {
@@ -691,6 +738,7 @@ impl Game {
         self.actor_death_explosion(&dying_actor, events, changed, removed_entities)?;
         self.summon_variant_maintainer_software_bugs(&dying_actor, changed);
         self.summon_odins_avenger(&dying_actor, events, changed);
+        self.summon_dawn_successor(&dying_actor, events, changed);
         let index = self
             .entities
             .iter()
@@ -751,10 +799,11 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
         // mon_take_hit: revival happens before death events, rewards and unique
-        // bookkeeping. ART_SILVER_HAMMER (335) is not an available item yet.
+        // bookkeeping. Silver Hammer suppresses revival after the source roll.
         if credit_player
             && self.entities[index].kind_id == "demo.actor.the-phoenix"
             && self.rng.bounded(3) == 0
+            && !self.player_has_equipped_artifact(335)
         {
             let actor = &mut self.entities[index];
             actor.hp = actor.max_hp;
@@ -777,6 +826,7 @@ impl Game {
         self.actor_death_explosion(&dying_actor, events, changed, removed_entities)?;
         self.summon_variant_maintainer_software_bugs(&dying_actor, changed);
         self.summon_odins_avenger(&dying_actor, events, changed);
+        self.summon_dawn_successor(&dying_actor, events, changed);
         let index = self
             .entities
             .iter()

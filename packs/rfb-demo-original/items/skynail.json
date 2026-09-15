@@ -1,0 +1,89 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.skynail",
+  "nameKey": "item-demo-skynail-name",
+  "descriptionKey": "item-demo-skynail-description",
+  "glyph": "|",
+  "generationLevel": 60,
+  "weightTenthsPound": 150,
+  "baseValue": 150000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "blessed-weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 341,
+    "baseItemKindId": "demo.item.broad-sword",
+    "instant": false,
+    "rarityOneIn": 50,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-res-or-power"
+    ]
+  },
+  "weaponProficiencyBaseItemId": "demo.item.broad-sword",
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "BRAND_FIRE",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "RES_CHAOS",
+      "RES_COLD",
+      "RES_DARK",
+      "RIDING",
+      "SHOW_MODS",
+      "SLAY_EVIL",
+      "SPEED",
+      "STR",
+      "VORPAL",
+      "XTRA_RES_OR_POWER"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 6,
+    "toHit": 19,
+    "toDamage": 14
+  },
+  "modifiers": {
+    "strength": 3,
+    "dexterity": 3,
+    "speed": 3
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant",
+    "chaos": "resistant"
+  },
+  "slays": {
+    "evil": "slay"
+  },
+  "brands": [
+    "fire"
+  ],
+  "vorpal": true,
+  "ridingWeaponKind": "compatible"
+}

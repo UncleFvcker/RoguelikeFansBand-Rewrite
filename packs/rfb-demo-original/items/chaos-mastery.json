@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.chaos-mastery",
+  "nameKey": "item-demo-chaos-mastery-name",
+  "descriptionKey": "item-demo-chaos-mastery-description",
+  "abilityBookId": "demo.ability-book.chaos-mastery",
+  "rfbBaseKind": {
+    "sourceIndex": 513,
+    "tval": 93,
+    "sval": 1
+  },
+  "baseValue": 1000,
+  "generationLevel": 20,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "book",
+    "chaos",
+    "spellbook"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ]
+}

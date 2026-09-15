@@ -1,0 +1,499 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "dualWieldingMaximum": 8000,
+  "id": "demo.class.samurai",
+  "nameKey": "class-demo-samurai-name",
+  "descriptionKey": "class-demo-samurai-description",
+  "modifiers": {
+    "strength": 2,
+    "intelligence": -2,
+    "wisdom": 1,
+    "dexterity": 2,
+    "constitution": 1,
+    "charisma": 1
+  },
+  "lifePercent": 107,
+  "experiencePercent": 130,
+  "baseHp": 12,
+  "skillSetId": "demo.skill-set.samurai",
+  "weaponProficiency": {
+    "defaultInitial": 2000,
+    "defaultMaximum": 8000,
+    "overrides": {
+      "demo.item.awl-pike": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.ball-and-chain": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.baseball-bat": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.basillard": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.bastard-sword": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.battle-axe": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.beaked-axe": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.blade-of-chaos": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.bo-staff": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.broad-axe": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.broad-spear": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.broad-sword": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.broken-dagger": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.broken-sword": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.claymore": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.club": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.cutlass": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.dagger": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.diamond-edge": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.dragon-fang": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.dwarven-pick": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.dwarven-shovel": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.espadon": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.executioners-sword": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.falchion": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.falcon-sword": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.fauchard": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.fishingpole": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.flail": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.flamberge": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.glaive": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.gnomish-shovel": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.great-axe": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.great-hammer": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.guisarme": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.halberd": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.hatchet": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.heavy-crossbow": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.heavy-lance": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.jo-staff": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.katana": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.khopesh": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.lajatang": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.lance": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.lead-filled-mace": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.light-crossbow": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.lochaber-axe": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.long-bow": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.long-sword": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.lucerne-hammer": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.mace-of-disruption": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.mace": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.main-gauche": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.mattock": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.morning-star": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.naginata": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.ninjato": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.no-dachi": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.nunchaku": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.orcish-pick": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.pick": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.pike": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.quarterstaff": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.rapier": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.rune-sword": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.sabre": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.scimitar": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.scythe-of-slicing": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.scythe": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.short-bow": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.short-sword": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.shovel": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.sickle": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.sling": {
+        "initial": 2000,
+        "maximum": 6000
+      },
+      "demo.item.small-sword": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.spear": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.tanto": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.tetsubo": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.three-piece-rod": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.trident": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.trifurcate-spear": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.tulwar": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.two-handed-flail": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.two-handed-sword": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.wakizashi": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.war-hammer": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.whip": {
+        "initial": 4000,
+        "maximum": 8000
+      },
+      "demo.item.wizardstaff": {
+        "initial": 0,
+        "maximum": 0
+      },
+      "demo.item.zweihander": {
+        "initial": 4000,
+        "maximum": 8000
+      }
+    }
+  },
+  "ridingProficiency": {
+    "initial": 0,
+    "maximum": 4000
+  },
+  "petUpkeepDivisor": 40,
+  "usesSpellScrolls": true,
+  "castingProfile": {
+    "resourceId": "demo.resource.mana",
+    "castingAttribute": "wisdom",
+    "capacityFormula": "rfb-mana",
+    "baseCapacity": 0,
+    "capacityPerLevel": 0,
+    "capacityPerAttributeIndex": 0,
+    "capacityPercent": 100,
+    "learningFormula": "linear",
+    "failureFormula": "rfb-magic",
+    "baseLearningCapacity": 32,
+    "learningCapacityPerLevel": 0,
+    "learningCapacityPerAttributeIndex": 0,
+    "learningCapacityCap": 32,
+    "resourceRecoveryPercent": 100,
+    "minimumFailurePercent": 0,
+    "beamChanceLevelMultiplier": 0,
+    "beamChanceLevelDivisor": 1,
+    "spellDamageBonusBase": 0,
+    "spellDamageBonusPerLevel": 0,
+    "spellDamageBonusLevelDivisor": 5,
+    "encumbrance": {
+      "maximumWeightTenthsPound": 3000,
+      "weaponWeightPercent": 0,
+      "penaltyWeightTenthsPound": 1200,
+      "gloveEncumbrance": false
+    },
+    "realmProfiles": [
+      {
+        "realmId": "hissatsu",
+        "abilityBookIds": [
+          "demo.ability-book.bugei-shofu",
+          "demo.ability-book.yagyuu-bugeichou",
+          "demo.ability-book.gorinnosho",
+          "demo.ability-book.hokusin-ittouryuu-kaiden"
+        ]
+      }
+    ]
+  },
+  "abilities": [
+    {
+      "abilityId": "demo.ability.samurai-concentration",
+      "minimumLevel": 1,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0
+    },
+    {
+      "abilityId": "demo.ability.samurai-no-posture",
+      "minimumLevel": 25,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0
+    },
+    {
+      "abilityId": "demo.ability.samurai-iai",
+      "minimumLevel": 25,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0
+    },
+    {
+      "abilityId": "demo.ability.samurai-fuujin",
+      "minimumLevel": 30,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0
+    },
+    {
+      "abilityId": "demo.ability.samurai-koukijin",
+      "minimumLevel": 35,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0
+    },
+    {
+      "abilityId": "demo.ability.samurai-musou",
+      "minimumLevel": 40,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0
+    }
+  ],
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.katana",
+      "quantity": 1,
+      "equipped": true
+    },
+    {
+      "itemKindId": "demo.item.chain-mail",
+      "quantity": 1,
+      "equipped": true
+    }
+  ],
+  "specialItemTags": [
+    "spellbook"
+  ],
+  "tags": [
+    "caster",
+    "samurai",
+    "rfb-compatibility"
+  ],
+  "levelResistances": [
+    {
+      "minimumLevel": 30,
+      "resistances": {
+        "fear": "resistant"
+      }
+    }
+  ]
+}

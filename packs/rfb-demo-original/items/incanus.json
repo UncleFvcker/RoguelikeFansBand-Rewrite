@@ -1,0 +1,115 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.incanus",
+  "nameKey": "item-demo-incanus-name",
+  "descriptionKey": "item-demo-incanus-description",
+  "glyph": "(",
+  "generationLevel": 50,
+  "weightTenthsPound": 20,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 131,
+    "baseItemKindId": "demo.item.robe",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "rfbValue": {
+    "flags": [
+      "DEC_MANA",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "LEVITATION",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "SEARCH",
+      "SEE_INVIS",
+      "SPELL_CAP",
+      "SUST_INT",
+      "SUST_WIS",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 20
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 22,
+    "intelligence": 3,
+    "wisdom": 3
+  },
+  "equipmentBonuses": {
+    "searchSkill": 15,
+    "spellCapacityBonus": 3
+  },
+  "passives": [
+    "levitation",
+    "reduced-mana-cost",
+    "see-invisible",
+    "sustain-intelligence",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "cold": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.incanus",
+        "nameKey": "device-activation-e5-bolt-mana-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 6000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.incanus-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1200
+    }
+  }
+}

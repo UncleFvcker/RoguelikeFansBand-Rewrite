@@ -224,6 +224,7 @@
     "poison": "immune"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.emperor-lich", "chancePercent": 5},
   "speed": 130,
   "statusImmunities": [
     "rfb.status.confusion",

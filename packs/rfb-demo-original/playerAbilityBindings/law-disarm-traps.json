@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.law-disarm-traps",
+  "minimumLevel": 8,
+  "resourceCost": 4,
+  "baseFailurePercent": 20,
+  "firstSuccessExperience": 64,
+  "resourceId": "demo.resource.mana"
+}

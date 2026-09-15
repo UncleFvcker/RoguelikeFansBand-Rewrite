@@ -133,6 +133,7 @@
     "poison": "resistant"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.atlas", "chancePercent": 5},
   "speed": 125,
   "tags": [
     "attack-spell",

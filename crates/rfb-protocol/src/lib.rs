@@ -78,6 +78,16 @@ impl Direction {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct SamuraiStateDto {
+    pub mana_decay_fraction: u16,
+    pub posture: u8,
+    pub counter: bool,
+    pub sutemi: bool,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -97,12 +107,25 @@ pub struct PendingAbilityDirectionDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PendingAbilityGlyphDto {
+    pub cast_resolution: AbilityCastResolutionDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
     tag = "type",
     rename_all = "kebab-case",
     rename_all_fields = "camelCase"
 )]
 pub enum DuelistPromptDto {
+    LawEscape,
+    BurglaryEscape,
+    BurglaryNegotiate {
+        target_entity_id: String,
+        cost: u32,
+    },
     Charge {
         ability_id: String,
         target_entity_id: String,
@@ -363,6 +386,9 @@ pub enum GameCommand {
         target: TargetSelection,
     },
     CancelAbilityDirection,
+    ResolveAbilityGlyph {
+        glyph: Option<String>,
+    },
     ClearDuelistChallenge,
     ResolveDuelistChoice {
         choice: DuelistChoiceDto,
@@ -1412,6 +1438,30 @@ pub enum TerrainInteractionKindDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
+#[derive(Default)]
+pub struct MusicStateDto {
+    pub spell: Option<u8>,
+    pub beats: u8,
+    pub interrupted: bool,
+    pub half_mana: bool,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct HexStateDto {
+    pub active: u32,
+    pub interrupted: bool,
+    pub mana_fraction: u32,
+    pub revenge_kind: u8,
+    pub revenge_ticks: u8,
+    pub revenge_damage: u32,
+    pub revenge_cast: Option<AbilityCastResolutionDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
 pub struct ResourcePoolDto {
     pub id: String,
     pub name_key: String,
@@ -1557,6 +1607,7 @@ pub struct AbilitySummonCandidateSpecDto {
 #[serde(rename_all = "kebab-case")]
 pub enum AbilityTerrainBeamOperationDto {
     JamDoors,
+    DisarmTraps,
     DestroyTrapsAndDoors,
     StoneToMud,
 }
@@ -1787,6 +1838,9 @@ pub enum AbilityEffectSpecDto {
     },
     PolymorphSelf,
     PolymorphTarget,
+    CloneTarget,
+    HasteTarget,
+    HealTarget,
     SwapPosition,
     Recall {
         delay_dice: u16,
@@ -1845,6 +1899,46 @@ pub enum AbilityEffectSpecDto {
         radius: u8,
         duration_turns: u16,
     },
+    ChainLightning,
+    ChaosMeteorSwarm,
+    TrumpSummoning {
+        category: String,
+    },
+    TrumpShuffle,
+    Necromancy {
+        spell: u8,
+    },
+    Music {
+        spell: u8,
+    },
+    StopSinging,
+    Burglary {
+        spell: u8,
+    },
+    Rage {
+        spell: u8,
+    },
+    Hex {
+        spell: u8,
+    },
+    StopHex {
+        spell: Option<u8>,
+    },
+    Hissatsu {
+        spell: u8,
+    },
+    SamuraiConcentration,
+    SamuraiPosture {
+        posture: u8,
+    },
+    Law {
+        spell: u8,
+    },
+    ResetRecall,
+    CallChaos,
+    ChaosPolymorphSelf,
+    CallVoid,
+
     DemonSummoning,
     AngelSummoning,
     BanishEvil {
@@ -2107,6 +2201,8 @@ pub enum AbilityEffectSpecDto {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         remaining_divisor: Option<u32>,
     },
+    PrepareConfusingStrike,
+    DestroyAdjacentTrapsAndDoors,
     SatisfyHunger,
     DevourFlesh {
         maximum_hp_divisor: u16,
@@ -2277,6 +2373,9 @@ pub struct AbilityDto {
     pub element_targets: Vec<DamageTypeDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub item_targets: Option<Vec<AbilityItemTargetDto>>,
+    /// Submit this target when item selection is cancelled; absence means no cast.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub item_selection_cancel_target: Option<TargetSelection>,
     pub learned: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub forgotten: bool,
@@ -3629,6 +3728,11 @@ pub enum AbilityEffectResolutionDto {
         hp_before: i32,
         hp_after: i32,
     },
+    CloneTarget {
+        effect_index: u8,
+        cloned_entity_id: Option<String>,
+        protected: bool,
+    },
     PolymorphTarget {
         effect_index: u8,
         target_entity_id: String,
@@ -4242,10 +4346,15 @@ pub struct PlayerDto {
     pub minor_slow: u8,
     #[serde(default)]
     pub reality_change_ticks: u8,
+    pub music: MusicStateDto,
+    pub hex: HexStateDto,
+    pub rage_mana_sustained: bool,
+    pub samurai: SamuraiStateDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
+    pub pending_ability_glyph: Option<PendingAbilityGlyphDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub duelist_target_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5707,6 +5816,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(Direction);
     push_declaration!(PendingMutationDirectionDto);
     push_declaration!(PendingAbilityDirectionDto);
+    push_declaration!(PendingAbilityGlyphDto);
     push_declaration!(DuelistPromptDto);
     push_declaration!(DuelistChoiceDto);
     push_declaration!(DuelistContinuationDto);
@@ -5782,6 +5892,9 @@ pub fn generated_typescript() -> String {
     push_declaration!(TargetModeDto);
     push_declaration!(TargetSpecDto);
     push_declaration!(ResourcePoolDto);
+    push_declaration!(MusicStateDto);
+    push_declaration!(HexStateDto);
+    push_declaration!(SamuraiStateDto);
     push_declaration!(AbilityLearningDto);
     push_declaration!(SpellRealmsDto);
     push_declaration!(RealmChangeBookDto);
@@ -6015,8 +6128,13 @@ pub struct PlayerSaveDto {
     pub chaos_patron_id: Option<String>,
     #[serde(default)]
     pub reality_change_ticks: u8,
+    pub music: MusicStateDto,
+    pub hex: HexStateDto,
+    pub rage_mana_sustained: bool,
+    pub samurai: SamuraiStateDto,
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
+    pub pending_ability_glyph: Option<PendingAbilityGlyphDto>,
     pub duelist_target_id: Option<String>,
     pub pending_duelist: Option<PendingDuelistDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6203,8 +6321,12 @@ pub struct ActorSaveDto {
     pub friendly: bool,
     pub no_pet: bool,
     pub no_genocide: bool,
+    pub cloned: bool,
+    pub no_destruction: bool,
     #[serde(default)]
     pub casting_cooldown_remaining: u16,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub burglary_drops_remaining: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub observed_player_resistances: Vec<ResistanceSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -6294,6 +6416,8 @@ pub struct ResistanceSaveDto {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CapturedActorSaveDto {
     pub custom_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub burglary_drops_remaining: Option<u32>,
     pub kind_id: String,
     pub speed: u16,
     pub hp: i32,
@@ -7334,8 +7458,13 @@ mod tests {
                 energy_need: 0,
                 minor_slow: 0,
                 reality_change_ticks: 0,
+                music: MusicStateDto::default(),
+                hex: HexStateDto::default(),
+                rage_mana_sustained: false,
+                samurai: SamuraiStateDto::default(),
                 pending_mutation_direction: None,
                 pending_ability_direction: None,
+                pending_ability_glyph: None,
                 duelist_target_id: None,
                 pending_duelist: None,
                 carried_weight_tenths_pound: 5,
@@ -7600,6 +7729,8 @@ mod tests {
         current["entities"][0]["friendly"] = serde_json::json!(false);
         current["entities"][0]["noPet"] = serde_json::json!(false);
         current["entities"][0]["noGenocide"] = serde_json::json!(false);
+        current["entities"][0]["cloned"] = serde_json::json!(false);
+        current["entities"][0]["noDestruction"] = serde_json::json!(false);
         current["entities"][0]["minorSlow"] = serde_json::json!(0);
         current["items"][0]["permanentDestructionImmunities"] = serde_json::json!([]);
         current["inventory"][0]["permanentDestructionImmunities"] = serde_json::json!([]);
@@ -7693,8 +7824,13 @@ mod tests {
             minor_slow_energy: 0,
             chaos_patron_id: None,
             reality_change_ticks: 0,
+            music: MusicStateDto::default(),
+            hex: HexStateDto::default(),
+            rage_mana_sustained: false,
+            samurai: SamuraiStateDto::default(),
             pending_mutation_direction: None,
             pending_ability_direction: None,
+            pending_ability_glyph: None,
             duelist_target_id: None,
             pending_duelist: None,
             statuses: Vec::new(),

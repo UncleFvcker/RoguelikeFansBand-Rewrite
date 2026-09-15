@@ -34,7 +34,8 @@ pub(in crate::game) fn nature_wrath_direction_roll(events: &[DomainEvent]) -> Op
 
 impl Game {
     pub(in crate::game) fn dungeon_blocks_player_ability(&self, ability_id: &str) -> bool {
-        self.dungeon_blocks_magic()
+        !ability_id.starts_with("demo.ability.hissatsu-")
+            && self.dungeon_blocks_magic()
             && self.mutation_activation_for_ability(ability_id).is_none()
             && self.race_ability_activation(ability_id).is_none()
             && self.class_ability_activation(ability_id).map_or_else(
@@ -55,6 +56,12 @@ impl Game {
         &self,
         ability_id: &str,
     ) -> Option<&'static str> {
+        if let Some(reason) = self.hex_ability_unavailable_reason(ability_id) {
+            return Some(reason);
+        }
+        if let Some(reason) = self.samurai_ability_unavailable_reason(ability_id) {
+            return Some(reason);
+        }
         if self.maia_forbids_spell(ability_id)
             && self.mutation_activation_for_ability(ability_id).is_none()
             && self.race_ability_activation(ability_id).is_none()
@@ -86,6 +93,9 @@ impl Game {
             }
         }
         match ability.effect {
+            AbilityEffectDefinition::StopSinging if self.music.spell.is_none() => {
+                Some("no-active-song")
+            }
             AbilityEffectDefinition::BeginFasting if self.fasting => Some("already-fasting"),
             AbilityEffectDefinition::ClearMind if self.pet_upkeep().controlled_pets > 0 => {
                 Some("pets-require-attention")
@@ -195,14 +205,21 @@ impl Game {
             });
             return Ok(None);
         }
-        if source == AbilitySourceDto::Learned && self.player_has_anti_magic() {
+        if source == AbilitySourceDto::Learned
+            && !matches!(ability.effect, AbilityEffectDefinition::Hissatsu { .. })
+            && self.player_has_anti_magic()
+        {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "anti-magic".to_owned(),
             });
             return Ok(None);
         }
-        if source == AbilitySourceDto::Learned && self.player_has_status_kind(STATUS_BERSERK) {
+        if source == AbilitySourceDto::Learned
+            && !matches!(ability.effect, AbilityEffectDefinition::Hissatsu { .. })
+            && !matches!(ability.effect, AbilityEffectDefinition::Rage { .. })
+            && self.player_has_status_kind(STATUS_BERSERK)
+        {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "berserk".to_owned(),
@@ -264,7 +281,10 @@ impl Game {
                     Some("level-too-low")
                 } else if !self.profile_supports_ability(profile, ability_id) {
                     Some("ability-not-supported")
-                } else if self.ability_book_item_id(profile, ability_id).is_none() {
+                } else if !self.player_is_samurai()
+                    && !self.player_is_rage_mage()
+                    && self.ability_book_item_id(profile, ability_id).is_none()
+                {
                     Some("book-unavailable")
                 } else if self.ability_cooldown_remaining(&ability) > 0 {
                     Some("cooldown")
@@ -289,6 +309,9 @@ impl Game {
             return Ok(None);
         }
 
+        if matches!(ability.effect, AbilityEffectDefinition::Hissatsu { .. }) {
+            self.set_samurai_posture(0);
+        }
         // Validate the target before charging resources/HP or drawing the
         // failure/damage RNG. The command remains a normal scheduled action,
         // but an impossible target cannot consume resources or proficiency.
@@ -449,8 +472,21 @@ impl Game {
             });
             return Ok(None);
         }
-        let percentile_roll =
-            u8::try_from(self.rng.bounded(100)).expect("percentile ability roll must fit u8");
+        if matches!(ability.effect, AbilityEffectDefinition::Music { .. }) {
+            self.stop_music();
+        }
+        let percentile_roll = if matches!(
+            ability.effect,
+            AbilityEffectDefinition::StopSinging
+                | AbilityEffectDefinition::StopHex { .. }
+                | AbilityEffectDefinition::Hissatsu { .. }
+                | AbilityEffectDefinition::SamuraiConcentration
+                | AbilityEffectDefinition::SamuraiPosture { .. }
+        ) {
+            0
+        } else {
+            u8::try_from(self.rng.bounded(100)).expect("percentile ability roll must fit u8")
+        };
         let succeeded = percentile_roll >= failure_percent;
         // spells.c::do_cmd_power rolls failure before SPELL_CAST. Vampirism's
         // NO_MELEE cancellation then refunds time and cost; a failed power still pays.
@@ -485,6 +521,9 @@ impl Game {
         let resource_after = resource_before.saturating_sub(resource_paid);
         let book_spell =
             source == AbilitySourceDto::Learned && self.player_uses_dual_realm_learning();
+        if !succeeded && let AbilityEffectDefinition::Rage { spell } = ability.effect {
+            self.rage_failure(spell);
+        }
         let progress_after = if source != AbilitySourceDto::Learned {
             mutation_progress
         } else {
@@ -519,6 +558,26 @@ impl Game {
                 resolution.hp_paid = self.pay_class_ability_hit_points(hp_paid);
             }
             events.push(DomainEvent::AbilityCastFailed { resolution });
+            if let AbilityEffectDefinition::Necromancy { spell } = ability.effect {
+                self.necromancy_summon(
+                    &ability,
+                    spell,
+                    self.player.position,
+                    true,
+                    events,
+                    changed,
+                );
+            }
+            if let AbilityEffectDefinition::TrumpSummoning { category } = &ability.effect {
+                self.resolve_trump_summoning(
+                    &ability,
+                    category,
+                    self.player.position,
+                    true,
+                    events,
+                    changed,
+                );
+            }
             if super::mindcraft::is_mindcraft_spell(&ability) {
                 self.resolve_mindcraft_failure(
                     &ability,
@@ -563,14 +622,72 @@ impl Game {
             None
         };
 
+        if ability_id == "demo.ability.chaos-wonder" && random_branch_index == Some(20) {
+            self.pending_ability_glyph = Some(rfb_protocol::PendingAbilityGlyphDto {
+                cast_resolution: resolution,
+            });
+            return Ok(None);
+        }
         let practice = book_spell.then(|| (ability.clone(), self.spell_practice_targets()));
-        let result = self.resolve_player_ability_effect(
-            ability,
-            target_plan,
-            events,
-            changed,
-            removed_entities,
-        );
+        let shuffle = matches!(ability.effect, AbilityEffectDefinition::TrumpShuffle);
+        if shuffle && self.begin_trump_shuffle(&ability, events, changed, removed_entities)? {
+            self.pending_ability_direction = Some(rfb_protocol::PendingAbilityDirectionDto {
+                ability_id: ability.id.clone(),
+                branch_roll: 1,
+                cast_resolution: resolution,
+            });
+            return Ok(None);
+        }
+        let call_chaos = matches!(ability.effect, AbilityEffectDefinition::CallChaos);
+        if call_chaos
+            && let Some(branch_roll) =
+                self.begin_call_chaos(&ability, events, changed, removed_entities)?
+        {
+            self.pending_ability_direction = Some(rfb_protocol::PendingAbilityDirectionDto {
+                ability_id: ability.id.clone(),
+                branch_roll,
+                cast_resolution: resolution,
+            });
+            return Ok(None);
+        }
+        if matches!(
+            ability.effect,
+            AbilityEffectDefinition::Hissatsu { spell: 26 }
+        ) {
+            let before = removed_entities.len();
+            self.resolve_player_ability_effect(
+                ability.clone(),
+                target_plan,
+                events,
+                changed,
+                removed_entities,
+            )?;
+            if removed_entities.len() > before
+                && !self.player_is_dead()
+                && self
+                    .resources
+                    .get("demo.resource.mana")
+                    .is_some_and(|p| p.current > 8)
+            {
+                self.pending_ability_direction = Some(rfb_protocol::PendingAbilityDirectionDto {
+                    ability_id: ability.id,
+                    branch_roll: 1,
+                    cast_resolution: resolution,
+                });
+            }
+            return Ok(None);
+        }
+        let result = if call_chaos || shuffle {
+            Ok(None)
+        } else {
+            self.resolve_player_ability_effect(
+                ability,
+                target_plan,
+                events,
+                changed,
+                removed_entities,
+            )
+        };
         if result.is_ok() && source == AbilitySourceDto::Class && self.duelist_prompt().is_some() {
             events.remove(cast_event_index);
             self.continue_after_duelist_choice(rfb_protocol::DuelistContinuationDto::ClassCast {
@@ -592,10 +709,15 @@ impl Game {
         }
         let direction_pending =
             ability_id == NATURE_WRATH_ABILITY_ID && nature_wrath_direction_roll(events).is_some();
-        if result.is_ok() && !direction_pending && first_success_experience > 0 {
+        if result.is_ok()
+            && !self.player_is_dead()
+            && !direction_pending
+            && first_success_experience > 0
+        {
             self.apply_player_experience(u64::from(first_success_experience), events);
         }
         if result.is_ok()
+            && !self.player_is_dead()
             && !direction_pending
             && let Some((ability, targets)) = practice
         {
@@ -661,7 +783,10 @@ impl Game {
             u64::from(base_roll.saturating_add(level_bonus)),
         ))
         .expect("spell-powered random ability roll must fit i32");
-        if ability.id == DEATH_INVOKE_SPIRITS_ABILITY_ID {
+        if matches!(
+            ability.id.as_str(),
+            DEATH_INVOKE_SPIRITS_ABILITY_ID | "demo.ability.chaos-wonder"
+        ) {
             roll = self.adjust_roll_by_chance_virtue(roll);
             if roll < 26 {
                 self.add_virtue(VirtueKindDto::Chance, 1);
@@ -672,9 +797,12 @@ impl Game {
             .enumerate()
             .find(|(_, branch)| roll <= i32::from(branch.maximum_roll))
             .or_else(|| {
-                (ability.id == DEATH_INVOKE_SPIRITS_ABILITY_ID)
-                    .then(|| branches.iter().enumerate().next_back())
-                    .flatten()
+                matches!(
+                    ability.id.as_str(),
+                    DEATH_INVOKE_SPIRITS_ABILITY_ID | "demo.ability.chaos-wonder"
+                )
+                .then(|| branches.iter().enumerate().next_back())
+                .flatten()
             })
             .expect("validated random ability branches must cover every roll");
         let branch_index =
@@ -694,6 +822,12 @@ impl Game {
             trace: None,
         });
         ability.effect = (*branch.effect).clone();
+        // Wonder's genocide branch collects its glyph only after paying and drawing.
+        // It has no projectile/self target to resolve during this first command.
+        if ability.id == "demo.ability.chaos-wonder" && branch_index == 20 {
+            *target_plan = AbilityTargetPlan::SelfTarget;
+            return branch_index;
+        }
         match branch.target {
             AbilityRandomTargetDefinition::CastTarget => {
                 if !matches!(ability.effect, AbilityEffectDefinition::NoOp { .. }) {
@@ -706,12 +840,164 @@ impl Game {
                 ability.target.modes = vec![AbilityTargetModeDefinition::SelfTarget];
                 ability.target.range = 0;
                 ability.target.requires_line_of_effect = false;
-                *target_plan = self
-                    .ability_target_plan(ability, &TargetSelection::SelfTarget)
-                    .expect("validated random branch must accept a self target");
+                // A paid random earthquake may land on a protected surface;
+                // its executor handles that no-effect result without rerolling.
+                *target_plan =
+                    if matches!(ability.effect, AbilityEffectDefinition::Earthquake { .. }) {
+                        AbilityTargetPlan::SelfTarget
+                    } else {
+                        self.ability_target_plan(ability, &TargetSelection::SelfTarget)
+                            .expect("validated random branch must accept a self target")
+                    };
             }
         }
         branch_index
+    }
+
+    pub(in crate::game) fn resolve_pending_ability_glyph(
+        &mut self,
+        glyph: Option<String>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        if glyph
+            .as_ref()
+            .is_some_and(|g| g.chars().count() != 1 || g.chars().any(char::is_control))
+        {
+            return Err(CoreError::AbilityGlyphUnavailable);
+        }
+        let pending = self
+            .pending_ability_glyph
+            .clone()
+            .ok_or(CoreError::AbilityGlyphUnavailable)?;
+        let cast = pending.cast_resolution;
+        let profile = self
+            .casting_profile()
+            .cloned()
+            .ok_or(CoreError::AbilityGlyphUnavailable)?;
+        let definition = self
+            .content
+            .ability(&cast.ability_id)
+            .ok_or(CoreError::AbilityGlyphUnavailable)?;
+        let mut ability = self.effective_casting_ability(&profile, definition);
+        Self::apply_player_level_scaling(&mut ability, self.progress.level);
+        let AbilityEffectDefinition::RandomChoice { branches, .. } = &ability.effect else {
+            return Err(CoreError::AbilityGlyphUnavailable);
+        };
+        ability.effect = (*branches[20].effect).clone();
+        let targets = self.spell_practice_targets();
+        self.pending_ability_glyph = None;
+        if glyph.is_some() {
+            self.resolve_player_genocide_effect(
+                &ability,
+                None,
+                glyph,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
+        // Wonder ignores symbol_genocide's cancellation return: the paid cast,
+        // first-success experience, virtues and one action are retained.
+        if cast.cast_count == 1 {
+            let experience = Self::player_ability_parameters(&ability).first_success_experience;
+            if experience > 0 {
+                self.apply_player_experience(u64::from(experience), events);
+            }
+        }
+        if self.player_uses_dual_realm_learning() {
+            self.apply_book_spell_cast_virtues(
+                &ability.id,
+                cast.resource_cost,
+                cast.failure_percent,
+                cast.cast_count == 1,
+            );
+            self.grow_book_spell(&ability, &targets, events);
+        }
+        Ok(())
+    }
+
+    pub(in crate::game) fn resolve_pending_call_chaos(
+        &mut self,
+        direction: Option<Direction>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        if self
+            .pending_ability_direction
+            .as_ref()
+            .is_some_and(|p| p.ability_id == "demo.ability.hissatsu-hundred-slaughter")
+        {
+            return self.continue_hissatsu_slaughter(direction, events, changed, removed_entities);
+        }
+        if self
+            .pending_ability_direction
+            .as_ref()
+            .is_some_and(|p| p.ability_id == "demo.ability.hex-revenge")
+        {
+            return self.continue_hex_revenge(direction, events, changed, removed_entities);
+        }
+        let pending = self
+            .pending_ability_direction
+            .clone()
+            .ok_or(CoreError::AbilityDirectionUnavailable)?;
+        if !((pending.ability_id == "demo.ability.chaos-call-chaos"
+            && (1..=62).contains(&pending.branch_roll))
+            || (pending.ability_id == "demo.ability.trump-shuffle" && pending.branch_roll == 1))
+        {
+            return Err(CoreError::AbilityDirectionUnavailable);
+        }
+        let ability = self
+            .content
+            .ability(&pending.ability_id)
+            .cloned()
+            .ok_or(CoreError::AbilityDirectionUnavailable)?;
+        let targets = self.spell_practice_targets();
+        self.pending_ability_direction = None;
+        if let Some(direction) = direction {
+            if pending.ability_id == "demo.ability.trump-shuffle" {
+                let profile = self.casting_profile().expect("paid spell profile");
+                let effective = self.effective_casting_ability(profile, &ability);
+                self.trump_lovers(&effective, direction, events, changed, removed_entities)?;
+            } else {
+                self.call_chaos_projection(
+                    &ability,
+                    pending.branch_roll,
+                    direction,
+                    250,
+                    3 + (self.progress.level / 35) as u8,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+        }
+        if self.player_is_dead() {
+            return Ok(());
+        }
+        let cast = pending.cast_resolution;
+        if cast.cast_count == 1 {
+            let profile = self
+                .casting_profile()
+                .expect("pending Chaos cast has a profile");
+            let effective = self.effective_casting_ability(profile, &ability);
+            let experience = Self::player_ability_parameters(&effective).first_success_experience;
+            if experience > 0 {
+                self.apply_player_experience(u64::from(experience), events);
+            }
+        }
+        if self.player_uses_dual_realm_learning() {
+            self.apply_book_spell_cast_virtues(
+                &ability.id,
+                cast.resource_cost,
+                cast.failure_percent,
+                cast.cast_count == 1,
+            );
+            self.grow_book_spell(&ability, &targets, events);
+        }
+        Ok(())
     }
 
     pub(in crate::game) fn resolve_pending_ability_direction(
@@ -721,6 +1007,22 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        if self.pending_ability_direction.as_ref().is_some_and(|p| {
+            matches!(
+                p.ability_id.as_str(),
+                "demo.ability.chaos-call-chaos"
+                    | "demo.ability.trump-shuffle"
+                    | "demo.ability.hissatsu-hundred-slaughter"
+                    | "demo.ability.hex-revenge"
+            )
+        }) {
+            return self.resolve_pending_call_chaos(
+                Some(direction),
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         let pending = self
             .pending_ability_direction
             .clone()

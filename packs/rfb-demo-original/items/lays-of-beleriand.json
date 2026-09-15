@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.lays-of-beleriand",
+  "nameKey": "item-demo-lays-of-beleriand-name",
+  "descriptionKey": "item-demo-lays-of-beleriand-description",
+  "abilityBookId": "demo.ability-book.lays-of-beleriand",
+  "rfbBaseKind": {
+    "sourceIndex": 555,
+    "tval": 105,
+    "sval": 3
+  },
+  "baseValue": 100000,
+  "generationLevel": 80,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "music",
+    "book",
+    "spellbook"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

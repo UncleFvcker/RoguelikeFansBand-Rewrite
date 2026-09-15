@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.padre",
+  "nameKey": "item-demo-padre-name",
+  "descriptionKey": "item-demo-padre-description",
+  "glyph": "[",
+  "generationLevel": 55,
+  "weightTenthsPound": 340,
+  "baseValue": 80000,
+  "maxStack": 1,
+  "equipmentSlot": "body",
+  "tags": ["artifact", "equipment", "armor"],
+  "artifactGeneration": {"sourceIndex": 206, "baseItemKindId": "demo.item.metal-lamellar-armour", "instant": false, "rarityOneIn": 5},
+  "rfbValue": {"flags": ["CHR", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "LITE", "REFLECT", "RES_CHAOS", "RES_FIRE"], "pval": 2, "toArmor": 17},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "modifiers": {"defense": 40, "charisma": 2},
+  "equipmentBonuses": {"meleeSkill": 5, "meleeDamage": 5, "lightRadius": 1},
+  "passives": ["reflects-bolts"],
+  "resistances": {"fire": "resistant", "chaos": "resistant"}
+}

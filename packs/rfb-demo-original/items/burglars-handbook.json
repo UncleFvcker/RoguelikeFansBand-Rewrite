@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.burglars-handbook",
+  "nameKey": "item-demo-burglars-handbook-name",
+  "descriptionKey": "item-demo-burglars-handbook-description",
+  "abilityBookId": "demo.ability-book.burglars-handbook",
+  "rfbBaseKind": {
+    "sourceIndex": 568,
+    "tval": 109,
+    "sval": 0
+  },
+  "baseValue": 100,
+  "generationLevel": 10,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "burglary",
+    "book",
+    "spellbook"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ]
+}

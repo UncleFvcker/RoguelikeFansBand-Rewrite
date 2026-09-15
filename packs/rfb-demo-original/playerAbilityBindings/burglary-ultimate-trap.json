@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.burglary-ultimate-trap",
+  "minimumLevel": 47,
+  "resourceCost": 100,
+  "baseFailurePercent": 90,
+  "firstSuccessExperience": 5640,
+  "resourceId": "demo.resource.mana"
+}

@@ -3,6 +3,35 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn telmora_symbol_groups_reject_invalid_content_and_duplicate_artifact_placement() {
+    let base = compile_pack_dir(&original_pack_path()).unwrap().content;
+    for invalid in [
+        "empty",
+        "duplicate-cell",
+        "duplicate-payload",
+        "unknown-item",
+        "actor-depth",
+    ] {
+        let mut content = base.clone();
+        let floor = content.worlds[0]
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == "demo.floor.telmora-vault")
+            .unwrap();
+        let group = &mut floor.inline_map.as_mut().unwrap().symbol_groups[0];
+        match invalid {
+            "empty" => group.clear(),
+            "duplicate-cell" => group[1].positions = group[0].positions.clone(),
+            "duplicate-payload" => group[0].positions.push(ContentPosition { x: 1, y: 1 }),
+            "unknown-item" => group[0].item_kind_id = Some("demo.item.missing".into()),
+            "actor-depth" => group[0].actor_depth = Some(256),
+            _ => unreachable!(),
+        }
+        assert!(validate_and_normalize(&mut content).is_err(), "{invalid}");
+    }
+}
+
+#[test]
 fn asgard_depths_and_source_shafts_keep_direction_span_and_dungeon_boundaries() {
     let content = compile_pack_dir(&original_pack_path()).unwrap().content;
     let world = &content.worlds[0];
@@ -219,7 +248,16 @@ fn zul_node_maps_rewards_and_admission_references_match_source() {
             .find(|item| item.id == format!("demo.item.{book}"))
             .unwrap();
         assert_eq!(book.elemental_destruction_immunities.len(), 4);
-        assert_eq!(book.ability_book_id.is_some(), realm != "chaos");
+        assert_eq!(
+            book.ability_book_id.as_deref(),
+            Some(
+                format!(
+                    "demo.ability-book.{book_id}",
+                    book_id = book.id.strip_prefix("demo.item.").unwrap()
+                )
+                .as_str()
+            )
+        );
     }
     for invalid in [
         "no-facility",
@@ -1041,7 +1079,7 @@ fn telmora_keeps_the_full_map_and_unopened_quest_terrain() {
         assert_eq!(tiles[&position], terrain);
     }
     for x in 41..=44 {
-        assert_eq!(tiles[&(x, 21)], "demo.terrain.permanent-wall");
+        assert_eq!(tiles[&(x, 21)], "demo.terrain.telmora-castle-entrance");
     }
     // Unassigned spaces leave the source TERRAIN_TOWN background (FLOOR).
     assert_eq!(tiles[&(130, 0)], "demo.terrain.floor");
@@ -2488,7 +2526,7 @@ fn early_monster_profiles_keep_existing_traits() {
             ability_ids("demo.actor.drider"),
             [
                 "rfb-legacy.ability.bolt-physical-2d6-4",
-                "rfb-legacy.ability.bolt-physical-3d6",
+                "rfb-legacy.ability.arrow-physical-3d6",
                 "rfb-legacy.ability.confuse",
                 "rfb-legacy.ability.curse-3d8",
                 "rfb-legacy.ability.darkness",
@@ -2525,7 +2563,7 @@ fn early_monster_profiles_keep_existing_traits() {
         );
         assert_eq!(
             ability_ids("demo.actor.black-orc"),
-            ["rfb-legacy.ability.bolt-physical-2d7"]
+            ["rfb-legacy.ability.arrow-physical-2d7"]
                 .into_iter()
                 .collect()
         );
@@ -2614,7 +2652,7 @@ fn early_monster_profiles_keep_existing_traits() {
         );
         assert_eq!(
             ability_ids("demo.actor.orcish-artillery"),
-            ["rfb-legacy.ability.bolt-physical-3d6"]
+            ["rfb-legacy.ability.arrow-physical-3d6"]
                 .into_iter()
                 .collect()
         );
@@ -2864,7 +2902,7 @@ fn monster_projectile_parameters_match_source() {
         );
         assert_eq!(
             ability_ids("demo.actor.griffon"),
-            ["rfb-legacy.ability.bolt-physical-4d5"]
+            ["rfb-legacy.ability.arrow-physical-4d5"]
                 .into_iter()
                 .collect()
         );
@@ -2954,7 +2992,7 @@ fn monster_projectile_parameters_match_source() {
             );
             assert!(actor(id).movement.never_moves);
         }
-        assert_abilities("uruk", &["bolt-physical-3d5"]);
+        assert_abilities("uruk", &["arrow-physical-3d5"]);
         assert_abilities(
             "chaos-beastman",
             &[
@@ -2967,7 +3005,7 @@ fn monster_projectile_parameters_match_source() {
         assert_abilities("giant-bronze-dragon-fly", &["breath-confusion-17-400-r2"]);
         assert_abilities("stone-giant", &["bolt-physical-1d1-53"]);
         assert_abilities("snow-golem", &["ball-cold-1d1-17"]);
-        assert_abilities("bush-ranger", &["bolt-physical-8d6"]);
+        assert_abilities("bush-ranger", &["arrow-physical-8d6"]);
         assert_abilities(
             "frost-giant",
             &[
@@ -2992,11 +3030,11 @@ fn monster_projectile_parameters_match_source() {
 
         for (id, damage_type, dice, sides, bonus) in [
             ("bolt-cold-6d8-6", ActorDamageType::Cold, 6, 8, 6),
-            ("bolt-physical-3d5", ActorDamageType::Physical, 3, 5, 0),
+            ("arrow-physical-3d5", ActorDamageType::Physical, 3, 5, 0),
             ("bolt-physical-2d6-6", ActorDamageType::Physical, 2, 6, 6),
             ("bolt-fire-9d8-6", ActorDamageType::Fire, 9, 8, 6),
             ("bolt-physical-1d1-53", ActorDamageType::Physical, 1, 1, 53),
-            ("bolt-physical-8d6", ActorDamageType::Physical, 8, 6, 0),
+            ("arrow-physical-8d6", ActorDamageType::Physical, 8, 6, 0),
             ("bolt-physical-1d1-59", ActorDamageType::Physical, 1, 1, 59),
         ] {
             assert!(matches!(
@@ -3374,7 +3412,7 @@ fn midlevel_monster_profiles_keep_existing_traits() {
         );
         assert_eq!(
             ability_ids("demo.actor.orc-captain"),
-            ["rfb-legacy.ability.bolt-physical-3d6"]
+            ["rfb-legacy.ability.arrow-physical-3d6"]
                 .into_iter()
                 .collect()
         );
@@ -3795,7 +3833,7 @@ fn monster_support_and_summon_parameters_match_source() {
                 "blink",
                 "bolt-electricity-4d8-6",
                 "bolt-physical-2d6-6",
-                "bolt-physical-5d6",
+                "arrow-physical-5d6",
                 "summon-legacy-import-l20-1d1",
             ],
         );
@@ -3843,7 +3881,7 @@ fn monster_support_and_summon_parameters_match_source() {
             ));
         }
         assert!(matches!(
-            ability("bolt-physical-5d6").effect,
+            ability("arrow-physical-5d6").effect,
             AbilityEffectDefinition::Damage {
                 damage_dice: 5,
                 damage_sides: 6,
@@ -11448,6 +11486,10 @@ fn town_entrances_and_shared_facilities_match_source() {
                     dungeon_id: "demo.dungeon.dragon-lair".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 75, y: 51 },
+                    dungeon_id: "demo.dungeon.mount-meru".to_owned(),
+                },
+                WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 75, y: 57 },
                     dungeon_id: "demo.dungeon.battlefield".to_owned(),
                 },
@@ -12971,6 +13013,18 @@ fn town_stock_and_spellbook_tiers_match_source() {
                 .map(|stock| stock.item_kind_id.as_str())
                 .collect::<BTreeSet<_>>(),
             BTreeSet::from([
+                "demo.item.attractions-of-law",
+                "demo.item.apprentice-handbook",
+                "demo.item.minstrels-music",
+                "demo.item.bugei-shofu",
+                "demo.item.yagyuu-bugeichou",
+                "demo.item.handbook-of-hex",
+                "demo.item.high-curse",
+                "demo.item.burglars-handbook",
+                "demo.item.thieving-ways",
+                "demo.item.anger-management",
+                "demo.item.northern-frights",
+                "demo.item.obstacle-coursebook",
                 "demo.item.beginners-handbook",
                 "demo.item.black-mass",
                 "demo.item.black-prayers",
@@ -12978,8 +13032,15 @@ fn town_stock_and_spellbook_tiers_match_source() {
                 "demo.item.book-of-elements",
                 "demo.item.call-of-the-wild",
                 "demo.item.cantrips-for-beginners",
+                "demo.item.chaos-mastery",
+                "demo.item.conjurings-and-tricks",
+                "demo.item.deck-of-many-things",
                 "demo.item.dark-incantations",
+                "demo.item.stench-of-death",
+                "demo.item.sepulchral-ways",
                 "demo.item.earth-wind-and-fire",
+                "demo.item.grade-holders-book",
+                "demo.item.handbook-for-pupils",
                 "demo.item.high-mass",
                 "demo.item.immortal-rituals",
                 "demo.item.major-arcana",
@@ -12988,6 +13049,7 @@ fn town_stock_and_spellbook_tiers_match_source() {
                 "demo.item.minor-arcana",
                 "demo.item.nature-mastery",
                 "demo.item.rites-of-initiation",
+                "demo.item.sign-of-chaos",
                 "demo.item.ways-of-war",
             ])
         );
@@ -13368,7 +13430,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 424);
+    assert_eq!(base_items.entries.len(), 459);
     // Source kind 245 retains its 1/255 allocation as integer weight zero.
     assert_eq!(
         base_items
@@ -13477,6 +13539,41 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
             "demo.item.rusty-chain-mail",
             "demo.item.adamantite-plate-mail",
             "demo.item.scythe",
+            "demo.item.sign-of-chaos",
+            "demo.item.chaos-mastery",
+            "demo.item.chaos-channels",
+            "demo.item.conjurings-and-tricks",
+            "demo.item.deck-of-many-things",
+            "demo.item.stench-of-death",
+            "demo.item.sepulchral-ways",
+            "demo.item.return-of-the-dead",
+            "demo.item.necromatic-tome",
+            "demo.item.trumps-of-doom",
+            "demo.item.five-aces",
+            "demo.item.attractions-of-law",
+            "demo.item.obstacle-coursebook",
+            "demo.item.building-alternative-realities",
+            "demo.item.acquiris-quodcumque-rapis",
+            "demo.item.apprentice-handbook",
+            "demo.item.minstrels-music",
+            "demo.item.harps-of-rivendell",
+            "demo.item.lays-of-beleriand",
+            "demo.item.bugei-shofu",
+            "demo.item.yagyuu-bugeichou",
+            "demo.item.handbook-of-hex",
+            "demo.item.high-curse",
+            "demo.item.anger-management",
+            "demo.item.northern-frights",
+            "demo.item.gorinnosho",
+            "demo.item.hokusin-ittouryuu-kaiden",
+            "demo.item.curse-and-spelling",
+            "demo.item.forbidden-cursebook",
+            "demo.item.the-sound-and-the-fury",
+            "demo.item.dire-ire",
+            "demo.item.burglars-handbook",
+            "demo.item.thieving-ways",
+            "demo.item.great-escapes",
+            "demo.item.book-of-shadows",
         ])
         .collect::<BTreeSet<_>>();
     let actual_item_ids = base_items
@@ -13484,7 +13581,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 390);
+    assert_eq!(expected_item_ids.len(), 425);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -14244,6 +14341,7 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
     floor.abandoned_entry_terrain_id = None;
     floor.task_id = None;
     floor.inline_map = Some(InlineFloorMapDefinition {
+        symbol_groups: Vec::new(),
         friend_group_leader_ids: Vec::new(),
         vault_positions: Vec::new(),
         task_terrain_overrides: Vec::new(),

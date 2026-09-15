@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.trump-spying",
+  "nameKey": "ability-demo-trump-spying-name",
+  "descriptionKey": "ability-demo-trump-spying-description",
+  "abilityProgramId": "demo.ability-program.trump-spying",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "spellPowerFields": [
+    {
+      "effectIndex": 0,
+      "field": "status-duration-sides"
+    }
+  ],
+  "tags": [
+    "trump",
+    "spell"
+  ]
+}

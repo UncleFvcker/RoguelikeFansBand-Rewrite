@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.necromancy-shield-of-the-dead",
+  "minimumLevel": 35,
+  "resourceCost": 30,
+  "baseFailurePercent": 80,
+  "firstSuccessExperience": 4025,
+  "resourceId": "demo.resource.mana"
+}

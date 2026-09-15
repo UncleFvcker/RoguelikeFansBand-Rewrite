@@ -77,7 +77,7 @@
   "monsterCasting": {
     "abilities": [
       {
-        "abilityId": "rfb-legacy.ability.bolt-physical-1d4",
+        "abilityId": "rfb-legacy.ability.arrow-physical-1d4",
         "weight": 1,
         "innate": true
       }

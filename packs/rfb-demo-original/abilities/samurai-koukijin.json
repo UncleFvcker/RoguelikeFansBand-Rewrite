@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.samurai-koukijin",
+  "nameKey": "ability-demo-samurai-koukijin-name",
+  "descriptionKey": "ability-demo-samurai-koukijin-description",
+  "abilityProgramId": "demo.ability-program.samurai-koukijin",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "class",
+    "samurai"
+  ]
+}

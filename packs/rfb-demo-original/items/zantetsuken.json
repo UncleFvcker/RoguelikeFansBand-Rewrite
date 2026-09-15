@@ -1,0 +1,61 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.zantetsuken",
+  "nameKey": "item-demo-zantetsuken-name",
+  "descriptionKey": "item-demo-zantetsuken-description",
+  "glyph": "|",
+  "generationLevel": 50,
+  "weightTenthsPound": 120,
+  "baseValue": 80000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 150,
+    "baseItemKindId": "demo.item.katana",
+    "instant": false,
+    "rarityOneIn": 25
+  },
+  "weaponProficiencyBaseItemId": "demo.item.katana",
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SHOW_MODS",
+      "STR",
+      "TUNNEL",
+      "VORPAL"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 8,
+    "damageSides": 5,
+    "toHit": 17,
+    "toDamage": 21
+  },
+  "tunnelingPval": 2,
+  "modifiers": {
+    "strength": 2,
+    "dexterity": 2
+  },
+  "vorpal": true
+}

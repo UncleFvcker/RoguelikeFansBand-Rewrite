@@ -823,6 +823,16 @@ fn p87b_dungeon_definition_excludes_a_tagless_guardian_from_allocation() {
 
     assert!(!arthur.tags.iter().any(|tag| tag == "guardian"));
     assert!(game.actor_kind_is_dungeon_guardian(&arthur.id));
+    assert!(
+        !game
+            .summon_category_candidate_kind_ids("any-monster", None, 100, true, false)
+            .contains(&arthur.id)
+    );
+    assert!(
+        !game
+            .summon_category_candidate_kind_ids("any-monster", None, 100, true, true)
+            .contains(&"demo.actor.the-icky-queen".to_owned())
+    );
 }
 
 #[test]

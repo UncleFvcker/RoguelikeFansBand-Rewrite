@@ -645,6 +645,7 @@ fn invisible_replay_game(seed: u64, race_id: &str) -> Game {
 
     payload.entities = vec![ActorSaveDto {
         custom_name: None,
+        burglary_drops_remaining: None,
         id: "test.high-elf-invisible".to_owned(),
         kind_id: "demo.actor.clear-icky-thing".to_owned(),
         experience: 0,
@@ -665,6 +666,8 @@ fn invisible_replay_game(seed: u64, race_id: &str) -> Game {
         friendly: false,
         no_pet: false,
         no_genocide: false,
+        cloned: false,
+        no_destruction: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: Vec::new(),
         statuses: Vec::new(),

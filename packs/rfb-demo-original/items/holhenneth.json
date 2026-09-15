@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.holhenneth",
+  "nameKey": "item-demo-holhenneth-name",
+  "descriptionKey": "item-demo-holhenneth-description",
+  "glyph": "]",
+  "generationLevel": 25,
+  "weightTenthsPound": 75,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 40,
+    "baseItemKindId": "demo.item.iron-helm",
+    "instant": false,
+    "rarityOneIn": 5
+  },
+  "rfbValue": {
+    "flags": [
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "RES_BLIND",
+      "SEARCH",
+      "SEE_INVIS",
+      "WIS"
+    ],
+    "pval": 2,
+    "toArmor": 10
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 15,
+    "intelligence": 2,
+    "wisdom": 2
+  },
+  "equipmentBonuses": {
+    "searchSkill": 10
+  },
+  "passives": [
+    "see-invisible"
+  ],
+  "statusImmunities": [
+    "rfb.status.blindness"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.holhenneth",
+        "nameKey": "device-activation-e5-detect-all-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 20,
+        "rfbValue": 2000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "rfb.effect.device-detect-all"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 500
+    }
+  }
+}

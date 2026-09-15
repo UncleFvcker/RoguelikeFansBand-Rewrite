@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.hrunting",
+  "nameKey": "item-demo-hrunting-name",
+  "descriptionKey": "item-demo-hrunting-description",
+  "glyph": "|",
+  "generationLevel": 50,
+  "weightTenthsPound": 250,
+  "baseValue": 100000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 156,
+    "baseItemKindId": "demo.item.two-handed-sword",
+    "instant": false,
+    "rarityOneIn": 90
+  },
+  "weaponProficiencyBaseItemId": "demo.item.two-handed-sword",
+  "rfbValue": {
+    "flags": [
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "KILL_GIANT",
+      "LEVITATION",
+      "LITE",
+      "SHOW_MODS",
+      "SLAY_DRAGON",
+      "STR",
+      "VORPAL"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 7,
+    "toHit": 13,
+    "toDamage": 21
+  },
+  "modifiers": {
+    "strength": 4
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "passives": [
+    "levitation"
+  ],
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "giant": "kill",
+    "dragon": "slay"
+  },
+  "vorpal": true
+}

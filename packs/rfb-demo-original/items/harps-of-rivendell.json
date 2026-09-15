@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.harps-of-rivendell",
+  "nameKey": "item-demo-harps-of-rivendell-name",
+  "descriptionKey": "item-demo-harps-of-rivendell-description",
+  "abilityBookId": "demo.ability-book.harps-of-rivendell",
+  "rfbBaseKind": {
+    "sourceIndex": 554,
+    "tval": 105,
+    "sval": 2
+  },
+  "baseValue": 15000,
+  "generationLevel": 45,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "music",
+    "book",
+    "spellbook"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

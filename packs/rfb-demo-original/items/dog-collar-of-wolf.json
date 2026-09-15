@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dog-collar-of-wolf",
+  "nameKey": "item-demo-dog-collar-of-wolf-name",
+  "descriptionKey": "item-demo-dog-collar-of-wolf-description",
+  "glyph": "\"",
+  "generationLevel": 5,
+  "weightTenthsPound": 30,
+  "baseValue": 5000,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": ["artifact", "equipment", "jewelry"],
+  "artifactGeneration": {"sourceIndex": 309, "baseItemKindId": "demo.item.amulet", "instant": false, "rarityOneIn": 70},
+  "rfbValue": {"flags": ["CON", "FREE_ACT", "FULL_NAME", "HIDE_TYPE", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "QUESTITEM"], "pval": 1, "toArmor": 7},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "modifiers": {"constitution": 1, "defense": 7},
+  "statusImmunities": ["rfb.status.paralysis"]
+}

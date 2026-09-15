@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 10000,
+  "descriptionKey": "item-demo-phial-626-description",
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "!",
+  "id": "demo.item.phial-626",
+  "maxStack": 1,
+  "nameKey": "item-demo-phial-626-name",
+  "rfbBaseKind": {
+    "sourceIndex": 626,
+    "tval": 39,
+    "sval": 25
+  },
+  "rfbValue": {
+    "flags": [
+      "INSTA_ART"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "instant-artifact-base",
+    "light-source"
+  ],
+  "weightTenthsPound": 5
+}

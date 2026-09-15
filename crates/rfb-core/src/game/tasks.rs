@@ -1008,8 +1008,9 @@ impl Game {
         {
             return Err("reward-unavailable");
         }
-        // q_old_castle RANDOM27 and q_eddies RANDOM77 are birth-time choices. Use the existing durable
-        // selection seed, so intervening commands and failed claims cannot reroll it.
+        // q_old_castle RANDOM27 and q_eddies RANDOM77 are birth-time choices.
+        // Telmora's alternatives share one fixed lamp. Keep the existing unique
+        // artifact replacement path and failed-claim preflight for these rewards.
         let fixed_castle_reward = self.build.as_ref().is_some_and(|build| {
             matches!(
                 build.class_id.as_str(),
@@ -1022,8 +1023,12 @@ impl Game {
                     | "demo.class.magic-eater"
             )
         });
-        let fixed_task_reward = task_id == "demo.task.zul-eddies"
-            || (fixed_castle_reward && task_id == "demo.task.old-castle");
+        let fixed_task_reward = matches!(
+            task_id,
+            "demo.task.zul-eddies"
+                | "demo.task.telmora-volcano"
+                | "demo.task.telmora-thing-under-the-mountain"
+        ) || (fixed_castle_reward && task_id == "demo.task.old-castle");
         if fixed_task_reward && let Some(reward) = task.reward.as_mut() {
             let mut selection =
                 crate::rng::RfbRng::seeded(task_selection_seed(task_id, self.wilderness_seed));

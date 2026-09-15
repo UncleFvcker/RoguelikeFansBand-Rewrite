@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.law-subpoena",
+  "nameKey": "ability-demo-law-subpoena-name",
+  "descriptionKey": "ability-demo-law-subpoena-description",
+  "abilityProgramId": "demo.ability-program.law-subpoena",
+  "target": {
+    "modes": [
+      "entity"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "law",
+    "spell"
+  ]
+}

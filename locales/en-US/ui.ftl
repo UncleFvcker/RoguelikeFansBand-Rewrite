@@ -113,15 +113,15 @@ session-career-viewing = Viewing · Activate an option to confirm
 session-career-open-children = { $name }, choose a realm
 session-career-pending = Complete the realm choices, or go back to keep your previous class.
 session-career-death-name = Death
-session-career-available-realms = Currently available realm: Death.
+session-career-available-realms = Available realms: Life, Crusade, Death and Daemon.
 session-career-label = Career
 session-first-realm-label = First realm
 session-second-realm-label = Second realm
 session-selection-pending = Selection incomplete
-session-mage-realms-help = Choose two different realms from the eight available. The first realm can reach Master proficiency; the second can reach Expert.
-session-ranger-realms-help = Nature is your fixed first realm. Choose Sorcery, Death, Arcane or Daemon as your second. Random book study starts at level 3 and shares one learning capacity across both realms. The first realm can reach Master proficiency; the second can reach Expert.
+session-mage-realms-help = Choose two different realms from the eleven available. The first realm can reach Master proficiency; the second can reach Expert.
+session-ranger-realms-help = Nature is your fixed first realm. Choose Sorcery, Chaos, Trump, Death, Arcane or Daemon as your second. Random book study starts at level 3 and shares one learning capacity across both realms. The first realm can reach Master proficiency; the second can reach Expert.
 session-priest-realms-help = Cast with Wisdom and gain mana and random book study from level 1. Life or Crusade is a good primary realm; Death or Daemon is evil. Realms cannot repeat or oppose your alignment. Both share one learning capacity; the first can reach Master proficiency and the second Expert.
-session-warrior-mage-realms-help = Arcane is your fixed primary realm. Choose one of eight second realms, including Craft. Cast with Intelligence; choose and restudy spells from either realm's books using one shared learning capacity. Primary proficiency reaches Master, secondary Expert. Two resource conversion powers unlock at level 25.
+session-warrior-mage-realms-help = Arcane is your fixed primary realm. Choose one of ten second realms, including Craft, Chaos and Trump. Cast with Intelligence; choose and restudy spells from either realm's books using one shared learning capacity. Primary proficiency reaches Master, secondary Expert. Two resource conversion powers unlock at level 25.
 session-priest-first-realm-help = Your first realm is permanent and determines your alignment and class power. Confirm it to choose your second realm.
 session-priest-second-realm-help = Confirming a second-realm change through a real book clears the old secondary spell progress and immediately attempts random study. The change remains even if nothing can be learned, and spent learning capacity is not refunded.
 session-priest-good-help = Each unblessed sword or polearm gives a good Priest -2 to hit and damage and adds 25 percentage points to prayer failure. Bless Weapon becomes available at level 35; blessing removes these penalties without raising weapon proficiency caps.
@@ -1497,7 +1497,7 @@ casino-poker-no-pair = No winning hand
 
 session-career-craft-name = Craft
 realm-craft-name = Craft
-session-high-mage-available-realms = Available realms: Death and Craft.
+session-high-mage-available-realms = All ten existing realms are available.
 ability-target-element = Element
 ability-element-target = Choose an element
 item-crafting-quantity-confirm = This stack has more than 30 missiles. Crafting can fail and consume the cast. Continue?
@@ -2248,3 +2248,85 @@ display-warning-threshold = { $percent }%
 
 pet-menu-behavior-title = Behavior and spells
 pet-menu-management-title = Targets and pets
+
+realm-chaos-name = Chaos
+
+realm-trump-name = Trump
+message-trump-direction-required = Lovers: choose a direction to charm. Cancelling still spends mana and time.
+
+message-trump-card-0 = Death!
+message-trump-card-1 = The Devil!
+message-trump-card-2 = The Hanged Man.
+message-trump-card-3 = The swords of discord.
+message-trump-card-4 = The Fool.
+message-trump-card-5 = A picture of a strange monster.
+message-trump-card-6 = The Moon.
+message-trump-card-7 = The Wheel of Fortune.
+message-trump-card-8 = A teleport trump.
+message-trump-card-9 = Justice.
+message-trump-card-10 = A teleport trump.
+message-trump-card-11 = A teleport trump.
+message-trump-card-12 = The Tower.
+message-trump-card-13 = Temperance.
+message-trump-card-14 = The Tower.
+message-trump-card-15 = A picture of a friendly monster.
+message-trump-card-16 = A picture of a friendly monster.
+message-trump-card-17 = A picture of a friendly monster.
+message-trump-card-18 = A picture of a friendly monster.
+message-trump-card-19 = The Lovers.
+message-trump-card-20 = The Hermit.
+message-trump-card-21 = Judgement.
+message-trump-card-22 = The Sun.
+message-trump-card-23 = The World.
+confirm-ability-necromancy-repose = You will enter a deep sleep and cannot act until you awaken. Continue?
+
+duelist-choice-law-escape-title = Getaway
+duelist-choice-law-escape-help = Teleport to another dungeon level? The casting cost has already been paid.
+
+realm-law-name = Law
+
+status-law-spin-name = Spin
+status-law-tread-softly-name = Tread Softly
+
+creation-realm-music = Music
+
+status-music-active = Singing: { $song } (use Stop Singing to end)
+
+creation-realm-hissatsu = Hissatsu
+
+hissatsu-harakiri-confirm = Harakiri will end this life. Proceed?
+hissatsu-harakiri-type = Type @ to confirm Harakiri.
+
+status-samurai-posture = Posture: { $posture }
+
+realm-hex-name = Hex
+status-hex-active = Hex: { $spells }
+status-hex-cursed-armor = Hex: cursed armor bonus
+status-hex-interrupted = Hex interrupted: { $spells }
+item-hex-curse-confirm = Curse this equipment?
+
+realm-rage-name = Rage
+
+rage-self-damage-confirm = This technique costs life and can kill you. Cast it?
+
+status-rage-mage-name = Rage-Mage
+status-rage-resist-disenchantment-name = Resist Disenchantment
+status-rage-resist-curses-name = Resist Curses
+status-rage-spell-reaction-name = Spell Reaction
+status-rage-armor-of-fury-name = Armor of Fury
+status-rage-spell-turning-name = Spell Turning
+status-rage-detect-magical-name = Detect Magical Foes
+status-rage-anti-magic-name = Anti-Magic Ray
+
+realm-burglary-name = Burglary
+
+duelist-choice-burglary-escape-title = Escape?
+duelist-choice-burglary-negotiate-title = Pay for service?
+duelist-choice-burglary-negotiate-description = Pay { $cost } gold to hire the thief. The thief may betray you.
+
+session-career-category-stealth = Stealth
+status-rfb-burglary-infravision = See in the Dark
+status-rfb-burglary-tread-softly = Tread Softly
+status-rfb-burglary-shadows = Hide in Shadows
+
+duelist-choice-burglary-escape-help = Teleport away now?

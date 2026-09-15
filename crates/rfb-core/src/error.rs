@@ -33,6 +33,10 @@ pub enum CoreError {
     AbilityDirectionRequired,
     #[error("no ability is waiting for a direction")]
     AbilityDirectionUnavailable,
+    #[error("a spell glyph choice is required")]
+    AbilityGlyphRequired,
+    #[error("the spell glyph choice is unavailable or invalid")]
+    AbilityGlyphUnavailable,
     #[error("the duelist challenge request is unavailable")]
     DuelistChallengeUnavailable,
     #[error("the duelist must finish the pending choice")]

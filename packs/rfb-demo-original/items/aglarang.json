@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.aglarang",
+  "nameKey": "item-demo-aglarang-name",
+  "descriptionKey": "item-demo-aglarang-description",
+  "glyph": "|",
+  "generationLevel": 50,
+  "weightTenthsPound": 50,
+  "baseValue": 150000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 81,
+    "baseItemKindId": "demo.item.katana",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "weaponProficiencyBaseItemId": "demo.item.katana",
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SHOW_MODS",
+      "SPEED",
+      "SUST_DEX",
+      "TUNNEL",
+      "VORPAL",
+      "VORPAL2"
+    ],
+    "pval": 5,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 8,
+    "damageSides": 5,
+    "toHit": 0,
+    "toDamage": 0
+  },
+  "tunnelingPval": 5,
+  "modifiers": {
+    "dexterity": 5,
+    "speed": 5
+  },
+  "passives": [
+    "sustain-dexterity"
+  ],
+  "vorpal": true
+}

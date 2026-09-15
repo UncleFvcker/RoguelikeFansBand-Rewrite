@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.hissatsu-boomerang",
+  "nameKey": "ability-demo-hissatsu-boomerang-name",
+  "descriptionKey": "ability-demo-hissatsu-boomerang-description",
+  "abilityProgramId": "demo.ability-program.hissatsu-boomerang",
+  "target": {
+    "modes": [
+      "direction",
+      "entity",
+      "position"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "hissatsu",
+    "technique"
+  ]
+}

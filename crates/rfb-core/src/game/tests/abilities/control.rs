@@ -64,6 +64,7 @@ fn genocide_erases_without_rewards_or_corpses_and_uniques_resist() {
     game.resolve_player_genocide_effect(
         &ability,
         Some(vec![Position { x: 4, y: 3 }]),
+        None,
         &mut events,
         &mut BTreeSet::new(),
         &mut removed_entities,

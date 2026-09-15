@@ -66,6 +66,9 @@ pub(crate) enum GameAction {
         target: TargetSelection,
     },
     CancelAbilityDirection,
+    ResolveAbilityGlyph {
+        glyph: Option<String>,
+    },
     ClearDuelistChallenge,
     ResolveDuelistChoice {
         choice: rfb_protocol::DuelistChoiceDto,
@@ -483,6 +486,7 @@ impl From<GameCommand> for GameAction {
                 Self::CastAbility { ability_id, target }
             }
             GameCommand::CancelAbilityDirection => Self::CancelAbilityDirection,
+            GameCommand::ResolveAbilityGlyph { glyph } => Self::ResolveAbilityGlyph { glyph },
             GameCommand::ClearDuelistChallenge => Self::ClearDuelistChallenge,
             GameCommand::ResolveDuelistChoice { choice } => Self::ResolveDuelistChoice { choice },
             GameCommand::CloseDoor { direction } => Self::CloseDoor { direction },

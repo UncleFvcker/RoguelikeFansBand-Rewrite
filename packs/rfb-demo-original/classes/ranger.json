@@ -289,6 +289,478 @@
           {"abilityId": "demo.ability.daemon-send-to-hell", "minimumLevel": 99, "resourceCost": 0, "baseFailurePercent": 0, "firstSuccessExperience": 0},
           {"abilityId": "demo.ability.daemon-polymorph-demonlord", "minimumLevel": 99, "resourceCost": 0, "baseFailurePercent": 0, "firstSuccessExperience": 0}
         ]
+      },
+      {
+        "realmId": "chaos",
+        "abilityBookIds": [
+          "demo.ability-book.sign-of-chaos",
+          "demo.ability-book.chaos-mastery",
+          "demo.ability-book.chaos-channels",
+          "demo.ability-book.armageddon-tome"
+        ],
+        "learningCapacityBonus": 0,
+        "abilityOverrides": [
+          {
+            "abilityId": "demo.ability.chaos-magic-missile",
+            "minimumLevel": 3,
+            "resourceCost": 1,
+            "baseFailurePercent": 20,
+            "firstSuccessExperience": 3
+          },
+          {
+            "abilityId": "demo.ability.chaos-trap-door-destruction",
+            "minimumLevel": 3,
+            "resourceCost": 3,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 6
+          },
+          {
+            "abilityId": "demo.ability.chaos-flash-of-light",
+            "minimumLevel": 5,
+            "resourceCost": 3,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 10
+          },
+          {
+            "abilityId": "demo.ability.chaos-confusing-touch",
+            "minimumLevel": 7,
+            "resourceCost": 5,
+            "baseFailurePercent": 45,
+            "firstSuccessExperience": 14
+          },
+          {
+            "abilityId": "demo.ability.chaos-mana-burst",
+            "minimumLevel": 14,
+            "resourceCost": 12,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 28
+          },
+          {
+            "abilityId": "demo.ability.chaos-fire-bolt",
+            "minimumLevel": 20,
+            "resourceCost": 16,
+            "baseFailurePercent": 50,
+            "firstSuccessExperience": 120
+          },
+          {
+            "abilityId": "demo.ability.chaos-fist-of-force",
+            "minimumLevel": 25,
+            "resourceCost": 21,
+            "baseFailurePercent": 60,
+            "firstSuccessExperience": 75
+          },
+          {
+            "abilityId": "demo.ability.chaos-teleport-self",
+            "minimumLevel": 25,
+            "resourceCost": 22,
+            "baseFailurePercent": 60,
+            "firstSuccessExperience": 75
+          },
+          {
+            "abilityId": "demo.ability.chaos-wonder",
+            "minimumLevel": 27,
+            "resourceCost": 23,
+            "baseFailurePercent": 60,
+            "firstSuccessExperience": 135
+          },
+          {
+            "abilityId": "demo.ability.chaos-chaos-bolt",
+            "minimumLevel": 30,
+            "resourceCost": 25,
+            "baseFailurePercent": 60,
+            "firstSuccessExperience": 240
+          },
+          {
+            "abilityId": "demo.ability.chaos-sonic-boom",
+            "minimumLevel": 33,
+            "resourceCost": 30,
+            "baseFailurePercent": 70,
+            "firstSuccessExperience": 429
+          },
+          {
+            "abilityId": "demo.ability.chaos-doom-bolt",
+            "minimumLevel": 35,
+            "resourceCost": 31,
+            "baseFailurePercent": 70,
+            "firstSuccessExperience": 350
+          },
+          {
+            "abilityId": "demo.ability.chaos-fireball",
+            "minimumLevel": 37,
+            "resourceCost": 35,
+            "baseFailurePercent": 75,
+            "firstSuccessExperience": 555
+          },
+          {
+            "abilityId": "demo.ability.chaos-teleport-other",
+            "minimumLevel": 39,
+            "resourceCost": 29,
+            "baseFailurePercent": 65,
+            "firstSuccessExperience": 195
+          },
+          {
+            "abilityId": "demo.ability.chaos-word-of-destruction",
+            "minimumLevel": 43,
+            "resourceCost": 30,
+            "baseFailurePercent": 95,
+            "firstSuccessExperience": 645
+          },
+          {
+            "abilityId": "demo.ability.chaos-invoke-logrus",
+            "minimumLevel": 48,
+            "resourceCost": 50,
+            "baseFailurePercent": 85,
+            "firstSuccessExperience": 1440
+          },
+          {
+            "abilityId": "demo.ability.chaos-polymorph-other",
+            "minimumLevel": 22,
+            "resourceCost": 20,
+            "baseFailurePercent": 60,
+            "firstSuccessExperience": 660
+          },
+          {
+            "abilityId": "demo.ability.chaos-chain-lightning",
+            "minimumLevel": 25,
+            "resourceCost": 25,
+            "baseFailurePercent": 70,
+            "firstSuccessExperience": 500
+          },
+          {
+            "abilityId": "demo.ability.chaos-arcane-binding",
+            "minimumLevel": 28,
+            "resourceCost": 25,
+            "baseFailurePercent": 80,
+            "firstSuccessExperience": 1260
+          },
+          {
+            "abilityId": "demo.ability.chaos-disintegrate",
+            "minimumLevel": 35,
+            "resourceCost": 32,
+            "baseFailurePercent": 70,
+            "firstSuccessExperience": 1225
+          },
+          {
+            "abilityId": "demo.ability.chaos-alter-reality",
+            "minimumLevel": 38,
+            "resourceCost": 35,
+            "baseFailurePercent": 85,
+            "firstSuccessExperience": 5700
+          },
+          {
+            "abilityId": "demo.ability.chaos-magic-rocket",
+            "minimumLevel": 50,
+            "resourceCost": 50,
+            "baseFailurePercent": 90,
+            "firstSuccessExperience": 7500
+          },
+          {
+            "abilityId": "demo.ability.chaos-chaos-branding",
+            "minimumLevel": 48,
+            "resourceCost": 100,
+            "baseFailurePercent": 90,
+            "firstSuccessExperience": 12000
+          },
+          {
+            "abilityId": "demo.ability.chaos-summon-demon",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          },
+          {
+            "abilityId": "demo.ability.chaos-gravity-beam",
+            "minimumLevel": 33,
+            "resourceCost": 33,
+            "baseFailurePercent": 66,
+            "firstSuccessExperience": 264
+          },
+          {
+            "abilityId": "demo.ability.chaos-meteor-swarm",
+            "minimumLevel": 40,
+            "resourceCost": 45,
+            "baseFailurePercent": 85,
+            "firstSuccessExperience": 1400
+          },
+          {
+            "abilityId": "demo.ability.chaos-flame-strike",
+            "minimumLevel": 42,
+            "resourceCost": 42,
+            "baseFailurePercent": 75,
+            "firstSuccessExperience": 1764
+          },
+          {
+            "abilityId": "demo.ability.chaos-call-chaos",
+            "minimumLevel": 48,
+            "resourceCost": 48,
+            "baseFailurePercent": 85,
+            "firstSuccessExperience": 4800
+          },
+          {
+            "abilityId": "demo.ability.chaos-polymorph-self",
+            "minimumLevel": 42,
+            "resourceCost": 75,
+            "baseFailurePercent": 95,
+            "firstSuccessExperience": 10500
+          },
+          {
+            "abilityId": "demo.ability.chaos-mana-storm",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          },
+          {
+            "abilityId": "demo.ability.chaos-breathe-logrus",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          },
+          {
+            "abilityId": "demo.ability.chaos-call-the-void",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          }
+        ]
+      },
+      {
+        "realmId": "trump",
+        "abilityBookIds": [
+          "demo.ability-book.conjurings-and-tricks",
+          "demo.ability-book.deck-of-many-things",
+          "demo.ability-book.trumps-of-doom",
+          "demo.ability-book.five-aces"
+        ],
+        "learningCapacityBonus": 0,
+        "abilityOverrides": [
+          {
+            "abilityId": "demo.ability.trump-phase-door",
+            "minimumLevel": 3,
+            "resourceCost": 1,
+            "baseFailurePercent": 25,
+            "firstSuccessExperience": 9
+          },
+          {
+            "abilityId": "demo.ability.trump-spiders",
+            "minimumLevel": 6,
+            "resourceCost": 6,
+            "baseFailurePercent": 25,
+            "firstSuccessExperience": 24
+          },
+          {
+            "abilityId": "demo.ability.trump-shuffle",
+            "minimumLevel": 9,
+            "resourceCost": 7,
+            "baseFailurePercent": 37,
+            "firstSuccessExperience": 72
+          },
+          {
+            "abilityId": "demo.ability.trump-reset-recall",
+            "minimumLevel": 10,
+            "resourceCost": 8,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 80
+          },
+          {
+            "abilityId": "demo.ability.trump-teleport",
+            "minimumLevel": 13,
+            "resourceCost": 10,
+            "baseFailurePercent": 20,
+            "firstSuccessExperience": 52
+          },
+          {
+            "abilityId": "demo.ability.trump-spying",
+            "minimumLevel": 17,
+            "resourceCost": 17,
+            "baseFailurePercent": 30,
+            "firstSuccessExperience": 102
+          },
+          {
+            "abilityId": "demo.ability.trump-teleport-away",
+            "minimumLevel": 20,
+            "resourceCost": 20,
+            "baseFailurePercent": 30,
+            "firstSuccessExperience": 100
+          },
+          {
+            "abilityId": "demo.ability.trump-animals",
+            "minimumLevel": 23,
+            "resourceCost": 22,
+            "baseFailurePercent": 30,
+            "firstSuccessExperience": 184
+          },
+          {
+            "abilityId": "demo.ability.trump-reach",
+            "minimumLevel": 24,
+            "resourceCost": 22,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 192
+          },
+          {
+            "abilityId": "demo.ability.trump-kamikaze",
+            "minimumLevel": 27,
+            "resourceCost": 23,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 243
+          },
+          {
+            "abilityId": "demo.ability.trump-phantasmal-servant",
+            "minimumLevel": 30,
+            "resourceCost": 26,
+            "baseFailurePercent": 30,
+            "firstSuccessExperience": 240
+          },
+          {
+            "abilityId": "demo.ability.trump-haste-monster",
+            "minimumLevel": 35,
+            "resourceCost": 33,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 420
+          },
+          {
+            "abilityId": "demo.ability.trump-teleport-level",
+            "minimumLevel": 39,
+            "resourceCost": 38,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 390
+          },
+          {
+            "abilityId": "demo.ability.trump-dimension-door",
+            "minimumLevel": 42,
+            "resourceCost": 40,
+            "baseFailurePercent": 45,
+            "firstSuccessExperience": 504
+          },
+          {
+            "abilityId": "demo.ability.trump-word-of-recall",
+            "minimumLevel": 45,
+            "resourceCost": 42,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 675
+          },
+          {
+            "abilityId": "demo.ability.trump-banish",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          },
+          {
+            "abilityId": "demo.ability.trump-swap-position",
+            "minimumLevel": 25,
+            "resourceCost": 40,
+            "baseFailurePercent": 70,
+            "firstSuccessExperience": 1000
+          },
+          {
+            "abilityId": "demo.ability.trump-undead",
+            "minimumLevel": 28,
+            "resourceCost": 26,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 700
+          },
+          {
+            "abilityId": "demo.ability.trump-reptiles",
+            "minimumLevel": 31,
+            "resourceCost": 30,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 930
+          },
+          {
+            "abilityId": "demo.ability.trump-monsters",
+            "minimumLevel": 36,
+            "resourceCost": 32,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 324
+          },
+          {
+            "abilityId": "demo.ability.trump-hounds",
+            "minimumLevel": 36,
+            "resourceCost": 33,
+            "baseFailurePercent": 35,
+            "firstSuccessExperience": 1260
+          },
+          {
+            "abilityId": "demo.ability.trump-branding",
+            "minimumLevel": 41,
+            "resourceCost": 80,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 4100
+          },
+          {
+            "abilityId": "demo.ability.trump-living-trump",
+            "minimumLevel": 44,
+            "resourceCost": 120,
+            "baseFailurePercent": 45,
+            "firstSuccessExperience": 11000
+          },
+          {
+            "abilityId": "demo.ability.trump-cyberdemon",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          },
+          {
+            "abilityId": "demo.ability.trump-divination",
+            "minimumLevel": 35,
+            "resourceCost": 33,
+            "baseFailurePercent": 30,
+            "firstSuccessExperience": 1750
+          },
+          {
+            "abilityId": "demo.ability.trump-lore",
+            "minimumLevel": 40,
+            "resourceCost": 65,
+            "baseFailurePercent": 45,
+            "firstSuccessExperience": 4000
+          },
+          {
+            "abilityId": "demo.ability.trump-heal-monster",
+            "minimumLevel": 44,
+            "resourceCost": 65,
+            "baseFailurePercent": 45,
+            "firstSuccessExperience": 4400
+          },
+          {
+            "abilityId": "demo.ability.trump-dragon",
+            "minimumLevel": 48,
+            "resourceCost": 95,
+            "baseFailurePercent": 40,
+            "firstSuccessExperience": 7200
+          },
+          {
+            "abilityId": "demo.ability.trump-meteors",
+            "minimumLevel": 46,
+            "resourceCost": 60,
+            "baseFailurePercent": 70,
+            "firstSuccessExperience": 4600
+          },
+          {
+            "abilityId": "demo.ability.trump-demon",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          },
+          {
+            "abilityId": "demo.ability.trump-greater-undead",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          },
+          {
+            "abilityId": "demo.ability.trump-ancient-dragon",
+            "minimumLevel": 99,
+            "resourceCost": 0,
+            "baseFailurePercent": 0,
+            "firstSuccessExperience": 0
+          }
+        ]
       }
     ],
     "firstSpellLevel": 3,

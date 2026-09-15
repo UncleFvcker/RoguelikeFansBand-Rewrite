@@ -379,6 +379,9 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             failure_threshold: *failure_threshold,
         },
         AbilityEffectDefinition::PolymorphSelf => AbilityEffectSpecDto::PolymorphSelf,
+        AbilityEffectDefinition::CloneTarget => AbilityEffectSpecDto::CloneTarget,
+        AbilityEffectDefinition::HasteTarget => AbilityEffectSpecDto::HasteTarget,
+        AbilityEffectDefinition::HealTarget => AbilityEffectSpecDto::HealTarget,
         AbilityEffectDefinition::PolymorphTarget => AbilityEffectSpecDto::PolymorphTarget,
         AbilityEffectDefinition::SwapPosition => AbilityEffectSpecDto::SwapPosition,
         AbilityEffectDefinition::Recall {
@@ -472,6 +475,39 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             radius: *radius,
             duration_turns: *duration_turns,
         },
+        AbilityEffectDefinition::ChaosMeteorSwarm => AbilityEffectSpecDto::ChaosMeteorSwarm,
+        AbilityEffectDefinition::TrumpSummoning { category } => {
+            AbilityEffectSpecDto::TrumpSummoning {
+                category: category.clone(),
+            }
+        }
+        AbilityEffectDefinition::TrumpShuffle => AbilityEffectSpecDto::TrumpShuffle,
+        AbilityEffectDefinition::Music { spell } => AbilityEffectSpecDto::Music { spell: *spell },
+        AbilityEffectDefinition::Hissatsu { spell } => {
+            AbilityEffectSpecDto::Hissatsu { spell: *spell }
+        }
+        AbilityEffectDefinition::SamuraiConcentration => AbilityEffectSpecDto::SamuraiConcentration,
+        AbilityEffectDefinition::SamuraiPosture { posture } => {
+            AbilityEffectSpecDto::SamuraiPosture { posture: *posture }
+        }
+        AbilityEffectDefinition::Burglary { spell } => {
+            AbilityEffectSpecDto::Burglary { spell: *spell }
+        }
+        AbilityEffectDefinition::Rage { spell } => AbilityEffectSpecDto::Rage { spell: *spell },
+        AbilityEffectDefinition::StopSinging => AbilityEffectSpecDto::StopSinging,
+        AbilityEffectDefinition::Hex { spell } => AbilityEffectSpecDto::Hex { spell: *spell },
+        AbilityEffectDefinition::StopHex { spell } => {
+            AbilityEffectSpecDto::StopHex { spell: *spell }
+        }
+        AbilityEffectDefinition::Law { spell } => AbilityEffectSpecDto::Law { spell: *spell },
+        AbilityEffectDefinition::Necromancy { spell } => {
+            AbilityEffectSpecDto::Necromancy { spell: *spell }
+        }
+        AbilityEffectDefinition::ResetRecall => AbilityEffectSpecDto::ResetRecall,
+        AbilityEffectDefinition::CallChaos => AbilityEffectSpecDto::CallChaos,
+        AbilityEffectDefinition::ChaosPolymorphSelf => AbilityEffectSpecDto::ChaosPolymorphSelf,
+        AbilityEffectDefinition::CallVoid => AbilityEffectSpecDto::CallVoid,
+        AbilityEffectDefinition::ChainLightning => AbilityEffectSpecDto::ChainLightning,
         AbilityEffectDefinition::DemonSummoning => AbilityEffectSpecDto::DemonSummoning,
         AbilityEffectDefinition::AngelSummoning => AbilityEffectSpecDto::AngelSummoning,
         AbilityEffectDefinition::BanishEvil => AbilityEffectSpecDto::BanishEvil { power: 0 },
@@ -589,6 +625,9 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
         },
         AbilityEffectDefinition::TerrainBeam { operation } => AbilityEffectSpecDto::TerrainBeam {
             operation: match operation {
+                AbilityTerrainBeamOperationDefinition::DisarmTraps => {
+                    rfb_protocol::AbilityTerrainBeamOperationDto::DisarmTraps
+                }
                 AbilityTerrainBeamOperationDefinition::JamDoors => {
                     AbilityTerrainBeamOperationDto::JamDoors
                 }
@@ -825,6 +864,12 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
             current_divisor: *current_divisor,
             remaining_divisor: *remaining_divisor,
         },
+        AbilityEffectDefinition::PrepareConfusingStrike => {
+            AbilityEffectSpecDto::PrepareConfusingStrike
+        }
+        AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors => {
+            AbilityEffectSpecDto::DestroyAdjacentTrapsAndDoors
+        }
         AbilityEffectDefinition::SatisfyHunger => AbilityEffectSpecDto::SatisfyHunger,
         AbilityEffectDefinition::DevourFlesh {
             maximum_hp_divisor,

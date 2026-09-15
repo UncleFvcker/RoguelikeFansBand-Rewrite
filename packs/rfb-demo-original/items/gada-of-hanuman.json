@@ -1,0 +1,70 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.gada-of-hanuman",
+  "nameKey": "item-demo-gada-of-hanuman-name",
+  "descriptionKey": "item-demo-gada-of-hanuman-description",
+  "glyph": "\\",
+  "generationLevel": 75,
+  "weightTenthsPound": 500,
+  "baseValue": 50000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 382,
+    "baseItemKindId": "demo.item.mace",
+    "instant": false,
+    "rarityOneIn": 150
+  },
+  "rfbValue": {
+    "flags": [
+      "FULL_NAME",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_FEAR",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLOW_DIGEST",
+      "STR",
+      "STUN"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "weapon",
+  "modifiers": {
+    "strength": 2
+  },
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 9,
+    "damageSides": 5,
+    "toHit": 10,
+    "toDamage": 20
+  },
+  "weaponProficiencyBaseItemId": "demo.item.mace",
+  "passives": [
+    "slow-digestion"
+  ],
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "slays": {
+    "demon": "slay"
+  }
+}

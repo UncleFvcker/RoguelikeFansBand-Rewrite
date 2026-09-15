@@ -1,0 +1,512 @@
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c
+
+N:4:of Carlammas
+I:40:0:2
+W:50:15:3:60000
+F:CON | HIDE_TYPE | RES_FIRE | RES_FEAR
+E:PROT_EVIL:30:300
+E:护身符发出尖锐的嚎叫声……
+D:一个燃烧的青铜圆环，带有驱逐邪恶的强大法术。
+
+N:8:'Frakir'
+I:45:0:1
+W:30:20:2:10000
+F:STR | INT | WIS | DEX | CON | CHR | STEALTH | HIDE_TYPE | SPEED
+F:RES_POIS | SEE_INVIS | SEARCH | WARNING |
+E:DRAIN_LIFE:30:150:100
+E:你命令弗拉基尔勒住你的对手。
+
+N:9:of Tulkas
+I:45:0:4
+W:70:45:2:35000
+F:STR | DEX | CON | HIDE_TYPE | SPEED |
+D:维拉中最迅捷、最愤怒的托卡斯的宝物。
+E:SPEED_HERO:25:225:75
+E:戒指闪耀着明亮的光芒……
+
+N:10:of Power (Narya)
+I:45:0:1
+W:70:50:2:100000
+P:0:1d1:0:0:0
+F:STR | INT | WIS | DEX | CON | CHR | SPEED | HIDE_TYPE |
+F:FREE_ACT | SEE_INVIS |
+F:SLOW_DIGEST | REGEN | SUST_STR | SUST_DEX | IM_FIRE | BRAND_FIRE
+F:WEAPONMASTERY | XTRA_SHOTS | FIXED_ART
+E:BALL_FIRE:50:50:300
+E:戒指闪耀着深红色的光芒……
+D:火之戒，镶嵌着一颗如火焰般发光的红宝石。纳雅是
+D:精灵所铸造并向索伦隐藏的
+D:三枚力量之戒之一。
+
+N:11:of Power (Nenya)
+I:45:0:2
+W:80:70:2:200000
+P:0:1d1:0:0:0
+F:STR | INT | WIS | DEX | CON | CHR | SPEED | HIDE_TYPE |
+F:HOLD_LIFE | FREE_ACT | SEE_INVIS |
+F:LEVITATION | REGEN |
+F:SUST_INT | SUST_WIS | IM_COLD | BRAND_COLD
+F:XTRA_POWER | WEAPONMASTERY | XTRA_SHOTS | FIXED_ART
+E:BALL_COLD:50:50:400
+E:戒指闪耀着明亮的白光……
+D:精金之戒，镶嵌着一颗纯白色的宝石。南雅是
+D:精灵所铸造并向索伦隐藏的
+D:三枚力量之戒之一。
+
+N:12:of Power (Vilya)
+I:45:0:3
+W:90:85:2:300000
+P:0:1d1:0:0:0
+F:STR | INT | WIS | DEX | CON | CHR | SPEED | HIDE_TYPE |
+F:HOLD_LIFE | FREE_ACT | SEE_INVIS |
+F:LEVITATION | SLOW_DIGEST | REGEN |
+F:SUST_INT | SUST_WIS | SUST_STR | SUST_DEX | IM_ELEC | BRAND_ELEC
+F:XTRA_POWER | WEAPONMASTERY | XTRA_SHOTS | FIXED_ART
+E:BALL_ELEC:50:50:500
+E:戒指闪耀着深蓝色的光芒……
+D:蓝宝石之戒，镶有一颗清澈如星光般闪耀的蓝宝石，
+D:无论魔苟斯造成怎样的破坏，它都闪耀着不可触犯的光芒。维雅是
+D:精灵所铸造并向索伦隐藏的
+D:三枚力量之戒之一。
+
+N:18:of Faramir
+I:40:0:3
+W:30:30:2:20000
+P:0:0d0:12:0:0
+F:STEALTH | SHOW_MODS | HIDE_TYPE |
+F:RES_CONF | SUST_DEX |
+E:PESTICIDE:10:5
+E:你消灭了微小的生命。
+D:一条纤细的真银项链，附有伊西利安的宁静法术，用来援助和
+D:保护佩戴者。
+
+N:23:of Julian
+I:37:3:4
+W:75:15:250:120000
+P:15:2d4:-2:0:40
+F:STR | CHR | HIDE_TYPE |
+F:RES_ACID | RES_ELEC | RES_FIRE | RES_COLD | RES_DARK |
+F:RES_DISEN | XTRA_H_RES | ESP_ANIMAL
+E:GENOCIDE:40:500:200
+E:你的盔甲闪耀着深蓝色的光芒……
+
+N:25:of Caspanion
+I:37:6:3
+W:45:9:270:40000
+P:16:1d4:-2:0:20
+F:INT | WIS | CON | HIDE_TYPE | XTRA_H_RES |
+F:RES_ACID | RES_POIS | RES_CONF
+E:DESTROY_TRAP:20:10
+E:你的盔甲闪耀着明亮的红光……
+D:由相互锁合的钢环组成的锁子甲、护腿和袖子，在关键部位战略性地
+D:加固了第二层锁链。其内部蕴含着
+D:增强身心的魔法，并且没有任何门能阻挡佩戴者的去路。
+
+N:40:'Holhenneth'
+I:32:5:2
+W:25:5:75:100000
+P:5:1d3:0:0:10
+F:INT | WIS | SEARCH | HIDE_TYPE | RES_BLIND | SEE_INVIS
+E:DETECT_ALL:20:50
+E:你的头盔闪耀着明亮的白光……一个图像在你的脑海中形成。
+D:一顶著名的锻铁头盔，赋予佩戴者非凡的心智和
+D:感知能力。
+
+N:44:'Colluin'
+I:35:1:0
+W:30:45:10:80000
+P:1:0d0:0:0:15
+F:RES_ACID | RES_ELEC | RES_FIRE | RES_COLD | RES_POIS
+E:RESISTANCE:30:111
+E:你的披风闪烁着五颜六色的光芒……
+D:由来自维林诺的英雄所穿戴的披风，那是一片完全超越了元素纷争
+D:的土地。
+
+N:48:'Colannon'
+I:35:1:3
+W:20:10:10:15000
+P:1:0d0:0:0:15
+F:STEALTH | RES_ACID
+E:TELEPORT:10:45
+E:你的披风扭曲了你周围的空间……
+D:一件水晶蓝色的精美丝绸披风，曾被律法势力的
+D:无声信使所穿戴。不知何故，它的佩戴者总能逃脱
+D:麻烦。
+
+N:61:of Flora
+I:30:2:5
+W:40:25:20:70000
+P:2:1d1:0:0:15
+F:DEX | HIDE_TYPE | CHR | SUST_CHR | FREE_ACT |
+F:RES_NETHER | RES_CHAOS | SUST_CON
+E:CURE_FEAR_POIS:10:5
+E:你的靴子闪耀着深蓝色的光芒……
+
+N:82:'Ringil'
+I:23:17:5
+W:70:100:130:300000
+P:0:5d6:22:25:0
+F:SPEED | REGEN | SHOW_MODS | RIDING | CHR |
+F:SLAY_EVIL | BRAND_COLD | SLAY_UNDEAD | SLAY_DEMON | SLAY_TROLL |
+F:FREE_ACT | RES_COLD | RES_LITE | LITE | SEE_INVIS | SLOW_DIGEST |
+F:ESP_ORC | ESP_TROLL | ESP_GIANT
+E:BALL_COLD:20:200:100
+E:你的剑闪耀着强烈的蓝光……
+D:诺多精灵至高王芬国昐的武器；它闪耀起来就像一根
+D:被不灭之光照亮的冰柱。魔苟斯曾极不情愿地去面对它；
+D:他那瘸了的脚会提醒他，如果再次遇到它，它的威力有多么可怕。
+
+N:83:'Anduril'
+I:23:17:4
+W:30:20:130:80000
+P:0:3d6:10:15:5
+F:STR | HIDE_TYPE | RIDING | XTRA_RES_OR_POWER |
+F:SLAY_EVIL | BRAND_FIRE | SLAY_TROLL | SLAY_ORC | FREE_ACT |
+F:RES_FIRE | SUST_DEX | SEE_INVIS | SHOW_MODS | LITE | ESP_UNDEAD |
+E:BALL_FIRE:20:40:72
+E:你的剑闪耀着强烈的红光……
+D:著名的“西方之焰”，这把断折的剑被重新
+D:锻造。它闪烁着火焰的精华，其佩戴者在战斗中无比强大，
+D:没有哪个索伦的生物能抵挡它。即使在失败中，它也永远不会
+D:被玷污或折断。
+
+N:84:'Werewindle'
+I:23:17:3
+W:45:20:130:120000
+P:0:3d6:8:12:0
+F:STR | CON | HIDE_TYPE | BRAND_CHAOS | REGEN | SLOW_DIGEST |
+F:SLAY_EVIL | BRAND_ELEC | SLAY_DEMON | FREE_ACT | RES_ELEC |
+F:RES_LITE | LITE | SEE_INVIS | SHOW_MODS | SPEED |
+F:SUST_CON | SUST_STR | SUST_INT | SUST_WIS | RES_DARK |
+F:RES_DISEN
+E:ESCAPE:20:35
+D:布兰德强大的“图案”剑，是科温的“灰杖（Grayswandir）”的双生剑。
+
+N:93:of Theoden
+I:22:10:3
+W:30:30:120:40000
+P:0:2d7:10:12:0
+F:WIS | CON | HIDE_TYPE | BLESSED |
+F:SLAY_DRAGON | TELEPATHY | SLOW_DIGEST | SHOW_MODS
+E:DRAIN_LIFE:20:100:120
+E:你的斧刃闪耀着黑光……
+D:这把武器狭窄的斧头被一个像乌鸦嘴一样的尖头完美平衡，
+D:甚至能刺穿史矛革的盔甲，挥舞它的人能感知到
+D:敌人的思想。
+
+N:98:of Destiny
+I:22:7:4
+W:70:40:100:80000
+P:0:3d11:15:15:0
+F:INT | WIS | INFRA | HIDE_TYPE | SEARCH | BRAND_FIRE |
+F:SLAY_GIANT | SLAY_EVIL | SLAY_DEMON | SLAY_UNDEAD | SLAY_DRAGON |
+F:RES_FIRE | RES_LITE | HOLD_LIFE | LEVITATION |
+F:LITE | SEE_INVIS | BLESSED | SHOW_MODS | RIDING
+E:STONE_TO_MUD:15:5
+E:你的长矛在悸动……
+
+N:108:of Ulmo
+I:22:5:4
+W:70:90:70:120000
+P:0:4d10:15:19:0
+F:DEX | HIDE_TYPE | XTRA_POWER |
+F:SLAY_DRAGON | SLAY_ANIMAL | FREE_ACT | HOLD_LIFE | IM_ACID |
+F:RES_NETHER | SEE_INVIS | SLOW_DIGEST | REGEN |
+F:BLESSED | SHOW_MODS | RIDING
+E:TELEPORT_AWAY:30:50
+E:你的三叉戟闪耀着深红色的光芒……
+D:水之主，维拉乌欧牟的可怕武器。作为除了曼威本人之外
+D:最强大的善良力量，乌欧牟嘲笑着不死生物可怕的
+D:力量，并且完全掌控着水元素。
+
+N:115:'Firestar'
+I:21:12:0
+W:25:8:150:35000
+P:0:2d7:5:7:2
+F:BRAND_FIRE | RES_FIRE | SHOW_MODS | LITE
+E:BALL_FIRE:25:50:72
+E:你的晨星锤在火焰中狂怒……
+D:古代著名的战斗领主，它那带有红色的头部，颜色如同
+D:还能在愤怒中重新燃起的余烬一样。
+
+N:116:'Taratol'
+I:21:5:0
+W:35:15:200:50000
+P:0:3d5:12:12:0
+F:KILL_DRAGON | BRAND_ELEC | IM_ELEC | SHOW_MODS
+E:SPEED:20:100:20
+E:你的权杖闪耀着明亮的绿光……
+D:一把巨大的脊状权杖，它会在你周围召唤出一圈活跃的闪电光环；
+D:即使粗大的火花在你手指和眉毛周围划过，
+D:你也完全不受影响。
+
+N:119:'Eriril'
+I:21:3:4
+W:20:30:150:100000
+P:0:1d10:3:5:0
+F:INT | WIS | HIDE_TYPE | SPELL_CAP
+F:SLAY_EVIL | RES_LITE | LITE | SEE_INVIS | SHOW_MODS
+E:IDENTIFY:10:10
+E:你的铁头木棍闪耀着黄光……
+D:传奇伊斯塔（Istar）的耀眼金色法杖，这件巫师的伴侣
+D:赋予了敏锐的视觉和许多隐藏事物的知识。
+
+N:122:'Turmil'
+I:22:12:4
+W:20:10:120:30000
+P:0:2d6:10:6:8
+F:WIS | INFRA | HIDE_TYPE | BLESSED |
+F:BRAND_COLD | SLAY_ORC | RES_COLD | RES_LITE | LITE | REGEN |
+F:SHOW_MODS | XTRA_H_RES
+E:DRAIN_LIFE:25:70:90
+E:你的锤子闪耀着白光……
+D:曾被米涅尔塔玛（Meneltarma）大祭司所挥舞，这把巨大的权杖闪烁着
+D:如月光般冰冷的光芒，它在精神上和物理上都能
+D:发动极其强大的打击。
+
+N:127:of Himring
+I:36:6:0
+W:25:6:100:35000
+P:6:0d0:0:0:15
+F:RES_CHAOS | RES_NETHER | RES_POIS | AURA_COLD
+E:PROT_EVIL:25:200
+E:一阵尖锐的哀号声环绕着你。
+D:这件由柔韧皮革制成的镶钉胸甲中，蕴含着关于未被征服的
+D:希姆林的记忆，那是一座被魔苟斯军团包围却依然屹立不倒的堡垒。
+
+N:128:'Kusanagi-no-tsurugi'
+I:23:20:3
+W:50:20:120:123456
+P:0:4d4:15:15:0
+F:STEALTH | DEX | RES_NETHER | RES_DISEN |
+F:RES_ACID | RES_ELEC | RES_FIRE | RES_COLD |
+F:SLAY_EVIL | SLAY_ANIMAL | SLAY_DEMON | SLAY_DRAGON |
+F:SEE_INVIS | REGEN | BLESSED | LITE | SHOW_MODS
+E:ESCAPE:20:35
+
+N:131:of Incanus
+I:36:2:3
+W:50:40:20:100000
+P:2:0d0:0:0:20
+F:INT | WIS | SEARCH | HIDE_TYPE | LEVITATION
+F:SUST_INT | SUST_WIS | FREE_ACT | SEE_INVIS | DEC_MANA |
+F:RES_ACID | RES_ELEC | RES_FIRE | RES_COLD | SPELL_CAP
+E:BOLT_MANA:50:120:200
+E:长袍随着原始的法力而悸动……
+D:伟大巫师甘道夫的长袍，他在南方也被称为
+D:因卡努斯。它是抵御元素的证明，因为无论是南方的
+D:酷热、北方的严寒，还是多尔哥多（Dol Guldur）的酸液坑，
+D:都无法阻挡这位无畏的迈雅去追求
+D:他的使命。
+
+N:133:of Hurin
+I:22:10:4
+W:50:30:180:120000
+P:0:3d7:10:12:2
+F:CON | BLOWS | HIDE_TYPE | BRAND_ACID | SHOW_MODS
+F:SLAY_TROLL | SLAY_DEMON
+E:SPEED_HERO:30:200:50
+D:“胡林[...]双手挥舞着斧头，据说那把斧头在
+D:勾斯魔格巨魔卫队的黑色鲜血中冒着烟，直到它枯萎，
+D:每次杀戮时，胡林都会高喊‘Aure entuluva！新的白昼
+D:必将来临！’。他喊了七十次，但在魔苟斯的命令下，
+D:他们最终还是活捉了他……”
+
+N:149:'Yasaka-no-Magatama'
+I:40:0:3
+W:65:25:3:90000
+F:INT | CHR | SEARCH | HIDE_TYPE |
+F:SEE_INVIS | FREE_ACT |
+F:RES_FIRE | RES_COLD | RES_ELEC |
+E:RECALL:30:200
+E:你的护身符闪耀着柔和的白光……
+
+N:159:of Taikobo
+I:22:40:0
+W:10:150:30:10000
+P:0:1d1:0:0:0
+F:INSTA_ART
+E:FISHING:1
+
+N:170:'Matoi'
+I:21:7:3
+W:20:5:100:808
+P:0:1d8:-5:10:3
+F:STR | CHR | RES_FIRE |
+E:HEROISM:10:45
+
+N:184:'Aranruth'
+I:23:16:4
+W:30:45:150:50000
+P:0:3d6:20:12:0
+F:DEX | HIDE_TYPE |
+F:SLAY_DEMON | SLAY_ORC | FREE_ACT | RES_COLD | LEVITATION |
+F:SLOW_DIGEST | SHOW_MODS |
+F:ESP_ORC | ESP_TROLL | ESP_GIANT | ESP_DEMON
+E:BOLT_COLD:10:50:12
+E:你的剑闪耀着淡蓝色的光芒……
+D:辛葛的美丽佩剑，正如其名“国王之怒”。它闪烁的光芒
+D:冰冷得足以冻结恶魔的心脏。当你紧握它那镶嵌着金银的剑柄时，
+D:你会感到身体柔软且步履轻盈。
+
+N:188:of Bolshoi
+I:21:2:4
+W:15:8:30:22500
+P:0:2d8:6:9:0
+F:DEX | CHR | HIDE_TYPE | RIDING |
+F:KILL_ANIMAL | ESP_ANIMAL | BRAND_FIRE
+E:CHARM_ANIMAL:25:200
+
+N:202:'Ama-no-NumaHoko'
+I:22:4:4
+W:50:40:240:150000
+P:0:2d10:16:20:0
+F:WIS | CHR | SUST_WIS | SUST_CHR | HIDE_TYPE |
+F:SLAY_EVIL | SLAY_DEMON | SLAY_UNDEAD |
+F:RES_ACID | RES_COLD | RES_BLIND | RES_CHAOS |
+F:LITE | BLESSED | SEE_INVIS | SHOW_MODS
+E:BALL_WATER:50:250:200
+E:你的破甲锥悸动着深蓝色的光芒……
+
+N:205:of Mook
+I:35:3:0
+W:50:20:30:50000
+P:3:0d0:0:0:20
+F:RES_COLD | RES_ACID | RES_CHAOS | LEVITATION
+E:RESIST_COLD:20:60
+E:你的披风变成了白色。
+
+N:207:'Dragonic Sword'
+I:23:25:3
+W:55:160:200:180000
+P:0:4d7:17:23:0
+F:STR | SLAY_EVIL | SLAY_DEMON | BRAND_ELEC |
+F:RES_ELEC | RES_FIRE | RES_NETHER |
+F:LITE | SEE_INVIS | SHOW_MODS
+E:BALL_ELEC:50:50:500
+E:剑闪耀着深蓝色的光芒……
+
+N:209:'hermit's purple'
+I:21:2:2
+W:40:40:30:40000
+P:0:1d7:10:5:0
+F:INT | WIS | BRAND_MANA
+F:SEE_INVIS | TELEPATHY
+E:PROT_EVIL:35:225
+E:鞭子发出一声尖锐的哀号……
+
+N:211:of Nain
+I:20:7:6
+W:60:10:250:80000
+P:0:3d8:12:18:0
+F:TUNNEL | INFRA | SEARCH | STR |
+F:SLAY_ORC | SLAY_TROLL | SLAY_GIANT | SLAY_DRAGON |
+F:BRAND_ACID | RES_ACID | RES_DARK | RES_DISEN |
+E:STONE_TO_MUD:20:2
+E:你的鹤嘴锄在悸动……
+D:在阿扎努比扎（Azanulbizar）战役中，铁丘陵的内恩曾挥舞过这把巨大的
+D:鹤嘴锄，为矮人战胜阿索格的半兽人带来了胜利——尽管内恩
+D:自己最后倒下了，即使胜利已成定局。
+
+N:214:of Fundin Bluecloak
+I:21:6:4
+W:65:65:130:150000
+P:0:4d5:13:17:10
+F:STR | WIS | SPEED | LITE | HIDE_TYPE |
+F:SLAY_EVIL | SLAY_UNDEAD |
+F:RES_FIRE | RES_ELEC | RES_NETHER | HOLD_LIFE |
+E:DISPEL_EVIL:50:100:250
+E:铁球使周围区域充满了善良的力量……
+D:伟大的矮人牧师之一的武器，拥有
+D:保护肉体和灵魂的力量，并且是那些
+D:在死后寻求生命者的克星。
+
+N:218:Harness of the Hell
+I:40:0:2
+W:50:20:30:66666
+P:0:0d0:15:15:-5
+F:DEC_INT | DEC_WIS | CHR | DEC_STEALTH | DEC_SPEED | HIDE_TYPE | FULL_NAME
+F:RES_DARK | RES_NETHER |
+F:SEE_INVIS | AGGRAVATE | ESP_UNDEAD |
+E:BALL_DARK:50:100:250
+E:你的项圈挽具被漆黑的暗影所覆盖……
+
+N:225:of Asclepius
+I:21:14:3
+W:40:45:160:300000
+P:0:2d12:15:15:5
+F:WIS | CHR | BLESSED | LITE | LIFE
+F:SEE_INVIS | FREE_ACT | HOLD_LIFE | REGEN | SLOW_DIGEST |
+F:BRAND_VAMP | SLAY_ANIMAL | SLAY_DRAGON | SLAY_HUMAN |
+F:SLAY_ORC | SLAY_TROLL | SLAY_GIANT |
+F:RES_POIS | RES_CONF | RES_CHAOS |
+E:RESTORING:40:750
+E:“阿斯克勒庇俄斯！Ot-tiovno ok-lut！”这根武术棍闪耀出深绿色的光芒……
+D:这是希腊医神阿斯克勒庇俄斯的法杖。
+
+N:252:of the Defender of the Crown
+I:21:6:3
+W:50:50:200:150000
+P:0:5d5:0:20:0
+F:STR | CON | LITE | HIDE_TYPE |
+F:SLAY_EVIL | SLAY_HUMAN | SLAY_DEMON
+F:RES_SOUND | RES_SHARDS | RES_NETHER | HOLD_LIFE |
+E:STONE_SKIN:30:300
+E:你的流星锤发出了“啵”的一声……
+D:一个相当笨拙但体积巨大的铁制流星锤。
+D:当你用它击打敌人时，它会发出一种
+D:奇怪的、沉闷的铃铛般的声音。
+
+N:277:'Stomper'
+I:30:6:3
+W:30:25:80:85000
+P:6:1d1:0:2:21
+F:STR | CON | DEC_STEALTH | RES_SHARDS | RES_CONF | RES_NEXUS
+E:EARTHQUAKE:30:35
+E:你用力地跺下了脚……
+
+N:333:Sword of Tengri
+I:23:15:3
+W:30:15:130:40000
+P:0:4d5:16:18:0
+F:SLAY_HUMAN | FULL_NAME | STR | CHR | RES_FEAR | FREE_ACT
+F:SHOW_MODS | BRAND_ELEC | BRAND_FIRE | LITE
+E:HEROISM:25:35:25
+D:这把剑是上天赐予一位注定要征服世界的战士的礼物。
+
+N:336:of Bubo
+I:30:3:2
+W:30:22:40:50000
+P:3:1d1:0:0:14
+F:RES_FEAR | RES_COLD | RES_DARK | CON | STR | DEX | MAGIC_MASTERY
+E:SPEED:30:100
+D:一双旧皮靴，舒适却坚固耐穿，这是布博在前往
+D:北方冰冻之地的旅途中所穿戴的。
+
+N:361:Bobble Hat of Barnaby
+I:32:1:2
+W:16:10:8:10000
+P:1:0d0:0:0:8
+F:INT | DEX | CHR | STEALTH | FREE_ACT | RES_COLD | SEARCH | FULL_NAME
+E:PHASE_DOOR:1:5
+D:一顶用羊毛编织的迷彩绒球帽，曾被伟大的冒险家
+D:巴纳比戴过。
+
+N:363:Pendant 'Efki'
+I:40:0:3
+W:65:65:3:50000
+P:0:0d0:0:0:5
+F:SPEED | RES_FEAR | HOLD_LIFE | FULL_NAME
+E:SPEED:60:150:30
+D:这件保护性的护身符上刻有强大的速度符文。
+D:当你脖子上挂着它令人安心的重量时，你会感到平静，不再畏惧危险，
+D:因为你知道几乎没有哪个敌人能跑得过你。
+
+N:367:of Surveillance
+I:40:0:2
+W:50:27:3:60000
+F:CHR | STEALTH | HIDE_TYPE | FREE_ACT | SEE_INVIS | TELEPATHY | ESP_NONLIVING
+E:PROBING:30:10
+E:你把护身符举到眼前……
+D:这个护身符能揭示世界上所有的秘密。你很高兴
+D:它没有落入不太负责任的人手中……

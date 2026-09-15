@@ -113,15 +113,15 @@ session-career-viewing = 正在查看 · 点击选项确认选择
 session-career-open-children = { $name }，进入领域选择
 session-career-pending = 请完成领域选择，或返回保留原来的职业。
 session-career-death-name = 死亡
-session-career-available-realms = 当前可选领域：死亡。
+session-career-available-realms = 当前可选领域：生命、圣战、死亡、恶魔。
 session-career-label = 职业
 session-first-realm-label = 第一领域
 session-second-realm-label = 第二领域
 session-selection-pending = 尚未完成选择
-session-mage-realms-help = 从现有八个领域中选择两个不同的领域。第一领域熟练度上限为大师，第二领域为专家。
-session-ranger-realms-help = 第一领域固定为自然，第二领域可选咒术、死亡、奥秘或恶魔。3级开始从书中随机学习法术，两个领域共用学习容量；第一领域熟练度上限为大师，第二领域为专家。
+session-mage-realms-help = 从现有十一个领域中选择两个不同的领域。第一领域熟练度上限为大师，第二领域为专家。
+session-ranger-realms-help = 第一领域固定为自然，第二领域可选咒术、混沌、王牌、死亡、奥秘或恶魔。3级开始从书中随机学习法术，两个领域共用学习容量；第一领域熟练度上限为大师，第二领域为专家。
 session-priest-realms-help = 以感知施法，1级起拥有法力并从书中随机学习。生命或圣战为善良主领域，死亡或恶魔为邪恶主领域；两个领域不能重复或阵营相反。两个领域共用学习容量，第一领域熟练度上限为大师，第二领域为专家。
-session-warrior-mage-realms-help = 主领域固定为奥秘，第二领域可从含工艺在内的八个领域中选择。以智力施法，从双方书本中自主选择法术并重复研习，共用学习容量；主领域熟练度上限为大师，副领域为专家。25级开放两项生命与法力转换能力。
+session-warrior-mage-realms-help = 主领域固定为奥秘，第二领域可从含工艺、混沌、王牌在内的十个领域中选择。以智力施法，从双方书本中自主选择法术并重复研习，共用学习容量；主领域熟练度上限为大师，副领域为专家。25级开放两项生命与法力转换能力。
 session-priest-first-realm-help = 第一领域终身保留，决定善恶阵营与职业能力。确认后选择第二领域。
 session-priest-second-realm-help = 通过真实书本确认改换第二领域，会清除旧副领域的当前法术进度，并立即尝试随机学习。没有可学法术仍会保留改换，已消耗的学习容量不会返还。
 session-priest-good-help = 善良牧师使用未祝福的剑或长柄武器时，每把降低2点命中和伤害，并增加25个百分点的祈祷失败率。35级获得“祝福武器”；祝福可解除上述惩罚，但不提高武器熟练度上限。
@@ -431,11 +431,11 @@ maia-path-title = 迈雅的道路
 maia-path-prompt = 你的本质终于显现。你必须选择迈雅的道路。
 maia-path-enlightened = 启明
 maia-path-corrupted = 堕落
-maia-path-enlightened-description = 获得免食、光照、护甲成长、时间与光抗性、看破隐形和拾取诅咒感知；50级获得漂浮、毒电冷抗性、电冷光环与武器屠邪。禁止学习和施放死亡、恶魔、咒术、死灵领域。选择后不能更改。
+maia-path-enlightened-description = 获得免食、光照、护甲成长、时间与光抗性、看破隐形和拾取诅咒感知；50级获得漂浮、毒电冷抗性、电冷光环与武器屠邪。禁止学习和施放死亡、恶魔、诅咒、死灵领域。选择后不能更改。
 maia-path-corrupted-description = 获得免食、生命成长、时间火暗抗性和轻诅咒脱装；50级获得毒抗、火免疫和火焰光环。禁止学习和施放生命、十字军领域。选择后不能更改。
 trait-maia-rule-birth = 未启蒙出生，感知恶魔与邪恶，拥有10格红外视觉和缓慢消化。
 trait-maia-rule-choice = 20级必须选择启明或堕落；两条道路均免食，降级保留选择。
-trait-maia-rule-realms = 启明禁学禁用死亡、恶魔、咒术和死灵领域；堕落禁用生命与十字军。保留已学法术和书本浏览。
+trait-maia-rule-realms = 启明禁学禁用死亡、恶魔、诅咒和死灵领域；堕落禁用生命与十字军。保留已学法术和书本浏览。
 character-virtues-empty = 当前没有德行记录。
 character-materials-empty = 当前没有材料。
 mutation-choice-select = 选择
@@ -1493,7 +1493,7 @@ casino-poker-no-pair = 无牌型
 
 session-career-craft-name = 工艺
 realm-craft-name = 工艺
-session-high-mage-available-realms = 当前可选领域：死亡、工艺。
+session-high-mage-available-realms = 当前可选十一个领域。
 ability-target-element = 元素
 ability-element-target = 选择元素
 item-crafting-quantity-confirm = 这叠弹药数量超过 30，工艺有可能失败并消耗本次施法。继续吗？
@@ -2244,3 +2244,85 @@ display-warning-threshold = { $percent }%
 
 pet-menu-behavior-title = 行为与施法
 pet-menu-management-title = 目标与宠物管理
+
+realm-chaos-name = 混沌
+
+realm-trump-name = 王牌
+message-trump-direction-required = 抽到了恋人。选择魅惑方向；取消仍消耗法力与时间。
+
+message-trump-card-0 = 糟糕！是“死神”！
+message-trump-card-1 = 糟糕！是“恶魔”！
+message-trump-card-2 = 糟糕！是“倒吊人”。
+message-trump-card-3 = 是“纷争之剑”。
+message-trump-card-4 = 是“愚者”。
+message-trump-card-5 = 这是一张奇怪怪物的图画。
+message-trump-card-6 = 是“月亮”。
+message-trump-card-7 = 是“命运之轮”。
+message-trump-card-8 = 这是一张传送王牌。
+message-trump-card-9 = 是“正义”。
+message-trump-card-10 = 这是一张传送王牌。
+message-trump-card-11 = 这是一张传送王牌。
+message-trump-card-12 = 是“高塔”。
+message-trump-card-13 = 是“节制”。
+message-trump-card-14 = 是“高塔”。
+message-trump-card-15 = 这是一张友善怪物的图画。
+message-trump-card-16 = 这是一张友善怪物的图画。
+message-trump-card-17 = 这是一张友善怪物的图画。
+message-trump-card-18 = 这是一张友善怪物的图画。
+message-trump-card-19 = 是“恋人”。
+message-trump-card-20 = 是“隐者”。
+message-trump-card-21 = 是“审判”。
+message-trump-card-22 = 是“太阳”。
+message-trump-card-23 = 是“世界”。
+confirm-ability-necromancy-repose = 你将进入深度沉睡。你确定吗？
+
+duelist-choice-law-escape-title = 逃之夭夭
+duelist-choice-law-escape-help = 传送到另一层？本次施法的消耗已结算。
+
+realm-law-name = 律法
+
+status-law-spin-name = 扭曲事实
+status-law-tread-softly-name = 轻声潜行
+
+creation-realm-music = 音乐
+
+status-music-active = 持续演唱：{ $song }（可用“停止唱歌”结束）
+
+creation-realm-hissatsu = 剑道
+
+hissatsu-harakiri-confirm = 切腹会结束本次生命。确定执行吗？
+hissatsu-harakiri-type = 输入 @ 确认切腹。
+
+status-samurai-posture = 架势：{ $posture }
+
+realm-hex-name = 诅咒
+status-hex-active = 诅咒：{ $spells }
+status-hex-cursed-armor = 诅咒：诅咒护甲加成
+status-hex-interrupted = 诅咒中断：{ $spells }
+item-hex-curse-confirm = 确定要诅咒这件装备吗？
+
+realm-rage-name = 狂怒
+
+rage-self-damage-confirm = 此招式会消耗生命，可能致死。继续施展？
+
+status-rage-mage-name = 狂怒法师
+status-rage-resist-disenchantment-name = 抵抗解除附魔
+status-rage-resist-curses-name = 抵抗诅咒
+status-rage-spell-reaction-name = 法术反击
+status-rage-armor-of-fury-name = 狂怒之甲
+status-rage-spell-turning-name = 法术反转
+status-rage-detect-magical-name = 探测魔法敌人
+status-rage-anti-magic-name = 反魔法射线
+
+realm-burglary-name = 行窃
+
+duelist-choice-burglary-escape-title = 逃跑吗？
+duelist-choice-burglary-negotiate-title = 你付款吗？
+duelist-choice-burglary-negotiate-description = 支付 { $cost } 枚金币雇佣窃贼；对方可能反悔。
+
+session-career-category-stealth = 潜行
+status-rfb-burglary-infravision = 黑暗视觉
+status-rfb-burglary-tread-softly = 轻声行走
+status-rfb-burglary-shadows = 隐匿于阴影
+
+duelist-choice-burglary-escape-help = 现在传送离开吗？

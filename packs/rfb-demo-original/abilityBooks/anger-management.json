@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.anger-management",
+  "nameKey": "item-demo-anger-management-name",
+  "descriptionKey": "item-demo-anger-management-description",
+  "realmId": "rage",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.rage-shout",
+    "demo.ability.rage-detect-magical-foes",
+    "demo.ability.rage-smash",
+    "demo.ability.rage-evasive-leap",
+    "demo.ability.rage-light-area",
+    "demo.ability.rage-focus-rage",
+    "demo.ability.rage-rage-sustenance",
+    "demo.ability.rage-veterans-blessing"
+  ],
+  "tags": [
+    "rage",
+    "spellbook"
+  ]
+}

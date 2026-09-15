@@ -146,6 +146,39 @@ impl Game {
         {
             return Ok(());
         }
+        // mauler.c: carried or equipped Vice drains gold; exact zero survives.
+        let maul_index = self
+            .items
+            .iter()
+            .position(|item| {
+                item.location == ItemLocation::Inventory && self.item_is_fixed_artifact(item, 279)
+            })
+            .or_else(|| {
+                self.items.iter().position(|item| {
+                    matches!(item.location, ItemLocation::Equipped { .. })
+                        && self.item_is_fixed_artifact(item, 279)
+                })
+            });
+        if let Some(index) = maul_index {
+            let amount = self.rng.bounded(u64::from(self.progress.level.max(1))) as u32 + 1;
+            let insufficient = self.gold < amount;
+            self.gold = self.gold.saturating_sub(amount);
+            let message_key = if insufficient {
+                self.blast_item(index);
+                Some("item-vice-blasted")
+            } else if self.gold < 1000 {
+                Some("item-vice-low-gold")
+            } else if self.rng.bounded(111) == 0 {
+                Some("item-vice-gold-draining")
+            } else {
+                None
+            };
+            if let Some(message_key) = message_key {
+                events.push(DomainEvent::ItemSpecialMessage {
+                    message_key: message_key.to_owned(),
+                });
+            }
+        }
         let intrinsic_teleport = self.items.iter().any(|item| {
             matches!(item.location, ItemLocation::Equipped { .. })
                 && item.curse.is_none()
@@ -172,6 +205,9 @@ impl Game {
                 self.curse_teleport(50, events, changed);
             }
         }
+        if self.player_has_equipped_artifact(85) && self.rng.bounded(100) == 0 {
+            self.chainsword_noise(events);
+        }
         if let Some(source) = self
             .items
             .iter()
@@ -189,6 +225,14 @@ impl Game {
         }
         self.process_other_equipped_curses(events, changed);
         Ok(())
+    }
+
+    pub(super) fn chainsword_noise(&mut self, events: &mut Vec<DomainEvent>) {
+        // master:lib/file/chainswd.txt has six authoritative (English) lines.
+        let line = self.rng.bounded(6) + 1;
+        events.push(DomainEvent::ItemSpecialMessage {
+            message_key: format!("item-chainsword-noise-{line}"),
+        });
     }
 }
 

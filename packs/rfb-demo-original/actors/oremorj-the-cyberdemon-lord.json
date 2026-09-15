@@ -119,6 +119,7 @@
     "poison": "resistant"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.cyberdemon-lord", "chancePercent": 5},
   "speed": 130,
   "tags": [
     "attack-spell",

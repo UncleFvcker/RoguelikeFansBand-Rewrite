@@ -76,9 +76,10 @@ fn roll_virtues(
                 VirtueKindDto::Enlightenment,
                 VirtueKindDto::Patience,
             ]),
-            "demo.class.mage" => {
+            "demo.class.mage" | "demo.class.necromancer" => {
                 kinds.extend([VirtueKindDto::Knowledge, VirtueKindDto::Enchantment])
             }
+            "demo.class.bard" => kinds.extend([VirtueKindDto::Harmony, VirtueKindDto::Compassion]),
             "demo.class.high-mage" => kinds.extend([
                 VirtueKindDto::Enlightenment,
                 VirtueKindDto::Enchantment,
@@ -90,13 +91,19 @@ fn roll_virtues(
             "demo.class.priest" => {
                 kinds.extend([VirtueKindDto::Faith, VirtueKindDto::Temperance]);
             }
+            "demo.class.paladin" => kinds.extend([
+                VirtueKindDto::Justice,
+                VirtueKindDto::Valour,
+                VirtueKindDto::Honour,
+                VirtueKindDto::Faith,
+            ]),
             "demo.class.warrior-mage" => {
                 kinds.extend([VirtueKindDto::Enchantment, VirtueKindDto::Valour]);
             }
             "demo.class.magic-eater" => {
                 kinds.extend([VirtueKindDto::Enchantment, VirtueKindDto::Knowledge]);
             }
-            "demo.class.warrior" => {
+            "demo.class.warrior" | "demo.class.samurai" => {
                 kinds.extend([VirtueKindDto::Valour, VirtueKindDto::Honour]);
             }
             _ => {}
@@ -294,6 +301,7 @@ impl Game {
             ],
             "death" => &[(Unlife, 1), (Justice, -1), (Faith, -1), (Vitality, -1)],
             "daemon" => &[(Justice, -1), (Faith, -1), (Honour, -1), (Temperance, -1)],
+            "hex" => &[(Justice, -1), (Faith, -1), (Honour, -1), (Compassion, -1)],
             "crusade" => &[(Faith, 1), (Justice, 1), (Sacrifice, 1), (Honour, 1)],
             "nature" => &[(Nature, 1), (Harmony, 1)],
             _ => &[],
@@ -324,6 +332,7 @@ impl Game {
             "death" => (Unlife, -1),
             "nature" => (Nature, -1),
             "daemon" => (Justice, 1),
+            "hex" => (Compassion, -1),
             "crusade" => (Justice, -1),
             _ => (Knowledge, -1),
         };
@@ -371,6 +380,13 @@ impl Game {
             };
         }
         alignment
+            - if self.player_is_necromancer() { 200 } else { 0 }
+            - 1000
+                * self
+                    .equipped_melee_weapons()
+                    .iter()
+                    .filter(|item| self.item_is_fixed_artifact(item, 173))
+                    .count() as i32
             + match self
                 .character_definitions()
                 .map(|(_, race, _, _)| race.id.as_str())

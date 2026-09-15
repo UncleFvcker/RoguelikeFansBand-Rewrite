@@ -1,0 +1,84 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.colannon",
+  "nameKey": "item-demo-colannon-name",
+  "descriptionKey": "item-demo-colannon-description",
+  "glyph": "(",
+  "generationLevel": 20,
+  "weightTenthsPound": 10,
+  "baseValue": 15000,
+  "maxStack": 1,
+  "equipmentSlot": "cloak",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 48,
+    "baseItemKindId": "demo.item.cloak",
+    "instant": false,
+    "rarityOneIn": 10
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "STEALTH"
+    ],
+    "pval": 3,
+    "toArmor": 15
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 16
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 3
+  },
+  "resistances": {
+    "acid": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.colannon",
+        "nameKey": "device-activation-e5-teleport-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 10,
+        "rfbValue": 1500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.random-teleport-long"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 450
+    }
+  }
+}

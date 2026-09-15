@@ -135,8 +135,13 @@ impl Game {
             energy_need: self.player.energy_need,
             minor_slow: self.minor_slow,
             reality_change_ticks: self.reality_change_ticks,
+            music: self.music.clone(),
+            hex: self.hex.clone(),
+            rage_mana_sustained: self.rage_mana_sustained,
+            samurai: self.samurai,
             pending_mutation_direction: self.pending_mutation_direction.clone(),
             pending_ability_direction: self.pending_ability_direction.clone(),
+            pending_ability_glyph: self.pending_ability_glyph.clone(),
             duelist_target_id: self.duelist_target_id.clone(),
             pending_duelist: self
                 .pending_duelist
@@ -173,6 +178,10 @@ impl Game {
                 .player
                 .statuses
                 .iter()
+                .chain(self.music_status().iter())
+                .chain(self.samurai_status().iter())
+                .chain(self.hex_status().iter())
+                .chain(self.rage_status().iter())
                 .map(crate::effect::StatusInstance::to_dto)
                 .collect(),
             confusing_strike_ready: self.confusing_strike_ready,
@@ -612,9 +621,14 @@ impl Game {
                     && !ability.tags.iter().any(|tag| tag == "usable-while-afraid")
                 {
                     Some("afraid")
-                } else if source == AbilitySourceDto::Learned && self.player_has_anti_magic() {
+                } else if source == AbilitySourceDto::Learned
+                    && !self.player_is_samurai()
+                    && self.player_has_anti_magic()
+                {
                     Some("anti-magic")
                 } else if source == AbilitySourceDto::Learned
+                    && !self.player_is_samurai()
+                    && !self.player_is_rage_mage()
                     && self.player_has_status_kind(STATUS_BERSERK)
                 {
                     Some("berserk")
@@ -636,7 +650,11 @@ impl Game {
                     Some("projectile-unavailable")
                 } else if cooldown_remaining > 0 {
                     Some("cooldown")
-                } else if source == AbilitySourceDto::Learned && book_item_id.is_none() {
+                } else if source == AbilitySourceDto::Learned
+                    && !self.player_is_samurai()
+                    && !self.player_is_rage_mage()
+                    && book_item_id.is_none()
+                {
                     Some("book-unavailable")
                 } else {
                     None
@@ -673,6 +691,8 @@ impl Game {
                     beam_damage: matches!(
                         effective_ability.effect,
                         AbilityEffectDefinition::BeamDamage { .. }
+                            | AbilityEffectDefinition::Law { spell: 27 }
+                            | AbilityEffectDefinition::Music { spell: 22 }
                     ),
                     cone_radius: match effective_ability.effect {
                         AbilityEffectDefinition::ConeDamage { radius, .. } => Some(radius),
@@ -741,6 +761,9 @@ impl Game {
                         .collect(),
                     target_spec,
                     element_targets: self.ability_element_targets(&effective_ability),
+                    item_selection_cancel_target: (effective_ability.id
+                        == "demo.ability.chaos-chaos-branding")
+                        .then_some(rfb_protocol::TargetSelection::SelfTarget),
                     item_targets: if matches!(
                         effective_ability.effect,
                         AbilityEffectDefinition::MagicEaterAbsorb
@@ -748,6 +771,10 @@ impl Game {
                         Some(self.magic_absorption_item_targets())
                     } else {
                         self.craft_ability_item_targets(&effective_ability)
+                            .map(|mut targets| {
+                                targets.sort_by(|left, right| left.item_id.cmp(&right.item_id));
+                                targets
+                            })
                     },
                     town_targets: matches!(ability.effect, AbilityEffectDefinition::TeleportTown)
                         .then(|| self.teleport_town_targets())
@@ -771,6 +798,10 @@ impl Game {
                             .is_some_and(|learning| learning.remaining_slots > 0),
                     can_forget: source == AbilitySourceDto::Learned
                         && learned
+                        && !self.player_is_bard()
+                        && !self.player_uses_hex()
+                        && !self.player_is_samurai()
+                        && !self.player_is_rage_mage()
                         && !self.player_uses_dual_realm_learning(),
                     can_cast: unavailable_reason.is_none(),
                     unavailable_reason: unavailable_reason.map(str::to_owned),
@@ -1071,7 +1102,10 @@ impl Game {
         }
         if matches!(
             self.inventory_item_use_effect(&item.id),
-            Some((ItemUseEffectDefinition::PiercingShot, _))
+            Some((
+                ItemUseEffectDefinition::PiercingShot | ItemUseEffectDefinition::RamaArrow,
+                _
+            ))
         ) {
             target.range = self
                 .player_projectile_profile()

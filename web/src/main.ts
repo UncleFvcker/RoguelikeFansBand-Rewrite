@@ -523,8 +523,8 @@ const statusPanel = new StatusPanel({
   restUntilRecovered: () => { playerUiLayout.closePage(); return inputController.chooseRestMode(); },
   contentName,
   statusName,
-  selectItemTarget: (excludedItemId, onSelect, allowedItemIds, command) =>
-    inventoryPanel.selectItemTarget(excludedItemId, onSelect, undefined, allowedItemIds, command),
+  selectItemTarget: (excludedItemId, onSelect, allowedItemIds, command, onCancel) =>
+    inventoryPanel.selectItemTarget(excludedItemId, onSelect, onCancel, allowedItemIds, command),
   confirmItemChoice: (id, command) => inventoryPanel.confirmItemChoice(id, command),
   startAbilityTargeting: (ability) => {
     playerUiLayout.closePage();

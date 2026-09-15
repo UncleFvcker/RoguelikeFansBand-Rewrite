@@ -100,7 +100,7 @@
         "weight": 1
       },
       {
-        "abilityId": "rfb-legacy.ability.bolt-physical-7d6",
+        "abilityId": "rfb-legacy.ability.arrow-physical-7d6",
         "weight": 1,
         "innate": true
       },

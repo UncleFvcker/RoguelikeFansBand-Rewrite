@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.kronos",
+  "nameKey": "item-demo-kronos-name",
+  "descriptionKey": "item-demo-kronos-description",
+  "glyph": "/",
+  "generationLevel": 90,
+  "weightTenthsPound": 250,
+  "baseValue": 10000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 305,
+    "baseItemKindId": "demo.item.sickle",
+    "instant": false,
+    "rarityOneIn": 4
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "CON",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "KILL_GIANT",
+      "KILL_HUMAN",
+      "QUESTITEM",
+      "RES_CHAOS",
+      "RES_CONF",
+      "RES_FIRE",
+      "RES_SOUND",
+      "SLAY_EVIL",
+      "SPEED",
+      "STR",
+      "VORPAL",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 3,
+    "intelligence": 3,
+    "wisdom": 3,
+    "dexterity": 3,
+    "constitution": 3,
+    "charisma": 3,
+    "speed": 3
+  },
+  "weaponProficiencyBaseItemId": "demo.item.sickle",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 10,
+    "damageSides": 4,
+    "toHit": 15,
+    "toDamage": 15
+  },
+  "resistances": {
+    "sound": "resistant",
+    "fire": "resistant",
+    "confusion": "resistant",
+    "chaos": "resistant"
+  },
+  "vorpal": true,
+  "slays": {
+    "evil": "slay",
+    "giant": "kill",
+    "human": "kill"
+  }
+}

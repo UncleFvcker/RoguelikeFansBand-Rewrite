@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.maggot",
+  "nameKey": "item-demo-maggot-name",
+  "descriptionKey": "item-demo-maggot-description",
+  "glyph": "/",
+  "generationLevel": 10,
+  "weightTenthsPound": 70,
+  "baseValue": 10000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 232,
+    "baseItemKindId": "demo.item.sickle",
+    "instant": false,
+    "rarityOneIn": 4
+  },
+  "weaponProficiencyBaseItemId": "demo.item.sickle",
+  "rfbValue": {
+    "flags": [
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_FIRE",
+      "RES_LITE",
+      "STR",
+      "VORPAL"
+    ],
+    "pval": 1,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 4,
+    "toHit": 7,
+    "toDamage": 9
+  },
+  "modifiers": {
+    "strength": 1,
+    "dexterity": 1
+  },
+  "resistances": {
+    "fire": "resistant",
+    "light": "resistant"
+  },
+  "vorpal": true
+}

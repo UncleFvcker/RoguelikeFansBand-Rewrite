@@ -32,6 +32,169 @@ use rfb_protocol::{
 use std::collections::{BTreeMap, BTreeSet};
 
 impl Game {
+    // gf.c GF_OLD_CLONE / GF_OLD_SPEED / GF_OLD_HEAL. These beneficial
+    // monster projections do not run hostile control resistance or anger.
+    pub(super) fn resolve_player_monster_aid(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        let (trace, index) = self.trace_projectile_path(path);
+        let Some(index) = index else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability.id.clone(),
+                trace,
+            });
+            return;
+        };
+        let actor = &self.entities[index];
+        let id = actor.id.clone();
+        let kind_id = actor.kind_id.clone();
+        let definition = self.actor_runtime_definition(actor).unwrap();
+        let unique = definition
+            .tags
+            .iter()
+            .any(|t| matches!(t.as_str(), "unique" | "unique2"));
+        let protected = unique
+            || actor.controller_id.as_deref() == Some(self.player.id.as_str())
+            || definition
+                .tags
+                .iter()
+                .any(|t| matches!(t.as_str(), "guardian" | "questor"))
+            || definition.finite_lifetime_instance_limit().is_some()
+            || definition
+                .allocation
+                .as_ref()
+                .is_some_and(|a| a.task_id.is_some());
+        let friendly = actor.friendly || actor.controller_id.is_some();
+        let evil = definition.tags.iter().any(|t| t == "evil");
+        let good = definition.tags.iter().any(|t| t == "good");
+        let animal = definition.tags.iter().any(|t| t == "animal");
+        let mut effects = Vec::new();
+        match ability.effect {
+            AbilityEffectDefinition::CloneTarget => {
+                let mut cloned_entity_id = None;
+                if !protected {
+                    self.entities[index].hp = self.entities[index].max_hp;
+                    if self.place_monster_offspring(index, true, changed) {
+                        cloned_entity_id = self.entities.last().map(|a| a.id.clone());
+                    }
+                }
+                effects.push(AbilityEffectResolutionDto::CloneTarget {
+                    effect_index: 0,
+                    cloned_entity_id,
+                    protected,
+                });
+            }
+            AbilityEffectDefinition::HasteTarget => {
+                let remaining = self.entities[index]
+                    .statuses
+                    .iter_mut()
+                    .find(|s| s.kind_id == crate::effect::STATUS_HASTE)
+                    .map_or(0, |s| {
+                        s.remaining_ticks = s.remaining_ticks.min(200);
+                        s.remaining_ticks
+                    });
+                effects.push(apply_ability_status_effect(
+                    &mut self.entities[index],
+                    &ability.id,
+                    0,
+                    crate::effect::STATUS_HASTE,
+                    1,
+                    (200 - remaining).min(100),
+                    0,
+                    0,
+                    AbilityStatusStackingDefinition::Extend,
+                    None,
+                    None,
+                    &BTreeMap::new(),
+                    &BTreeSet::new(),
+                    &StatModifiers::default(),
+                    &EquipmentBonuses::default(),
+                    &BTreeSet::new(),
+                    None,
+                    false,
+                    100,
+                    None,
+                    None,
+                    &mut self.rng,
+                ));
+                if unique {
+                    self.add_virtue(VirtueKindDto::Individualism, 1);
+                }
+                if friendly {
+                    self.add_virtue(VirtueKindDto::Honour, 1);
+                }
+            }
+            AbilityEffectDefinition::HealTarget => {
+                let rolled = if ability.id == "demo.ability.trump-heal-monster" {
+                    crate::game::ability_scaling::spell_power_value(
+                        u64::from(self.progress.level * 10 + 200),
+                        ability.spell_power_bonus,
+                    ) as i32
+                } else {
+                    self.roll_damage(4, 6)
+                };
+                let amount = if evil {
+                    rolled
+                } else {
+                    rolled * (625 + i32::from(self.virtue_current(VirtueKindDto::Compassion))) / 625
+                };
+                let actor = &mut self.entities[index];
+                let before = actor.hp;
+                actor.hp = (actor.hp + amount).min(actor.max_hp);
+                actor.alerted = true;
+                for kind in [
+                    STATUS_SLEEP,
+                    crate::effect::STATUS_STUN,
+                    STATUS_CONFUSION,
+                    STATUS_FEAR,
+                ] {
+                    effects.push(remove_ability_status_effect(actor, 0, kind));
+                }
+                effects.push(AbilityEffectResolutionDto::Heal {
+                    effect_index: 0,
+                    resolution: rfb_protocol::HealingResolutionDto {
+                        requested: amount,
+                        applied: actor.hp - before,
+                    },
+                });
+                self.add_virtue(VirtueKindDto::Vitality, 1);
+                if unique {
+                    self.add_virtue(VirtueKindDto::Individualism, 1);
+                }
+                if friendly {
+                    self.add_virtue(VirtueKindDto::Honour, 1);
+                } else if !evil {
+                    self.add_virtue(VirtueKindDto::Compassion, if good { 2 } else { 1 });
+                }
+                if animal {
+                    self.add_virtue(VirtueKindDto::Nature, 1);
+                }
+            }
+            _ => unreachable!("monster aid executor requires a beneficial monster projection"),
+        }
+        changed.insert(self.entities[index].position);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(id.clone()),
+                target_kind_id: Some(kind_id.clone()),
+                effects,
+            },
+            trace: Some(trace),
+        });
+        if matches!(ability.effect, AbilityEffectDefinition::HealTarget)
+            && kind_id == "demo.actor.mangy-looking-leper"
+        {
+            self.add_virtue(VirtueKindDto::Compassion, 5);
+            self.erase_monsters_without_death(&[id], changed, removed_entities);
+        }
+    }
+
     pub(in crate::game) fn anger_monster_from_control_effect(&mut self, index: usize) {
         let actor = &self.entities[index];
         let definition = self.actor_runtime_definition(actor).unwrap();
@@ -88,6 +251,25 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) -> bool {
+        self.resolve_monster_status_targets(
+            source_id,
+            projection,
+            power,
+            self.projected_monster_status_targets(),
+            events,
+            changed,
+        )
+    }
+
+    pub(super) fn resolve_monster_status_targets(
+        &mut self,
+        source_id: &str,
+        projection: MonsterStatusProjectionDefinition,
+        power: u16,
+        targets: Vec<String>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> bool {
         // ponytail: source initial counters use shared tick recovery; source
         // noise/fear recovery belongs to the monster timing parity work.
         use MonsterStatusProjectionDefinition::{Confusion, Fear, Sleep, Stasis};
@@ -98,7 +280,7 @@ impl Game {
             Stasis => STATUS_PARALYSIS,
         };
         let mut noticed = false;
-        for actor_id in self.projected_monster_status_targets() {
+        for actor_id in targets {
             let index = self
                 .entities
                 .iter()
@@ -353,7 +535,21 @@ impl Game {
                     .applied;
             }
         }
-        for entity_id in &removed_entity_ids {
+        self.erase_monsters_without_death(&removed_entity_ids, changed, removed_entities);
+        GenocideResolution {
+            removed_entity_ids,
+            resisted_entity_ids,
+            fatigue_damage,
+        }
+    }
+
+    pub(super) fn erase_monsters_without_death(
+        &mut self,
+        entity_ids: &[String],
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) {
+        for entity_id in entity_ids {
             let Some(index) = self
                 .entities
                 .iter()
@@ -397,11 +593,6 @@ impl Game {
             changed.insert(removed.position);
             removed_entities.push(removed.id);
         }
-        GenocideResolution {
-            removed_entity_ids,
-            resisted_entity_ids,
-            fatigue_damage,
-        }
     }
 
     pub(in crate::game) fn resolve_ability_control(
@@ -414,6 +605,11 @@ impl Game {
         if category == "any-monster" {
             return self.resolve_psychic_charm(target_index, effect_index, power);
         }
+        let power = if self.player_has_status_kind("rfb.status.law-spin") {
+            power.saturating_add(25.max(power * 2 / 5))
+        } else {
+            power
+        };
         let target_entity_id = self.entities[target_index].id.clone();
         let target_kind_id = self.entities[target_index].kind_id.clone();
         let definition = self
@@ -1458,6 +1654,7 @@ impl Game {
         };
         let target_entity_id = self.entities[target_index].id.clone();
         let target_kind_id = self.entities[target_index].kind_id.clone();
+        let seen = self.entity_is_visible_to_player(&self.entities[target_index]);
         let resolution = self.resolve_actor_polymorph_target(
             target_index,
             u32::from(self.progress.level),
@@ -1465,6 +1662,15 @@ impl Game {
             events,
             changed,
         );
+        if ability.id == "demo.ability.chaos-polymorph-other"
+            && seen
+            && matches!(
+                resolution,
+                AbilityEffectResolutionDto::PolymorphTarget { .. }
+            )
+        {
+            self.add_virtue(VirtueKindDto::Chance, 1);
+        }
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {
@@ -1547,6 +1753,7 @@ impl Game {
         &mut self,
         ability: &AbilityDefinition,
         path: Option<Vec<Position>>,
+        selected_glyph: Option<String>,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -1563,44 +1770,45 @@ impl Game {
         else {
             unreachable!("genocide executor requires a genocide effect");
         };
-        let (trace, target_entity_id, target_kind_id, glyph) =
-            if *scope == AbilityGenocideScopeDefinition::Nearby {
-                (None, None, None, None)
-            } else {
-                let (trace, target_index) =
-                    self.trace_projectile_path(path.expect("targeted genocide must retain a path"));
-                let Some(target_index) = target_index else {
-                    events.push(DomainEvent::AbilityLanded {
-                        ability_id: ability.id.clone(),
-                        trace: trace.clone(),
-                    });
-                    events.push(DomainEvent::AbilityEffectsResolved {
-                        ability_id: ability.id.clone(),
-                        resolution: AbilityEffectsResolutionDto {
-                            target_entity_id: None,
-                            target_kind_id: None,
-                            effects: vec![AbilityEffectResolutionDto::Skipped {
-                                effect_index: 0,
-                                reason: AbilityEffectSkipReasonDto::NoTarget,
-                            }],
-                        },
-                        trace: Some(trace),
-                    });
-                    return;
-                };
-                let target_entity_id = self.entities[target_index].id.clone();
-                let target_kind_id = self.entities[target_index].kind_id.clone();
-                let glyph = self
-                    .content
-                    .actor(&target_kind_id)
-                    .map(|definition| definition.glyph.clone());
-                (
-                    Some(trace),
-                    Some(target_entity_id),
-                    Some(target_kind_id),
-                    glyph,
-                )
+        let (trace, target_entity_id, target_kind_id, glyph) = if let Some(glyph) = selected_glyph {
+            (None, None, None, Some(glyph))
+        } else if *scope == AbilityGenocideScopeDefinition::Nearby {
+            (None, None, None, None)
+        } else {
+            let (trace, target_index) =
+                self.trace_projectile_path(path.expect("targeted genocide must retain a path"));
+            let Some(target_index) = target_index else {
+                events.push(DomainEvent::AbilityLanded {
+                    ability_id: ability.id.clone(),
+                    trace: trace.clone(),
+                });
+                events.push(DomainEvent::AbilityEffectsResolved {
+                    ability_id: ability.id.clone(),
+                    resolution: AbilityEffectsResolutionDto {
+                        target_entity_id: None,
+                        target_kind_id: None,
+                        effects: vec![AbilityEffectResolutionDto::Skipped {
+                            effect_index: 0,
+                            reason: AbilityEffectSkipReasonDto::NoTarget,
+                        }],
+                    },
+                    trace: Some(trace),
+                });
+                return;
             };
+            let target_entity_id = self.entities[target_index].id.clone();
+            let target_kind_id = self.entities[target_index].kind_id.clone();
+            let glyph = self
+                .content
+                .actor(&target_kind_id)
+                .map(|definition| definition.glyph.clone());
+            (
+                Some(trace),
+                Some(target_entity_id),
+                Some(target_kind_id),
+                glyph,
+            )
+        };
         let mut candidate_ids = self
             .entities
             .iter()

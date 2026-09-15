@@ -539,6 +539,7 @@ impl Game {
             "demo.terrain.wall",
             "demo.terrain.quartz-vein",
             "demo.terrain.magma-vein",
+            None,
         );
         self.apply_area_destruction_plan(plan, events, changed, removed_entities);
     }

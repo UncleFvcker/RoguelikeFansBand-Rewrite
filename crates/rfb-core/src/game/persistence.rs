@@ -1086,6 +1086,10 @@ impl Game {
             return Err(CoreError::InvalidSave("player chaos patron is invalid"));
         }
         let reality_change_ticks = payload.player.reality_change_ticks;
+        let music = payload.player.music.clone();
+        let hex = payload.player.hex.clone();
+        let rage_mana_sustained = payload.player.rage_mana_sustained;
+        let samurai = payload.player.samurai;
         if reality_change_ticks > 35 {
             return Err(CoreError::InvalidSave(
                 "player reality change countdown is invalid",
@@ -1102,16 +1106,54 @@ impl Game {
             ));
         }
         let pending_ability_direction = payload.player.pending_ability_direction.clone();
+        let pending_ability_glyph = payload.player.pending_ability_glyph.clone();
+        if pending_ability_glyph.as_ref().is_some_and(|pending| {
+            pending.cast_resolution.ability_id != "demo.ability.chaos-wonder"
+                || !pending.cast_resolution.succeeded
+                || !saved_learned_ability_ids.contains(&pending.cast_resolution.ability_id)
+                || !content
+                    .ability(&pending.cast_resolution.ability_id)
+                    .is_some_and(|ability| {
+                        matches!(ability.effect, AbilityEffectDefinition::RandomChoice { .. })
+                    })
+                || payload.map_scale != MapScaleDto::Local
+        }) {
+            return Err(CoreError::InvalidSave("pending spell glyph is invalid"));
+        }
+
         let duelist_target_id = payload.player.duelist_target_id.clone();
         let pending_duelist = payload.player.pending_duelist.clone();
         if pending_ability_direction.as_ref().is_some_and(|pending| {
-            pending.ability_id != "demo.ability.nature-natures-wrath"
-                || !matches!(pending.branch_roll, 2 | 6)
-                || pending.cast_resolution.ability_id != pending.ability_id
+            !match pending.ability_id.as_str() {
+                "demo.ability.nature-natures-wrath" => matches!(pending.branch_roll, 2 | 6),
+                "demo.ability.chaos-call-chaos" => (1..=62).contains(&pending.branch_roll),
+                "demo.ability.trump-shuffle"
+                | "demo.ability.hissatsu-hundred-slaughter"
+                | "demo.ability.hex-revenge" => pending.branch_roll == 1,
+                _ => false,
+            } || pending.cast_resolution.ability_id != pending.ability_id
                 || !pending.cast_resolution.succeeded
                 || !saved_learned_ability_ids.contains(&pending.ability_id)
                 || !content.ability(&pending.ability_id).is_some_and(|ability| {
-                    matches!(ability.effect, AbilityEffectDefinition::NatureWrath)
+                    matches!(
+                        (&ability.effect, pending.ability_id.as_str()),
+                        (
+                            AbilityEffectDefinition::NatureWrath,
+                            "demo.ability.nature-natures-wrath"
+                        ) | (
+                            AbilityEffectDefinition::CallChaos,
+                            "demo.ability.chaos-call-chaos"
+                        ) | (
+                            AbilityEffectDefinition::TrumpShuffle,
+                            "demo.ability.trump-shuffle"
+                        ) | (
+                            AbilityEffectDefinition::Hissatsu { spell: 26 },
+                            "demo.ability.hissatsu-hundred-slaughter"
+                        ) | (
+                            AbilityEffectDefinition::Hex { spell: 31 },
+                            "demo.ability.hex-revenge"
+                        )
+                    )
                 })
                 || payload.map_scale != MapScaleDto::Local
         }) {
@@ -1548,8 +1590,13 @@ impl Game {
             minor_slow_energy,
             chaos_patron_id,
             reality_change_ticks,
+            music,
+            hex,
+            rage_mana_sustained,
+            samurai,
             pending_mutation_direction,
             pending_ability_direction,
+            pending_ability_glyph,
             duelist_target_id,
             pending_duelist,
             pending_magic_absorption: payload.pending_magic_absorption,
@@ -1612,6 +1659,18 @@ impl Game {
             .is_some_and(|run| !game.running_state_is_valid(run))
         {
             return Err(CoreError::InvalidSave("player running state is invalid"));
+        }
+        if !game.samurai_state_is_valid() {
+            return Err(CoreError::InvalidSave("invalid Samurai state"));
+        }
+        if !game.player_is_rage_mage() && game.rage_mana_sustained {
+            return Err(CoreError::InvalidSave("invalid Rage state"));
+        }
+        if !game.hex_state_is_valid() {
+            return Err(CoreError::InvalidSave("invalid Hex state"));
+        }
+        if !game.music_state_is_valid() {
+            return Err(CoreError::InvalidSave("invalid Music state"));
         }
         if game.fishing_direction.is_some() && !game.fishing_state_is_valid() {
             return Err(CoreError::InvalidSave("player fishing state is invalid"));
@@ -1886,8 +1945,13 @@ impl Game {
         player.minor_slow_energy = self.minor_slow_energy;
         player.chaos_patron_id = self.chaos_patron_id.clone();
         player.reality_change_ticks = self.reality_change_ticks;
+        player.music = self.music.clone();
+        player.hex = self.hex.clone();
+        player.rage_mana_sustained = self.rage_mana_sustained;
+        player.samurai = self.samurai;
         player.pending_mutation_direction = self.pending_mutation_direction.clone();
         player.pending_ability_direction = self.pending_ability_direction.clone();
+        player.pending_ability_glyph = self.pending_ability_glyph.clone();
         player.duelist_target_id = self.duelist_target_id.clone();
         player.pending_duelist = self.pending_duelist.clone();
         player.body_slots = self

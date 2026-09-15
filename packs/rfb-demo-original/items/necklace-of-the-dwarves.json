@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.necklace-of-the-dwarves",
+  "nameKey": "item-demo-necklace-of-the-dwarves-name",
+  "descriptionKey": "item-demo-necklace-of-the-dwarves-description",
+  "glyph": "\"",
+  "generationLevel": 70,
+  "weightTenthsPound": 3,
+  "baseValue": 75000,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": ["artifact", "equipment", "jewelry"],
+  "artifactGeneration": {"sourceIndex": 6, "baseItemKindId": "demo.item.amulet", "instant": false, "rarityOneIn": 35},
+  "rfbValue": {"flags": ["CON", "DEC_STEALTH", "FREE_ACT", "FULL_NAME", "HIDE_TYPE", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "INFRA", "LIFE", "LITE", "REGEN", "RES_BLIND", "SEE_INVIS", "STR"], "pval": 2, "toArmor": 0},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "modifiers": {"strength": 2, "constitution": 2},
+  "equipmentBonuses": {"infravision": 2, "stealthSkill": -2, "lifePercent": 6, "lightRadius": 1},
+  "passives": ["regeneration", "see-invisible"],
+  "statusImmunities": ["rfb.status.blindness", "rfb.status.paralysis"]
+}

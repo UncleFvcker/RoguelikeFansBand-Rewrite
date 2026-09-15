@@ -16,6 +16,12 @@
     "purchasePriceCap": 10000
   },
   "stock": [
+    { "itemKindId": "demo.item.apprentice-handbook", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.minstrels-music", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.stench-of-death", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.sepulchral-ways", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.handbook-for-pupils", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.grade-holders-book", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
     { "itemKindId": "demo.item.black-prayers", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
     { "itemKindId": "demo.item.black-mass", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
     { "itemKindId": "demo.item.beginners-handbook", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
@@ -33,7 +39,45 @@
     { "itemKindId": "demo.item.call-of-the-wild", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
     { "itemKindId": "demo.item.nature-mastery", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
     { "itemKindId": "demo.item.book-of-elements", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
-    { "itemKindId": "demo.item.earth-wind-and-fire", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 }
+    { "itemKindId": "demo.item.earth-wind-and-fire", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    {"itemKindId":"demo.item.sign-of-chaos","initialMinimum":1,"initialMaximum":1,"maintenanceMinimum":1,"maintenanceMaximum":1},
+    {"itemKindId":"demo.item.chaos-mastery","initialMinimum":1,"initialMaximum":1,"maintenanceMinimum":1,"maintenanceMaximum":1},
+    {
+      "itemKindId": "demo.item.conjurings-and-tricks",
+      "initialMinimum": 1,
+      "initialMaximum": 1,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 1
+    },
+    {
+      "itemKindId": "demo.item.deck-of-many-things",
+      "initialMinimum": 1,
+      "initialMaximum": 1,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 1
+    },
+    {
+      "itemKindId": "demo.item.attractions-of-law",
+      "initialMinimum": 1,
+      "initialMaximum": 1,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 1
+    },
+    {
+      "itemKindId": "demo.item.obstacle-coursebook",
+      "initialMinimum": 1,
+      "initialMaximum": 1,
+      "maintenanceMinimum": 1,
+      "maintenanceMaximum": 1
+    },
+    {"itemKindId": "demo.item.bugei-shofu", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
+    {"itemKindId": "demo.item.yagyuu-bugeichou", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
+    {"itemKindId": "demo.item.handbook-of-hex", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
+    {"itemKindId": "demo.item.high-curse", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
+    {"itemKindId": "demo.item.anger-management", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
+    {"itemKindId": "demo.item.northern-frights", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
+    {"itemKindId": "demo.item.burglars-handbook", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1},
+    {"itemKindId": "demo.item.thieving-ways", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1}
   ],
   "maintenance": { "intervalWorldTicks": 10000 }
 }

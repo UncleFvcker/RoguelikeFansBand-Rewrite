@@ -909,8 +909,13 @@ pub struct Game {
     minor_slow_energy: u16,
     chaos_patron_id: Option<String>,
     reality_change_ticks: u8,
+    music: rfb_protocol::MusicStateDto,
+    hex: rfb_protocol::HexStateDto,
+    rage_mana_sustained: bool,
+    samurai: rfb_protocol::SamuraiStateDto,
     pending_mutation_direction: Option<PendingMutationDirectionDto>,
     pending_ability_direction: Option<PendingAbilityDirectionDto>,
+    pending_ability_glyph: Option<rfb_protocol::PendingAbilityGlyphDto>,
     duelist_target_id: Option<String>,
     pending_duelist: Option<rfb_protocol::PendingDuelistDto>,
     pending_magic_absorption: Option<rfb_protocol::PendingMagicAbsorptionDto>,
@@ -1038,6 +1043,19 @@ impl Game {
             && matches!(action, GameAction::ResolveMutationDirection { .. })
         {
             return Err(CoreError::MutationDirectionUnavailable);
+        }
+        if self.pending_ability_glyph.is_some()
+            && !matches!(action, GameAction::ResolveAbilityGlyph { .. })
+        {
+            return Err(CoreError::AbilityGlyphRequired);
+        }
+        if let GameAction::ResolveAbilityGlyph { glyph } = &action
+            && (self.pending_ability_glyph.is_none()
+                || glyph
+                    .as_ref()
+                    .is_some_and(|g| g.chars().count() != 1 || g.chars().any(char::is_control)))
+        {
+            return Err(CoreError::AbilityGlyphUnavailable);
         }
         if self.pending_ability_direction.is_some()
             && !configuring_preferences
@@ -1422,6 +1440,10 @@ impl Game {
         );
         let mut action_cost = if map_scale_before_command == MapScaleDto::World && advances_world {
             STANDARD_ACTION_COST.saturating_mul(wilderness::WORLD_MAP_ACTION_MULTIPLIER)
+        } else if matches!(&action, GameAction::CastAbility { ability_id, .. }
+            if self.content.ability(ability_id).is_some_and(|a| matches!(a.effect, AbilityEffectDefinition::StopHex { .. })))
+        {
+            10
         } else if projectile_action {
             self.player_projectile_profile()
                 .map_or_else(|| action.energy_cost(), |profile| profile.energy_cost)
@@ -1445,6 +1467,9 @@ impl Game {
                             ability.effect,
                             AbilityEffectDefinition::BlinkSelf { .. }
                                 | AbilityEffectDefinition::Strafing
+                                | AbilityEffectDefinition::Law {
+                                    spell: 18 | 24 | 30
+                                }
                         )
                     }) =>
             {
@@ -1509,7 +1534,7 @@ impl Game {
                 }
         );
         let item_projectile_action = matches!(&action, GameAction::UseItem { item_id, .. }
-            if matches!(self.inventory_item_use_effect(item_id), Some((ItemUseEffectDefinition::PiercingShot, _))));
+            if matches!(self.inventory_item_use_effect(item_id), Some((ItemUseEffectDefinition::PiercingShot | ItemUseEffectDefinition::RamaArrow, _))));
         let deferred_spell_study = self.player_uses_dual_realm_learning()
             && matches!(
                 &action,
@@ -1543,6 +1568,8 @@ impl Game {
         if !matches!(&action, GameAction::ContinueFishing) {
             self.fishing_direction = None;
         }
+        self.samurai_before_action(&action, advances_world);
+        self.hex_before_action(&action);
         match action {
             GameAction::SelectMagicAbsorptionSlot { slot } => {
                 self.select_magic_absorption_slot(slot, &mut events);
@@ -2039,6 +2066,12 @@ impl Game {
                         &mut removed_entities,
                     )?;
                 }
+                if self.pending_ability_glyph.is_some() || self.pending_ability_direction.is_some()
+                {
+                    advances_world = false;
+                    action_cost = 0;
+                    turn_advance = 0;
+                }
                 if defer_ability_cooldowns {
                     if events.iter().any(|event| matches!(event,
                         DomainEvent::AbilityCastUnavailable { reason, .. } if reason == "anti-melee")) {
@@ -2075,8 +2108,41 @@ impl Game {
                     }
                 }
             }
+            GameAction::ResolveAbilityGlyph { glyph } => {
+                self.resolve_pending_ability_glyph(
+                    glyph,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?;
+            }
             GameAction::CancelAbilityDirection => {
-                self.pending_ability_direction = None;
+                if self.pending_ability_direction.as_ref().is_some_and(|p| {
+                    matches!(
+                        p.ability_id.as_str(),
+                        "demo.ability.chaos-call-chaos"
+                            | "demo.ability.trump-shuffle"
+                            | "demo.ability.hissatsu-hundred-slaughter"
+                            | "demo.ability.hex-revenge"
+                    )
+                }) {
+                    self.resolve_pending_call_chaos(
+                        None,
+                        &mut events,
+                        &mut changed,
+                        &mut removed_entities,
+                    )?;
+                    advances_world = true;
+                    action_cost = STANDARD_ACTION_COST;
+                    turn_advance = 1;
+                    if self.pending_ability_direction.is_some() {
+                        advances_world = false;
+                        action_cost = 0;
+                        turn_advance = 0;
+                    }
+                } else {
+                    self.pending_ability_direction = None;
+                }
             }
             GameAction::ResolveAbilityDirection { direction } => {
                 self.resolve_pending_ability_direction(
@@ -2085,6 +2151,11 @@ impl Game {
                     &mut changed,
                     &mut removed_entities,
                 )?;
+                if self.pending_ability_direction.is_some() {
+                    advances_world = false;
+                    action_cost = 0;
+                    turn_advance = 0;
+                }
             }
             GameAction::Fire { direction } => self.resolve_player_projectile(
                 TargetSelection::Direction { direction },
@@ -2318,6 +2389,10 @@ impl Game {
                 }
             }
             GameAction::Rest { turns, mode } => {
+                if turns > 0 {
+                    self.stop_hex(None);
+                    self.stop_music();
+                }
                 let resolution = self.resolve_player_rest(
                     turns,
                     mode,
@@ -2732,6 +2807,9 @@ impl Game {
                 events.extend(self.resolve_wilderness_terrain_hazard(self.player.position));
             }
             if advances_world {
+                if events.iter().any(|e|matches!(e,DomainEvent::AbilityCastSucceeded {resolution} if resolution.ability_id=="demo.ability.burglary-major-getaway")) { action_cost=15; }
+                if self.player_has_astral_guide() && events.iter().any(|e|matches!(e,DomainEvent::AbilityCastSucceeded {resolution} if resolution.ability_id=="demo.ability.burglary-minor-getaway")) { action_cost=30; }
+                if self.player_has_status_kind(STATUS_BERSERK) && events.iter().any(|e|matches!(e,DomainEvent::AbilityCastSucceeded {resolution} if resolution.ability_id=="demo.ability.rage-evasive-leap")) { action_cost=30; }
                 if astral_guide_blink.as_ref().is_some_and(|ability_id| {
                     events.iter().any(|event| {
                         matches!(
@@ -2806,6 +2884,7 @@ impl Game {
                         },
                     );
                 } else {
+                    self.rage_after_action(action_cost);
                     spend_energy(&mut self.player.energy_need, action_cost);
                     self.advance_until_player_ready(
                         false,
@@ -3304,6 +3383,7 @@ impl Game {
                     && self.pantheon_allows_allocation(&self.current_floor_id, definition)
                     && excluded_category
                         .is_none_or(|category| !actor_matches_category(definition, category))
+                    && !self.actor_kind_is_dungeon_guardian(&definition.id)
                     && !definition.tags.iter().any(|tag| tag == "guardian")
                     && actor_answers_summons(definition)
                     && self.dungeon_allows_monster(
@@ -4196,7 +4276,10 @@ impl Game {
     }
 
     fn player_has_status_kind(&self, kind_id: &str) -> bool {
-        (kind_id == STATUS_BERSERK && self.player_is_berserker())
+        self.hex_grants_status(kind_id)
+            || self.samurai_grants_status(kind_id)
+            || self.music_grants_status(kind_id)
+            || (kind_id == STATUS_BERSERK && self.player_is_berserker())
             || self
                 .player
                 .statuses
@@ -5222,6 +5305,9 @@ fn slay_target_matches(target: SlayTarget, definition: &rfb_content::ActorDefini
 }
 
 fn actor_matches_category(definition: &rfb_content::ActorDefinition, category: &str) -> bool {
+    if category == "magical" {
+        return definition.monster_casting.is_some();
+    }
     if category == "mind" {
         return definition.role == ActorRole::Monster
             && !definition.tags.iter().any(|tag| tag == "empty-mind");

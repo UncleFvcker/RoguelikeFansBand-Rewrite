@@ -1,0 +1,23 @@
+# RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: lib/edit/a_info.txt
+N:43:of Jack of Shadows
+I:35:1:7
+W:50:50:10:100000
+P:1:0d0:0:0:19
+F:STEALTH | SEARCH | FREE_ACT | SEE_INVIS | HOLD_LIFE | TELEPATHY
+
+N:168:of Giles
+I:37:2:2
+W:20:20:200:30000
+P:12:1d4:-2:0:18
+F:DEC_STEALTH |
+F:RES_FIRE | RES_CHAOS | RES_NEXUS | RES_COLD
+F:HIDE_TYPE
+D:哈姆的吉尔斯的坚固环甲，他凭借着这些神器的力量，
+D:从一个不起眼的农夫变成了一位伟大的领主和英雄。
+
+N:206:of The Padre
+I:37:13:2
+W:55:5:340:80000
+P:23:1d6:5:5:17
+F:CHR | REFLECT |
+F:RES_FIRE | RES_CHAOS | LITE

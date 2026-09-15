@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.trump-ancient-dragon",
+  "minimumLevel": 49,
+  "resourceCost": 100,
+  "baseFailurePercent": 40,
+  "firstSuccessExperience": 10780,
+  "resourceId": "demo.resource.mana"
+}

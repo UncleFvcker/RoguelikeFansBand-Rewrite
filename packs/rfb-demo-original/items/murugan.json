@@ -1,0 +1,124 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.murugan",
+  "nameKey": "item-demo-murugan-name",
+  "descriptionKey": "item-demo-murugan-description",
+  "glyph": "/",
+  "generationLevel": 15,
+  "weightTenthsPound": 50,
+  "baseValue": 30000,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 383,
+    "baseItemKindId": "demo.item.spear",
+    "instant": false,
+    "rarityOneIn": 120
+  },
+  "rfbValue": {
+    "flags": [
+      "ESP_DEMON",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_CHAOS",
+      "RES_DARK",
+      "RES_FEAR",
+      "RIDING",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLOW_DIGEST",
+      "SPEED",
+      "STR",
+      "SUST_STR",
+      "SUST_WIS",
+      "THROWING",
+      "VORPAL",
+      "WIS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "weapon",
+  "modifiers": {
+    "strength": 3,
+    "wisdom": 3,
+    "speed": 3
+  },
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 8,
+    "toHit": 18,
+    "toDamage": 14
+  },
+  "weaponProficiencyBaseItemId": "demo.item.spear",
+  "passives": [
+    "esp-demon",
+    "see-invisible",
+    "slow-digestion",
+    "sustain-strength",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "dark": "resistant",
+    "chaos": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis",
+    "rfb.status.fear"
+  ],
+  "vorpal": true,
+  "ridingWeaponKind": "compatible",
+  "slays": {
+    "demon": "slay"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.murugan",
+        "nameKey": "device-activation-e5-dispel-demon-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 5500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.murugan-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 900
+    }
+  }
+}

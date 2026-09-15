@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.ulmo-activation",
+  "input": "actor",
+  "steps": [
+    {
+      "type": "ability-effect",
+      "effect": {
+        "type": "teleport-away",
+        "minimumDistance": 100,
+        "power": 100
+      }
+    }
+  ]
+}

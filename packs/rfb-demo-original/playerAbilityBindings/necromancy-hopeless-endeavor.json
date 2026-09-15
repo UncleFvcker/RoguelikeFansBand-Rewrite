@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.necromancy-hopeless-endeavor",
+  "minimumLevel": 47,
+  "resourceCost": 75,
+  "baseFailurePercent": 75,
+  "firstSuccessExperience": 7050,
+  "resourceId": "demo.resource.mana"
+}

@@ -926,7 +926,21 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.sign-of-chaos",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.black-prayers",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.conjurings-and-tricks",
       "maxDepth": 30,
       "minDepth": 10,
       "quantity": 1,
@@ -961,7 +975,56 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.stench-of-death",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.book-of-elements",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.attractions-of-law",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.apprentice-handbook",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.bugei-shofu",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.handbook-of-hex",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.anger-management",
+      "maxDepth": 30,
+      "minDepth": 10,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.burglars-handbook",
       "maxDepth": 30,
       "minDepth": 10,
       "quantity": 1,
@@ -1479,7 +1542,21 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.chaos-mastery",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.black-mass",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.deck-of-many-things",
       "maxDepth": 50,
       "minDepth": 20,
       "quantity": 1,
@@ -1514,7 +1591,56 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.sepulchral-ways",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.earth-wind-and-fire",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.obstacle-coursebook",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.minstrels-music",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.yagyuu-bugeichou",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.high-curse",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.northern-frights",
+      "maxDepth": 50,
+      "minDepth": 20,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.thieving-ways",
       "maxDepth": 50,
       "minDepth": 20,
       "quantity": 1,
@@ -2326,7 +2452,21 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.chaos-channels",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.black-channels",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.trumps-of-doom",
       "maxDepth": 90,
       "minDepth": 45,
       "quantity": 1,
@@ -2354,7 +2494,49 @@
       "weight": 100
     },
     {
+      "itemKindId": "demo.item.return-of-the-dead",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
       "itemKindId": "demo.item.path-of-destruction",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.harps-of-rivendell",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.gorinnosho",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.curse-and-spelling",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.the-sound-and-the-fury",
+      "maxDepth": 90,
+      "minDepth": 45,
+      "quantity": 1,
+      "weight": 100
+    },
+    {
+      "itemKindId": "demo.item.great-escapes",
       "maxDepth": 90,
       "minDepth": 45,
       "quantity": 1,
@@ -2520,6 +2702,13 @@
       "minDepth": 50,
       "quantity": 1,
       "weight": 6
+    },
+    {
+      "itemKindId": "demo.item.building-alternative-realities",
+      "maxDepth": 90,
+      "minDepth": 50,
+      "quantity": 1,
+      "weight": 100
     },
     {
       "itemKindId": "demo.item.leather-pouch",
@@ -2781,6 +2970,13 @@
       "weight": 16
     },
     {
+      "itemKindId": "demo.item.acquiris-quodcumque-rapis",
+      "maxDepth": 65535,
+      "minDepth": 75,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
       "itemKindId": "demo.item.mace-of-disruption",
       "maxDepth": 65535,
       "minDepth": 80,
@@ -2858,6 +3054,13 @@
       "weight": 33
     },
     {
+      "itemKindId": "demo.item.five-aces",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
       "itemKindId": "demo.item.spiritual-enlightenment",
       "maxDepth": 65535,
       "minDepth": 80,
@@ -2866,6 +3069,48 @@
     },
     {
       "itemKindId": "demo.item.hellfire-tome",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.necromatic-tome",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.lays-of-beleriand",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.hokusin-ittouryuu-kaiden",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.forbidden-cursebook",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 33
+    },
+    {
+      "itemKindId": "demo.item.dire-ire",
+      "maxDepth": 65535,
+      "minDepth": 80,
+      "quantity": 1,
+      "weight": 50
+    },
+    {
+      "itemKindId": "demo.item.book-of-shadows",
       "maxDepth": 65535,
       "minDepth": 80,
       "quantity": 1,

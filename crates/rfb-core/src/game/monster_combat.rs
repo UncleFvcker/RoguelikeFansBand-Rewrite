@@ -629,6 +629,26 @@ impl Game {
         damage_type: DamageType,
         events: &mut Vec<DomainEvent>,
     ) -> AbilityEffectResolutionDto {
+        // gf.c GF_ARROW: blindness hides the projectile and prevents cutting it.
+        if self.player_has_equipped_artifact(150)
+            && !self.player_has_status_kind(STATUS_BLINDNESS)
+            && self
+                .content
+                .ability(ability_id)
+                .is_some_and(|ability| ability.tags.iter().any(|tag| tag == "monster-arrow"))
+        {
+            events.push(DomainEvent::ItemSpecialMessage {
+                message_key: "item-zantetsuken-arrow".to_owned(),
+            });
+            return AbilityEffectResolutionDto::Damage {
+                effect_index,
+                resolution: resolve_damage(
+                    DamagePacket::new(0, damage_type),
+                    ResistanceLevel::Normal,
+                )
+                .into(),
+            };
+        }
         let raw_damage = self.scale_monster_damage(source_entity_id, raw_damage);
         let prepared_damage = self.scale_monster_damage(source_entity_id, prepared_damage);
         let magic_resistance = if self.monster_ability_is_innate(ability_id) {
@@ -692,6 +712,7 @@ impl Game {
         };
         let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
         let damage = application.damage;
+        self.rage_armor_of_fury(source_entity_id, ability_id, damage.applied);
         self.damage_player_inventory(source_kind_id, damage_type, false, damage.applied, events);
         if application.fatal {
             events.push(DomainEvent::PlayerDied {
@@ -737,28 +758,29 @@ impl Game {
         damage
     }
 
-    fn monster_ability_is_innate(&self, ability_id: &str) -> bool {
+    pub(in crate::game) fn monster_ability_is_innate(&self, ability_id: &str) -> bool {
         self.content.ability(ability_id).is_some_and(|ability| {
-            ability
-                .effect
-                .ordered_effects()
-                .iter()
-                .any(|effect| match effect {
-                    AbilityEffectDefinition::BreathDamage { .. } => true,
-                    AbilityEffectDefinition::AreaDamage {
-                        damage_dice,
-                        damage_sides,
-                        damage_type: ActorDamageType::Shards,
-                        ..
-                    }
-                    | AbilityEffectDefinition::Damage {
-                        damage_dice,
-                        damage_sides,
-                        damage_type: ActorDamageType::Physical,
-                        ..
-                    } => *damage_dice == 1 && *damage_sides == 1,
-                    _ => false,
-                })
+            ability.tags.iter().any(|tag| tag == "monster-arrow")
+                || ability
+                    .effect
+                    .ordered_effects()
+                    .iter()
+                    .any(|effect| match effect {
+                        AbilityEffectDefinition::BreathDamage { .. } => true,
+                        AbilityEffectDefinition::AreaDamage {
+                            damage_dice,
+                            damage_sides,
+                            damage_type: ActorDamageType::Shards,
+                            ..
+                        }
+                        | AbilityEffectDefinition::Damage {
+                            damage_dice,
+                            damage_sides,
+                            damage_type: ActorDamageType::Physical,
+                            ..
+                        } => *damage_dice == 1 && *damage_sides == 1,
+                        _ => false,
+                    })
         })
     }
 
@@ -1498,7 +1520,7 @@ impl Game {
         });
     }
 
-    fn resolve_player_disenchantment(&mut self) {
+    pub(in crate::game) fn resolve_player_disenchantment(&mut self) {
         let remove_status = self.rng.bounded(5) != 0;
         let resistance = self
             .effective_player_resistances()
@@ -1610,6 +1632,15 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
         if self.dungeon_blocks_melee() {
+            return Ok(false);
+        }
+        if only_blow_index.is_none()
+            && self.samurai.posture == 1
+            && self
+                .resolve_hissatsu_melee(index, 99, events, changed, removed_entities)?
+                .killed
+        {
+            self.samurai.posture = 0;
             return Ok(false);
         }
         let source_entity_id = self.entities[index].id.clone();
@@ -2236,6 +2267,21 @@ impl Game {
                 return Ok(false);
             }
         }
+        if only_blow_index.is_none()
+            && (self.samurai.counter || self.samurai.posture == 4)
+            && self.player.hp > 0
+            && self.entity_is_visible_to_player(&self.entities[index])
+            && let Some(pool) = self.resources.values_mut().next()
+            && pool.current > 7
+        {
+            pool.current -= 7;
+            if self
+                .resolve_hissatsu_melee(index, 6, events, changed, removed_entities)?
+                .killed
+            {
+                return Ok(false);
+            }
+        }
         if blink_after_melee && self.player.hp > 0 {
             self.blink_monster_after_theft(index, events, changed);
         }
@@ -2352,6 +2398,11 @@ impl Game {
                     actor_matches_category(definition, "evil")
                         && !definition.tags.iter().any(|tag| tag == "resist-all")
                 });
+        if self.hexing(21)
+            && self.hex_shadow_aura(target_index, events, changed, removed_entities)?
+        {
+            return Ok(true);
+        }
         if holy_target {
             let player_level = self.progress.level / 10;
             let raw = 2_i32.saturating_add(self.roll_damage(
@@ -2372,7 +2423,7 @@ impl Game {
         Ok(false)
     }
 
-    fn resolve_player_contact_aura_damage(
+    pub(in crate::game) fn resolve_player_contact_aura_damage(
         &mut self,
         target_index: usize,
         damage_type: DamageType,
@@ -2592,6 +2643,9 @@ impl Game {
             });
         }
 
+        if self.hexing(23) {
+            return Ok(());
+        }
         let status_index = self
             .player
             .statuses

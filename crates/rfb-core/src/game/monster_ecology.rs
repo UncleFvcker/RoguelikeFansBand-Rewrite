@@ -705,7 +705,12 @@ impl Game {
         if target_definition
             .tags
             .iter()
-            .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian"))
+            .any(|tag| matches!(tag.as_str(), "unique" | "unique2" | "guardian" | "questor"))
+            || target_definition.finite_lifetime_instance_limit().is_some()
+            || target_definition
+                .allocation
+                .as_ref()
+                .is_some_and(|a| a.task_id.is_some())
         {
             return AbilityEffectResolutionDto::Skipped {
                 effect_index,
@@ -993,6 +998,49 @@ impl Game {
 #[cfg(test)]
 mod w3_tests {
     use super::*;
+
+    #[test]
+    fn q2_moire_is_reachable_through_complete_ocean_allocation() {
+        let mut game = Game::new_with_build(526, "demo.build.warrior").unwrap();
+        let water = game
+            .content
+            .terrain("demo.terrain.surface-water-deep")
+            .unwrap()
+            .clone();
+        let kind = "demo.actor.moire-queen-of-rebma";
+        assert!(
+            game.content
+                .actor(kind)
+                .unwrap()
+                .allocation
+                .as_ref()
+                .unwrap()
+                .wild_only
+        );
+        assert!((0..10_000).any(|_| {
+            game.select_surface_allocated_monster(
+                39,
+                &water,
+                Some(WildernessTerrain::DeepWater),
+                &[],
+            )
+            .as_deref()
+                == Some(kind)
+        }));
+        let occupied = vec![kind.to_owned()];
+        for _ in 0..100 {
+            assert_ne!(
+                game.select_surface_allocated_monster(
+                    39,
+                    &water,
+                    Some(WildernessTerrain::DeepWater),
+                    &occupied,
+                )
+                .as_deref(),
+                Some(kind)
+            );
+        }
+    }
 
     #[test]
     fn daylight_excludes_light_vulnerable_wilderness_monsters() {
@@ -2076,6 +2124,9 @@ impl Game {
         {
             return false;
         }
+        if self.hex_barrier(index, 24) {
+            return false;
+        }
         // melee2.c: Harmony and crowding consume RNG before pet restrictions.
         let harmony_roll = self.rng.bounded(375).saturating_add(1) as i16;
         if harmony_roll <= self.virtue_current(rfb_protocol::VirtueKindDto::Harmony) {
@@ -2102,6 +2153,17 @@ impl Game {
         {
             return false;
         }
+        self.place_monster_offspring(index, false, changed)
+    }
+
+    pub(super) fn place_monster_offspring(
+        &mut self,
+        index: usize,
+        cloned: bool,
+        changed: &mut BTreeSet<Position>,
+    ) -> bool {
+        let kind_id = self.entities[index].kind_id.clone();
+        let origin = self.entities[index].position;
         let mut selected = None;
         let mut candidate_count = 0_u64;
         for x in origin.x - 1..=origin.x + 1 {
@@ -2143,6 +2205,8 @@ impl Game {
             INITIAL_MONSTER_ENERGY_NEED,
             true,
         );
+        offspring.cloned = cloned || self.entities[index].cloned;
+        offspring.friendly = self.entities[index].friendly;
         // Preserve the existing finite summon lifetime as well as control.
         // Breeding does not renew the duration or grant a permanent pet.
         offspring.controller_id = self.entities[index].controller_id.clone();

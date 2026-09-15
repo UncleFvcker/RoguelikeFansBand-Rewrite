@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.building-alternative-realities",
+  "nameKey": "item-demo-building-alternative-realities-name",
+  "descriptionKey": "ability-book-demo-trumps-of-doom-description",
+  "realmId": "law",
+  "rank": 3,
+  "abilityIds": [
+    "demo.ability.law-charm-monster",
+    "demo.ability.law-expert-trap",
+    "demo.ability.law-getaway",
+    "demo.ability.law-blame-undead",
+    "demo.ability.law-probe",
+    "demo.ability.law-spin",
+    "demo.ability.law-advanced-bloodsucking",
+    "demo.ability.law-alter-reality"
+  ],
+  "tags": [
+    "law",
+    "spellbook"
+  ]
+}

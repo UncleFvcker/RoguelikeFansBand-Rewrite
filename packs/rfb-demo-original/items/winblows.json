@@ -1,0 +1,73 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.winblows",
+  "nameKey": "item-demo-winblows-name",
+  "descriptionKey": "item-demo-winblows-description",
+  "glyph": "\\",
+  "generationLevel": 30,
+  "weightTenthsPound": 500,
+  "baseValue": 0,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 139,
+    "baseItemKindId": "demo.item.flail",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "weaponProficiencyBaseItemId": "demo.item.flail",
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "BRAND_CHAOS",
+      "CURSED",
+      "DEC_INT",
+      "DEC_SPEED",
+      "DEC_STEALTH",
+      "DEC_WIS",
+      "HEAVY_CURSE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IMPACT",
+      "RANDOM_CURSE0",
+      "SHOW_MODS"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 8,
+    "damageSides": 7,
+    "toHit": 0,
+    "toDamage": 30
+  },
+  "modifiers": {
+    "intelligence": -4,
+    "wisdom": -4,
+    "speed": -4
+  },
+  "equipmentBonuses": {
+    "stealthSkill": -4
+  },
+  "brands": [
+    "chaos"
+  ],
+  "initialCurse": "heavy"
+}

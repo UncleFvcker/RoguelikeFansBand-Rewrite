@@ -1,0 +1,309 @@
+{
+  "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+  "sourceFiles": [
+    "src/bard.c",
+    "src/do-spell.c",
+    "src/tables.c",
+    "src/effects.c",
+    "src/dungeon.c",
+    "src/cmd1.c",
+    "src/xtra1.c",
+    "src/virtue.c",
+    "lib/edit/s_info.txt",
+    "lib/edit/k_info.txt",
+    "src/kind_name_zh.inc"
+  ],
+  "spells": [
+    {
+      "slot": 0,
+      "name": "定身之歌",
+      "abilityId": "demo.ability.music-holding",
+      "minimumLevel": 1,
+      "resourceCost": 1,
+      "baseFailurePercent": 10,
+      "experienceMultiplier": 2
+    },
+    {
+      "slot": 1,
+      "name": "祝福之歌",
+      "abilityId": "demo.ability.music-blessing",
+      "minimumLevel": 2,
+      "resourceCost": 1,
+      "baseFailurePercent": 10,
+      "experienceMultiplier": 2
+    },
+    {
+      "slot": 2,
+      "name": "破坏音符",
+      "abilityId": "demo.ability.music-wrecking-note",
+      "minimumLevel": 3,
+      "resourceCost": 2,
+      "baseFailurePercent": 20,
+      "experienceMultiplier": 3
+    },
+    {
+      "slot": 3,
+      "name": "震慑旋律",
+      "abilityId": "demo.ability.music-stunning-pattern",
+      "minimumLevel": 4,
+      "resourceCost": 2,
+      "baseFailurePercent": 20,
+      "experienceMultiplier": 4
+    },
+    {
+      "slot": 4,
+      "name": "生命之流",
+      "abilityId": "demo.ability.music-flow-of-life",
+      "minimumLevel": 5,
+      "resourceCost": 2,
+      "baseFailurePercent": 20,
+      "experienceMultiplier": 6
+    },
+    {
+      "slot": 5,
+      "name": "太阳之歌",
+      "abilityId": "demo.ability.music-song-of-the-sun",
+      "minimumLevel": 7,
+      "resourceCost": 4,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 8
+    },
+    {
+      "slot": 6,
+      "name": "恐惧之歌",
+      "abilityId": "demo.ability.music-song-of-fear",
+      "minimumLevel": 9,
+      "resourceCost": 3,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 10
+    },
+    {
+      "slot": 7,
+      "name": "英雄战歌",
+      "abilityId": "demo.ability.music-heroic-ballad",
+      "minimumLevel": 10,
+      "resourceCost": 2,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 12
+    },
+    {
+      "slot": 8,
+      "name": "顺风耳",
+      "abilityId": "demo.ability.music-clairaudience",
+      "minimumLevel": 12,
+      "resourceCost": 3,
+      "baseFailurePercent": 40,
+      "experienceMultiplier": 20
+    },
+    {
+      "slot": 9,
+      "name": "灵魂尖啸",
+      "abilityId": "demo.ability.music-soul-shriek",
+      "minimumLevel": 15,
+      "resourceCost": 16,
+      "baseFailurePercent": 42,
+      "experienceMultiplier": 35
+    },
+    {
+      "slot": 10,
+      "name": "学识之歌",
+      "abilityId": "demo.ability.music-lore",
+      "minimumLevel": 17,
+      "resourceCost": 18,
+      "baseFailurePercent": 40,
+      "experienceMultiplier": 25
+    },
+    {
+      "slot": 11,
+      "name": "隐匿曲调",
+      "abilityId": "demo.ability.music-hiding-tune",
+      "minimumLevel": 18,
+      "resourceCost": 2,
+      "baseFailurePercent": 45,
+      "experienceMultiplier": 30
+    },
+    {
+      "slot": 12,
+      "name": "幻象旋律",
+      "abilityId": "demo.ability.music-illusion-pattern",
+      "minimumLevel": 23,
+      "resourceCost": 8,
+      "baseFailurePercent": 50,
+      "experienceMultiplier": 38
+    },
+    {
+      "slot": 13,
+      "name": "厄运召唤",
+      "abilityId": "demo.ability.music-doomcall",
+      "minimumLevel": 28,
+      "resourceCost": 30,
+      "baseFailurePercent": 50,
+      "experienceMultiplier": 41
+    },
+    {
+      "slot": 14,
+      "name": "菲瑞尔之歌",
+      "abilityId": "demo.ability.music-firiel-song",
+      "minimumLevel": 33,
+      "resourceCost": 35,
+      "baseFailurePercent": 60,
+      "experienceMultiplier": 42
+    },
+    {
+      "slot": 15,
+      "name": "团契圣歌",
+      "abilityId": "demo.ability.music-fellowship",
+      "minimumLevel": 38,
+      "resourceCost": 35,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 46
+    },
+    {
+      "slot": 16,
+      "name": "解离之音",
+      "abilityId": "demo.ability.music-sound-of-disintegration",
+      "minimumLevel": 10,
+      "resourceCost": 4,
+      "baseFailurePercent": 20,
+      "experienceMultiplier": 13
+    },
+    {
+      "slot": 17,
+      "name": "芬罗德的抵抗",
+      "abilityId": "demo.ability.music-finrod-resistance",
+      "minimumLevel": 22,
+      "resourceCost": 5,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 26
+    },
+    {
+      "slot": 18,
+      "name": "霍比特旋律",
+      "abilityId": "demo.ability.music-hobbit-melodies",
+      "minimumLevel": 23,
+      "resourceCost": 3,
+      "baseFailurePercent": 35,
+      "experienceMultiplier": 27
+    },
+    {
+      "slot": 19,
+      "name": "世界扭曲",
+      "abilityId": "demo.ability.music-world-contortion",
+      "minimumLevel": 26,
+      "resourceCost": 28,
+      "baseFailurePercent": 37,
+      "experienceMultiplier": 29
+    },
+    {
+      "slot": 20,
+      "name": "驱散圣歌",
+      "abilityId": "demo.ability.music-dispelling-chant",
+      "minimumLevel": 32,
+      "resourceCost": 37,
+      "baseFailurePercent": 41,
+      "experienceMultiplier": 36
+    },
+    {
+      "slot": 21,
+      "name": "萨鲁曼之声",
+      "abilityId": "demo.ability.music-saruman-voice",
+      "minimumLevel": 33,
+      "resourceCost": 22,
+      "baseFailurePercent": 43,
+      "experienceMultiplier": 40
+    },
+    {
+      "slot": 22,
+      "name": "风暴之歌",
+      "abilityId": "demo.ability.music-tempest-song",
+      "minimumLevel": 37,
+      "resourceCost": 35,
+      "baseFailurePercent": 46,
+      "experienceMultiplier": 42
+    },
+    {
+      "slot": 23,
+      "name": "安巴坎塔",
+      "abilityId": "demo.ability.music-ambarkanta",
+      "minimumLevel": 45,
+      "resourceCost": 60,
+      "baseFailurePercent": 50,
+      "experienceMultiplier": 56
+    },
+    {
+      "slot": 24,
+      "name": "破坏旋律",
+      "abilityId": "demo.ability.music-wrecking-pattern",
+      "minimumLevel": 23,
+      "resourceCost": 18,
+      "baseFailurePercent": 20,
+      "experienceMultiplier": 23
+    },
+    {
+      "slot": 25,
+      "name": "停滞尖啸",
+      "abilityId": "demo.ability.music-station-still",
+      "minimumLevel": 30,
+      "resourceCost": 30,
+      "baseFailurePercent": 30,
+      "experienceMultiplier": 26
+    },
+    {
+      "slot": 26,
+      "name": "耐力",
+      "abilityId": "demo.ability.music-endurance",
+      "minimumLevel": 33,
+      "resourceCost": 65,
+      "baseFailurePercent": 41,
+      "experienceMultiplier": 30
+    },
+    {
+      "slot": 27,
+      "name": "英雄诗篇",
+      "abilityId": "demo.ability.music-heroic-poem",
+      "minimumLevel": 37,
+      "resourceCost": 35,
+      "baseFailurePercent": 43,
+      "experienceMultiplier": 35
+    },
+    {
+      "slot": 28,
+      "name": "雅凡娜的慰藉",
+      "abilityId": "demo.ability.music-yavanna-comfort",
+      "minimumLevel": 40,
+      "resourceCost": 30,
+      "baseFailurePercent": 46,
+      "experienceMultiplier": 50
+    },
+    {
+      "slot": 29,
+      "name": "女神重生",
+      "abilityId": "demo.ability.music-goddess-rebirth",
+      "minimumLevel": 42,
+      "resourceCost": 75,
+      "baseFailurePercent": 50,
+      "experienceMultiplier": 68
+    },
+    {
+      "slot": 30,
+      "name": "索伦的巫术",
+      "abilityId": "demo.ability.music-wizardry-of-sauron",
+      "minimumLevel": 45,
+      "resourceCost": 58,
+      "baseFailurePercent": 62,
+      "experienceMultiplier": 73
+    },
+    {
+      "slot": 31,
+      "name": "芬国昐的挑战",
+      "abilityId": "demo.ability.music-fingolfin-challenge",
+      "minimumLevel": 49,
+      "resourceCost": 48,
+      "baseFailurePercent": 70,
+      "experienceMultiplier": 200
+    }
+  ],
+  "buildIds": [
+    "demo.build.bard"
+  ]
+}

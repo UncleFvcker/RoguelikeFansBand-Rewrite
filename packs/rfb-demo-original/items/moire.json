@@ -1,0 +1,69 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.moire",
+  "nameKey": "item-demo-moire-name",
+  "descriptionKey": "item-demo-moire-description",
+  "glyph": "]",
+  "generationLevel": 40,
+  "weightTenthsPound": 30,
+  "baseValue": 125000,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 317,
+    "baseItemKindId": "demo.item.golden-crown",
+    "instant": false,
+    "rarityOneIn": 40
+  },
+  "rfbValue": {
+    "flags": [
+      "CON",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "REGEN",
+      "RES_ACID",
+      "RES_BLIND",
+      "RES_CONF",
+      "SEE_INVIS",
+      "STR",
+      "TELEPATHY"
+    ],
+    "pval": 2,
+    "toArmor": 15
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 2,
+    "constitution": 2,
+    "defense": 15
+  },
+  "passives": [
+    "regeneration",
+    "see-invisible",
+    "telepathy"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "confusion": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.blindness"
+  ]
+}

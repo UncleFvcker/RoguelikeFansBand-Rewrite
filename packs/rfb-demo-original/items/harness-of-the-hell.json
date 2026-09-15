@@ -1,0 +1,107 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.harness-of-the-hell",
+  "nameKey": "item-demo-harness-of-the-hell-name",
+  "descriptionKey": "item-demo-harness-of-the-hell-description",
+  "glyph": "\"",
+  "generationLevel": 50,
+  "weightTenthsPound": 30,
+  "baseValue": 66666,
+  "maxStack": 1,
+  "equipmentSlot": "amulet",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 218,
+    "baseItemKindId": "demo.item.amulet",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "CHR",
+      "DEC_INT",
+      "DEC_SPEED",
+      "DEC_STEALTH",
+      "DEC_WIS",
+      "ESP_UNDEAD",
+      "FULL_NAME",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_DARK",
+      "RES_NETHER",
+      "SEE_INVIS"
+    ],
+    "pval": 2,
+    "toArmor": -5
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": -5,
+    "intelligence": -2,
+    "wisdom": -2,
+    "charisma": 2,
+    "speed": -2
+  },
+  "equipmentBonuses": {
+    "meleeSkill": 15,
+    "meleeDamage": 15,
+    "stealthSkill": -2
+  },
+  "passives": [
+    "esp-undead",
+    "see-invisible"
+  ],
+  "resistances": {
+    "dark": "resistant",
+    "nether": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.harness-of-the-hell",
+        "nameKey": "device-activation-e5-ball-dark-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 50,
+        "rfbValue": 12500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.harness-of-the-hell-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1000
+    }
+  }
+}

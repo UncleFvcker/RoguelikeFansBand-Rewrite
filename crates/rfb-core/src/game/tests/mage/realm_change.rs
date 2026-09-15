@@ -444,7 +444,7 @@ fn saved_current_realms_history_pending_books_and_progress_are_validated() {
         match corruption {
             0 => realms.second_realm_id = "death".to_owned(),
             1 => realms.second_realm_id = "unknown".to_owned(),
-            2 => realms.second_realm_id = "chaos".to_owned(),
+            2 => realms.second_realm_id = "trump".to_owned(),
             3 => realms.previous_realm_ids.clear(),
             4 => realms.previous_realm_ids = vec!["death".to_owned()],
             5 => realms.previous_realm_ids.push("sorcery".to_owned()),

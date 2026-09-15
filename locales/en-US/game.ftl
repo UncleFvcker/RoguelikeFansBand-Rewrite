@@ -152,6 +152,7 @@ message-mutation-warning-safe = You feel reasonably safe.
 message-mutation-warning-lonely = You feel lonely.
 message-mutation-direction-required = Magical energy surges through you! Choose a direction to release it.
 message-ability-direction-required = Choose a direction for Nature's Wrath.
+message-chaos-direction-required = Choose a direction for Call Chaos; cancelling still costs mana and a turn.
 message-mutation-fumbled = You trip over your own feet and take { $damage } damage.
 message-mutation-fumbled-drop = You trip over your own feet, take { $damage } damage, and drop { $target }.
 message-mutation-reality-changed = You reject this reality and replace it with another one.
@@ -176,6 +177,7 @@ message-ability-teleport = { $ability } carries you from ({ $fromX }, { $fromY }
 message-ability-summon = { $ability } calls { $count } { $actor } into nearby open spaces.
 message-ability-detect = { $ability } detects { $count } nearby { $category } terrain cues.
 message-ability-detect-mind = { $ability } senses { $count } nearby creatures with minds.
+message-ability-detect-monsters = { $ability } detects { $count } nearby monsters.
 message-ability-monsters-probed = { $ability } probes { $count } visible monsters.
 message-ability-terrain-transform = { $ability } reshapes { $count } terrain cells into { $terrain }.
 message-ability-effects = { $ability } resolves an ordered sequence of { $count } effects.
@@ -794,3 +796,9 @@ riding-moved = Your mount moved on its own, carrying you along.
 rest-stop-displaced = position changed
 
 message-campaign-abandoned = You abandon this adventure with a final score of { $score }.
+message-ability-glyph-required = Wonder: enter a monster symbol to genocide (cancelling still spends this cast).
+
+status-necromancy-cloak-name = black cloak
+status-necromancy-shield-name = shield of the dead
+
+ability-unavailable-no-active-song = you are not singing

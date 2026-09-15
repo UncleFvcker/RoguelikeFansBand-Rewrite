@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.chaos-mastery",
+  "nameKey": "ability-book-demo-chaos-mastery-name",
+  "descriptionKey": "ability-book-demo-chaos-mastery-description",
+  "realmId": "chaos",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.chaos-wonder",
+    "demo.ability.chaos-chaos-bolt",
+    "demo.ability.chaos-sonic-boom",
+    "demo.ability.chaos-doom-bolt",
+    "demo.ability.chaos-fireball",
+    "demo.ability.chaos-teleport-other",
+    "demo.ability.chaos-word-of-destruction",
+    "demo.ability.chaos-invoke-logrus"
+  ],
+  "tags": [
+    "chaos",
+    "spellbook"
+  ]
+}

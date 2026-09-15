@@ -233,6 +233,9 @@ fn all_160_source_egos_have_an_effect_and_save_stable_instances() {
                     .item_definitions()
                     .find(|item| {
                         item.artifact_generation.is_none()
+                            && !item
+                                .passives
+                                .contains(&rfb_content::EquipmentPassive::NoEnchant)
                             && if (250..=256).contains(&source) {
                                 item.id == "demo.item.magic-missile-wand"
                             } else {

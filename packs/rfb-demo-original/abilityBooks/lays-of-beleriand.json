@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.lays-of-beleriand",
+  "nameKey": "item-demo-lays-of-beleriand-name",
+  "descriptionKey": "ability-book-demo-five-aces-description",
+  "realmId": "music",
+  "rank": 4,
+  "abilityIds": [
+    "demo.ability.music-wrecking-pattern",
+    "demo.ability.music-station-still",
+    "demo.ability.music-endurance",
+    "demo.ability.music-heroic-poem",
+    "demo.ability.music-yavanna-comfort",
+    "demo.ability.music-goddess-rebirth",
+    "demo.ability.music-wizardry-of-sauron",
+    "demo.ability.music-fingolfin-challenge"
+  ],
+  "tags": [
+    "music",
+    "spellbook"
+  ]
+}

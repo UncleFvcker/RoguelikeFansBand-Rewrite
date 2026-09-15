@@ -1,0 +1,79 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.microsoft-edge",
+  "nameKey": "item-demo-microsoft-edge-name",
+  "descriptionKey": "item-demo-microsoft-edge-description",
+  "glyph": "|",
+  "generationLevel": 50,
+  "weightTenthsPound": 480,
+  "baseValue": 0,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 334,
+    "baseItemKindId": "demo.item.diamond-edge",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "weaponProficiencyBaseItemId": "demo.item.diamond-edge",
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "BRAND_CHAOS",
+      "BRAND_VAMP",
+      "CURSED",
+      "DEC_INT",
+      "DEC_SPEED",
+      "DEC_WIS",
+      "DRAIN_EXP",
+      "HEAVY_CURSE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RANDOM_CURSE0",
+      "SLAY_GOOD",
+      "VORPAL2"
+    ],
+    "pval": 6,
+    "toArmor": -18
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 6,
+    "damageSides": 6,
+    "toHit": 6,
+    "toDamage": 36
+  },
+  "modifiers": {
+    "defense": -18,
+    "intelligence": -6,
+    "wisdom": -6,
+    "speed": -6
+  },
+  "passives": [
+    "vampiric"
+  ],
+  "slays": {
+    "good": "slay"
+  },
+  "brands": [
+    "chaos"
+  ],
+  "initialCurse": "heavy",
+  "vorpal": true
+}

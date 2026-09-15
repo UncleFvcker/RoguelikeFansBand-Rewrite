@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.loge",
+  "nameKey": "item-demo-loge-name",
+  "descriptionKey": "item-demo-loge-description",
+  "glyph": "|",
+  "generationLevel": 50,
+  "weightTenthsPound": 150,
+  "baseValue": 250000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 318,
+    "baseItemKindId": "demo.item.long-sword",
+    "instant": false,
+    "rarityOneIn": 240
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "RES_FIRE",
+      "STR",
+      "VORPAL"
+    ],
+    "pval": 1,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 1,
+    "dexterity": 1
+  },
+  "weaponProficiencyBaseItemId": "demo.item.long-sword",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 5,
+    "damageSides": 6,
+    "toHit": 0,
+    "toDamage": 0
+  },
+  "resistances": {
+    "fire": "resistant"
+  },
+  "vorpal": true,
+  "brands": [
+    "fire"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.multi-hued-centipede",
+  "nameKey": "item-demo-multi-hued-centipede-name",
+  "descriptionKey": "item-demo-multi-hued-centipede-description",
+  "glyph": "]",
+  "generationLevel": 30,
+  "weightTenthsPound": 20,
+  "baseValue": 10000,
+  "maxStack": 1,
+  "equipmentSlot": "boots",
+  "tags": ["artifact", "equipment", "armor"],
+  "artifactGeneration": {"sourceIndex": 327, "baseItemKindId": "demo.item.soft-leather-boots", "instant": false, "rarityOneIn": 20},
+  "rfbValue": {"flags": ["CON", "DEX", "FREE_ACT", "IGNORE_ACID", "IGNORE_COLD", "IGNORE_ELEC", "IGNORE_FIRE", "QUESTITEM", "RES_ACID", "RES_COLD", "RES_ELEC", "RES_FIRE", "RES_POIS", "SPEED", "STEALTH", "STR"], "pval": 1, "toArmor": 10},
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "modifiers": {"strength": 1, "dexterity": 1, "constitution": 1, "speed": 1, "defense": 12},
+  "equipmentBonuses": {"meleeSkill": 2, "meleeDamage": 3, "stealthSkill": 1},
+  "statusImmunities": ["rfb.status.paralysis"],
+  "resistances": {"acid": "resistant", "electricity": "resistant", "fire": "resistant", "cold": "resistant", "poison": "resistant"}
+}

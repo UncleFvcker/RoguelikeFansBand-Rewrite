@@ -1,0 +1,140 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "dualWieldingMaximum": 4000,
+  "id": "demo.class.bard",
+  "nameKey": "class-demo-bard-name",
+  "descriptionKey": "class-demo-bard-description",
+  "modifiers": {
+    "strength": -2,
+    "intelligence": 1,
+    "wisdom": 2,
+    "dexterity": -1,
+    "constitution": -2,
+    "charisma": 4
+  },
+  "lifePercent": 100,
+  "experiencePercent": 140,
+  "baseHp": 4,
+  "skillSetId": "demo.skill-set.bard",
+  "weaponProficiency": {
+    "defaultInitial": 2000,
+    "defaultMaximum": 6000,
+    "overrides": {
+      "demo.item.heavy-crossbow": {
+        "initial": 2000,
+        "maximum": 4000
+      },
+      "demo.item.light-crossbow": {
+        "initial": 2000,
+        "maximum": 4000
+      },
+      "demo.item.long-bow": {
+        "initial": 2000,
+        "maximum": 4000
+      },
+      "demo.item.nunchaku": {
+        "initial": 2000,
+        "maximum": 4000
+      },
+      "demo.item.poison-needle": {
+        "initial": 2000,
+        "maximum": 8000
+      },
+      "demo.item.short-bow": {
+        "initial": 2000,
+        "maximum": 4000
+      },
+      "demo.item.short-sword": {
+        "initial": 4000,
+        "maximum": 6000
+      },
+      "demo.item.sling": {
+        "initial": 2000,
+        "maximum": 4000
+      }
+    }
+  },
+  "ridingProficiency": {
+    "initial": 0,
+    "maximum": 2000
+  },
+  "petUpkeepDivisor": 25,
+  "usesSpellScrolls": true,
+  "castingProfile": {
+    "resourceId": "demo.resource.mana",
+    "castingAttribute": "charisma",
+    "capacityFormula": "rfb-mana",
+    "baseCapacity": 0,
+    "capacityPerLevel": 0,
+    "capacityPerAttributeIndex": 0,
+    "capacityPercent": 100,
+    "learningFormula": "rfb-single-realm",
+    "failureFormula": "rfb-magic",
+    "baseLearningCapacity": 1,
+    "learningCapacityPerLevel": 0,
+    "learningCapacityPerAttributeIndex": 0,
+    "learningCapacityCap": 32,
+    "resourceRecoveryPercent": 100,
+    "minimumFailurePercent": 0,
+    "beamChanceLevelMultiplier": 0,
+    "beamChanceLevelDivisor": 1,
+    "spellDamageBonusBase": 0,
+    "spellDamageBonusPerLevel": 0,
+    "spellDamageBonusLevelDivisor": 5,
+    "encumbrance": {
+      "maximumWeightTenthsPound": 400,
+      "weaponWeightPercent": 67,
+      "penaltyWeightTenthsPound": 800,
+      "gloveEncumbrance": false
+    },
+    "realmProfiles": [
+      {
+        "realmId": "music",
+        "abilityBookIds": [
+          "demo.ability-book.apprentice-handbook",
+          "demo.ability-book.minstrels-music",
+          "demo.ability-book.harps-of-rivendell",
+          "demo.ability-book.lays-of-beleriand"
+        ]
+      }
+    ]
+  },
+  "abilities": [
+    {
+      "abilityId": "demo.ability.bard-stop-singing",
+      "minimumLevel": 1,
+      "resourceCost": 0,
+      "baseFailurePercent": 0,
+      "minimumFailurePercent": 0
+    }
+  ],
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.short-sword",
+      "quantity": 1,
+      "equipped": true
+    },
+    {
+      "itemKindId": "demo.item.soft-leather-armour",
+      "quantity": 1,
+      "equipped": true
+    }
+  ],
+  "specialItemTags": [
+    "spellbook"
+  ],
+  "tags": [
+    "caster",
+    "bard",
+    "rfb-compatibility"
+  ],
+  "levelResistances": [
+    {
+      "minimumLevel": 1,
+      "resistances": {
+        "sound": "resistant"
+      }
+    }
+  ]
+}

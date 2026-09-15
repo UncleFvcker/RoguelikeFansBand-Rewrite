@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.big-punch",
+  "nameKey": "item-demo-big-punch-name",
+  "descriptionKey": "item-demo-big-punch-description",
+  "glyph": "\\",
+  "generationLevel": 50,
+  "weightTenthsPound": 800,
+  "baseValue": 150000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 254,
+    "baseItemKindId": "demo.item.lead-filled-mace",
+    "instant": false,
+    "rarityOneIn": 50
+  },
+  "weaponProficiencyBaseItemId": "demo.item.lead-filled-mace",
+  "rfbValue": {
+    "flags": [
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_SOUND",
+      "SHOW_MODS"
+    ],
+    "pval": 0,
+    "toArmor": -6
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 8,
+    "damageSides": 5,
+    "toHit": 1,
+    "toDamage": 3
+  },
+  "modifiers": {
+    "defense": -6
+  },
+  "resistances": {
+    "sound": "resistant"
+  }
+}

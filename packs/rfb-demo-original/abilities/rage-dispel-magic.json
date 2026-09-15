@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.rage-dispel-magic",
+  "nameKey": "ability-demo-rage-dispel-magic-name",
+  "descriptionKey": "ability-demo-rage-dispel-magic-description",
+  "abilityProgramId": "demo.ability-program.rage-dispel-magic",
+  "target": {
+    "modes": [
+      "entity"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  },
+  "tags": [
+    "rage",
+    "technique",
+    "usable-while-berserk"
+  ],
+  "affectsGroundItems": false
+}

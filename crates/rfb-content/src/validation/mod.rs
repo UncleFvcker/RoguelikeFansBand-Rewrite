@@ -404,6 +404,18 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
                     .items
                     .iter()
                     .any(|item| item.id == drop.item_kind_id && item.artifact_generation.is_some())
+                || (actor.id == "demo.actor.shiva-the-destroyer"
+                    && [
+                        "demo.item.shiva-avatar-jacket",
+                        "demo.item.shiva-avatar-boots",
+                    ]
+                    .iter()
+                    .any(|id| {
+                        !content
+                            .items
+                            .iter()
+                            .any(|item| item.id == *id && item.artifact_generation.is_some())
+                    }))
                 || drop.alternative.as_ref().is_some_and(|alternative| {
                     !(1..=100).contains(&alternative.chance_percent)
                         || !content.items.iter().any(|item| {

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.chaos-trap-door-destruction",
+  "nameKey": "ability-demo-chaos-trap-door-destruction-name",
+  "descriptionKey": "ability-demo-chaos-trap-door-destruction-description",
+  "abilityProgramId": "demo.ability-program.chaos-trap-door-destruction",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "chaos",
+    "spell"
+  ]
+}

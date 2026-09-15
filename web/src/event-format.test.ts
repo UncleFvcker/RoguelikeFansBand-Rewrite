@@ -44,6 +44,60 @@ test("pet event names are event-time text, including after evolution or dismissa
   }
 });
 
+test("Sorcery monster detection describes creatures without exposing the category ID", () => {
+  for (const locale of ["en-US", "zh-CN"]) {
+    localization.setLocale(locale);
+    const text = formatter.formatEvent({ messageKey: "ability-detect", args: { ability: "demo.ability.sorcery-detect-monsters", category: "normal-monster", count: "3" } });
+    assert.ok(text.includes("3"));
+    assert.ok(!text.includes("normal-monster"));
+    assert.ok(!text.includes("地形"));
+  }
+});
+
+test("temporary polymorph has its source name in both status panels", () => {
+  for (const [locale, expected] of [["en-US", "Polymorph Self"], ["zh-CN", "变形自身"]]) {
+    localization.setLocale(locale);
+    assert.equal(formatter.statusName("rfb.status.player-polymorph"), expected);
+    for (const [status, ability] of [["demon-lord-transformation", "daemon-polymorph-demonlord"], ["vampiric-transformation", "death-vampiric-transformation"]]) {
+      assert.equal(formatter.statusName(`rfb.status.${status}`), localization.format(`ability-demo-${ability}-name`));
+    }
+  }
+});
+
+test("Vice light speed has a localized name in the status panel and events", () => {
+  for (const [locale, expected] of [["en-US", "light speed"], ["zh-CN", "光速"]]) {
+    localization.setLocale(locale);
+    assert.equal(formatter.statusName("rfb.status.light-speed"), expected);
+  }
+});
+
+test("equipment regeneration includes the actual healed amount in both languages", () => {
+  for (const locale of ["en-US", "zh-CN"]) {
+    localization.setLocale(locale);
+    assert.equal(formatter.formatEvent({ messageKey: "equipment-regenerated", args: { amount: "2" } }),
+      localization.format("equipment-regenerated", { amount: "2" }));
+  }
+});
+
+test("equipment activation logs resolve the projected item without exposing unknown identity", () => {
+  const item = { id: "generated.item.208", kindId: "demo.item.narya", displayNameKey: "item-demo-narya-name", activation: { profileId: "demo.item-activation.narya" } };
+  const projected = createPresentationFormatter(localization, () => ({ ...state, currentEquipment: [item] }), helpers);
+  for (const locale of ["en-US", "zh-CN"]) {
+    localization.setLocale(locale);
+    const name = localization.format(item.displayNameKey);
+    assert.equal(projected.contentName(`rfb.item-activation.${item.id}`), name);
+    assert.equal(projected.contentName(item.activation.profileId), name);
+    for (const result of ["success", "failure"]) {
+      assert.equal(projected.formatEvent({ messageKey: `skill-check-device-${result}`, args: { target: item.kindId } }),
+        localization.format(`message-skill-check-device-${result}`, { target: name }));
+    }
+    item.displayNameKey = "item-unknown-name";
+    assert.equal(projected.contentName(`rfb.item-activation.${item.id}`), localization.format("item-unknown-name"));
+    assert.equal(projected.contentName(item.activation.profileId), localization.format("item-unknown-name"));
+    item.displayNameKey = "item-demo-narya-name";
+  }
+});
+
 test("resource conversion messages show actual life and mana changes in both languages", () => {
   for (const [locale, failed] of [["en-US", "conversion failed"], ["zh-CN", "你转换失败了"]]) {
     localization.setLocale(locale);
@@ -990,3 +1044,14 @@ function readLocale(locale: "en-US" | "zh-CN"): string[] {
     readFileSync(new URL(`../../locales/${locale}/${file}`, import.meta.url), "utf8"),
   );
 }
+
+test("Trump cards display the server-selected card in both locales", () => {
+  const event = {
+    kind: "ability.effects", messageKey: "ability-effects", args: { target: "demo.ability.trump-shuffle" },
+    outcome: { type: "ability-effects" as const, resolution: { targetEntityId: null, targetKindId: null, effects: [{ type: "random-choice" as const, effectIndex: 0, roll: 88, branchIndex: 19, maximumRoll: 120 }] } },
+  };
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "是“恋人”。");
+  localization.setLocale("en-US");
+  assert.equal(formatter.formatEvent(event), "The Lovers.");
+});

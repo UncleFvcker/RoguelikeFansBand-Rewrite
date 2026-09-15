@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.anubis",
+  "nameKey": "item-demo-anubis-name",
+  "descriptionKey": "item-demo-anubis-description",
+  "glyph": "|",
+  "generationLevel": 80,
+  "weightTenthsPound": 120,
+  "baseValue": 200000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 158,
+    "baseItemKindId": "demo.item.katana",
+    "instant": false,
+    "rarityOneIn": 90
+  },
+  "weaponProficiencyBaseItemId": "demo.item.katana",
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "BLOWS",
+      "BRAND_CHAOS",
+      "CHR",
+      "CURSED",
+      "HEAVY_CURSE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "NO_TELE",
+      "RES_CHAOS",
+      "RES_CONF",
+      "RES_DISEN",
+      "TUNNEL"
+    ],
+    "pval": 7,
+    "toArmor": -30
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 5,
+    "toHit": 28,
+    "toDamage": 22
+  },
+  "tunnelingPval": 7,
+  "modifiers": {
+    "defense": -30,
+    "charisma": 7
+  },
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 350
+  },
+  "passives": [
+    "anti-teleport"
+  ],
+  "resistances": {
+    "confusion": "resistant",
+    "chaos": "resistant",
+    "disenchant": "resistant"
+  },
+  "brands": [
+    "chaos"
+  ],
+  "initialCurse": "heavy"
+}

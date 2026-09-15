@@ -1,0 +1,72 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.twilight",
+  "nameKey": "item-demo-twilight-name",
+  "descriptionKey": "item-demo-twilight-description",
+  "glyph": "|",
+  "generationLevel": 70,
+  "weightTenthsPound": 250,
+  "baseValue": 0,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 78,
+    "baseItemKindId": "demo.item.two-handed-sword",
+    "instant": false,
+    "rarityOneIn": 15
+  },
+  "rfbValue": {
+    "flags": [
+      "BRAND_FIRE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "IM_FIRE",
+      "LITE",
+      "QUESTITEM",
+      "RES_DISEN",
+      "RES_FIRE",
+      "SHOW_MODS",
+      "SPEED"
+    ],
+    "pval": 10,
+    "toArmor": -50
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": -50,
+    "speed": 10
+  },
+  "weaponProficiencyBaseItemId": "demo.item.two-handed-sword",
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 4,
+    "damageSides": 7,
+    "toHit": -40,
+    "toDamage": -60
+  },
+  "resistances": {
+    "fire": "immune",
+    "disenchant": "resistant"
+  },
+  "brands": [
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "lightRadius": 1
+  }
+}

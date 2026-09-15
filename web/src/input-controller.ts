@@ -97,6 +97,7 @@ export class InputController {
   #commandCount: number | undefined;
   #runDirectionPreset: InputPreset | undefined;
   #walkDirection: { preset: InputPreset; special: boolean } | undefined;
+  #glyphPromptPending = false;
   #ridingDirection = false;
   #worldTravelDestination: Position | undefined;
   #localTravelDestination: Position | undefined;
@@ -494,6 +495,22 @@ export class InputController {
     } else if (!pendingDirection && this.#state.targetingIntent?.type === "mutation-direction") {
       this.cancelTargeting(false);
     }
+    if (state.player.pendingAbilityGlyph && !this.#glyphPromptPending) {
+      this.cancelTargeting(false);
+      this.#glyphPromptPending = true;
+      this.#window.setTimeout(() => {
+        try {
+          if (!this.#state.status?.player.pendingAbilityGlyph) return;
+          let glyph: string | null;
+          do {
+            glyph = this.#window.prompt(this.#localization.format("message-ability-glyph-required"));
+          } while (glyph !== null && ([...glyph].length !== 1 || /[\u0000-\u001f\u007f-\u009f]/u.test(glyph)));
+          void this.#dispatch({ type: "resolve-ability-glyph", glyph });
+        } finally {
+          this.#glyphPromptPending = false;
+        }
+      }, 0);
+    }
     const pendingAbilityDirection = state.player.pendingAbilityDirection;
     if (
       !pendingDirection &&
@@ -509,7 +526,15 @@ export class InputController {
       if (targeting) {
         this.#state.targeting = targeting;
         this.#state.targetingIntent = { type: "ability-direction" };
-        this.#announce("message-ability-direction-required", undefined, "ability");
+        this.#announce(
+          pendingAbilityDirection.abilityId === "demo.ability.trump-shuffle"
+            ? "message-trump-direction-required"
+            : pendingAbilityDirection.abilityId === "demo.ability.chaos-call-chaos"
+            ? "message-chaos-direction-required"
+            : "message-ability-direction-required",
+          undefined,
+          "ability",
+        );
       }
     } else if (
       !pendingAbilityDirection &&

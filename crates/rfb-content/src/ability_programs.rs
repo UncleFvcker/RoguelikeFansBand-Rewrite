@@ -190,6 +190,9 @@ fn ability_program_top_level_random_choice_is_valid(
                             | AbilityEffectDefinition::ApplyStatus { .. }
                             | AbilityEffectDefinition::DrainLife { .. }
                             | AbilityEffectDefinition::Genocide { .. }
+                            | AbilityEffectDefinition::CloneTarget
+                            | AbilityEffectDefinition::HasteTarget
+                            | AbilityEffectDefinition::HealTarget
                             | AbilityEffectDefinition::PolymorphTarget
                             | AbilityEffectDefinition::NoOp { .. }
                     ),
@@ -207,6 +210,83 @@ fn ability_program_input_accepts_step(
     input: AbilityProgramInputDefinition,
     effect: &AbilityEffectDefinition,
 ) -> bool {
+    if let AbilityEffectDefinition::Hissatsu { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::Item => *spell == 11,
+            AbilityProgramInputDefinition::SelfTarget => matches!(spell, 4 | 6 | 19 | 22 | 25 | 31),
+            AbilityProgramInputDefinition::CastTarget => {
+                *spell < 32 && !matches!(spell, 4 | 6 | 11 | 19 | 22 | 25 | 31)
+            }
+            _ => false,
+        };
+    }
+    if let AbilityEffectDefinition::Burglary { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::Item => *spell == 13,
+            AbilityProgramInputDefinition::CastTarget => {
+                matches!(spell, 1 | 9 | 10 | 11 | 17 | 18 | 25 | 26 | 27 | 31)
+            }
+            AbilityProgramInputDefinition::SelfTarget => {
+                *spell < 32 && !matches!(spell, 1 | 9 | 10 | 11 | 13 | 17 | 18 | 25 | 26 | 27 | 31)
+            }
+            _ => false,
+        };
+    }
+    if let AbilityEffectDefinition::Rage { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::Item => matches!(spell, 24 | 28),
+            AbilityProgramInputDefinition::CastTarget => {
+                matches!(spell, 0 | 2 | 10 | 12 | 22 | 23 | 30 | 31)
+            }
+            AbilityProgramInputDefinition::SelfTarget => {
+                *spell < 32 && !matches!(spell, 0 | 2 | 10 | 12 | 22 | 23 | 24 | 28 | 30 | 31)
+            }
+            _ => false,
+        };
+    }
+    if let AbilityEffectDefinition::Hex { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::Item => matches!(spell, 5 | 10 | 18 | 20 | 26),
+            AbilityProgramInputDefinition::CastTarget => *spell == 29,
+            AbilityProgramInputDefinition::SelfTarget => {
+                *spell < 32 && !matches!(spell, 5 | 10 | 18 | 20 | 26 | 29)
+            }
+            _ => false,
+        };
+    }
+    if let AbilityEffectDefinition::Music { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::CastTarget => matches!(spell, 2 | 22 | 30),
+            AbilityProgramInputDefinition::SelfTarget => {
+                *spell < 32 && !matches!(spell, 2 | 22 | 30)
+            }
+            _ => false,
+        };
+    }
+    if let AbilityEffectDefinition::Law { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::Item => *spell == 6,
+            AbilityProgramInputDefinition::CastTarget => {
+                matches!(spell, 5 | 7 | 9..=11 | 16 | 22 | 27 | 29)
+            }
+            AbilityProgramInputDefinition::SelfTarget => {
+                *spell < 32 && !matches!(spell, 5..=7 | 9..=11 | 16 | 22 | 27 | 29)
+            }
+            _ => false,
+        };
+    }
+    if let AbilityEffectDefinition::Necromancy { spell } = effect {
+        return match input {
+            AbilityProgramInputDefinition::Item => *spell == 11,
+            AbilityProgramInputDefinition::CastTarget => {
+                matches!(spell, 0 | 1 | 4 | 5 | 7 | 8 | 12..=21 | 24 | 27 | 30)
+            }
+            AbilityProgramInputDefinition::SelfTarget => {
+                matches!(spell, 2 | 3 | 6 | 9 | 10 | 22 | 23 | 25 | 26 | 28 | 29 | 31)
+            }
+            _ => false,
+        };
+    }
     match input {
         AbilityProgramInputDefinition::SelfTarget => {
             matches!(
@@ -219,6 +299,13 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::Summon { .. }
                     | AbilityEffectDefinition::SummonCategory { .. }
                     | AbilityEffectDefinition::NatureGate { .. }
+                    | AbilityEffectDefinition::ChainLightning
+                    | AbilityEffectDefinition::ChaosMeteorSwarm
+                    | AbilityEffectDefinition::TrumpShuffle
+                    | AbilityEffectDefinition::ResetRecall
+                    | AbilityEffectDefinition::CallChaos
+                    | AbilityEffectDefinition::ChaosPolymorphSelf
+                    | AbilityEffectDefinition::CallVoid
                     | AbilityEffectDefinition::DemonSummoning
                     | AbilityEffectDefinition::AngelSummoning
                     | AbilityEffectDefinition::BanishEvil
@@ -239,6 +326,12 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::Heal { .. }
                     | AbilityEffectDefinition::HealDice { .. }
                     | AbilityEffectDefinition::ReduceStatus { .. }
+                    | AbilityEffectDefinition::PrepareConfusingStrike
+                    | AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors
+                    | AbilityEffectDefinition::StopHex { .. }
+                    | AbilityEffectDefinition::StopSinging
+                    | AbilityEffectDefinition::SamuraiConcentration
+                    | AbilityEffectDefinition::SamuraiPosture { .. }
                     | AbilityEffectDefinition::SatisfyHunger
                     | AbilityEffectDefinition::DevourFlesh { .. }
                     | AbilityEffectDefinition::Vomit
@@ -304,7 +397,8 @@ fn ability_program_input_accepts_step(
         AbilityProgramInputDefinition::CastTarget => {
             matches!(
                 effect,
-                AbilityEffectDefinition::Damage { .. }
+                AbilityEffectDefinition::TrumpSummoning { .. }
+                    | AbilityEffectDefinition::Damage { .. }
                     | AbilityEffectDefinition::Malediction { .. }
                     | AbilityEffectDefinition::AreaDamage { .. }
                     | AbilityEffectDefinition::BeamDamage { .. }
@@ -346,6 +440,9 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::TeleportLevel
                     | AbilityEffectDefinition::DimensionDoor { .. }
                     | AbilityEffectDefinition::Jump { .. }
+                    | AbilityEffectDefinition::CloneTarget
+                    | AbilityEffectDefinition::HasteTarget
+                    | AbilityEffectDefinition::HealTarget
                     | AbilityEffectDefinition::PolymorphTarget
                     | AbilityEffectDefinition::SniperShot { .. }
                     | AbilityEffectDefinition::Rodeo
@@ -465,9 +562,16 @@ fn ability_program_input_matches_target(
         }
         AbilityProgramInputDefinition::CastTarget => {
             !target.modes.is_empty()
-                && !target
+                && (!target
                     .modes
                     .contains(&AbilityTargetModeDefinition::SelfTarget)
+                    || matches!(effect, AbilityEffectDefinition::TrumpSummoning { category } if category != "kamikaze")
+                    || matches!(
+                        effect,
+                        AbilityEffectDefinition::Necromancy {
+                            spell: 1 | 5 | 8 | 14 | 16..=21
+                        }
+                    ))
                 && !target.modes.contains(&AbilityTargetModeDefinition::Item)
                 && (1..=64).contains(&target.range)
                 && (target.requires_line_of_effect
@@ -479,6 +583,7 @@ fn ability_program_input_matches_target(
                             | AbilityEffectDefinition::SmashTrap
                             | AbilityEffectDefinition::FetchItem { .. }
                             | AbilityEffectDefinition::DimensionDoor { .. }
+                            | AbilityEffectDefinition::Hex { spell: 29 }
                     ))
         }
         AbilityProgramInputDefinition::Item => {

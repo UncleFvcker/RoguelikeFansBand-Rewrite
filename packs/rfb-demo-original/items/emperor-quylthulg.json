@@ -1,0 +1,73 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.emperor-quylthulg",
+  "nameKey": "item-demo-emperor-quylthulg-name",
+  "descriptionKey": "item-demo-emperor-quylthulg-description",
+  "glyph": "]",
+  "generationLevel": 80,
+  "weightTenthsPound": 30,
+  "baseValue": 125000,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 319,
+    "baseItemKindId": "demo.item.golden-crown",
+    "instant": false,
+    "rarityOneIn": 40,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "QUESTITEM",
+      "REGEN",
+      "RES_BLIND",
+      "RES_CHAOS",
+      "RES_CONF",
+      "SEE_INVIS",
+      "SPEED",
+      "TELEPATHY",
+      "XTRA_H_RES"
+    ],
+    "pval": 5,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "charisma": 5,
+    "speed": 5
+  },
+  "passives": [
+    "regeneration",
+    "see-invisible",
+    "telepathy"
+  ],
+  "resistances": {
+    "confusion": "resistant",
+    "chaos": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.blindness",
+    "rfb.status.paralysis"
+  ]
+}

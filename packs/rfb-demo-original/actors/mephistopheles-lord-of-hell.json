@@ -193,6 +193,7 @@
     "poison": "resistant"
   },
   "role": "monster",
+  "specialArtifactDrop": {"itemKindId": "demo.item.mephistopheles", "chancePercent": 5},
   "speed": 140,
   "statusImmunities": [
     "rfb.status.confusion",

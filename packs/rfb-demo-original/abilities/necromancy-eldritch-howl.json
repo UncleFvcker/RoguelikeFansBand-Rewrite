@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.necromancy-eldritch-howl",
+  "nameKey": "ability-demo-necromancy-eldritch-howl-name",
+  "descriptionKey": "ability-demo-necromancy-eldritch-howl-description",
+  "abilityProgramId": "demo.ability-program.necromancy-eldritch-howl",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "necromancy",
+    "spell"
+  ]
+}

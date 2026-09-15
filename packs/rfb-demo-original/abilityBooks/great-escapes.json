@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.great-escapes",
+  "nameKey": "item-demo-great-escapes-name",
+  "descriptionKey": "item-demo-great-escapes-description",
+  "realmId": "burglary",
+  "rank": 3,
+  "abilityIds": [
+    "demo.ability.burglary-create-stairs",
+    "demo.ability.burglary-panic-hit",
+    "demo.ability.burglary-panic-shot",
+    "demo.ability.burglary-panic-summons",
+    "demo.ability.burglary-panic-traps",
+    "demo.ability.burglary-flee-level",
+    "demo.ability.burglary-new-beginnings",
+    "demo.ability.burglary-major-getaway"
+  ],
+  "tags": [
+    "burglary",
+    "spellbook"
+  ]
+}

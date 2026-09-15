@@ -2,19 +2,28 @@
 
 mod berserker;
 mod book_magic;
+mod burglary;
 mod casting;
+mod chaos;
 mod compound;
 mod control;
 mod damage;
 mod duelist;
 mod duelist_choices;
+pub(in crate::game) mod hex;
+pub(in crate::game) mod hissatsu;
 mod items;
+mod law;
 pub(in crate::game) mod mindcraft;
+pub(in crate::game) mod music;
+mod necromancy;
+pub(in crate::game) mod rage;
 mod restoration;
 mod summoning;
 mod targeting;
 pub(in crate::game) mod terrain;
 mod travel;
+mod trump;
 
 pub(super) use casting::nature_wrath_direction_roll;
 pub(super) use targeting::AbilityTargetPlan;
@@ -37,14 +46,90 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<Option<Position>, CoreError> {
         match (ability.effect.clone(), target_plan) {
+            (AbilityEffectDefinition::Burglary { spell }, plan) => {
+                return self.resolve_burglary(
+                    &ability,
+                    spell,
+                    plan,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
+            (AbilityEffectDefinition::Rage { spell }, plan) => {
+                return self.resolve_rage(&ability, spell, plan, events, changed, removed_entities);
+            }
+            (AbilityEffectDefinition::Hex { spell }, plan) => {
+                return self.resolve_hex(&ability, spell, plan, events, changed, removed_entities);
+            }
+            (AbilityEffectDefinition::StopHex { spell }, _) => {
+                self.stop_hex(spell);
+                return Ok(None);
+            }
+
+            (AbilityEffectDefinition::Hissatsu { spell }, plan) => {
+                return self.resolve_hissatsu(
+                    &ability,
+                    spell,
+                    plan,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
+            (AbilityEffectDefinition::SamuraiConcentration, _) => {
+                self.samurai_concentrate();
+                return Ok(None);
+            }
+            (AbilityEffectDefinition::SamuraiPosture { posture }, _) => {
+                self.set_samurai_posture(posture);
+                return Ok(None);
+            }
+            (AbilityEffectDefinition::Music { spell }, plan) => {
+                return self.resolve_music(
+                    &ability,
+                    spell,
+                    plan,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
+            (AbilityEffectDefinition::StopSinging, _) => {
+                self.stop_music();
+                return Ok(None);
+            }
+            (AbilityEffectDefinition::Law { spell }, plan) => {
+                return self.resolve_law(&ability, spell, plan, events, changed, removed_entities);
+            }
+            (AbilityEffectDefinition::Necromancy { spell }, plan) => {
+                return self.resolve_necromancy(
+                    &ability,
+                    spell,
+                    plan,
+                    events,
+                    changed,
+                    removed_entities,
+                );
+            }
+            (
+                AbilityEffectDefinition::TrumpSummoning { category },
+                AbilityTargetPlan::TrumpSummoning { center },
+            ) => {
+                self.resolve_trump_summoning(&ability, &category, center, false, events, changed);
+            }
+            (AbilityEffectDefinition::ResetRecall, AbilityTargetPlan::SelfTarget) => {
+                self.reset_recall(self.recall_reset_plan().expect("validated recall reset"));
+            }
             (
                 AbilityEffectDefinition::ElementalBrand
                 | AbilityEffectDefinition::ElementalImmunity { .. },
                 AbilityTargetPlan::Element { element },
             ) => self.resolve_player_elemental_enchantment(&ability, element, events),
             (AbilityEffectDefinition::LivingTrump, AbilityTargetPlan::SelfTarget) => {
-                let controlled =
-                    self.rng.bounded(7) == 0 || self.floor_depth(&self.current_floor_id) == 0;
+                let controlled = self.rng.bounded(7) == 0
+                    || (ability.id != "demo.ability.trump-living-trump"
+                        && self.floor_depth(&self.current_floor_id) == 0);
                 self.gain_mutation(
                     if controlled {
                         "rfb.mutation.teleport"
@@ -320,6 +405,12 @@ impl Game {
                 AbilityEffectDefinition::PolymorphTarget,
                 AbilityTargetPlan::Projectile { path, .. },
             ) => self.resolve_player_polymorph_target_effect(&ability, path, events, changed),
+            (
+                AbilityEffectDefinition::CloneTarget
+                | AbilityEffectDefinition::HasteTarget
+                | AbilityEffectDefinition::HealTarget,
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => self.resolve_player_monster_aid(&ability, path, events, changed, removed_entities),
             (AbilityEffectDefinition::SwapPosition, AbilityTargetPlan::Projectile { path, .. }) => {
                 self.resolve_player_swap_position_effect(&ability, path, events, changed)
             }
@@ -386,6 +477,23 @@ impl Game {
             }
             (AbilityEffectDefinition::NatureGate { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_nature_gate_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::ChaosMeteorSwarm, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_chaos_meteor_swarm(&ability, events, changed, removed_entities)?;
+            }
+            (AbilityEffectDefinition::ChaosPolymorphSelf, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_chaos_polymorph(&ability, events, changed)?;
+            }
+            (AbilityEffectDefinition::CallVoid, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_call_void(&ability, events, changed, removed_entities)?;
+            }
+            (AbilityEffectDefinition::ChainLightning, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_chain_lightning_effect(
+                    &ability,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
             }
             (AbilityEffectDefinition::DemonSummoning, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_demon_summoning_effect(&ability, events, changed);
@@ -695,6 +803,16 @@ impl Game {
             (AbilityEffectDefinition::ReduceStatus { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_status_reduction_effect(&ability, events);
             }
+            (AbilityEffectDefinition::PrepareConfusingStrike, AbilityTargetPlan::SelfTarget) => {
+                // The same one-hit state is consumed by melee and persisted for scrolls.
+                self.confusing_strike_ready = true;
+            }
+            (
+                AbilityEffectDefinition::DestroyAdjacentTrapsAndDoors,
+                AbilityTargetPlan::SelfTarget,
+            ) => {
+                self.resolve_player_adjacent_trap_door_destruction(&ability, events, changed);
+            }
             (AbilityEffectDefinition::SatisfyHunger, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_satisfy_hunger_effect(&ability, events);
             }
@@ -768,6 +886,16 @@ impl Game {
             (AbilityEffectDefinition::AggravateMonsters, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_aggravate_monsters_effect(&ability, events, changed);
             }
+            (AbilityEffectDefinition::BrandWeapon { .. }, AbilityTargetPlan::SelfTarget)
+                if ability.id == "demo.ability.chaos-chaos-branding" =>
+            {
+                // The normal cast has already charged mana and rolled failure.
+                let mut cancelled = ability.clone();
+                cancelled.effect = AbilityEffectDefinition::NoOp {
+                    reason: "cancelled".into(),
+                };
+                self.resolve_player_no_op_effect(&cancelled, events);
+            }
             (AbilityEffectDefinition::BrandWeapon { .. }, AbilityTargetPlan::Item { item_id }) => {
                 self.resolve_player_brand_weapon_effect(&ability, &item_id, events);
             }
@@ -797,6 +925,7 @@ impl Game {
                 self.resolve_player_genocide_effect(
                     &ability,
                     Some(path),
+                    None,
                     events,
                     changed,
                     removed_entities,
@@ -811,6 +940,7 @@ impl Game {
             ) => {
                 self.resolve_player_genocide_effect(
                     &ability,
+                    None,
                     None,
                     events,
                     changed,

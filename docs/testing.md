@@ -114,11 +114,35 @@ node e2e/asgard-standalone.e2e.mjs
 
 ## 常规装备底材桌面验收
 
+N3使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --non-quest-n3`。复用同一普通Tauri与隔离目录，ignored导出从正常Mage新档准备50级、属性潜力、满HP、火把、无敌和睡眠战熊。四件代表分别验证追加时间伤害、弩发射普通箭、罪恶巨锤激活及金币消耗、丘比特魅惑；每步正常保存恢复并核对哈希。准备失败种子被排除，证据目录`test-results/non-quest-n3/`；不是自然练级、取得或完整源规则一致的证明。
+
+N2使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --non-quest-n2`。正常Mage新档经ignored导出用例准备50级、局部地格、无敌、睡眠目标／水格及真实普通或instant生成的五件神器；UI逐件拾取、装备、激活、等待，每步正常保存恢复并核对哈希。太公望激活前通过CDP暂停浏览器计时器，以固定自动钓鱼之间的保存检查点，后续手动等待仍执行正式核心命令；自动继续钓鱼另有输入控制器覆盖。证据目录`test-results/non-quest-n2/`，仍使用下述隔离构建目录；不代表自然取得、练级或全部源规则一致。
+
+N1使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --non-quest-n1`。普通Tauri新建人类Mage后，ignored核心导出用例准备50级、局部地格、无敌及通过真实底材／稀有度生成的四件神器；Hellfire另配普通弩矢／火把，两件武器保留相邻源怪物并选击杀种子。UI拾取、装备、近战／射击／等待，14次操作每次保存恢复并核对哈希，证据在`test-results/non-quest-n1/`。不是自然获取或练级证明。脚本尊重`CARGO_TARGET_DIR`，本次产物在`target/n1-validation/debug/rfb-tauri.exe`；构建和导出共用隔离的`CARGO_BUILD_BUILD_DIR=.../target/n1-validation-build`，避免共享工作树缓存。Windows上先结束同一路径的测试EXE，再重链接或执行导出。
+
+Q1命名奖励复用下述脚本的 `--quest-items` 模式：`node web/e2e/ordinary-equipment-standalone.e2e.mjs --quest-items`（仓库根目录）。它从正常1级人类战士出生存档准备局部场地、相邻当前HP1的Fang及真实击杀／掉落种子；物品由实际死亡掉落产生。UI攻击、移动、拾取、装备及等待，每步原生保存恢复并核对核心哈希。已有报告在`test-results/quest-items-q1/`。Q5实现结束后统一执行此前延后的编译和验收。
+
+Q2–Q5代表流程使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --quest-items-all`。从正常新档显式准备50级、天赋与无敌；眼球／九头蛇之眼／罗摩由相邻源怪物的真实死亡掉落产生，刺针由接受金库任务、进入正式地图产生。之后清理场景并定位真实奖励，罗摩另给10支普通箭；UI拾取、装备、激活／射击与等待，每步保存恢复。准备逻辑在ignored核心导出测试中，普通产物没有测试准备IPC。证据在 `test-results/quest-items-q2-q5/`；这不代表自然练级、战斗难度、全部神祇的桌面遭遇或Q4完整任务路线验收。
+
 在 `web` 执行 `npm run build:standalone:debug`，随后执行 `node e2e/ordinary-equipment-standalone.e2e.mjs`。[场景](../web/e2e/ordinary-equipment-standalone.e2e.mjs)使用普通 Tauri EXE、隔离的 WebView 配置目录和正式创角／装备／输入／保存加载路径，不启用 WebDriver 专用准备 IPC。
 
 正常创建人类1级战士并导出存档后，[核心导出用例](../crates/rfb-core/src/game/tests/death_scythe.rs)显式选择出生天赋、清怪、准备小片地格与相邻目标／岩浆矿脉，授予并鉴定七件代表底材。镰刀准备合法的 −255 命中附魔、临时 +2000 最大 HP、满有效 HP，并选择非致死反噬种子；钩镰枪及泳装目标起始睡眠。UI依次装备钩镰枪、矮人镐、秘银板甲／空灵披风／秘银护手、泳装和镰刀，并用原生按键攻击、挖掘或等待。每个动作后导出／正常加载，核对核心预演的完整状态哈希，再继续下一动作。
 
 报告、截图和存档在 `test-results/ordinary-equipment/`。准备后的交互与保存证据不代表自然取得七件稀有装备或自然练级；完整源分配、其他成员、概率与致死边界由核心验证。普通镰刀不自动返回，共用返回反噬仅在核心准备的返回状态中验证；未开放的返回能力入口和 Monster Sword 内部 kind111 不在桌面范围内。
+
+## 混沌领域桌面验收
+
+在`web`运行`npm run build:standalone:debug`，随后从仓库根执行`node web/e2e/ordinary-equipment-standalone.e2e.mjs --chaos`。构建、导出和桌面脚本共用`CARGO_TARGET_DIR=.../target/n1-validation`与`CARGO_BUILD_BUILD_DIR=.../target/n1-validation-build`。普通产物不启用WebDriver准备IPC；ignored核心导出仅准备合法等级、书本、目标和种子，产品UI完成学习、施法、选物、追加方向及等待，27步各经原生保存恢复核对哈希。中英文25入口和8个场景见`test-results/chaos/report.json`，来源差异与核心验收见[混沌计划](chaos-realm-plan.md#ch5开放与统一验收2026-09-14)。这不是自然练级、自然获取或Android验收。
+
+## 王牌领域桌面验收
+
+王牌领域使用 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --trump`。共享应用数据中的博物馆档案使用了当前分支不识别的格式，本次使用独立应用标识的普通standalone，保留原档案。构建及脚本设置 `CARGO_TARGET_DIR=.../target/trump-desktop-validation`、`CARGO_BUILD_BUILD_DIR=.../target/n1-validation-build`；在 `target/trump-standalone.conf.json` 写入 `{"identifier":"org.rfb.rewrite.trump-validation"}`，于 `web` 执行 `npm run build:standalone:debug -- --config ../target/trump-standalone.conf.json`。它只覆盖应用标识，未启用WebDriver或准备IPC。27 个王牌入口逐一检查中英文选择；六个场景共15步，覆盖第一册学习、相位门、召唤地点、恋人牌方向与取消、治疗宠物和烙印，每步原生保存恢复核对哈希。ignored 导出用例从正式高阶法师王牌构筑准备50级、满资源、无敌、书本、局部目标及实际施法成功种子。来源范围与限制见[王牌领域](trump-realm.md)，报告和截图在 `test-results/trump/`；不是自然练级或自然取得证明。
+
+## 死灵领域桌面验收
+
+在 `target/necromancy-standalone.conf.json` 写入 `{"identifier":"org.rfb.rewrite.necromancy-validation"}`，设置 `CARGO_TARGET_DIR=.../target/necromancy-desktop-validation` 与 `CARGO_BUILD_BUILD_DIR=.../target/n1-validation-build`，在 `web` 执行 `npm run build:standalone:debug -- --config ../target/necromancy-standalone.conf.json`，随后从根目录执行 `node web/e2e/ordinary-equipment-standalone.e2e.mjs --necromancy`。独立应用标识保留主线博物馆档案，普通产物没有准备IPC。
+
+场景从正式死灵法师构筑准备50级、满资源、书本、局部地形、目标、无敌和实际成功／失败种子。中英文创建入口、第一册学习与触摸、成功宠物、失败敌对召唤、鉴定和护盾经产品UI操作，每步原生保存恢复核对哈希。报告在 `test-results/necromancy/`；来源、核心证据和适配见[死灵领域](necromancy-realm.md)。这不是自然练级、自然获取四册或Android验收。
 
 ## 随机荒野地牢桌面专项
 

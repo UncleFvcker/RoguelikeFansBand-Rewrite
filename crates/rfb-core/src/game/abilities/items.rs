@@ -94,6 +94,38 @@ impl Game {
         ability: &AbilityDefinition,
     ) -> Option<Vec<rfb_protocol::AbilityItemTargetDto>> {
         use AbilityEffectDefinition as E;
+        if matches!(
+            ability.effect,
+            E::BrandWeapon { .. }
+                | E::RechargeFromPlayer { .. }
+                | E::Hissatsu { spell: 11 }
+                | E::Rage { spell: 24 | 28 }
+                | E::Hex {
+                    spell: 5 | 10 | 18 | 20 | 26
+                }
+        ) {
+            return Some(
+                self.items
+                    .iter()
+                    .filter_map(|item| {
+                        let target = TargetSelection::Item {
+                            item_id: item.id.clone(),
+                        };
+                        self.ability_target_plan(ability, &target).map(|_| {
+                            rfb_protocol::AbilityItemTargetDto {
+                                item_id: item.id.clone(),
+                                target,
+                                confirmation_key: matches!(
+                                    ability.effect,
+                                    E::Hex { spell: 5 | 20 }
+                                )
+                                .then(|| "item-hex-curse-confirm".to_owned()),
+                            }
+                        })
+                    })
+                    .collect(),
+            );
+        }
         if matches!(ability.effect, E::Mundanity) {
             return Some(self.mundanity_item_targets(None));
         }
@@ -164,6 +196,13 @@ impl Game {
         let valid = match ability.effect {
             E::BlessWeapon => definition
                 .rfb_base_kind
+                .or_else(|| {
+                    definition
+                        .artifact_generation
+                        .as_ref()
+                        .and_then(|artifact| self.content.item(&artifact.base_item_kind_id))
+                        .and_then(|base| base.rfb_base_kind)
+                })
                 .is_some_and(|base| (19..=23).contains(&base.tval)),
             E::CraftEnchant { .. } => {
                 definition.rfb_base_kind.is_some_and(|base| {
@@ -701,6 +740,7 @@ impl Game {
             DEATH_POISON_BRANDING_ABILITY_ID
                 | DEATH_VAMPIRIC_BRANDING_ABILITY_ID
                 | CRUSADE_HOLY_BLADE_ABILITY_ID
+                | "demo.ability.chaos-chaos-branding"
         ) {
             self.add_virtue(VirtueKindDto::Enchantment, 2);
         }

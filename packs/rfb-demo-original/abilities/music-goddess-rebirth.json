@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.music-goddess-rebirth",
+  "nameKey": "ability-demo-music-goddess-rebirth-name",
+  "descriptionKey": "ability-demo-music-goddess-rebirth-description",
+  "abilityProgramId": "demo.ability-program.music-goddess-rebirth",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": [
+    "music",
+    "spell"
+  ],
+  "affectsGroundItems": false
+}

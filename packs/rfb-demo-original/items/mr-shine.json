@@ -1,0 +1,70 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.mr-shine",
+  "nameKey": "item-demo-mr-shine-name",
+  "descriptionKey": "item-demo-mr-shine-description",
+  "glyph": "[",
+  "generationLevel": 65,
+  "weightTenthsPound": 100,
+  "baseValue": 65000,
+  "maxStack": 1,
+  "equipmentSlot": "shield",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 337,
+    "baseItemKindId": "demo.item.mirror-shield",
+    "instant": false,
+    "rarityOneIn": 25
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "REFLECT",
+      "RES_LITE",
+      "RES_POIS",
+      "RES_SHARDS",
+      "SUST_CHR",
+      "SUST_INT",
+      "SUST_WIS",
+      "WIS"
+    ],
+    "pval": 2,
+    "toArmor": 22
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "defense": 32,
+    "intelligence": 2,
+    "wisdom": 2,
+    "charisma": 2
+  },
+  "passives": [
+    "reflects-bolts",
+    "sustain-charisma",
+    "sustain-intelligence",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "poison": "resistant",
+    "light": "resistant",
+    "shards": "resistant"
+  }
+}

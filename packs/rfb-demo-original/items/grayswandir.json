@@ -1,0 +1,104 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.grayswandir",
+  "nameKey": "item-demo-grayswandir-name",
+  "descriptionKey": "item-demo-grayswandir-description",
+  "glyph": "|",
+  "generationLevel": 45,
+  "weightTenthsPound": 50,
+  "baseValue": 125000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "blessed-weapon"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 72,
+    "baseItemKindId": "demo.item.sabre",
+    "instant": false,
+    "rarityOneIn": 45
+  },
+  "weaponProficiencyBaseItemId": "demo.item.sabre",
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "BRAND_COLD",
+      "CON",
+      "DEX",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "REGEN",
+      "RES_CHAOS",
+      "RES_COLD",
+      "RES_NETHER",
+      "RIDING",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLAY_DRAGON",
+      "SLAY_EVIL",
+      "SLAY_UNDEAD",
+      "SLOW_DIGEST",
+      "STR",
+      "SUST_CON",
+      "SUST_STR"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 9,
+    "toHit": 20,
+    "toDamage": 12
+  },
+  "modifiers": {
+    "strength": 4,
+    "dexterity": 4,
+    "constitution": 4
+  },
+  "passives": [
+    "hold-life",
+    "regeneration",
+    "see-invisible",
+    "slow-digestion",
+    "sustain-constitution",
+    "sustain-strength"
+  ],
+  "resistances": {
+    "cold": "resistant",
+    "nether": "resistant",
+    "chaos": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "evil": "slay",
+    "undead": "slay",
+    "demon": "slay",
+    "dragon": "slay"
+  },
+  "brands": [
+    "cold"
+  ],
+  "ridingWeaponKind": "compatible"
+}

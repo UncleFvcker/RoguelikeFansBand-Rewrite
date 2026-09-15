@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.yagyuu-bugeichou",
+  "nameKey": "item-demo-yagyuu-bugeichou-name",
+  "descriptionKey": "ability-book-demo-deck-of-many-things-description",
+  "realmId": "hissatsu",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.hissatsu-serpents-tongue",
+    "demo.ability.hissatsu-zammaken",
+    "demo.ability.hissatsu-wind-blast",
+    "demo.ability.hissatsu-judge",
+    "demo.ability.hissatsu-rock-smash",
+    "demo.ability.hissatsu-midare-setsugekka",
+    "demo.ability.hissatsu-spot-aiming",
+    "demo.ability.hissatsu-majin-giri"
+  ],
+  "tags": [
+    "hissatsu",
+    "spellbook"
+  ]
+}

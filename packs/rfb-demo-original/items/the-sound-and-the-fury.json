@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.the-sound-and-the-fury",
+  "nameKey": "item-demo-the-sound-and-the-fury-name",
+  "descriptionKey": "item-demo-the-sound-and-the-fury-description",
+  "abilityBookId": "demo.ability-book.the-sound-and-the-fury",
+  "rfbBaseKind": {
+    "sourceIndex": 566,
+    "tval": 108,
+    "sval": 2
+  },
+  "baseValue": 15000,
+  "generationLevel": 45,
+  "glyph": "?",
+  "maxStack": 1,
+  "weightTenthsPound": 30,
+  "mogaminatorRare": false,
+  "tags": [
+    "rage",
+    "book",
+    "spellbook"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ]
+}

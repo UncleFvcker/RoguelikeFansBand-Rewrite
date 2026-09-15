@@ -1,0 +1,108 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.frakir",
+  "nameKey": "item-demo-frakir-name",
+  "descriptionKey": "item-demo-frakir-description",
+  "glyph": "=",
+  "generationLevel": 30,
+  "weightTenthsPound": 2,
+  "baseValue": 10000,
+  "maxStack": 1,
+  "equipmentSlot": "ring",
+  "tags": [
+    "artifact",
+    "equipment",
+    "armor",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 8,
+    "baseItemKindId": "demo.item.ring",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "CON",
+      "DEX",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "RES_POIS",
+      "SEARCH",
+      "SEE_INVIS",
+      "SPEED",
+      "STEALTH",
+      "STR",
+      "WARNING",
+      "WIS"
+    ],
+    "pval": 1,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "modifiers": {
+    "strength": 1,
+    "intelligence": 1,
+    "wisdom": 1,
+    "dexterity": 1,
+    "constitution": 1,
+    "charisma": 1,
+    "speed": 1
+  },
+  "equipmentBonuses": {
+    "stealthSkill": 1,
+    "searchSkill": 5
+  },
+  "passives": [
+    "see-invisible",
+    "warning"
+  ],
+  "resistances": {
+    "poison": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.frakir",
+        "nameKey": "device-activation-e5-drain-life-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 30,
+        "rfbValue": 3500,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.frakir-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1500
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "blocksSight": false,
+  "descriptionKey": "terrain-demo-law-semicolon-description",
+  "formatVersion": 1,
+  "glyph": ";",
+  "id": "demo.terrain.law-semicolon",
+  "monsterDestroyToTerrainId": "demo.terrain.floor",
+  "nameKey": "terrain-demo-law-semicolon-name",
+  "tags": [
+    "monster-trap"
+  ],
+  "walkable": true
+}

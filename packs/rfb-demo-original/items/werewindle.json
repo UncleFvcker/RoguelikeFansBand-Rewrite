@@ -1,0 +1,137 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.werewindle",
+  "nameKey": "item-demo-werewindle-name",
+  "descriptionKey": "item-demo-werewindle-description",
+  "glyph": "|",
+  "generationLevel": 45,
+  "weightTenthsPound": 130,
+  "baseValue": 120000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 84,
+    "baseItemKindId": "demo.item.long-sword",
+    "instant": false,
+    "rarityOneIn": 20
+  },
+  "weaponProficiencyBaseItemId": "demo.item.long-sword",
+  "rfbValue": {
+    "flags": [
+      "BRAND_CHAOS",
+      "BRAND_ELEC",
+      "CON",
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "REGEN",
+      "RES_DARK",
+      "RES_DISEN",
+      "RES_ELEC",
+      "RES_LITE",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_DEMON",
+      "SLAY_EVIL",
+      "SLOW_DIGEST",
+      "SPEED",
+      "STR",
+      "SUST_CON",
+      "SUST_INT",
+      "SUST_STR",
+      "SUST_WIS"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 3,
+    "damageSides": 6,
+    "toHit": 8,
+    "toDamage": 12
+  },
+  "modifiers": {
+    "strength": 3,
+    "constitution": 3,
+    "speed": 3
+  },
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "passives": [
+    "regeneration",
+    "see-invisible",
+    "slow-digestion",
+    "sustain-constitution",
+    "sustain-intelligence",
+    "sustain-strength",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "electricity": "resistant",
+    "light": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "slays": {
+    "evil": "slay",
+    "demon": "slay"
+  },
+  "brands": [
+    "chaos",
+    "electricity"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.werewindle",
+        "nameKey": "device-activation-e5-escape-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 20,
+        "rfbValue": 2000,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.kusanagi-no-tsurugi-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 350
+    }
+  }
+}

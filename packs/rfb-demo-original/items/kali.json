@@ -1,0 +1,123 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.kali",
+  "nameKey": "item-demo-kali-name",
+  "descriptionKey": "item-demo-kali-description",
+  "glyph": "|",
+  "generationLevel": 40,
+  "weightTenthsPound": 130,
+  "baseValue": 111111,
+  "maxStack": 1,
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 390,
+    "baseItemKindId": "demo.item.scimitar",
+    "instant": false,
+    "rarityOneIn": 200,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-res-or-power"
+    ]
+  },
+  "rfbValue": {
+    "flags": [
+      "AGGRAVATE",
+      "BLESSED",
+      "BLOWS",
+      "BRAND_CHAOS",
+      "DUAL_WIELDING",
+      "FREE_ACT",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "PERMA_CURSE",
+      "QUESTITEM",
+      "RES_NETHER",
+      "SLAY_DEMON",
+      "SPEED",
+      "VORPAL",
+      "XTRA_RES_OR_POWER"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "weapon",
+  "modifiers": {
+    "speed": 3
+  },
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 5,
+    "damageSides": 6,
+    "toHit": 14,
+    "toDamage": 14
+  },
+  "weaponProficiencyBaseItemId": "demo.item.scimitar",
+  "equipmentBonuses": {
+    "meleeAttacksDeltaPercent": 150
+  },
+  "passives": [
+    "blessed",
+    "dual-wielding",
+    "hold-life"
+  ],
+  "resistances": {
+    "nether": "resistant"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "vorpal": true,
+  "slays": {
+    "demon": "slay"
+  },
+  "brands": [
+    "chaos"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.kali",
+        "nameKey": "device-activation-e5-berserk-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 8,
+        "rfbValue": 2125,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.kali-activation"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1000
+    }
+  },
+  "initialCurse": "permanent"
+}

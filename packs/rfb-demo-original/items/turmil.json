@@ -1,0 +1,120 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.turmil",
+  "nameKey": "item-demo-turmil-name",
+  "descriptionKey": "item-demo-turmil-description",
+  "glyph": "/",
+  "generationLevel": 20,
+  "weightTenthsPound": 120,
+  "baseValue": 30000,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "blessed-weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 122,
+    "baseItemKindId": "demo.item.lucerne-hammer",
+    "instant": false,
+    "rarityOneIn": 10,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-high-resistance"
+    ]
+  },
+  "weaponProficiencyBaseItemId": "demo.item.lucerne-hammer",
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "BRAND_COLD",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "LITE",
+      "REGEN",
+      "RES_COLD",
+      "RES_LITE",
+      "SHOW_MODS",
+      "SLAY_ORC",
+      "WIS",
+      "XTRA_H_RES"
+    ],
+    "pval": 4,
+    "toArmor": 8
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 6,
+    "toHit": 10,
+    "toDamage": 6
+  },
+  "modifiers": {
+    "defense": 8,
+    "wisdom": 4
+  },
+  "equipmentBonuses": {
+    "infravision": 4,
+    "lightRadius": 1
+  },
+  "passives": [
+    "regeneration"
+  ],
+  "resistances": {
+    "cold": "resistant",
+    "light": "resistant"
+  },
+  "slays": {
+    "orc": "slay"
+  },
+  "brands": [
+    "cold"
+  ],
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.turmil",
+        "nameKey": "device-activation-e5-drain-life-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 25,
+        "rfbValue": 3150,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "effectProgramId": "demo.effect.drain-life"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 700
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.matoi",
+  "nameKey": "item-demo-matoi-name",
+  "descriptionKey": "item-demo-matoi-description",
+  "glyph": "\\",
+  "generationLevel": 20,
+  "weightTenthsPound": 100,
+  "baseValue": 808,
+  "maxStack": 1,
+  "equipmentSlot": "weapon",
+  "tags": [
+    "artifact",
+    "equipment",
+    "weapon",
+    "activatable"
+  ],
+  "artifactGeneration": {
+    "sourceIndex": 170,
+    "baseItemKindId": "demo.item.jo-staff",
+    "instant": false,
+    "rarityOneIn": 5
+  },
+  "weaponProficiencyBaseItemId": "demo.item.jo-staff",
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_FIRE",
+      "STR"
+    ],
+    "pval": 3,
+    "toArmor": 3
+  },
+  "resistsProjectionDestruction": true,
+  "resistsMonsterDestruction": true,
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 8,
+    "toHit": -5,
+    "toDamage": 10
+  },
+  "modifiers": {
+    "defense": 3,
+    "strength": 3,
+    "charisma": 3
+  },
+  "resistances": {
+    "fire": "resistant"
+  },
+  "deviceGeneration": {
+    "activations": [
+      {
+        "id": "demo.item-activation.matoi",
+        "nameKey": "device-activation-e5-heroism-name",
+        "minDepth": 1,
+        "maxDepth": 100,
+        "weight": 1,
+        "deviceCheckDifficulty": 10,
+        "rfbValue": 2125,
+        "charges": {
+          "minimum": 1,
+          "maximum": 1,
+          "cost": 1
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "effectProgramId": "demo.effect.tyr"
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 450
+    }
+  }
+}
