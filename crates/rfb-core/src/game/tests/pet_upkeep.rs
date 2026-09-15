@@ -15,7 +15,7 @@ fn single_step_rest_matches_pet_upkeep_and_rng() {
     for ordinal in 0..5 {
         add_actor(&mut game, "demo.actor.coatl", ordinal, true);
     }
-    let final_game = super::support::assert_rest_batch_matches_steps(game, 10);
+    let final_game = super::support::assert_rest_batch_matches_steps(game, 100);
     assert!(final_game.pet_upkeep_dto().dismissal_required);
 }
 
@@ -89,42 +89,40 @@ fn upkeep_uses_the_class_divisor_unique_cost_and_strict_control() {
 #[test]
 fn upkeep_scales_positive_mana_recovery_and_drains_above_one_hundred_percent() {
     let mut game = high_mage_game(2);
-    assert_eq!(
-        game.player_resource_recovery_change("demo.resource.mana", false),
-        2
-    );
-
+    assert_eq!(game.mana_recovery_per_cycle(false), 4858);
     add_actor(&mut game, "demo.actor.coatl", 0, true);
     assert_eq!(game.pet_upkeep().percent, 26);
-    assert_eq!(
-        game.player_resource_recovery_change("demo.resource.mana", false),
-        1
-    );
-
+    assert_eq!(game.mana_recovery_per_cycle(false), 3731);
     for ordinal in 1..5 {
         add_actor(&mut game, "demo.actor.coatl", ordinal, true);
     }
     assert_eq!(game.pet_upkeep().percent, 163);
-    assert_eq!(
-        game.player_resource_recovery_change("demo.resource.mana", false),
-        -1
-    );
+    assert_eq!(game.mana_recovery_per_cycle(false), -2691);
+    assert_eq!(game.mana_recovery_per_cycle(true), -2691);
     game.resources
         .get_mut("demo.resource.mana")
-        .expect("High-Mage should have mana")
+        .unwrap()
         .current = 1;
     let mut events = Vec::new();
-    game.apply_pet_upkeep_mana_loss(&mut events);
+    game.world_tick = 10;
+    game.process_mana_regeneration(false, &mut events);
     assert_eq!(game.resources["demo.resource.mana"].current, 0);
+    assert_eq!(
+        game.resources["demo.resource.mana"].fraction,
+        (65536 - 2691) << 16
+    );
+    assert!(!game.pet_upkeep_dto().dismissal_required);
+    for cycle in 2..=25 {
+        game.world_tick = cycle * 10;
+        game.process_mana_regeneration(false, &mut events);
+    }
+    game.finish_duelist_player_world(&mut events);
     assert!(game.pet_upkeep_dto().dismissal_required);
     assert!(matches!(
-        events.as_slice(),
-        [
-            DomainEvent::PetUpkeepManaLost { amount: 1, .. },
-            DomainEvent::PetUpkeepDismissalRequired {
-                upkeep_percent: 163
-            }
-        ]
+        events.last(),
+        Some(DomainEvent::PetUpkeepDismissalRequired {
+            upkeep_percent: 163
+        })
     ));
 }
 
@@ -164,10 +162,10 @@ fn advancing_actions_drain_excess_upkeep_and_zero_mana_interrupts_rest() {
             .any(|event| event.message_key == "pet-upkeep-mana-lost")
     );
 
-    game.resources
-        .get_mut("demo.resource.mana")
-        .expect("High-Mage should have mana")
-        .current = 0;
+    let mana = game.resources.get_mut("demo.resource.mana").unwrap();
+    assert!(mana.fraction > 0, "upkeep borrows from fractional mana");
+    mana.current = 0;
+    mana.fraction = 0; // This branch requires actual depletion, not a displayed zero.
     game.player.hp = game.player.hp.saturating_sub(1);
     let update = super::support::dispatch_next(&mut game, GameCommand::Rest { turns: 10 });
     assert_eq!(

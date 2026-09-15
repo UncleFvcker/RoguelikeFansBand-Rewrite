@@ -54,7 +54,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {
@@ -111,7 +111,7 @@ impl Game {
             (lost_experience, lost_levels)
         };
         self.refresh_character_skills();
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        self.refresh_after_attribute_change(previous_max_hp);
         events.push(DomainEvent::ExperienceDrained {
             source_kind_id: ability.id.clone(),
             amount: lost_experience,
@@ -157,7 +157,7 @@ impl Game {
                     .resources
                     .get_mut(&resource_id)
                     .expect("casting resource exists");
-                pool.current = pool.current.saturating_add(gain).min(pool.maximum);
+                pool.recover(gain);
                 gain > 0
             }
             AbilityEffectDefinition::ManaToHealth => {
@@ -982,7 +982,7 @@ impl Game {
         let active_before = self.progress.active_mutation_ids.clone();
         let hp_before = self.player.hp;
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         let mut power = i32::from(self.progress.level);
 
         if power > i32::try_from(self.rng.bounded(30)).expect("polymorph roll must fit i32")
@@ -1082,7 +1082,7 @@ impl Game {
             power -= 1;
         }
 
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        self.refresh_after_attribute_change(previous_max_hp);
         let active_after = &self.progress.active_mutation_ids;
         let gained_mutation_ids = active_after
             .difference(&active_before)

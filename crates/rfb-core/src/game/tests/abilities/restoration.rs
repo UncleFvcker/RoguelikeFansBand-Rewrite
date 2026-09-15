@@ -242,39 +242,31 @@ fn berserk_and_battle_frenzy_roll_independent_durations_and_round_trip() {
 fn waiting_and_resting_recover_mana_until_the_pool_is_full() {
     let mut game = test_caster_game(0);
     clear_monsters(&mut game);
+    let maximum = game.resources["demo.resource.mana"].maximum;
+    let before = maximum - 1;
     game.resources
         .get_mut("demo.resource.mana")
-        .expect("test caster mana pool should exist")
-        .current = 10;
+        .unwrap()
+        .current = before;
     let initial_draws = game.rng_draw_counter();
-
+    let normal = maximum * 197 + 524;
+    let rest = maximum * 394 + 524;
     let waited = dispatch_next(&mut game, GameCommand::Wait);
-    assert_eq!(game.resources["demo.resource.mana"].current, 11);
-    assert!(waited.events.iter().any(|event| {
-        event.kind == "resource.recovered"
-            && matches!(
-                event.outcome.as_ref(),
-                Some(GameEventOutcomeDto::ResourceRecovery { resolution })
-                    if resolution.before == 10
-                        && resolution.after == 11
-                        && resolution.recovered == 1
-            )
-    }));
-
-    let maximum = game.resources["demo.resource.mana"].maximum;
-    let rest_recovery = game
-        .content
-        .resource("demo.resource.mana")
-        .expect("Mana definition should remain available")
-        .rest_recovery_amount;
-    let expected_rest_turns = u16::try_from(maximum.saturating_sub(11).div_ceil(rest_recovery))
-        .expect("test rest duration should fit u16");
+    assert_eq!(game.resources["demo.resource.mana"].current, before);
+    assert_eq!(game.resources["demo.resource.mana"].fraction, normal << 16);
+    assert!(
+        !waited
+            .events
+            .iter()
+            .any(|event| event.kind == "resource.recovered")
+    );
+    let expected_rest_turns = u16::try_from((65536 - normal).div_ceil(rest)).unwrap();
     let rested = dispatch_next(&mut game, GameCommand::Rest { turns: 100 });
     let resolution = rest_resolution(&rested);
     assert_eq!(resolution.completed_turns, expected_rest_turns);
     assert_eq!(resolution.stop_reason, RestStopReasonDto::FullResources);
     assert_eq!(resolution.resource_recoveries.len(), 1);
-    assert_eq!(resolution.resource_recoveries[0].before, 11);
+    assert_eq!(resolution.resource_recoveries[0].before, before);
     assert_eq!(resolution.resource_recoveries[0].after, maximum);
     assert_eq!(game.resources["demo.resource.mana"].current, maximum);
     assert_eq!(rested.turn, 1 + u32::from(expected_rest_turns));
@@ -305,6 +297,55 @@ fn waiting_and_resting_recover_mana_until_the_pool_is_full() {
     )
     .expect("recovered mana should reload");
     assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn resting_ignores_hidden_and_telepathic_enemies_but_stops_for_sight() {
+    let mut game = Game::new_with_build(509, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    game.terrain.fill("demo.terrain.wall".into());
+    game.player.position = Position { x: 5, y: 5 };
+    for x in 5..=8 {
+        let index = game.index(Position { x, y: 5 }).unwrap();
+        game.terrain[index] = "demo.terrain.floor".into();
+    }
+    let hidden = Position { x: 7, y: 7 };
+    let index = game.index(hidden).unwrap();
+    game.terrain[index] = "demo.terrain.floor".into();
+    game.push_generated_actor("test.rest.enemy".into(), "demo.actor.newt", hidden);
+    game.reveal_current_visibility();
+    assert!(!game.entity_is_visible_to_player(&game.entities[0]));
+    let rested = dispatch_next(&mut game, GameCommand::RestForTurns { turns: 2 });
+    assert_eq!(rest_resolution(&rested).completed_turns, 2);
+    assert_eq!(
+        rest_resolution(&rested).stop_reason,
+        RestStopReasonDto::TurnLimit
+    );
+
+    game.player
+        .statuses
+        .push(monster_combat::melee_status("rfb.status.telepathy", 100, "test.rest.esp").status);
+    assert!(game.entity_is_visible_to_player(&game.entities[0]));
+    assert!(!game.entity_is_visually_visible_to_player(&game.entities[0]));
+    let rested = dispatch_next(&mut game, GameCommand::RestForTurns { turns: 2 });
+    assert_eq!(rest_resolution(&rested).completed_turns, 2);
+    assert_eq!(
+        rest_resolution(&rested).stop_reason,
+        RestStopReasonDto::TurnLimit
+    );
+
+    game.entities[0].position = Position { x: 6, y: 5 };
+    game.reveal_current_visibility();
+    assert!(game.entity_is_visually_visible_to_player(&game.entities[0]));
+    let world_tick = game.world_tick;
+    let stopped = dispatch_next(&mut game, GameCommand::RestForTurns { turns: 2 });
+    assert_eq!(rest_resolution(&stopped).completed_turns, 0);
+    assert_eq!(
+        rest_resolution(&stopped).stop_reason,
+        RestStopReasonDto::EnemyVisible
+    );
+    assert_eq!(game.world_tick, world_tick);
 }
 
 #[test]

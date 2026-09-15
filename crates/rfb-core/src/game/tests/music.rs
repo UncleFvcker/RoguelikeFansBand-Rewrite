@@ -133,7 +133,7 @@ fn music_real_wait_charges_half_mana_and_exhaustion_removes_bonuses() {
         assert_eq!(g.state_hash(), restored.state_hash());
         if turn == 0 {
             assert_eq!(g.resources["demo.resource.mana"].current, 1);
-            assert!(g.music.half_mana);
+            assert_eq!(g.resources["demo.resource.mana"].fraction, 1 << 31);
         }
     }
     assert!(g.music.spell.is_none());

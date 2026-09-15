@@ -10,7 +10,7 @@ import type { CameraMode, ZoomLevel } from "./camera.ts";
 import type { TilesetWarning } from "./tileset-runtime";
 import { defaultPreferences, parsePreferences, behaviorPreferences, type Preferences, type PreferencesClient } from "./preferences.ts";
 
-import { DISPLAY_FIELDS, DEFAULT_DISPLAY } from "./display-preferences.ts";
+import { DISPLAY_FIELDS, DEFAULT_DISPLAY, HUD_DISPLAY_FIELDS } from "./display-preferences.ts";
 
 export type TilesetPreset = "ascii" | "image";
 const TRAVEL_CONTROLS = { alwaysPickup: "travel-always-pickup", autoDetectTraps: "travel-auto-detect", autoMapArea: "travel-auto-map", disturbTrapDetect: "travel-disturb-detect" } as const;
@@ -38,6 +38,11 @@ interface SettingsOptions {
 const OPERATION_BOOLS = ["cutCorners", "travelIgnoreItems", "targetPets", "easyOpen", "easyDisarm", "autoRepeat"] as const;
 const RUN_STOPS = ["stairs", "openDoors", "knownTreasure"] as const;
 const DISPLAY_IDS = DISPLAY_FIELDS.map(field => "display-" + field);
+const HUD_GROUPS = {
+  header: { field: "showCharacterInfo", sections: ["showCharacterInfo"], arrows: ["▴", "▾"] },
+  sidebar: { field: "showSidebar", sections: ["showNearby", "showMessages"], arrows: ["▸", "◂"] },
+  footer: { field: "showFooter", sections: ["showMapActions", "showCombatSummary", "showDungeonInfo", "showShortcutBar"], arrows: ["▾", "▴"] },
+} as const;
 const OPERATION_IDS = ["operation-defaultTarget", ...OPERATION_BOOLS.map(field => "operation-" + field), ...RUN_STOPS.map(field => "run-stop-" + field)];
 
 export class SettingsPanel {
@@ -91,6 +96,24 @@ export class SettingsPanel {
     for (const id of [...OPERATION_IDS, ...DISPLAY_IDS]) on(this.#element(id), "change", () => { this.#readControls(); this.#renderPreview(); });
     for (const id of Object.values(TRAVEL_CONTROLS)) on(this.#element(id), "change", () => { this.#readControls(); this.#renderPreview(); });
     on(this.#element("player-ui-settings-open"), "click", () => { void this.open(); });
+    for (const [name, group] of Object.entries(HUD_GROUPS)) {
+      on(this.#element("hud-toggle-" + name), "click", () => {
+        if (this.#dialog.open) return;
+        void this.#run(async () => {
+          const saved = this.#o.preferences.snapshot;
+          if (!saved) throw new Error("preferences-unavailable");
+          const next = structuredClone(saved.preferences);
+          const expanded = next.display[group.field] && group.sections.some(field => next.display[field]);
+          next.display[group.field] = !expanded;
+          // Keep individual selections when collapsing; an explicit expansion must reveal something.
+          if (!expanded && !group.sections.some(field => next.display[field])) {
+            for (const field of group.sections) next.display[field] = true;
+          }
+          await this.commit(next, saved.revision);
+          this.#resetDraft();
+        });
+      });
+    }
     on(this.#element("player-ui-settings-close"), "click", () => this.close());
     on(this.#dialog, "cancel", event => { event.preventDefault(); this.close(); });
     on(this.#search, "input", () => this.#filter());
@@ -127,7 +150,7 @@ export class SettingsPanel {
         this.#status.textContent = this.#o.localization.format("preferences-import-preview");
       });
     });
-    for (const page of ["general", "behavior", "display", "glyphs", "colors", "advanced", "changes"] as const)
+    for (const page of ["general", "behavior", "autopick", "display", "glyphs", "colors", "advanced", "changes"] as const)
       on(this.#element("preferences-" + page), "click", () => this.#openPage(page));
     on(this.#element("preferences-prf-preview"), "click", () => {
       void this.#run(async () => this.#previewPrf(this.#element<HTMLInputElement>("preferences-command").value));
@@ -159,7 +182,9 @@ export class SettingsPanel {
       this.#element("preferences-prf-report").textContent = this.#o.localization.format("prf-export-omitted", { fields: result.omitted.join(", ") });
     });
     on(this.#element("preferences-keys"), "click", () => { if (this.close()) this.#o.openKeys(); });
-    on(this.#element("preferences-mogaminator"), "click", () => { if (this.close()) this.#o.openMogaminator(); });
+    on(this.#element("preferences-mogaminator"), "click", () => {
+      if (this.#o.state.mode === "playing" && this.#o.state.status?.mogaminator && this.close()) this.#o.openMogaminator();
+    });
   }
   dispose(): void { for (const remove of this.#remove.splice(0)) remove(); this.#installed = false; }
 
@@ -168,7 +193,7 @@ export class SettingsPanel {
       () => this.#draft.visuals, () => this.#renderPreview(), id => this.#o.renderer.visualBase(id));
     this.#visualEditor.open(page);
   }
-  #openPage(page: "general" | "behavior" | "display" | "glyphs" | "colors" | "advanced" | "changes"): void {
+  #openPage(page: "general" | "behavior" | "autopick" | "display" | "glyphs" | "colors" | "advanced" | "changes"): void {
     this.#search.value = "";
     this.#page = page === "glyphs" || page === "colors" ? "visuals" : page;
     this.#filter();
@@ -227,10 +252,21 @@ export class SettingsPanel {
     const p = this.#o.preferences.snapshot?.preferences;
     if (!p) return;
     this.#o.state.display = { ...p.display };
+    for (const field of HUD_DISPLAY_FIELDS) this.#element("app").dataset[field] = String(p.display[field]);
     this.#o.state.visuals = structuredClone(p.visuals);
     this.#o.localization.setLocale(p.locale);
     this.#o.localization.localizeDocument();
     this.#help();
+    for (const [name, group] of Object.entries(HUD_GROUPS)) {
+      const expanded = p.display[group.field] && group.sections.some(field => p.display[field]);
+      this.#element("app").dataset[name + "Expanded"] = String(expanded);
+      const button = this.#element<HTMLButtonElement>("hud-toggle-" + name);
+      button.textContent = group.arrows[expanded ? 0 : 1];
+      button.dataset.l10nAriaLabel = `hud-${expanded ? "hide" : "show"}-${name}`;
+      button.title = this.#o.localization.format(button.dataset.l10nAriaLabel);
+      button.setAttribute("aria-label", button.title);
+      button.setAttribute("aria-expanded", String(expanded));
+    }
     if (this.#o.rendererReady()) {
       this.#o.renderer.setVisualPreferences(p.visuals);
       if (this.#appliedTileset !== p.tilesetPreset) {
@@ -269,7 +305,6 @@ export class SettingsPanel {
     this.#status.textContent = saved ? this.#o.preferences.warnings.map(warning =>
       this.#o.localization.format("preferences-migration-warning", { detail: warning })).join("\n") : this.#o.localization.format("preferences-unavailable");
     this.#availability();
-    this.#element("preferences-mogaminator").hidden = this.#o.state.mode !== "playing";
     this.#element("travel-options").hidden = false;
     this.#element("preferences-session-details").hidden = this.#o.state.mode !== "playing";
   }
@@ -336,10 +371,13 @@ export class SettingsPanel {
       panel.hidden = query ? !panel.textContent?.toLocaleLowerCase().includes(query) : page !== this.#page;
     }
     for (const row of this.#dialog.querySelectorAll<HTMLElement>("[data-preference-row]")) {
-      row.hidden = (row.id === "preferences-mogaminator" && this.#o.state.mode !== "playing") || !row.textContent?.toLocaleLowerCase().includes(query);
+      row.hidden = !row.textContent?.toLocaleLowerCase().includes(query);
     }
   }
   #availability(): void {
+    for (const name of Object.keys(HUD_GROUPS)) {
+      this.#element<HTMLButtonElement>("hud-toggle-" + name).disabled = this.#working || !this.#o.preferences.snapshot;
+    }
     const unavailable = !this.#o.preferences.snapshot;
     for (const control of this.#element("preferences-visual-editor").querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLButtonElement>("input, select, button")) control.disabled = unavailable || this.#working;
     for (const id of [...OPERATION_IDS, ...DISPLAY_IDS]) (this.#element(id) as HTMLInputElement | HTMLSelectElement).disabled = unavailable || this.#working;
@@ -349,6 +387,9 @@ export class SettingsPanel {
       (this.#element(id) as HTMLButtonElement | HTMLInputElement).disabled = unavailable || this.#working;
     }
     this.#element<HTMLButtonElement>("preferences-prf-accept").disabled = unavailable || this.#working || !this.#prf || this.#prf.preview.blocked;
+    const canEditMogaminator = this.#o.state.mode === "playing" && !!this.#o.state.status?.mogaminator;
+    this.#element<HTMLButtonElement>("preferences-mogaminator").disabled = unavailable || this.#working || !canEditMogaminator;
+    this.#element("preferences-mogaminator-unavailable").hidden = canEditMogaminator;
     (this.#element("preferences-reload") as HTMLButtonElement).disabled = this.#working;
     (this.#element("player-ui-settings-close") as HTMLButtonElement).disabled = this.#working;
     this.#dialog.setAttribute("aria-busy", String(this.#working));

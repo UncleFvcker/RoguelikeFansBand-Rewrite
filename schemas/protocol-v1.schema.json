@@ -13344,11 +13344,6 @@
         "interrupted": {
           "type": "boolean"
         },
-        "manaFraction": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
-        },
         "revengeCast": {
           "anyOf": [
             {
@@ -13381,7 +13376,6 @@
       "required": [
         "active",
         "interrupted",
-        "manaFraction",
         "revengeKind",
         "revengeTicks",
         "revengeDamage"
@@ -15255,9 +15249,6 @@
           "maximum": 255,
           "minimum": 0
         },
-        "halfMana": {
-          "type": "boolean"
-        },
         "interrupted": {
           "type": "boolean"
         },
@@ -15273,8 +15264,7 @@
       },
       "required": [
         "beats",
-        "interrupted",
-        "halfMana"
+        "interrupted"
       ]
     },
     "MutationRatingDto": {
@@ -16616,16 +16606,23 @@
         "nameKey": {
           "type": "string"
         },
-        "restRecoveryAmount": {
+        "normalRecoveryPer65536": {
+          "description": "Signed natural mana change per 10 world ticks, in units of 2^-16.",
+          "type": "integer",
+          "format": "int64"
+        },
+        "restActionRecovery": {
           "type": "integer",
           "format": "uint32",
-          "default": 0,
           "minimum": 0
         },
-        "waitRecoveryAmount": {
+        "restRecoveryPer65536": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "restRecoveryTarget": {
           "type": "integer",
           "format": "uint32",
-          "default": 0,
           "minimum": 0
         }
       },
@@ -16633,7 +16630,11 @@
         "id",
         "nameKey",
         "current",
-        "maximum"
+        "maximum",
+        "normalRecoveryPer65536",
+        "restRecoveryPer65536",
+        "restActionRecovery",
+        "restRecoveryTarget"
       ]
     },
     "ResourceRecoveryResolutionDto": {
@@ -16815,12 +16816,6 @@
         "counter": {
           "type": "boolean"
         },
-        "manaDecayFraction": {
-          "type": "integer",
-          "format": "uint16",
-          "maximum": 65535,
-          "minimum": 0
-        },
         "posture": {
           "type": "integer",
           "format": "uint8",
@@ -16832,7 +16827,6 @@
         }
       },
       "required": [
-        "manaDecayFraction",
         "posture",
         "counter",
         "sutemi"

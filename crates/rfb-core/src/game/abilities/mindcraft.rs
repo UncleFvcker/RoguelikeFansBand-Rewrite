@@ -101,6 +101,7 @@ impl Game {
         self.apply_player_experience(experience, &mut Vec::new());
         for pool in self.resources.values_mut() {
             pool.current = pool.maximum;
+            pool.fraction = 0;
         }
     }
 

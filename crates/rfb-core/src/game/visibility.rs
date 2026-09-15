@@ -150,6 +150,14 @@ impl Game {
             .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "invisible"))
     }
 
+    pub(super) fn hostile_in_sight(&self) -> bool {
+        self.entities.iter().any(|entity| {
+            entity.hp > 0
+                && !self.actor_is_player_side(entity)
+                && self.entity_is_visually_visible_to_player(entity)
+        })
+    }
+
     pub(super) fn entity_is_visible_to_player(&self, entity: &Actor) -> bool {
         self.entity_is_visually_visible_to_player(entity)
             || self.entity_is_visible_by_telepathy(entity)

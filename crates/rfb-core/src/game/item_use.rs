@@ -2818,11 +2818,11 @@ impl Game {
             return true;
         }
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         let outcome = apply_attribute_drain(&mut self.progress, attribute, &mut self.rng);
         let noticed = outcome.changed;
         if noticed {
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
             self.mark_item_aware(source_kind_id);
         }
         events.push(DomainEvent::ItemAttributeChanged {
@@ -2869,7 +2869,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         let victorious = self.victory_level_cap_unlocked();
         let luck = self.player_luck_bias();
         let mut noticed = false;
@@ -2897,7 +2897,7 @@ impl Game {
         }
 
         if noticed {
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
             self.mark_item_aware(source_kind_id);
         }
         let display_name_key = self.item_display_name_key(source_kind_id);
@@ -4984,7 +4984,7 @@ impl Game {
         let attribute_potentials = CharacterProgress::roll_attribute_potentials(&mut planned_rng);
 
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         self.rng = planned_rng;
         self.progress.hp_progression = hp_progression;
         self.progress.life_force = 1_000;
@@ -4992,7 +4992,7 @@ impl Game {
         self.progress.clamp_attributes_to_potentials();
         let removed_mutations = self.remove_all_unlocked_mutations_without_refresh();
         self.reconcile_player_body_slots_for_current_form();
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        self.refresh_after_attribute_change(previous_max_hp);
 
         for (mutation_id, name) in removed_mutations {
             events.push(DomainEvent::MutationLost { mutation_id, name });
@@ -5026,7 +5026,7 @@ impl Game {
 
     pub(super) fn restore_all_player_attributes(&mut self) -> bool {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         let mut restored = false;
         for attribute in [
             AttributeKind::Strength,
@@ -5040,7 +5040,7 @@ impl Game {
                 apply_attribute_restoration(&mut self.progress, attribute).changed || restored;
         }
         if restored {
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
         }
         restored
     }
@@ -5510,7 +5510,6 @@ impl Game {
         &mut self,
         source_kind_id: &str,
         previous_max_hp: i32,
-        previous_resource_maxima: &BTreeMap<String, (u32, u32)>,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let mut noticed = false;
@@ -5530,7 +5529,7 @@ impl Game {
             });
         }
         if noticed {
-            self.refresh_after_attribute_change(previous_max_hp, previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
         }
         noticed
     }
@@ -5541,16 +5540,11 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         self.player
             .statuses
             .retain(|status| status.kind_id != STATUS_TSUYOSHI);
-        let noticed = self.apply_tsuyoshi_crash(
-            source_kind_id,
-            previous_max_hp,
-            &previous_resource_maxima,
-            events,
-        );
+        let noticed = self.apply_tsuyoshi_crash(source_kind_id, previous_max_hp, events);
         self.mark_item_aware(source_kind_id);
         noticed
     }
@@ -5606,6 +5600,7 @@ impl Game {
         let drained = self.resources.get_mut(resource_id).map_or(0, |pool| {
             let drained = pool.current;
             pool.current = 0;
+            pool.fraction = 0;
             drained
         });
         if drained > 0 {

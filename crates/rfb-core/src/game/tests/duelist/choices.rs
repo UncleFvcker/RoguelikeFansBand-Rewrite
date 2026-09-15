@@ -202,7 +202,6 @@ fn tampered_prompts_callers_and_costs_are_rejected_on_load() {
         .continuations
         .push(DuelistContinuationDto::PlayerAction {
             energy_cost: 0,
-            recover_after_wait: false,
             pet_neglect_allowed: false,
             visible_auras_before: Vec::new(),
         });

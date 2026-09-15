@@ -168,7 +168,6 @@ impl Game {
             if let Some((source, poison)) = &waste_exposure {
                 self.apply_player_melee_status(STATUS_POISON, *poison, source);
             }
-            self.decay_samurai_mana();
             self.process_hunger(events);
             if self.player_is_dead() {
                 break;
@@ -181,6 +180,7 @@ impl Game {
                 self.process_natural_hp_regeneration(resting);
                 self.process_equipment_regeneration(events);
             }
+            self.process_mana_regeneration(resting, events);
             self.process_fasting(events);
             self.process_minor_slow_recovery();
             if local_floor_active {
@@ -1027,7 +1027,6 @@ impl Game {
                         .clone()
                         .unwrap_or_else(|| STATUS_TSUYOSHI.to_owned()),
                     self.effective_player_max_hp(),
-                    self.player_resource_maxima(),
                 )
             });
         let player_race_status_expiring =
@@ -1066,10 +1065,7 @@ impl Game {
             ignores_suffocation,
             |player, damage, fatality_policy| {
                 if rage && let Some(pool) = mana.as_deref_mut() {
-                    pool.current = pool
-                        .current
-                        .saturating_add(Self::rage_damage_mana(damage.applied, player.hp, max_hp))
-                        .min(pool.maximum);
+                    pool.recover(Self::rage_damage_mana(damage.applied, player.hp, max_hp));
                 }
                 commit_final_player_damage(
                     player,
@@ -1106,15 +1102,10 @@ impl Game {
         for status_kind_id in player_tick.expired {
             events.push(DomainEvent::PlayerStatusExpired { status_kind_id });
         }
-        if let Some((source_kind_id, previous_max_hp, previous_resource_maxima)) =
+        if let Some((source_kind_id, previous_max_hp)) =
             tsuyoshi_expiration.filter(|_| tsuyoshi_expired)
         {
-            self.apply_tsuyoshi_crash(
-                &source_kind_id,
-                previous_max_hp,
-                &previous_resource_maxima,
-                events,
-            );
+            self.apply_tsuyoshi_crash(&source_kind_id, previous_max_hp, events);
         }
         if player_race_status_expiring {
             self.reconcile_player_body_slots_for_current_form();

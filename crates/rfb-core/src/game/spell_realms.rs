@@ -214,6 +214,7 @@ impl Game {
         self.player.hp = self.effective_player_max_hp();
         for pool in self.resources.values_mut() {
             pool.current = pool.maximum;
+            pool.fraction = 0;
         }
         self.reveal_current_visibility();
         Ok(())

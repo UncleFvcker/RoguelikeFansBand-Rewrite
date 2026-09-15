@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+import { formatManaRecovery } from "./mana-recovery.ts";
 import { DEFAULT_DISPLAY, type DisplayPreferences } from "./display-preferences.ts";
 
 import type { AppDom } from "./app-dom";
@@ -918,6 +919,10 @@ export class StatusPanel {
   #installed = false;
   #abilityFocus: { id: string; action?: string } | undefined;
   #chosenBook: { id: string; command: string; snapshot: AppState["status"] } | undefined;
+  #letterCommand: "cast" | "power" | "study" | "browse" = "cast";
+  #letterBook: string | undefined;
+  #letterPage = 0;
+  readonly #bindHotbar: ((id: string) => void) | undefined;
 
   #confirmBook(id: string, command: "cast" | "power" | "study"): boolean {
     const chosen = this.#chosenBook;
@@ -927,6 +932,7 @@ export class StatusPanel {
   }
 
   constructor(options: {
+    bindHotbar?: (id: string) => void;
     confirmItemChoice: (itemId: string, command: "cast" | "power" | "study") => boolean;
     dom: StatusDom;
     state: AppState;
@@ -948,6 +954,7 @@ export class StatusPanel {
     refreshInventoryActions: () => void;
   }) {
     this.#dom = options.dom;
+    this.#bindHotbar = options.bindHotbar;
     this.#state = options.state;
     this.#localization = options.localization;
     this.#dispatch = options.dispatch;
@@ -1199,6 +1206,14 @@ export class StatusPanel {
     this.#rememberAbilityFocus();
     this.#dom.resourceList.replaceChildren();
     this.#dom.abilityList.replaceChildren();
+    const navigation = document.createElement("li"); navigation.className = "ability-letter-navigation";
+    const previous = this.#abilityAction("ability-letter-previous", () => this.#changeLetterPage(-1));
+    previous.dataset.letterPage = "previous";
+    const next = this.#abilityAction("ability-letter-next", () => this.#changeLetterPage(1));
+    next.dataset.letterPage = "next";
+    const status = document.createElement("span"); status.className = "ability-letter-status";
+    navigation.append(previous, status, next);
+    this.#dom.abilityList.append(navigation);
     const realms = learning?.realms;
     const presentation = abilityPresentation(abilities, realms ? [realms.firstRealmId, realms.secondRealmId] : []);
     this.#dom.resourceRest.disabled =
@@ -1208,7 +1223,7 @@ export class StatusPanel {
       !this.#state.status ||
       (this.#state.status.player.hp >= this.#state.status.player.maxHp &&
         !resources.some(
-          (resource) => resource.restRecoveryAmount > 0 && resource.current < resource.maximum,
+          (resource) => (resource.restRecoveryPer65536 > 0 || resource.restActionRecovery > 0) && resource.current < resource.restRecoveryTarget,
         ));
     if (resources.length === 0 && !concentration) {
       const unavailable = document.createElement("li");
@@ -1277,9 +1292,14 @@ export class StatusPanel {
         resource: name,
         current: resource.current,
         maximum: resource.maximum,
-        wait: resource.waitRecoveryAmount,
-        rest: resource.restRecoveryAmount,
+        normal: formatManaRecovery(Number(resource.normalRecoveryPer65536)),
+        rest: formatManaRecovery(Number(resource.restRecoveryPer65536)),
       });
+      if (resource.restActionRecovery > 0) {
+        recovery.textContent += " " + this.#localization.format("ability-resource-rest-action", { amount: resource.restActionRecovery });
+      }
+      row.title = recovery.textContent;
+      meter.setAttribute("aria-description", recovery.textContent);
       row.append(heading, meter, recovery);
       this.#dom.resourceList.append(row);
     }
@@ -1340,6 +1360,7 @@ export class StatusPanel {
         this.#dom.abilityList.append(this.#abilityRow(entry.ability, studyMode));
       }
     }
+    this.#refreshAbilityKeys();
     this.updateAbilityActions();
   }
 
@@ -1373,12 +1394,15 @@ export class StatusPanel {
 
   focusCommand(command: "study" | "browse" | "power" | "cast"): void {
     this.#chosenBook = undefined;
+    this.#letterCommand = command; this.#letterBook = undefined; this.#letterPage = 0;
+    this.#refreshAbilityKeys();
     const abilities = this.#state.status?.player.abilities ?? [];
     const books = [...new Set(abilities.filter(ability => ability.bookItemId &&
       (command !== "study" || ability.canStudy)).map(ability => ability.bookItemId!))];
     if (command !== "power" && books.length > 0) {
       this.#selectItemTarget(undefined, async bookId => {
         this.#chosenBook = { id: bookId, command, snapshot: this.#state.status };
+        this.#letterBook = bookId; this.#letterPage = 0; this.#refreshAbilityKeys();
         const ability = abilities.find(ability => ability.bookItemId === bookId && (command !== "study" || ability.canStudy));
         if (!ability) return;
         const row = [...this.#dom.abilityList.querySelectorAll<HTMLElement>("[data-ability-id]")].find(row => row.dataset.abilityId === ability.id);
@@ -1401,6 +1425,78 @@ export class StatusPanel {
       : command === "cast" || command === "power" ? row?.querySelector<HTMLElement>(castSelector) : row;
     (control ?? row)?.focus();
     (control ?? row)?.scrollIntoView({ block: "nearest" });
+  }
+
+  resetAbilitySelection(): void {
+    this.#chosenBook = undefined; this.#letterBook = undefined; this.#letterPage = 0; this.#letterCommand = "cast";
+    this.#refreshAbilityKeys();
+  }
+
+  #refreshAbilityKeys(): void {
+    const abilities = this.#state.status?.player.abilities ?? [];
+    if (this.#letterBook && !abilities.some(a => a.bookItemId === this.#letterBook)) this.#letterBook = undefined;
+    const eligible = new Set(abilities.filter(a => (!this.#letterBook || a.bookItemId === this.#letterBook) &&
+      (this.#letterCommand !== "power" || ["race", "class", "mutation"].includes(a.source))).map(a => a.id));
+    const rows = [...this.#dom.abilityList.querySelectorAll<HTMLElement>("[data-ability-id]")];
+    const candidates = rows.filter(row => eligible.has(row.dataset.abilityId!));
+    const pages = Math.max(1, Math.ceil(candidates.length / 26));
+    this.#letterPage = Math.max(0, Math.min(this.#letterPage, pages - 1));
+    const shown = candidates.slice(this.#letterPage * 26, (this.#letterPage + 1) * 26);
+    for (const row of rows) {
+      const index = shown.indexOf(row); row.hidden = index < 0;
+      row.dataset.abilityKey = index < 0 ? "" : String.fromCharCode(97 + index);
+      const name = row.querySelector<HTMLElement>(".ability-name");
+      if (name) name.dataset.shortcut = index < 0 ? "" : `${row.dataset.abilityKey}) `;
+    }
+    let heading: HTMLElement | undefined;
+    for (const row of this.#dom.abilityList.querySelectorAll<HTMLElement>("[data-ability-id], .ability-book-heading")) {
+      if (!row.dataset.abilityId) { heading = row; heading.hidden = true; }
+      else if (!row.hidden && heading) heading.hidden = false;
+    }
+    const status = this.#dom.abilityList.querySelector<HTMLElement>(".ability-letter-status");
+    if (status) status.textContent = this.#localization.format("ability-letter-help", { page: this.#letterPage + 1, pages });
+    const previous = this.#dom.abilityList.querySelector<HTMLButtonElement>('[data-letter-page="previous"]');
+    const next = this.#dom.abilityList.querySelector<HTMLButtonElement>('[data-letter-page="next"]');
+    if (previous) previous.disabled = this.#letterPage === 0;
+    if (next) next.disabled = this.#letterPage === pages - 1;
+  }
+
+  #changeLetterPage(delta: number): void {
+    this.#letterPage += delta; this.#refreshAbilityKeys();
+    this.#dom.abilityList.querySelector<HTMLElement>('[data-ability-key="a"]')?.focus();
+  }
+
+  handleAbilityKey(event: KeyboardEvent): boolean {
+    if (event.ctrlKey || event.altKey || event.metaKey || event.isComposing || event.repeat) return false;
+    if (event.key === "PageDown" || event.key === "PageUp") {
+      this.#changeLetterPage(event.key === "PageDown" ? 1 : -1);
+    } else {
+      if (!/^[a-z]$/i.test(event.key)) return false;
+      const row = this.#dom.abilityList.querySelector<HTMLElement>(`[data-ability-key="${event.key.toLowerCase()}"]`);
+      if (!row) return false;
+      row.focus(); row.scrollIntoView({ block: "nearest" });
+      if (event.key === event.key.toLowerCase() && this.#letterCommand !== "browse" && !this.#state.busy && !this.#state.commandBlocked && !this.#state.worldMap) {
+        const selector = this.#letterCommand === "study" ? '[data-ability-action="study"]' : ".ability-cast-action";
+        row.querySelector<HTMLButtonElement>(`${selector}:not(:disabled)`)?.click();
+      }
+    }
+    event.preventDefault(); event.stopImmediatePropagation(); return true;
+  }
+
+  useHotbarAbility(id: string): void {
+    const ability = this.#state.status?.player.abilities?.find(a => a.id === id);
+    if (!ability?.canCast || this.#state.busy || this.#state.commandBlocked || this.#state.worldMap) {
+      this.#dom.abilityList.ownerDocument.defaultView?.alert(this.#localization.format(ability ? "hotbar-ability-unavailable" : "hotbar-ability-missing"));
+      return;
+    }
+    const row = [...this.#dom.abilityList.querySelectorAll<HTMLElement>("[data-ability-id]")].find(row => row.dataset.abilityId === id);
+    const selection = row?.querySelector<HTMLSelectElement>(".ability-town-target, .ability-element-target");
+    if (selection) {
+      this.resetAbilitySelection();
+      const rows = [...this.#dom.abilityList.querySelectorAll<HTMLElement>("[data-ability-id]")];
+      this.#letterPage = Math.floor(rows.indexOf(row!) / 26); this.#refreshAbilityKeys();
+      selection.focus(); selection.scrollIntoView({ block: "nearest" });
+    } else row?.querySelector<HTMLButtonElement>(".ability-cast-action:not(:disabled)")?.click();
   }
 
   #renderNearby(state: GameSnapshot | GameUpdate): void {
@@ -1632,6 +1728,7 @@ export class StatusPanel {
       if (!this.#state.status?.player.abilityLearning?.realms) actions.append(forget);
     }
     actions.append(cast);
+    if (this.#bindHotbar) actions.append(this.#abilityAction("hotbar-bind", () => this.#bindHotbar!(ability.id)));
     row.append(details, actions);
     return row;
   }

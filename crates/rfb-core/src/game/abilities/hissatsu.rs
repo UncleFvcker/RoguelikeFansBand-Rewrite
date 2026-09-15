@@ -181,7 +181,7 @@ impl Game {
                 .saturating_add(pool.maximum / 2)
                 .min(Self::samurai_mana_limit(pool.maximum, level));
             if pool.current == Self::samurai_mana_limit(pool.maximum, level) {
-                self.samurai.mana_decay_fraction = 0;
+                pool.fraction = 0;
             }
         }
     }
@@ -213,31 +213,6 @@ impl Game {
         {
             self.set_samurai_posture(0);
         }
-    }
-
-    pub(in crate::game) fn decay_samurai_mana(&mut self) {
-        if !self.player_is_samurai() || !self.world_tick.is_multiple_of(10) {
-            return;
-        }
-        let Some(pool) = self.resources.get_mut("demo.resource.mana") else {
-            return;
-        };
-        if pool.current <= pool.maximum {
-            self.samurai.mana_decay_fraction = 0;
-            return;
-        }
-        // dungeon.c _decay_mana: 32 times normal regeneration, in 1/65536 units.
-        let decay =
-            u64::from(self.samurai.mana_decay_fraction) + u64::from(pool.maximum) * 32 * 197 + 524;
-        pool.current = pool
-            .current
-            .saturating_sub((decay / 65536) as u32)
-            .max(pool.maximum);
-        self.samurai.mana_decay_fraction = if pool.current == pool.maximum {
-            0
-        } else {
-            (decay % 65536) as u16
-        };
     }
 
     pub(in crate::game) fn advance_samurai(&mut self) {

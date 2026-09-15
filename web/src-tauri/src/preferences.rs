@@ -22,6 +22,8 @@ pub struct Preferences {
     pub camera_mode: String,
     pub zoom: f64,
     pub key_bindings: Vec<KeyBinding>,
+    #[serde(default = "default_hotbar")]
+    pub hotbar: Vec<Option<HotbarBinding>>,
     pub travel: rfb_protocol::TravelOptionsDto,
     pub operations: rfb_protocol::OperationOptionsDto,
     pub mogaminator: rfb_protocol::MogaminatorPreferencesDto,
@@ -36,6 +38,58 @@ pub struct KeyBinding {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "camelCase", deny_unknown_fields)]
+pub enum HotbarBinding {
+    Ability {
+        id: String,
+    },
+    Item {
+        #[serde(rename = "kindId")]
+        kind_id: String,
+        #[serde(rename = "artifactName")]
+        artifact_name: Option<String>,
+        inscription: Option<String>,
+        action: String,
+    },
+}
+impl HotbarBinding {
+    fn valid(&self) -> bool {
+        let id = match self {
+            Self::Ability { id } => id,
+            Self::Item {
+                kind_id,
+                artifact_name,
+                inscription,
+                action,
+            } => {
+                if !matches!(
+                    action.as_str(),
+                    "food"
+                        | "potion"
+                        | "scroll"
+                        | "wand"
+                        | "staff"
+                        | "rod"
+                        | "activate"
+                        | "equip"
+                        | "throw"
+                ) || [artifact_name, inscription].iter().any(|text| {
+                    text.as_ref()
+                        .is_some_and(|text| text.encode_utf16().count() > 1024)
+                }) {
+                    return false;
+                }
+                kind_id
+            }
+        };
+        !id.is_empty() && id.encode_utf16().count() <= 256
+    }
+}
+fn default_hotbar() -> Vec<Option<HotbarBinding>> {
+    vec![None; 60]
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PreferenceSnapshot {
     pub revision: u32,
@@ -45,6 +99,24 @@ pub struct PreferenceSnapshot {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DisplayPreferences {
+    #[serde(default = "default_visible")]
+    pub show_character_info: bool,
+    #[serde(default = "default_visible")]
+    pub show_sidebar: bool,
+    #[serde(default = "default_visible")]
+    pub show_footer: bool,
+    #[serde(default = "default_visible")]
+    pub show_nearby: bool,
+    #[serde(default = "default_visible")]
+    pub show_messages: bool,
+    #[serde(default = "default_visible")]
+    pub show_map_actions: bool,
+    #[serde(default = "default_visible")]
+    pub show_combat_summary: bool,
+    #[serde(default = "default_visible")]
+    pub show_dungeon_info: bool,
+    #[serde(default = "default_visible")]
+    pub show_shortcut_bar: bool,
     pub highlight_player: bool,
     pub target_path: bool,
     pub unsafe_grids: bool,
@@ -63,9 +135,21 @@ pub struct DisplayPreferences {
     pub hp_warning_percent: u8,
     pub mana_warning_percent: u8,
 }
+fn default_visible() -> bool {
+    true
+}
 impl Default for DisplayPreferences {
     fn default() -> Self {
         Self {
+            show_character_info: true,
+            show_sidebar: true,
+            show_footer: true,
+            show_nearby: true,
+            show_messages: true,
+            show_map_actions: true,
+            show_combat_summary: true,
+            show_dungeon_info: true,
+            show_shortcut_bar: true,
             highlight_player: false,
             target_path: false,
             unsafe_grids: false,
@@ -221,6 +305,7 @@ impl Default for Preferences {
             camera_mode: "player-centered".into(),
             zoom: 1.0,
             key_bindings: Vec::new(),
+            hotbar: default_hotbar(),
             travel: rfb_protocol::TravelOptionsDto::default(),
             operations: rfb_protocol::OperationOptionsDto::default(),
             mogaminator: rfb_core::Game::default_behavior_preferences().mogaminator,
@@ -264,6 +349,8 @@ impl Preferences {
             || !matches!(self.camera_mode.as_str(), "player-centered" | "full-map")
             || ![0.75, 1.0, 1.25, 1.5, 2.0].contains(&self.zoom)
             || self.key_bindings.len() > 256
+            || self.hotbar.len() != 60
+            || self.hotbar.iter().flatten().any(|binding| !binding.valid())
         {
             return Err(error(
                 "preferences-invalid",
@@ -580,6 +667,66 @@ mod tests {
             json["visuals"]["uniqueEffect"] = invalid;
             assert!(serde_json::from_value::<Preferences>(json.clone()).is_err());
         }
+    }
+
+    #[test]
+    fn hud_visibility_defaults_for_older_preferences_and_preserves_explicit_false() {
+        let preferences = Preferences::default();
+        let mut json = serde_json::to_value(&preferences).unwrap();
+        let display = json["display"].as_object_mut().unwrap();
+        for field in [
+            "showCharacterInfo",
+            "showSidebar",
+            "showFooter",
+            "showNearby",
+            "showMessages",
+            "showMapActions",
+            "showCombatSummary",
+            "showDungeonInfo",
+            "showShortcutBar",
+        ] {
+            display.remove(field);
+        }
+        assert_eq!(
+            serde_json::from_value::<Preferences>(json.clone()).unwrap(),
+            preferences
+        );
+        json["display"]["showMessages"] = false.into();
+        let loaded = serde_json::from_value::<Preferences>(json.clone()).unwrap();
+        assert!(!loaded.display.show_messages);
+        assert_eq!(loaded.behavior(), preferences.behavior());
+        json["display"]["showMessages"] = "false".into();
+        assert!(serde_json::from_value::<Preferences>(json).is_err());
+    }
+
+    #[test]
+    fn hotbar_defaults_and_round_trips_sixty_slots_without_changing_behavior() {
+        let original = Preferences::default();
+        let mut json = serde_json::to_value(&original).unwrap();
+        json.as_object_mut().unwrap().remove("hotbar");
+        let mut loaded = serde_json::from_value::<Preferences>(json).unwrap();
+        assert_eq!(loaded.hotbar, original.hotbar);
+        assert_eq!(loaded.hotbar.len(), 60);
+        loaded.hotbar[59] = Some(HotbarBinding::Ability {
+            id: "demo.ability.heal".into(),
+        });
+        loaded.validate().unwrap();
+        assert_eq!(loaded.behavior(), original.behavior());
+        let json = serde_json::to_value(&loaded).unwrap();
+        assert_eq!(
+            serde_json::from_value::<Preferences>(json.clone()).unwrap(),
+            loaded
+        );
+        let mut invalid = json;
+        invalid["hotbar"].as_array_mut().unwrap().pop();
+        assert!(
+            serde_json::from_value::<Preferences>(invalid)
+                .unwrap()
+                .validate()
+                .is_err()
+        );
+        loaded.hotbar[0] = Some(HotbarBinding::Ability { id: String::new() });
+        assert!(loaded.validate().is_err());
     }
 
     fn root() -> std::path::PathBuf {

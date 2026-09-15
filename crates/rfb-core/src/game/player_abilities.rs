@@ -1592,7 +1592,7 @@ impl Game {
             .get_mut(&resource_id)
             .expect("casting resource must exist");
         let before = pool.current;
-        pool.current = pool.current.saturating_add(amount).min(pool.maximum);
+        pool.recover(amount);
         events.push(DomainEvent::ResourceRecovered {
             resolution: ResourceRecoveryResolutionDto {
                 resource_id,
@@ -1634,6 +1634,7 @@ impl Game {
         if self.player_is_rage_mage() {
             for pool in self.resources.values_mut() {
                 pool.current = 0;
+                pool.fraction = 0;
             }
         }
     }
@@ -1677,6 +1678,8 @@ impl Game {
                 return Err(CoreError::InvalidSave("player resource ID is invalid"));
             };
             if !seen.insert(saved.id)
+                || (saved.maximum == 0 && saved.fraction != 0)
+                || (!samurai && saved.current == saved.maximum && saved.fraction != 0)
                 || saved.maximum != pool.maximum
                 || saved.current
                     > if samurai {
@@ -1688,6 +1691,7 @@ impl Game {
                 return Err(CoreError::InvalidSave("player resource pool is invalid"));
             }
             pool.current = saved.current;
+            pool.fraction = saved.fraction;
         }
         if seen.len() != self.resources.len() {
             return Err(CoreError::InvalidSave("player resource set is incomplete"));
@@ -1758,12 +1762,26 @@ impl Game {
         for (resource_id, maximum) in &pool_maxima {
             let initial = initial_resource_pool(*maximum);
             let pool = self.resources.entry(resource_id.clone()).or_insert(initial);
-            pool.maximum = *maximum;
-            pool.current = pool.current.min(if samurai {
+            if pool.maximum != *maximum {
+                if pool.current > 0 {
+                    let percent = u64::from(pool.current) * 100 / u64::from(pool.maximum.max(1));
+                    pool.current = if pool.maximum == 0 {
+                        *maximum
+                    } else {
+                        u32::try_from(u64::from(*maximum) * percent / 100).unwrap_or(u32::MAX)
+                    };
+                }
+                pool.maximum = *maximum;
+            }
+            let limit = if samurai {
                 Self::samurai_mana_limit(*maximum, self.progress.level)
             } else {
                 *maximum
-            });
+            };
+            if pool.current >= limit {
+                pool.current = limit;
+                pool.fraction = 0;
+            }
         }
         self.resources.retain(|id, _| pool_maxima.contains_key(id));
         self.refresh_player_spell_memory();
@@ -2049,77 +2067,12 @@ impl Game {
         )
     }
 
-    pub(super) fn recover_player_resources(
-        &mut self,
-        resting: bool,
-        events: &mut Vec<DomainEvent>,
-    ) {
-        let samurai = self.player_is_samurai();
-        if samurai
-            && resting
-            && self
-                .samurai_ability_unavailable_reason("demo.ability.samurai-concentration")
-                .is_none()
-        {
-            self.samurai_concentrate();
-        }
-        let changes = self
-            .resources
-            .keys()
-            .map(|id| {
-                (
-                    id.clone(),
-                    self.player_resource_recovery_change(id, resting),
-                )
-            })
-            .collect::<BTreeMap<_, _>>();
-        let upkeep_percent = self.pet_upkeep().percent;
-        for (id, pool) in &mut self.resources {
-            let before = pool.current;
-            let change = changes[id];
-            if change >= 0 {
-                pool.current = pool
-                    .current
-                    .saturating_add(u32::try_from(change).unwrap_or(u32::MAX))
-                    .min(if samurai {
-                        before.max(pool.maximum)
-                    } else {
-                        pool.maximum
-                    });
-            } else {
-                pool.current = pool
-                    .current
-                    .saturating_sub(u32::try_from(-change).unwrap_or(u32::MAX));
-            }
-            if pool.current > before {
-                events.push(DomainEvent::ResourceRecovered {
-                    resolution: ResourceRecoveryResolutionDto {
-                        resource_id: id.clone(),
-                        before,
-                        after: pool.current,
-                        recovered: pool.current - before,
-                    },
-                });
-            } else if pool.current < before {
-                events.push(DomainEvent::PetUpkeepManaLost {
-                    resource_id: id.clone(),
-                    amount: before - pool.current,
-                    upkeep_percent,
-                });
-            }
-        }
-        if self.pet_upkeep_dto().dismissal_required {
-            events.push(DomainEvent::PetUpkeepDismissalRequired { upkeep_percent });
-        }
-    }
-
-    pub(super) fn player_resource_recovery_amount(&self, id: &str, resting: bool) -> u32 {
-        u32::try_from(self.player_resource_recovery_change(id, resting).max(0)).unwrap_or(u32::MAX)
-    }
-
     fn player_has_depleted_recoverable_resource(&self, resting: bool) -> bool {
         self.resources.iter().any(|(id, pool)| {
-            pool.current < pool.maximum && self.player_resource_recovery_amount(id, resting) > 0
+            pool.current < pool.maximum
+                && id == "demo.resource.mana"
+                && (self.mana_recovery_per_cycle(resting) > 0
+                    || (resting && self.rest_action_mana_recovery() > 0))
         })
     }
 
@@ -2180,7 +2133,7 @@ impl Game {
             RestStopReasonDto::PetDismissalRequired
         } else if !self.player_has_rest_need(mode) {
             RestStopReasonDto::FullResources
-        } else if self.visible_hostile_exists() {
+        } else if self.hostile_in_sight() {
             RestStopReasonDto::EnemyVisible
         } else {
             loop {
@@ -2194,6 +2147,7 @@ impl Game {
                     .map(|actor| actor.id.clone())
                     .collect::<BTreeSet<_>>();
                 let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
+                self.recover_resources_for_rest_action(events);
                 self.rage_after_action(STANDARD_ACTION_COST);
                 spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
                 self.advance_until_player_ready(
@@ -2226,8 +2180,6 @@ impl Game {
                 if self.player_is_dead() {
                     break RestStopReasonDto::PlayerDied;
                 }
-                // RFB regenerates mana before wall damage's cave_no_regen HP gate.
-                self.recover_player_resources(true, events);
                 if self.player.hp < hp_before {
                     break RestStopReasonDto::Damaged;
                 }
@@ -2238,7 +2190,7 @@ impl Game {
                 {
                     break RestStopReasonDto::Displaced;
                 }
-                if self.visible_hostile_exists() {
+                if self.hostile_in_sight() {
                     break RestStopReasonDto::EnemyVisible;
                 }
                 if self.pet_upkeep_dto().dismissal_required {

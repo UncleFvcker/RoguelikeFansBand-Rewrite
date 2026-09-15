@@ -413,12 +413,9 @@ impl Game {
             MutationPeriodicEffectDefinition::Normality => {
                 if self.rng.bounded(5_000) == 0 {
                     let previous_max_hp = self.effective_player_max_hp();
-                    let previous_resource_maxima = self.player_resource_maxima();
+
                     if self.lose_random_mutation_without_refresh(events).is_some() {
-                        self.refresh_after_attribute_change(
-                            previous_max_hp,
-                            &previous_resource_maxima,
-                        );
+                        self.refresh_after_attribute_change(previous_max_hp);
                         self.record_periodic_mutation(mutation, events);
                     }
                 }
@@ -479,7 +476,7 @@ impl Game {
                             .expect("wasting drain amount must fit u8");
                         let permanent = self.rng.bounded(6) == 0;
                         let previous_max_hp = self.effective_player_max_hp();
-                        let previous_resource_maxima = self.player_resource_maxima();
+
                         let outcome = if permanent {
                             apply_permanent_attribute_drain(
                                 &mut self.progress,
@@ -496,10 +493,7 @@ impl Game {
                             )
                         };
                         if outcome.changed {
-                            self.refresh_after_attribute_change(
-                                previous_max_hp,
-                                &previous_resource_maxima,
-                            );
+                            self.refresh_after_attribute_change(previous_max_hp);
                         }
                         self.record_periodic_mutation(mutation, events);
                     }
@@ -1002,7 +996,7 @@ impl Game {
         if amount == 0 {
             return false;
         }
-        pool.current = pool.current.saturating_add(amount).min(pool.maximum);
+        pool.recover(amount);
         let damage = resolve_damage(
             DamagePacket::new(
                 i32::try_from(amount).unwrap_or(i32::MAX),
@@ -1185,12 +1179,12 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         if !self.gain_mutation_without_refresh(mutation_id, events) {
             return false;
         }
         self.reconcile_player_body_slots_for_current_form();
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        self.refresh_after_attribute_change(previous_max_hp);
         true
     }
 
@@ -1258,12 +1252,12 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         if !self.lose_mutation_without_refresh(mutation_id, events) {
             return false;
         }
         self.reconcile_player_body_slots_for_current_form();
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        self.refresh_after_attribute_change(previous_max_hp);
         true
     }
 
@@ -1290,14 +1284,14 @@ impl Game {
 
     pub(super) fn lose_all_unlocked_mutations(&mut self, events: &mut Vec<DomainEvent>) -> usize {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         let removed = self.remove_all_unlocked_mutations_without_refresh();
         if removed.is_empty() {
             return 0;
         }
 
         self.reconcile_player_body_slots_for_current_form();
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        self.refresh_after_attribute_change(previous_max_hp);
         for (mutation_id, name) in &removed {
             events.push(DomainEvent::MutationLost {
                 mutation_id: mutation_id.clone(),
@@ -1465,7 +1459,7 @@ impl Game {
 
     pub(super) fn resolve_polymorph_mutations(&mut self, events: &mut Vec<DomainEvent>) -> bool {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         let mut count = self
             .progress
             .active_mutation_ids
@@ -1483,7 +1477,7 @@ impl Game {
                 events.push(DomainEvent::MutationLost { mutation_id, name });
             }
             self.reconcile_player_body_slots_for_current_form();
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
             return true;
         }
 
@@ -1526,7 +1520,7 @@ impl Game {
 
         if changed {
             self.reconcile_player_body_slots_for_current_form();
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
         }
         changed
     }
@@ -1938,10 +1932,7 @@ impl Game {
                 i32::try_from(level.saturating_mul(4) / 9).unwrap_or(i32::MAX),
             );
             if let Some(pool) = self.resources.get_mut(&resource_id) {
-                pool.current = pool
-                    .current
-                    .saturating_add(level.saturating_mul(2) / 9)
-                    .min(pool.maximum);
+                pool.recover(level.saturating_mul(2) / 9);
             }
         } else {
             self.apply_player_healing(

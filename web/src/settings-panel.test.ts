@@ -75,6 +75,42 @@ test("display draft is inert until saved and applies without a Core command", as
   assert.equal(f.behaviorCalls.length, 0);
 });
 
+test("HUD quick toggles persist, preserve section choices and retain the active layout on write failure", async () => {
+  const f = await fixture(); await f.panel.apply(); f.state.mode = "playing";
+  await f.panel.open();
+  f.element("display-showNearby").checked = false;
+  f.element("display-showDungeonInfo").checked = false;
+  f.click("preferences-save"); await f.idle(); f.panel.close();
+  for (const area of ["header", "sidebar", "footer"]) {
+    f.click("hud-toggle-" + area); await f.idle();
+    assert.equal(f.element("app").dataset[area + "Expanded"], "false");
+    assert.equal(f.element("hud-toggle-" + area).attributes.get("aria-expanded"), "false");
+    f.click("hud-toggle-" + area); await f.idle();
+    assert.equal(f.element("app").dataset[area + "Expanded"], "true");
+  }
+  assert.equal(f.client.snapshot.preferences.display.showNearby, false);
+  assert.equal(f.client.snapshot.preferences.display.showDungeonInfo, false);
+  const revision = f.client.snapshot.revision;
+  f.failWrite(true); f.click("hud-toggle-sidebar"); await f.idle();
+  assert.equal(f.client.snapshot.revision, revision);
+  assert.equal(f.element("app").dataset.sidebarExpanded, "true");
+  assert.equal(f.behaviorCalls.length, 0);
+});
+
+test("Mogaminator settings entry explains unavailable state and opens the shared editor in game", async () => {
+  const f = await fixture(); await f.panel.open();
+  f.click("preferences-autopick");
+  assert.equal(f.element("preferences-mogaminator-unavailable").hidden, false);
+  f.click("preferences-mogaminator");
+  assert.equal(f.mogaminatorCalls.length, 0);
+  f.panel.close(); f.state.mode = "playing"; f.state.status = { mogaminator: {} };
+  await f.panel.open(); f.click("preferences-autopick");
+  assert.equal(f.element("preferences-mogaminator-unavailable").hidden, true);
+  f.click("preferences-mogaminator");
+  assert.equal(f.element("player-ui-settings-dialog").open, false);
+  assert.equal(f.mogaminatorCalls.length, 1);
+});
+
 test("settings offer only the two RFB input presets", () => {
   for (const preset of ["original", "roguelike"]) {
     assert.equal(isInputPreset(preset), true);
@@ -111,15 +147,16 @@ test("operation controls share the global draft, cancellation and behavior commi
 test("title and game use one draft: preview is inert, cancel discards, save applies globally", async () => {
   const f = await fixture();
   await f.panel.open();
-  assert.equal(f.element("preferences-mogaminator").hidden, true);
+  assert.equal(f.element("preferences-mogaminator").disabled, true);
   f.change("input-preset", "roguelike");
   assert.equal(f.panel.inputPreset, "original");
   assert.equal(f.client.snapshot.revision, 1);
   assert.equal(f.panel.close(), true);
   f.state.mode = "playing";
+  f.state.status = { mogaminator: {} };
   await f.panel.open();
   assert.equal(f.element("input-preset").value, "original");
-  assert.equal(f.element("preferences-mogaminator").hidden, false);
+  assert.equal(f.element("preferences-mogaminator").disabled, false);
   f.change("input-preset", "roguelike");
   f.click("preferences-save"); await f.idle();
   assert.equal(f.panel.inputPreset, "roguelike");
@@ -209,15 +246,15 @@ async function fixture() {
     saved = { revision: revision + 1, preferences: structuredClone(preferences) }; return structuredClone(saved);
   } });
   await client.load();
-  const state = { mode: "title" }, applied = [], behaviorCalls = [];
+  const state = { mode: "title" }, applied = [], behaviorCalls = [], mogaminatorCalls = [];
   const localization = { locale: "zh-CN", setLocale(locale) { this.locale = locale; }, localizeDocument() {}, format: (key, args) => key + (args ? JSON.stringify(args) : "") };
   const panel = new SettingsPanel({ document, state, preferences: client, localization,
     dom: { languageSelect: element("language-select"), inputPresetSelect: element("input-preset"), tilesetPresetSelect: element("tileset-preset"), cameraModeSelect: element("camera-mode"), zoomSelect: element("zoom-level"), controlsHelp: element("controls-help") },
-    renderer: {}, rendererReady: () => false, beforeEdit: async () => {}, openKeys() {}, openMogaminator() {}, download() {},
+    renderer: {}, rendererReady: () => false, beforeEdit: async () => {}, openKeys() {}, openMogaminator() { mogaminatorCalls.push(true); }, download() {},
     renderTargeting() {}, renderLocaleDependentUi: () => applied.push(client.snapshot.revision), async onBehaviorChange(p) { behaviorCalls.push(p); }, announce() {},
   });
   panel.initialize(); panel.install();
-  return { panel, client, state, element, document, localization, applied, behaviorCalls, failWrite: value => { fail = value; },
+  return { panel, client, state, element, document, localization, applied, behaviorCalls, mogaminatorCalls, failWrite: value => { fail = value; },
     change: (id, value) => { element(id).value = value; element(id).dispatchEvent(new Event("change")); },
     click: id => element(id).dispatchEvent(new Event("click")), idle: () => new Promise(resolve => setImmediate(resolve)),
   };

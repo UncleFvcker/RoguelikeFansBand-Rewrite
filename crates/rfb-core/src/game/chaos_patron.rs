@@ -332,7 +332,7 @@ impl Game {
 
     fn increase_patron_attribute(&mut self, attribute: AttributeKind) {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         let threshold = self
             .player_luck_bias()
             .attribute_increase_threshold(self.progress.maximum_attributes.value(attribute));
@@ -345,7 +345,7 @@ impl Game {
             &mut self.rng,
         );
         if outcome.changed {
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
         }
     }
 
@@ -359,7 +359,7 @@ impl Game {
             return;
         }
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         let changed = if permanent {
             self.progress
                 .permanently_drain_attribute(attribute, amount, &mut self.rng)
@@ -368,7 +368,7 @@ impl Game {
                 .drain_attribute_by(attribute, amount, &mut self.rng)
         };
         if changed {
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
         }
     }
 
@@ -381,7 +381,7 @@ impl Game {
 
     fn apply_patron_full_healing(&mut self, events: &mut Vec<DomainEvent>) {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         apply_experience_restoration(&mut self.progress);
         apply_life_force_restoration(
             &mut self.progress,
@@ -402,7 +402,7 @@ impl Game {
             )
         });
         self.apply_player_experience(0, events);
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        self.refresh_after_attribute_change(previous_max_hp);
         self.apply_player_healing(5_000);
     }
 

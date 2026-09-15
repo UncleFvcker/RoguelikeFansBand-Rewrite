@@ -849,7 +849,7 @@ function createInventoryFixture(t) {
       });
     }
   }
-  const document = { createElement: (tag) => new Element(tag), activeElement: undefined, body: new Element() };
+  const document = { createElement: (tag) => new Element(tag), activeElement: undefined, body: new Element(), defaultView: {} };
   const dom = Object.fromEntries([
     "inventoryCount", "inventoryFilters", "inventorySearch", "inventoryFilterReset",
     "inventorySelectionCount", "inventoryUse", "inventoryAbsorb", "inventoryRead", "inventoryUseOnMount",
@@ -884,6 +884,20 @@ function createInventoryFixture(t) {
   t.after(() => panel.dispose());
   return { panel, dom, state, radio, commands, targets, messages, document };
 }
+
+test("hotbar item use keeps inscription confirmation and dispatches the currently matched instance", async t => {
+  const { panel, document, commands } = createInventoryFixture(t);
+  panel.render([item("current-potion", { usable: true, useCategory: "potion", inscription: "!q" })], []);
+  let confirmed = 0;
+  document.defaultView.confirm = () => { confirmed++; return false; };
+  panel.openCommand("potion", undefined, ["current-potion"]);
+  assert.equal(confirmed, 1); assert.equal(commands.length, 0);
+  document.defaultView.confirm = () => { confirmed++; return true; };
+  panel.openCommand("potion", undefined, ["current-potion"]);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(confirmed, 2);
+  assert.deepEqual(commands, [{ type: "use-item", itemId: "current-potion" }]);
+});
 
 test("selection sources use Core quiver membership without changing eligible candidates", (t) => {
   const { panel, state, document, commands } = createInventoryFixture(t);

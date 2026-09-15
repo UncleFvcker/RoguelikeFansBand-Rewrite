@@ -275,17 +275,14 @@ fn level_passives_stack_with_race_and_rest_recovers_without_a_power_roll() {
             .level(DamageType::Confusion),
         ResistanceLevel::Normal
     );
-    let recovery29 = game.player_resource_recovery_amount(MANA, true);
+    let recovery29 = game.rest_action_mana_recovery();
     game.progress.level = 30;
     assert_eq!(
         game.effective_player_resistances()
             .level(DamageType::Confusion),
         ResistanceLevel::Resistant
     );
-    assert_eq!(
-        game.player_resource_recovery_amount(MANA, true),
-        recovery29 + 1
-    );
+    assert_eq!(game.rest_action_mana_recovery(), recovery29 + 1);
     game.progress.level = 39;
     assert!(!game.player_has_permanent_telepathy());
     game.progress.level = 40;
@@ -301,7 +298,8 @@ fn level_passives_stack_with_race_and_rest_recovers_without_a_power_roll() {
 
     let mut rested = mindcrafter(15);
     rested.resources.get_mut(MANA).unwrap().current = 0;
-    let expected = rested.player_resource_recovery_amount(MANA, true);
+    let expected =
+        rested.rest_action_mana_recovery() + (rested.mana_recovery_per_cycle(true) / 65536) as u32;
     let update = dispatch_next(&mut rested, GameCommand::Rest { turns: 1 });
     assert_eq!(rested.resources[MANA].current, expected);
     assert!(

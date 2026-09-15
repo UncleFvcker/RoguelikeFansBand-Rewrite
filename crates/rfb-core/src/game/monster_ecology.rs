@@ -370,10 +370,10 @@ impl Game {
             return false;
         }
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         let changed = apply_attribute_drain(&mut self.progress, attribute, &mut self.rng).changed;
         if changed {
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
         }
         changed
     }

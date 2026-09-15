@@ -52,6 +52,9 @@ pub(in crate::game) fn apply_resource_restoration(
             }
             ResourceRestoration::Full => pool.maximum,
         };
+        if pool.current == pool.maximum {
+            pool.fraction = 0;
+        }
         (before, pool.current)
     } else {
         (0, 0)
@@ -74,6 +77,7 @@ mod tests {
         let mut resources = BTreeMap::from([(
             "test.resource.mana".to_owned(),
             ResourcePool {
+                fraction: 0,
                 current: 3,
                 maximum: 10,
             },

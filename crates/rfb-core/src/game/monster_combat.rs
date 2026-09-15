@@ -2542,7 +2542,7 @@ impl Game {
         denominator: u16,
     ) {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         let mut changed = false;
         for attribute in attributes {
             let current = self.progress.attributes.value(*attribute);
@@ -2559,7 +2559,7 @@ impl Game {
             }
         }
         if changed {
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
         }
     }
 
@@ -2569,10 +2569,10 @@ impl Game {
             return;
         }
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
+
         let outcome = apply_attribute_drain(&mut self.progress, attribute, &mut self.rng);
         if outcome.changed {
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
         }
     }
 

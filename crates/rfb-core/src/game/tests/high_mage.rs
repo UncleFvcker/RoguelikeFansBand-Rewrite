@@ -6546,8 +6546,8 @@ fn death_high_mage_projects_original_mana_and_spell_table() {
         .expect("High-Mage should have Mana");
     assert_eq!((mana.current, mana.maximum), (11, 11));
     assert_eq!(
-        (mana.wait_recovery_amount, mana.rest_recovery_amount),
-        (2, 6)
+        (mana.normal_recovery_per_65536, mana.rest_recovery_per_65536),
+        (11 * 394 + 524, 11 * 788 + 524)
     );
     assert_eq!(
         snapshot.player.ability_learning,

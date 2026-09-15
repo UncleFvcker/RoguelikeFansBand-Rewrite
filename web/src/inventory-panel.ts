@@ -73,6 +73,7 @@ interface InventoryFormatter {
 }
 
 export class InventoryPanel {
+  readonly #bindHotbar: ((item: InventoryItemDto | EquipmentItemDto) => void) | undefined;
   readonly #dom: InventoryDom;
   readonly #state: AppState;
   readonly #localization: Localization;
@@ -99,6 +100,7 @@ export class InventoryPanel {
   #actionSnapshot: AppState["status"];
 
   constructor(options: {
+    bindHotbar?: (item: InventoryItemDto | EquipmentItemDto) => void;
     dom: InventoryDom;
     state: AppState;
     localization: Localization;
@@ -119,6 +121,7 @@ export class InventoryPanel {
     ) => string;
   }) {
     this.#dom = options.dom;
+    this.#bindHotbar = options.bindHotbar;
     this.#state = options.state;
     this.#localization = options.localization;
     this.#formatter = options.formatter;
@@ -422,7 +425,7 @@ export class InventoryPanel {
     return [...new Set(ids)].every(id => this.confirmItemChoice(id, shortcut));
   }
 
-  openCommand(command: ItemShortcut, count?: number): void {
+  openCommand(command: ItemShortcut, count?: number, shortcutItemIds?: readonly string[]): void {
     if (this.#state.busy || this.#state.commandBlocked || this.#state.worldMap) return;
     const inventory = this.#state.inventory;
     const equipment = this.#state.equipment;
@@ -431,6 +434,7 @@ export class InventoryPanel {
       command === "inspect" || command === "throw" || command === "activate" ? [...inventory, ...equipment] :
       command === "refuel" ? equipment : inventory;
     const eligible = candidates.filter(item => {
+      if (shortcutItemIds && !shortcutItemIds.includes(item.id)) return false;
       if (command === "equip") return "equipmentSlot" in item && Boolean(item.equipmentSlot);
       if (command === "activate") return Boolean(item.activation) && item.usable;
       if (command === "throw") return Boolean(item.throwTargetSpec);
@@ -441,7 +445,7 @@ export class InventoryPanel {
       }
       return true;
     });
-    this.#selectItemTargetFrom(eligible.map(item => ({ id: item.id, label: this.#itemName(item) })), async itemId => {
+    const choose = async (itemId: string): Promise<void> => {
       if (this.#state.busy || this.#state.commandBlocked) return;
       const item = [...this.#state.inventory, ...this.#state.equipment].find(item => item.id === itemId);
       if (!item) return;
@@ -467,7 +471,11 @@ export class InventoryPanel {
       else if (command === "destroy") this.#openAction("destroy");
       else if (command === "inscribe") this.#openAction("inscribe");
       else await this.#useSelectedItem(command);
-    }, undefined, `shortcut-${command}`, command);
+    };
+    const onlyItem = eligible.length === 1 ? eligible[0] : undefined;
+    if (shortcutItemIds && onlyItem) {
+      if (this.confirmItemChoice(onlyItem.id, command)) void choose(onlyItem.id);
+    } else this.#selectItemTargetFrom(eligible.map(item => ({ id: item.id, label: this.#itemName(item) })), choose, undefined, `shortcut-${command}`, command);
   }
 
   selectChest(command: "open-chest" | "disarm-chest", items: readonly ItemDto[], dispatch = this.#dispatch): void {
@@ -819,6 +827,12 @@ export class InventoryPanel {
     body.replaceChildren();
     this.#appendItemDetails(body, item);
     this.#dom.inventoryDetailActions.replaceChildren();
+    if (this.#bindHotbar && [...this.#state.inventory, ...this.#state.equipment].some(owned => owned.id === item.id)) {
+      const bind = body.ownerDocument.createElement("button"); bind.type = "button";
+      bind.textContent = this.#localization.format("hotbar-bind");
+      bind.addEventListener("click", () => this.#bindHotbar!(item));
+      this.#dom.inventoryDetailActions.append(bind);
+    }
     if ("slotId" in item) this.#appendEquipmentActions(this.#dom.inventoryDetailActions, item);
     if (item.throwTargetSpec) {
       const button = body.ownerDocument.createElement("button");

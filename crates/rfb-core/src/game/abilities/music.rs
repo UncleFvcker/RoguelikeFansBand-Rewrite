@@ -104,9 +104,7 @@ impl Game {
 
     pub(in crate::game) fn music_state_is_valid(&self) -> bool {
         let Some(spell) = self.music.spell else {
-            return self.music.beats == 0
-                && !self.music.interrupted
-                && (!self.music.half_mana || self.player_is_bard());
+            return self.music.beats == 0 && !self.music.interrupted;
         };
         self.player_is_bard()
             && spell < 32
@@ -289,14 +287,16 @@ impl Game {
             .resources
             .get_mut("demo.resource.mana")
             .expect("Bard mana");
-        let available = (mana.current * 2 + u32::from(self.music.half_mana)).min(mana.maximum * 2);
-        if available < half_cost {
+        let available = ((u64::from(mana.current) << 32) + u64::from(mana.fraction))
+            .min(u64::from(mana.maximum) << 32);
+        let cost = u64::from(half_cost) << 31;
+        if available < cost {
             self.stop_music();
             return Ok(());
         }
-        let remaining = available - half_cost;
-        mana.current = remaining / 2;
-        self.music.half_mana = remaining % 2 == 1;
+        let remaining = available - cost;
+        mana.current = (remaining >> 32) as u32;
+        mana.fraction = remaining as u32;
         self.music.interrupted = false;
         let depth = self.floor_depth(&self.current_floor_id);
         let level = self.progress.level;

@@ -55,7 +55,7 @@ try {
     layout.initialize();
     layout.install();
     const state = new AppState();
-    state.status = { items: [], player: {
+    state.status = { items: [], player: { visualCatalog: [],
       carriedWeightTenthsPound: 260, carryCapacityTenthsPound: 1500,
       inventoryUsedSlots: 26, inventorySlotCapacity: 26,
     } };
@@ -88,6 +88,7 @@ try {
           id: `item-${index}`, kindId: "fixture", displayNameKey: locale === "zh-CN"
             ? "验收用长物品名称".repeat(12) : "Long inventory item name ".repeat(12),
           quantity: index ? index * 11 : 3, weightTenthsPound: index % 2 ? 13 : 10, equipmentSlot: "weapon", usable: true,
+          visual: { id: "fixture.weapon", glyph: "|" },
           fuel: index % 2 ? { current: 1500, maximum: 5000 } : undefined,
           identification: "unexamined", modifiers: { attack: 0, defense: 0, maxHp: 0, speed: 0 },
         }));
@@ -689,13 +690,14 @@ try {
     const damageTypes = ["physical", "acid", "electricity", "fire", "cold", "poison", "light", "dark", "blindness", "fear", "confusion", "nether", "nexus", "sound", "shards", "rock", "chaos", "disenchant", "time", "mana", "gravity", "inertia", "plasma", "force", "nuke", "disintegrate", "storm", "holy-fire", "hell-fire", "ice", "water", "psi", "curse", "meteor", "rocket", "telekinesis"];
     const passives = ["regeneration", "warning", ...["animal", "undead", "demon", "orc", "troll", "giant", "dragon", "human", "good", "evil", "living", "nonliving"].map((id) => `esp-${id}`),
       "levitation", "telepathy", "slow-digestion", "hold-life", "see-invisible", ...["strength", "intelligence", "wisdom", "dexterity", "constitution", "charisma"].map((id) => `sustain-${id}`)];
-    const stats = ["speed", "melee-skill", "ranged-skill", "throwing-skill", "device-skill", "saving-throw", "stealth", "search", "perception", "disarm", "digging", "equipment-life", "infravision", "natural-regeneration", "mutation-regeneration", "melee-attacks", "ranged-base-shot", "ranged-energy"];
+    const stats = ["speed", "melee-skill", "ranged-skill", "throwing-skill", "device-skill", "saving-throw", "stealth", "search", "perception", "disarm", "digging", "equipment-life", "infravision", "natural-regeneration", "mutation-regeneration", "melee-attacks-hundredths", "ranged-base-shot", "ranged-energy"];
     window.menuFixture.renderTraits = (locale, known, protectedAction = false, empty = false) => {
       const localization = new Localization(locale, sources);
       localization.localizeDocument(document);
       const source = { kind: "equipment", sourceId: "fixture-trait-sword", resistances: [{ damageType: "fire", level: "resistant" }, { damageType: "fire", level: "vulnerable" }],
         statusImmunities: ["fixture-status", ...(protectedAction ? ["rfb.status.paralysis"] : [])], passives: ["hold-life", "levitation"], reflectsBolts: false, passesWalls: false, lifePercent: 5 };
       const traitDetails = {
+        meleeDamage: [],
         activeWeaponId: "fixture-trait-sword", activeLauncherId: "fixture-trait-launcher",
         auras: ["fire", "electricity", "cold", "mana"].map((damageType) => ({ damageType, sourceIds: ["fixture-status"], evilOnly: damageType === "mana" })),
         negatives: known ? [
@@ -806,7 +808,7 @@ try {
       assert.equal(await offense.locator('[data-trait-section="trait-auras"] details').count(), 4);
       assert.equal(await offense.locator('[data-trait="weapon-fixture-trait-second"] .trait-value').textContent(), locale === "zh-CN" ? "非当前攻击来源" : "Not the selected attack source");
       assert.equal(await offense.locator('[data-trait="weapon-fixture-trait-sword"] .trait-value').textContent(), locale === "zh-CN" ? "当前攻击来源" : "Selected attack source");
-      assert.equal(await page.locator('#character-trait-defenses [data-trait="stat-melee-attacks"]').count(), 0);
+      assert.equal(await page.locator('#character-trait-defenses [data-trait="stat-melee-attacks-hundredths"]').count(), 0);
       assert.equal(await offense.locator('[data-trait-section="trait-negatives"] details').count(), known ? 2 : 0);
       if (known) {
         assert.match(await offense.locator('[data-trait="stat-ranged-energy"] .trait-value').textContent(), locale === "zh-CN" ? /能量/ : /energy/);
@@ -1149,6 +1151,7 @@ try {
   const taskEntries = statuses.map((status, index) => ({
     taskId: `journal-${status}`, nameKey: 'fixture-task-name',
     descriptionKey: status === 'locked' ? null : 'fixture-task-description', status,
+    canAbandon: ['active', 'paused'].includes(status),
     current: index, required: 12, stage: 1, stages: status === 'active' ? 3 : 1,
     retakesUsed: 1, maxRetakes: status === 'paused' ? 2 : null,
   }));
@@ -1229,11 +1232,13 @@ try {
     ]);
     const state = new AppState();
     const localization = new Localization('zh-CN', sources);
+    state.mode = 'playing';
     const commands = [];
     window.menuFixture.statusCommands = commands;
     const panel = new StatusPanel({ dom: createAppDom(document), state, localization,
       dispatch: async (command) => { commands.push(command); }, contentName: (id) => id ?? '', statusName: (id) => id ?? '',
       selectItemTarget: () => {}, startAbilityTargeting: () => {}, reconcileTargeting: () => {},
+      confirmItemChoice: () => true,
       renderTargeting: () => {}, refreshInventoryActions: () => {},
     });
     const snapshot = {
@@ -1248,14 +1253,18 @@ try {
     window.menuFixture.renderAbilities = (locale, mode) => {
       localization.setLocale(locale);
       localization.localizeDocument(document.getElementById('player-page-dialog'));
-      snapshot.player.resources = mode === 'none' ? [] : [{ nameKey: 'fixture-task-name', current: 10, maximum: 20, restRecoveryAmount: 1, waitRecoveryAmount: 0 }];
-      snapshot.player.abilities = mode === 'hidden' ? [{ id: 'hidden', uiGroupNameKey: 'fixture-task-name', minimumLevel: 10 }]
+      snapshot.player.resources = mode === 'none' ? [] : [{ nameKey: 'fixture-task-name', current: 10, maximum: 20, restRecoveryPer65536: 4070, normalRecoveryPer65536: 2297, restActionRecovery: 0, restRecoveryTarget: 20 }];
+      snapshot.player.abilities = mode === 'hidden' ? [{ id: 'hidden', uiGroupNameKey: 'fixture-task-name', minimumLevel: 10,
+        nameKey: 'fixture-task-name', descriptionKey: 'fixture-task-description', source: 'class', effects: [],
+        resourceCost: 1, baseResourceCost: 1, hitPointCost: 1, failurePercent: 100, canCast: false, canStudy: false, canForget: false,
+        targetSpec: { modes: ['self'], range: 0 },
+      }]
         : mode !== 'full' ? [] : Array.from({ length: 12 }, (_, i) => ({
           id: `ability-${i}`, nameKey: 'fixture-task-name', descriptionKey: i % 2 ? 'fixture-weapon-long' : 'fixture-task-description',
           bookNameKey: i < 6 ? 'fixture-task-name' : 'fixture-weapon-long', bookRank: i < 6 ? 1 : 2,
           bookItemId: 'fixture-book', minimumLevel: 1, resourceCost: i + 1, baseResourceCost: i + 1, failurePercent: 20,
           proficiency: 0, proficiencyCap: 100, proficiencyRank: 'unskilled', castCount: 0, failCount: 0,
-          source: 'class', effects: [], canStudy: i % 2 === 0, canForget: false, canCast: i % 2 === 1, targetSpec: { modes: ['self'] },
+          source: 'learned', effects: [], canStudy: i % 2 === 0, canForget: false, canCast: i % 2 === 1, targetSpec: { modes: ['self'], range: 0 },
         }));
       panel.render(snapshot);
       window.menuFixture.layout.open('ability');
@@ -1264,6 +1273,7 @@ try {
       state.busy = busy;
       snapshot.mapScale = world ? 'world' : 'local';
       snapshot.tasks = ['active', 'paused'].map((status) => ({ taskId: status, status, nameKey: 'fixture-task-name',
+        canAbandon: true,
         current: 0, required: 1, stage: 1, stages: 1, retakesUsed: 0 }));
       panel.render(snapshot);
       window.menuFixture.layout.open('tasks');
@@ -1272,7 +1282,8 @@ try {
   for (const locale of ['zh-CN', 'en-US']) {
     for (const mode of ['none', 'resource', 'hidden', 'full']) {
       await page.evaluate(([locale, mode]) => window.menuFixture.renderAbilities(locale, mode), [locale, mode]);
-      assert.equal(await page.locator('#ability-list .ability-empty').count(), mode === 'full' ? 0 : 1);
+      assert.equal(await page.locator('#ability-list .ability-empty').count(), ['full', 'hidden'].includes(mode) ? 0 : 1);
+      if (mode === 'hidden') assert.equal(await page.locator('#ability-list .ability-cast-action').isDisabled(), true, 'future abilities remain visible but cannot be cast');
       assert.equal(await page.locator('#resource-list .resource-row').count(), mode === 'none' ? 0 : 1);
       if (mode !== 'full') continue;
       assert.equal(await page.locator('.ability-book-heading').count(), 2);
@@ -1290,7 +1301,7 @@ try {
       }
     }
   }
-  console.log('Production ability renderer: empty/resource-only/level-filtered states, preserved book grouping, variable descriptions, disabled controls and bilingual aligned actions passed.');
+  console.log('Production ability renderer: empty/resource-only/future-ability states, preserved book grouping, variable descriptions, disabled controls and bilingual aligned actions passed.');
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.locator('.ability-actions button').filter({ hasText: 'Study' }).first().click();
   await page.locator('.ability-cast-action:not(:disabled)').first().click();
@@ -1370,6 +1381,10 @@ try {
         const hud = await page.evaluate(() => {
           const el = (selector) => document.querySelector(selector);
           const map = el('#map-host').getBoundingClientRect();
+          const sameRow = (nodes) => {
+            const visible = [...nodes].filter(node => node.checkVisibility());
+            return visible.every(node => Math.abs(node.getBoundingClientRect().top - visible[0].getBoundingClientRect().top) <= 1);
+          };
           return {
             font: parseFloat(getComputedStyle(el('#hp-value')).fontSize),
             fits: ['html', '#app', '.game-layout', '.play-column'].every((selector) => {
@@ -1379,7 +1394,15 @@ try {
             mapHeight: map.height,
             bottom: el('.shortcut-bar').getBoundingClientRect().bottom,
             fullHeight: el('#app').getBoundingClientRect().bottom,
-            rightFilled: Math.abs(el('#hud-vitals-host').getBoundingClientRect().right - el('#app').getBoundingClientRect().right) <= 1,
+            rightFilled: Math.abs(Math.max(el('#hud-vitals-host').getBoundingClientRect().right,
+              el('#hud-menu-host').getBoundingClientRect().right) - el('#app').getBoundingClientRect().right) <= 1,
+            compactIdentity: sameRow(document.querySelectorAll('.player-identity-grid > div')),
+            compactAttributes: sameRow(document.querySelectorAll('#hud-attribute-list > li')),
+            compactVitals: sameRow([el('#health-meter'), el('#resource-panel')]),
+            compactStats: sameRow(document.querySelectorAll('.player-status-panel > .status-grid > div')),
+            compactDungeon: sameRow(document.querySelectorAll('.dungeon-info-grid > div')),
+            noRedundantRows: !el('#hud-location-value').checkVisibility() && !el('#connection-status').checkVisibility()
+              && !el('.map-panel > .panel-heading') && getComputedStyle(el('#dungeon-info-title')).position === 'absolute',
             meter: el('#hud-experience').value,
             timeLines: el('.message-turn') ? el('.message-turn').getBoundingClientRect().height / parseFloat(getComputedStyle(el('.message-turn')).lineHeight) : 0,
             rowsFit: [...document.querySelectorAll('.nearby-row, #resource-list .resource-row')].every((row) =>
@@ -1388,13 +1411,17 @@ try {
             localScroll: ['#nearby-list', '#message-list', '#resource-list'].every((selector) => {
               const node = el(selector);
               return (node.clientHeight > 0 || (selector === '#resource-list' && node.querySelector('.resource-empty')))
-                && node.scrollWidth <= node.clientWidth + 1;
+                && (node.scrollWidth <= node.clientWidth + 1 ||
+                  (selector === '#resource-list' && getComputedStyle(node).overflowX === 'auto'));
             }),
           };
         });
         assert.ok(Math.abs(hud.font - expected) < 0.02, `${width}: HUD font ${hud.font}`);
         assert.ok(hud.fits && Math.abs(hud.bottom - hud.fullHeight) <= 1, `${locale} ${width} ${full}: fixed full-height shell`);
-        assert.ok(hud.rightFilled && hud.meter === 250, 'vitals fill the old menu column and XP is projected');
+        assert.ok(hud.rightFilled && hud.meter === 250, 'vitals and utility menu fill the header; XP is projected');
+        assert.ok(hud.compactIdentity && hud.compactAttributes && hud.compactVitals && hud.compactStats && hud.compactDungeon,
+          `${locale} ${width}: identity/level, six attributes, health/resources, five stats and dungeon information stay in their rows`);
+        assert.ok(hud.noRedundantRows, 'duplicate location, map connection heading and dungeon heading take no layout space');
         assert.ok(hud.mapHeight > height * 0.3, `${locale} ${width} ${full}: map retains useful height (${hud.mapHeight})`);
         assert.ok(hud.localScroll && hud.rowsFit && hud.timeLines <= 2.1, `${locale} ${width}: readable non-overlapping local lists and timestamp`);
         if (locale === 'zh-CN' && [1280, 2560].includes(width)) await page.screenshot({ path: fileURLToPath(new URL(`hud-typography-${width}-${full ? 'full' : 'empty'}.png`, artifacts)) });
@@ -1402,7 +1429,98 @@ try {
     }
   }
   assert.deepEqual(errors, []);
-  console.log('HUD typography: bilingual 720p/1080p/1440p/4K and restore/maximize-sized viewports, empty/full logs and six resources, readable timestamps and full-height map shell passed.');
+  for (const width of [1280, 900]) {
+    await page.setViewportSize({ width, height: 720 });
+    const before = await page.locator('#map-host').boundingBox();
+    await page.evaluate(() => {
+      Object.assign(document.getElementById('app').dataset, {
+        showCharacterInfo: 'false', sidebarExpanded: 'false', footerExpanded: 'false',
+      });
+    });
+    for (const selector of ['#hud-identity-host', '#hud-vitals-host', '#player-sidebar', '#map-actions', '#context-summary', '#dungeon-strip', '#shortcut-bar']) {
+      assert.equal(await page.locator(selector).isVisible(), false, `${width}: ${selector} collapses`);
+    }
+    for (const selector of ['#hud-toggle-header', '#hud-toggle-sidebar', '#hud-toggle-footer', '.hud-menu > summary']) {
+      assert.equal(await page.locator(selector).isVisible(), true, `${width}: ${selector} remains accessible`);
+    }
+    const expanded = await page.locator('#map-host').boundingBox();
+    assert.ok(expanded.height > before.height && expanded.width >= before.width, 'collapsed sections give space to the map');
+    await page.evaluate(() => {
+      Object.assign(document.getElementById('app').dataset, { sidebarExpanded: 'true', showNearby: 'false', showMessages: 'true' });
+      document.getElementById('player-sidebar').dataset.intelPanel = 'nearby';
+    });
+    assert.equal(await page.locator('.message-panel-host').isVisible(), true, 'the remaining log is visible regardless of the old narrow-screen tab');
+    assert.equal(await page.locator('.intel-tabs').isVisible(), false);
+    await page.evaluate(() => {
+      for (const key of ['showCharacterInfo', 'sidebarExpanded', 'footerExpanded', 'showNearby', 'showMessages']) delete document.getElementById('app').dataset[key];
+    });
+  }
+  assert.deepEqual(errors, []);
+  await page.evaluate(() => {
+    document.getElementById('hud-menu').open = true;
+    document.querySelector('#hud-menu > summary').focus();
+  });
+  await page.keyboard.press('Tab');
+  assert.equal(await page.locator('#hud-menu').evaluate(node => node.open), true, 'Tab keeps the menu available for keyboard navigation');
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await page.locator('#hud-menu').evaluate(node => node.open), false, 'movement input dismisses the dropdown');
+  await page.locator('#hud-menu > summary').click();
+  await page.locator('#map-host').click({ position: { x: 20, y: 20 } });
+  assert.equal(await page.locator('#hud-menu').evaluate(node => node.open), false, 'clicking the map dismisses the dropdown');
+  await page.locator('#hud-menu > summary').click();
+  await page.locator('#player-ui-inventory-open').click();
+  assert.equal(await page.locator('#hud-menu').evaluate(node => node.open), false, 'choosing a menu action dismisses the dropdown');
+  assert.equal(await page.locator('#player-page-dialog').evaluate(node => node.open), true, 'the selected menu action still runs');
+  await page.evaluate(() => window.menuFixture.layout.closePage());
+  await page.locator('#hud-menu > summary').click();
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#hud-menu').evaluate(node => node.open), false);
+  assert.equal(await page.locator('#hud-menu > summary').evaluate(node => node === document.activeElement), true, 'Escape returns focus to the menu summary');
+  assert.deepEqual(errors, []);
+  console.log('HUD typography, collapsible sections and menu dismissal: compact responsive layout, expansion controls and pointer/keyboard dismissal passed.');
+  await page.evaluate(async sources => {
+    const [{ InputController }, { AppState }, { createAppDom }, { Localization }] = await Promise.all([
+      import('/src/input-controller.ts'), import('/src/app-state.ts'),
+      import('/src/app-dom.ts'), import('/src/localization.ts'),
+    ]);
+    const state = new AppState();
+    state.mode = 'playing';
+    state.status = { mapScale: 'local', player: { hp: 10, statuses: [] }, mogaminator: {} };
+    const calls = [], messages = [];
+    const controller = new InputController({
+      state, dom: createAppDom(document), window, localization: new Localization('zh-CN', sources),
+      getInputPreset: () => 'original', getZoom: () => 1, whenIdle: async () => {},
+      dispatch: async command => {
+        calls.push(command);
+        state.status.events = [{ outcome: { type: 'rest', resolution: {
+          completedTurns: 1, stopReason: calls.length === 3 ? 'full-resources' : 'turn-limit',
+        } } }];
+        return 'applied';
+      },
+      describeLook: () => '', openObjectList() {}, openMogaminator() {}, onLookFocusChange() {},
+      announce: key => messages.push(key),
+    });
+    controller.install();
+    window.restFixture = { controller, calls, messages };
+    // The boundary under test is real browser keyboard/dialog event ordering; Core is covered separately.
+  }, sources);
+  await page.keyboard.press('Shift+R');
+  assert.deepEqual(errors, []);
+  const restInput = page.locator('dialog[open].item-target-dialog input[type="text"]');
+  await restInput.waitFor({ state: 'visible' });
+  assert.equal(await restInput.inputValue(), '&');
+  await page.keyboard.press('Enter');
+  await page.waitForFunction(() => window.restFixture.calls.length === 3 && !window.restFixture.controller.continuousAction);
+  assert.deepEqual(await page.evaluate(() => window.restFixture.calls), Array(3).fill({ type: 'rest', turns: 1 }));
+  assert.deepEqual(await page.evaluate(() => window.restFixture.messages), []);
+  await page.keyboard.press('Shift+R');
+  await restInput.waitFor({ state: 'visible' });
+  await page.keyboard.press('Escape');
+  await restInput.waitFor({ state: 'hidden' });
+  assert.equal(await page.evaluate(() => window.restFixture.calls.length), 3, 'cancelling the dialog spends no turn');
+  await page.evaluate(() => window.restFixture.controller.dispose());
+  assert.deepEqual(errors, []);
+  console.log('Rest: native browser R → Enter continues across three responses; Escape cancels without a command.');
 } finally {
   await browser?.close();
   await server.close();

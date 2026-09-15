@@ -476,6 +476,7 @@ pub(super) fn profile_resource_maximum(
 
 pub(super) const fn initial_resource_pool(maximum: u32) -> ResourcePool {
     ResourcePool {
+        fraction: 0,
         current: maximum,
         maximum,
     }
@@ -510,16 +511,6 @@ fn rescale_i32(current: i32, previous_maximum: i32, next_maximum: i32) -> i32 {
     })
 }
 
-fn rescale_u32(current: u32, previous_maximum: u32, next_maximum: u32) -> u32 {
-    u32::try_from(
-        u64::from(current)
-            .saturating_mul(u64::from(next_maximum))
-            .saturating_div(u64::from(previous_maximum)),
-    )
-    .unwrap_or(u32::MAX)
-    .min(next_maximum)
-}
-
 impl Game {
     pub(super) fn player_is_maia(&self) -> bool {
         self.character_definitions()
@@ -546,9 +537,9 @@ impl Game {
 
     pub(super) fn choose_maia_path(&mut self, path: rfb_protocol::MaiaPathDto) {
         let max_hp = self.effective_player_max_hp();
-        let resources = self.player_resource_maxima();
+
         self.maia_path = Some(path);
-        self.refresh_after_attribute_change(max_hp, &resources);
+        self.refresh_after_attribute_change(max_hp);
         self.reveal_current_visibility();
     }
 
@@ -645,10 +636,9 @@ impl Game {
             };
             for id in ids {
                 if self.progress.locked_mutation_ids.remove(&id) {
-                    let resources = self.player_resource_maxima();
                     self.lose_mutation_without_refresh(&id, events);
                     self.reconcile_player_body_slots_for_current_form();
-                    self.refresh_after_attribute_change(previous_max_hp, &resources);
+                    self.refresh_after_attribute_change(previous_max_hp);
                     previous_max_hp = self.effective_player_max_hp();
                 }
             }
@@ -658,7 +648,7 @@ impl Game {
             race_id: race_id.to_owned(),
         });
         self.add_virtue(rfb_protocol::VirtueKindDto::Chance, 2);
-        let previous_resources = self.player_resource_maxima();
+
         self.build
             .as_mut()
             .expect("native identity must exist")
@@ -667,13 +657,13 @@ impl Game {
         let base_max_hp = self.progress.hp_progression[0];
         self.progress.hp_progression =
             CharacterProgress::roll_hp_progression(base_max_hp, &mut self.rng);
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resources);
-        let previous_resources = self.player_resource_maxima();
+        self.refresh_after_attribute_change(previous_max_hp);
+
         self.apply_player_experience(0, events);
         let previous_max_hp = self.effective_player_max_hp();
         self.reconcile_player_body_slots_for_current_form();
         self.refresh_character_skills();
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resources);
+        self.refresh_after_attribute_change(previous_max_hp);
         // Light, speed, resistance, abilities and riding checks read the current
         // body and equipment directly; only explored visibility needs refreshing.
         self.reveal_current_visibility();
@@ -685,10 +675,9 @@ impl Game {
         attribute: AttributeKind,
     ) -> AttributeMutationOutcome {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
         let outcome = apply_attribute_restoration(&mut self.progress, attribute);
         if outcome.changed {
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
         }
         outcome
     }
@@ -1287,7 +1276,6 @@ impl Game {
             return 0;
         }
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
         let lost_levels = self.progress.lose_experience(
             amount,
             self.character_experience_percent(),
@@ -1296,7 +1284,7 @@ impl Game {
         let drained = before.saturating_sub(self.progress.experience);
         if !lost_levels.is_empty() {
             self.refresh_character_skills();
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+            self.refresh_after_attribute_change(previous_max_hp);
         }
         events.push(DomainEvent::ExperienceDrained {
             source_kind_id: source_kind_id.to_owned(),
@@ -1317,13 +1305,12 @@ impl Game {
         attribute: AttributeKind,
     ) -> Option<(u16, u16, u8)> {
         let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
         let victorious = self.victory_level_cap_unlocked();
         let plan = plan_attribute_increase(&self.progress, attribute, victorious)?;
         self.progress.attributes = plan.attributes;
         self.progress.maximum_attributes = plan.maximum_attributes;
         self.progress.pending_attribute_increases = plan.pending_attribute_increases;
-        self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        self.refresh_after_attribute_change(previous_max_hp);
         let effective = self.effective_player_attributes();
         Some((
             self.progress.attributes.value(attribute),
@@ -1332,31 +1319,20 @@ impl Game {
         ))
     }
 
+    #[cfg(test)]
     pub(super) fn player_resource_maxima(&self) -> BTreeMap<String, (u32, u32)> {
         self.resources
             .iter()
-            .map(|(id, pool)| (id.clone(), (pool.current, pool.maximum)))
+            .map(|(id, p)| (id.clone(), (p.current, p.maximum)))
             .collect()
     }
 
-    pub(super) fn refresh_after_attribute_change(
-        &mut self,
-        previous_max_hp: i32,
-        previous_resource_maxima: &BTreeMap<String, (u32, u32)>,
-    ) {
+    pub(super) fn refresh_after_attribute_change(&mut self, previous_max_hp: i32) {
         let next_max_hp = self.effective_player_max_hp();
         if previous_max_hp > 0 && next_max_hp != previous_max_hp {
             self.player.hp = rescale_i32(self.player.hp, previous_max_hp, next_max_hp);
         }
         self.refresh_player_ability_state();
-        for (resource_id, (previous_current, previous_maximum)) in previous_resource_maxima {
-            let Some(pool) = self.resources.get_mut(resource_id) else {
-                continue;
-            };
-            if *previous_maximum > 0 && pool.maximum != *previous_maximum {
-                pool.current = rescale_u32(*previous_current, *previous_maximum, pool.maximum);
-            }
-        }
     }
 }
 

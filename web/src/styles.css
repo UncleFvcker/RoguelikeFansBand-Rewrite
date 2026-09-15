@@ -629,6 +629,7 @@ h1 {
 }
 
 .game-layout {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, auto) minmax(300px, 1fr);
   gap: 1rem;
@@ -1698,9 +1699,10 @@ summary:focus-visible {
   white-space: nowrap;
 }
 
-.hud-attribute-list {
+#app.game-shell .hud-attribute-list {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(max-content, 1fr));
+  overflow-x: auto;
   gap: 1px;
   margin: 0;
   border: 1px solid var(--ui-line);
@@ -1712,7 +1714,7 @@ summary:focus-visible {
 .hud-attribute-list .attribute-row {
   display: grid;
   min-width: 0;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto auto;
   gap: 0.3rem;
   padding: 0.35rem 0.4rem;
   background: #0f0f0d;
@@ -1787,6 +1789,7 @@ summary:focus-visible {
 
 .hud-menu > summary {
   min-height: 2rem;
+  border-bottom: 1px solid transparent;
   padding: 0.5rem 0.6rem;
   color: var(--ui-muted);
   cursor: pointer;
@@ -1977,7 +1980,9 @@ summary:focus-visible {
 }
 
 .play-column {
-  grid-template-rows: minmax(0, 1fr) auto auto auto;
+  position: relative;
+  grid-template-rows: minmax(0, 1fr);
+  grid-auto-rows: auto;
   overflow: hidden;
 }
 
@@ -1995,7 +2000,8 @@ summary:focus-visible {
 .map-panel {
   display: grid;
   min-height: 0;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
+  grid-auto-rows: auto;
 }
 
 .panel-heading {
@@ -2597,32 +2603,35 @@ kbd {
 }
 
 .dungeon-info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1px;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em 1.5em;
+  overflow-x: auto;
   margin: 0;
-  background: var(--ui-line-soft);
+  padding: 0.35em 0.65em;
+  font-size: var(--hud-font-note);
+  background: var(--ui-surface);
 }
 
 .dungeon-info-grid > div {
-  min-width: 0;
-  padding: 0.55rem 0.65rem;
-  background: #0f0f0d;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: baseline;
+  gap: 0.5em;
+  white-space: nowrap;
 }
 
 .dungeon-info-grid dt {
   color: var(--ui-faint);
-  font-size: 0.66rem;
+  font-size: inherit;
 }
 
 .dungeon-info-grid dd {
   min-width: 0;
-  margin: 0.18rem 0 0;
-  overflow: hidden;
+  margin: 0;
   color: var(--ui-text);
   font-family: "Cascadia Mono", Consolas, monospace;
-  font-size: 0.75rem;
-  text-overflow: ellipsis;
+  font-size: inherit;
   white-space: nowrap;
 }
 
@@ -2662,21 +2671,23 @@ kbd {
   white-space: nowrap;
 }
 
-.shortcut-bar-status {
-  overflow: hidden;
-  color: var(--ui-faint);
-  font-size: 0.62rem;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.hotbar-pages { display: flex; gap: 0.25em; }
+.hotbar-pages button { padding: 0.1em 0.3em; font-size: 0.65em; min-height: 0; }
+.hotbar-pages button[aria-pressed="true"] { border-color: var(--ui-accent); color: var(--ui-accent); }
+.hotbar-bind-dialog { width: min(46rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; color: var(--ui-text); background: var(--ui-surface); border: 1px solid var(--ui-line); }
+.hotbar-bind-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem; }
+.hotbar-bind-choices button { text-align: left; overflow-wrap: anywhere; }
+.ability-letter-navigation { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5em; padding: 0.5em; border-bottom: 1px solid var(--ui-line); }
+.ability-letter-status { flex: 1; color: var(--ui-muted); }
+.ability-name::before { content: attr(data-shortcut); color: var(--ui-accent); font-family: monospace; }
 
 .shortcut-bar-slots {
   display: grid;
   min-width: 0;
   height: 2.25rem;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(10, minmax(4.5em, 1fr));
   gap: 0.3rem;
+  overflow-x: auto;
 }
 
 .shortcut-slot {
@@ -2686,6 +2697,11 @@ kbd {
   border: 1px dashed #4a4437;
   border-radius: 3px;
   background: #0f0f0d;
+  padding: 0.2em 0.35em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
 }
 
 .player-page-dialog,
@@ -4933,12 +4949,19 @@ kbd {
 #app.game-shell .game-layout kbd { font-size: 1em; }
 #app.game-shell .input-toolbar { padding: 0.25em 0.5em; }
 #app.game-shell .context-panel { height: 6em; min-height: 0; }
-#app.game-shell .shortcut-bar { height: 3.25em; min-height: 0; grid-template-columns: auto minmax(0, 1fr); }
-#app.game-shell .shortcut-bar-slots { height: 2.25em; }
+#app.game-shell .shortcut-bar { height: auto; min-height: 3.25em; grid-template-columns: auto minmax(0, 1fr); }
+#app.game-shell .shortcut-bar-slots { height: auto; min-height: 2.25em; }
 #app.game-shell .app-header .status-grid > div { padding: 0.25em 0.5em; }
-#app.game-shell .app-header .health-meter { padding: 0.4em 0.6em; }
-#app.game-shell .app-header :is(.resource-row, .resource-empty) { padding: 0.3em 0.5em; }
-#app.game-shell .hud-vitals-host .resource-list { font-size: var(--hud-font-body); max-height: 4.5em; overflow-y: auto; grid-auto-rows: max-content; }
+#app.game-shell .app-header :is(.health-meter, .resource-row) { padding: 0.3em 0.5em; gap: 0.25em; }
+#app.game-shell .hud-vitals-host .resource-list {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(9em, 1fr);
+  font-size: var(--hud-font-body);
+  margin: 0;
+  overflow-x: auto;
+}
+#app.game-shell .hud-vitals-host :is(.resource-recovery, .ability-learning-summary) { display: none; }
 #app.game-shell .message { grid-template-columns: minmax(0, 1fr); gap: 0.2em; }
 #app.game-shell .message-turn { overflow-wrap: anywhere; }
 #app.game-shell .nearby-list { align-content: start; grid-auto-rows: max-content; }
@@ -4947,12 +4970,31 @@ kbd {
 
 #app.game-shell .app-header {
   position: relative;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.7fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.65fr) max-content;
 }
 #app.game-shell :is(.hud-identity-host, .hud-vitals-host) { background: var(--ui-surface); }
-#app.game-shell .hud-menu-host { position: absolute; top: 0; right: 0; width: 5.5em; }
-#app.game-shell .status-turn-row { min-height: 2.3em; padding: 0.35em 6em 0.2em 0.5em; }
-#app.game-shell .hud-identity-host .player-identity-grid > div { grid-column: 1 / -1; }
+#app.game-shell .hud-menu-host { position: relative; grid-column: 3; grid-row: 1; background: var(--ui-surface); }
+#app.game-shell .status-turn-row { min-height: 2.3em; padding: 0.35em 0.5em 0.2em; white-space: nowrap; }
+#app.game-shell .hud-menu > summary { text-align: right; }
+#app.game-shell .hud-identity-host .player-identity-grid {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 2.6em;
+}
+#app.game-shell .hud-identity-host .player-identity-grid > div { grid-column: auto; }
+#app.game-shell .hud-identity-host .hud-level-row { justify-content: flex-end; gap: 0.35em; }
+#app.game-shell .hud-identity-host .hud-experience-cell { overflow: visible; flex: 0 0 auto; }
+#app.game-shell .hud-vitals-host { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#app.game-shell .hud-vitals-host > .player-status-panel { display: contents; }
+#app.game-shell .hud-vitals-host .health-meter { grid-column: 1; grid-row: 1; }
+#app.game-shell .hud-vitals-host .resource-panel { grid-column: 2; grid-row: 1; }
+#app.game-shell .hud-vitals-host .status-grid {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  grid-template-columns: repeat(5, minmax(max-content, 1fr));
+  overflow-x: auto;
+}
+#app.game-shell .hud-vitals-host:has(.resource-empty) .health-meter { grid-column: 1 / -1; }
 #app.game-shell .hud-vitals-host .resource-panel:has(.resource-empty) { display: none; }
 .hud-location-row { color: var(--ui-muted); }
 .duelist-status { padding: 0.35em 0.5em; border-bottom: 1px solid var(--ui-line-soft); overflow-wrap: anywhere; }
@@ -4971,9 +5013,9 @@ kbd {
 .hud-experience {
   display: block;
   appearance: none;
-  width: calc(100% - 1em);
-  height: 0.25em;
-  margin: 0.1em 0.5em 0.4em;
+  width: 4em;
+  height: 0.4em;
+  margin: 0;
   border: 0;
   background: var(--ui-line-soft);
   color: var(--ui-accent);
@@ -4983,24 +5025,73 @@ kbd {
 .hud-experience::-webkit-progress-value { background: var(--ui-accent); }
 .hud-experience::-moz-progress-bar { background: var(--ui-accent); }
 .hud-experience:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+@media (max-width: 1100px) {
+  #app.game-shell .app-header { grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr); }
+  #app.game-shell .hud-menu-host { grid-column: 1 / -1; grid-row: 1; display: flex; justify-content: flex-end; align-items: center; }
+  #app.game-shell .hud-identity-host { grid-column: 1; grid-row: 2; }
+  #app.game-shell .hud-vitals-host { grid-column: 2; grid-row: 2; }
+}
 @media (max-width: 680px) {
   #app.game-shell .app-header { grid-template-columns: minmax(0, 1fr); }
-  #app.game-shell .hud-identity-host { grid-column: 1; }
-  #app.game-shell .player-identity-line { padding-right: 6em; }
-  #app.game-shell .status-turn-row { padding-right: 0.5em; }
+  #app.game-shell .hud-vitals-host { grid-column: 1; grid-row: 3; }
 }
 
 @media (min-width: 901px) {
   #app.game-shell .game-layout { grid-template-columns: minmax(0, 1fr) min(28vw, calc(var(--hud-font-body) * 22)); }
 }
-@media (min-width: 681px) and (max-width: 1599px) {
-  #app.game-shell .hud-attribute-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Global presentation preferences collapse the existing panels without stopping their updates. */
+.hud-section-toggle {
+  flex: 0 0 auto;
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0.15em 0.35em;
+  border: 1px solid var(--ui-line);
+  border-radius: 0.2rem;
+  color: var(--ui-muted);
+  background: var(--ui-surface);
+  line-height: 1;
+}
+.hud-section-toggle:hover, .hud-section-toggle:focus-visible { color: var(--ui-accent); border-color: var(--ui-accent); }
+#hud-toggle-header { margin-right: 0.4em; }
+#hud-toggle-sidebar, #hud-toggle-footer { position: absolute; z-index: 12; }
+#hud-toggle-sidebar { right: 0; top: 50%; transform: translateY(-50%); }
+#hud-toggle-footer { left: 50%; bottom: 0; transform: translateX(-50%); }
+#app.game-shell[data-show-character-info="false"] :is(.hud-identity-host, .hud-vitals-host),
+#app.game-shell[data-footer-expanded="false"] :is(.input-toolbar, .context-panel, .support-drawer, .shortcut-bar),
+#app.game-shell[data-show-nearby="false"] .player-sidebar > .nearby-panel,
+#app.game-shell[data-show-messages="false"] .player-sidebar > .message-panel-host,
+#app.game-shell[data-show-map-actions="false"] .map-panel > .input-toolbar,
+#app.game-shell[data-show-combat-summary="false"] .play-column > .context-panel,
+#app.game-shell[data-show-dungeon-info="false"] .play-column > .support-drawer,
+#app.game-shell[data-show-shortcut-bar="false"] .play-column > .shortcut-bar {
+  display: none;
+}
+#app.game-shell[data-show-character-info="false"] .app-header,
+#app.game-shell[data-show-character-info="false"] .hud-menu-host {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+#app.game-shell[data-show-character-info="false"] .app-header { min-height: 0; }
+#app.game-shell[data-sidebar-expanded="false"] .player-sidebar { display: none; }
+#app.game-shell[data-sidebar-expanded="false"] .game-layout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+#app.game-shell:is([data-show-nearby="false"], [data-show-messages="false"]) .player-sidebar {
+  grid-template-rows: minmax(0, 1fr);
+}
+#app.game-shell:is([data-show-nearby="false"], [data-show-messages="false"]) .intel-tabs { display: none; }
+#app.game-shell:is([data-show-nearby="false"], [data-show-messages="false"]) .player-sidebar > :is(.nearby-panel, .message-panel-host) {
+  grid-row: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 @media (max-height: 700px) {
   #app.game-shell .context-panel { height: 4.5em; }
   #app.game-shell .combat-target .context-heading { min-height: 0; padding-block: 0.15em; }
   #app.game-shell .combat-target-health { padding-block: 0.1em; }
-  #app.game-shell .hud-vitals-host .resource-list { max-height: 4em; }
 }
 
 @media (max-width: 1100px) {

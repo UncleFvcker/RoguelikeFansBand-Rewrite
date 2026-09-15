@@ -19,6 +19,7 @@ interface PlayerUiDom {
   readonly hudIdentityHost: HTMLElement;
   readonly hudVitalsHost: HTMLElement;
   readonly hudMenuContent: HTMLElement;
+  readonly hudMenu: HTMLDetailsElement;
   readonly gameplaySettingsHost: HTMLElement;
   readonly inventoryOpen: HTMLButtonElement;
   readonly abilityOpen: HTMLButtonElement;
@@ -54,15 +55,21 @@ export class PlayerUiLayout {
   #openPage: PlayerPage | undefined;
   readonly #characterScrollPositions = new Map<string, number>();
   #installed = false;
+  readonly #onAbilityKey: ((event: KeyboardEvent) => boolean) | undefined;
+  readonly #onAbilityOpen: (() => void) | undefined;
 
   constructor(options: {
     document: Document;
     window: Window;
     localization: Localization;
+    onAbilityKey?: (event: KeyboardEvent) => boolean;
+    onAbilityOpen?: () => void;
   }) {
     this.#document = options.document;
     this.#window = options.window;
     this.#localization = options.localization;
+    this.#onAbilityKey = options.onAbilityKey;
+    this.#onAbilityOpen = options.onAbilityOpen;
     this.#dom = createPlayerUiDom(this.#document);
   }
 
@@ -96,6 +103,9 @@ export class PlayerUiLayout {
     this.#dom.pageDialog.addEventListener("close", this.#handlePageClosed);
     this.#dom.pageDialog.addEventListener("cancel", this.#handlePageCancel);
     this.#dom.pageDialog.addEventListener("click", this.#handlePageAction, true);
+    this.#dom.hudMenuContent.addEventListener("click", this.#handleHudMenuAction);
+    this.#window.addEventListener("pointerdown", this.#handleHudMenuPointer, true);
+    this.#window.addEventListener("keydown", this.#handleHudMenuKey, true);
     this.#window.addEventListener("keydown", this.#handleShortcut);
   }
 
@@ -115,12 +125,47 @@ export class PlayerUiLayout {
     this.#dom.pageDialog.removeEventListener("close", this.#handlePageClosed);
     this.#dom.pageDialog.removeEventListener("cancel", this.#handlePageCancel);
     this.#dom.pageDialog.removeEventListener("click", this.#handlePageAction, true);
+    this.#dom.hudMenuContent.removeEventListener("click", this.#handleHudMenuAction);
+    this.#window.removeEventListener("pointerdown", this.#handleHudMenuPointer, true);
+    this.#window.removeEventListener("keydown", this.#handleHudMenuKey, true);
     this.#window.removeEventListener("keydown", this.#handleShortcut);
   }
 
   localize(): void {
     if (this.#openPage) this.#updatePageTitle(this.#openPage);
   }
+
+  #closeHudMenu(): void {
+    this.#dom.hudMenu.open = false;
+    const active = this.#document.activeElement;
+    if (active instanceof HTMLElement && this.#dom.hudMenu.contains(active)) active.blur();
+  }
+
+  readonly #handleHudMenuPointer = (event: PointerEvent): void => {
+    if (this.#dom.hudMenu.open && event.target instanceof HTMLElement && !this.#dom.hudMenu.contains(event.target)) this.#closeHudMenu();
+  };
+
+  readonly #handleHudMenuAction = (event: MouseEvent): void => {
+    if (event.target instanceof HTMLElement && event.target.closest("button:not(:disabled), a[href]")) this.#closeHudMenu();
+  };
+
+  readonly #handleHudMenuKey = (event: KeyboardEvent): void => {
+    if (!this.#dom.hudMenu.open || event.isComposing || isEditableTarget(event.target) ||
+        this.#document.querySelector("dialog[open]") ||
+        ["Tab", "Shift", "Control", "Alt", "Meta", "CapsLock"].includes(event.key)) return;
+    if (event.target instanceof HTMLElement && this.#dom.hudMenu.contains(event.target) &&
+        (event.key === "Enter" || event.key === " ")) {
+      // Let native menu activation run without also sending a game command.
+      event.stopPropagation();
+      return;
+    }
+    this.#closeHudMenu();
+    if (event.key === "Escape") {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      this.#dom.hudMenu.querySelector<HTMLElement>("summary")!.focus();
+    }
+  };
 
   closePage(): void {
     if (!this.#dom.pageDialog.open) return;
@@ -144,6 +189,7 @@ export class PlayerUiLayout {
     this.#dom.pageHost.setAttribute("aria-labelledby", activeTab.id);
     if (!this.#dom.pageDialog.open) this.#dom.pageDialog.showModal();
     activeTab.focus();
+    if (page === "ability") this.#onAbilityOpen?.();
     if (page === "character") this.#restoreCharacterScroll();
   }
 
@@ -275,9 +321,10 @@ export class PlayerUiLayout {
     ) {
       return;
     }
+    if (this.#document.querySelector("dialog[open]:not(#player-page-dialog)")) return;
+    if (this.#openPage === "ability" && this.#dom.pageDialog.open && this.#onAbilityKey?.(event)) return;
     const page = playerPageForShortcut(event.key);
     if (!page) return;
-    if (this.#document.querySelector("dialog[open]:not(#player-page-dialog)")) return;
     event.preventDefault();
     if (this.#dom.pageDialog.open && this.#openPage === page) this.closePage();
     else this.open(page);
@@ -384,6 +431,7 @@ function createPlayerUiDom(document: Document): PlayerUiDom {
     hudIdentityHost: element("hud-identity-host"),
     hudVitalsHost: element("hud-vitals-host"),
     hudMenuContent: element("hud-menu-content"),
+    hudMenu: element<HTMLDetailsElement>("hud-menu"),
     gameplaySettingsHost: element("gameplay-settings-host"),
     inventoryOpen: element("player-ui-inventory-open"),
     abilityOpen: element("player-ui-ability-open"),

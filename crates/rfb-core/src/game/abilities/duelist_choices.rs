@@ -410,7 +410,6 @@ impl Game {
                 }
                 self.continue_after_duelist_choice(Continue::PlayerAction {
                     energy_cost: STANDARD_ACTION_COST,
-                    recover_after_wait: false,
                     pet_neglect_allowed: self.pet_upkeep().unsafe_warning(),
                     visible_auras_before,
                 });
@@ -728,7 +727,6 @@ impl Game {
                 }
                 Continue::PlayerAction {
                     energy_cost,
-                    recover_after_wait,
                     pet_neglect_allowed,
                     visible_auras_before,
                 } => {
@@ -752,21 +750,14 @@ impl Game {
                         )?;
                     }
                     if self.pending_duelist.is_some() || self.pending_mutation_direction.is_some() {
-                        self.continue_after_duelist_choice(Continue::PlayerWorld {
-                            recover_after_wait,
-                        });
+                        self.continue_after_duelist_choice(Continue::PlayerWorld {});
                     } else {
-                        self.finish_duelist_player_world(recover_after_wait, events);
+                        self.finish_duelist_player_world(events);
                     }
                 }
-                Continue::PlayerWorld { recover_after_wait } => {
-                    self.finish_duelist_player_world(recover_after_wait, events)
-                }
+                Continue::PlayerWorld {} => self.finish_duelist_player_world(events),
                 Continue::RestRecovery { completed_turns } => {
                     self.decrement_ability_cooldowns(completed_turns);
-                    if !self.player_is_dead() {
-                        self.recover_player_resources(true, events);
-                    }
                 }
             }
             if self.duelist_prompt().is_some() || self.pending_mutation_direction.is_some() {
@@ -783,17 +774,11 @@ impl Game {
         Ok(pending.command_completion)
     }
 
-    pub(in crate::game) fn finish_duelist_player_world(
-        &mut self,
-        recover_after_wait: bool,
-        events: &mut Vec<DomainEvent>,
-    ) {
-        if !self.player_is_dead() && !self.wilderness_blocks_regeneration() {
-            if recover_after_wait {
-                self.recover_player_resources(false, events);
-            } else {
-                self.apply_pet_upkeep_mana_loss(events);
-            }
+    pub(in crate::game) fn finish_duelist_player_world(&mut self, events: &mut Vec<DomainEvent>) {
+        if !self.player_is_dead() && self.pet_upkeep_dto().dismissal_required {
+            events.push(DomainEvent::PetUpkeepDismissalRequired {
+                upkeep_percent: self.pet_upkeep().percent,
+            });
         }
     }
 }

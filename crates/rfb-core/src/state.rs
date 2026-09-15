@@ -62,6 +62,25 @@ pub(crate) struct RidingBond {
 pub(crate) struct ResourcePool {
     pub(crate) current: u32,
     pub(crate) maximum: u32,
+    /// Fractional current mana, in units of 2^-32 (RFB csp_frac).
+    pub(crate) fraction: u32,
+}
+
+impl ResourcePool {
+    pub(crate) fn recover(&mut self, amount: u32) {
+        self.current = self.current.saturating_add(amount).min(self.maximum);
+        if self.current == self.maximum {
+            self.fraction = 0;
+        }
+    }
+
+    pub(crate) fn apply_fixed_change(&mut self, change: i64, minimum: u32) {
+        let value = (i128::from(self.current) << 32) + i128::from(self.fraction);
+        let next = (value + (i128::from(change) << 16))
+            .clamp(i128::from(minimum) << 32, i128::from(u64::MAX));
+        self.current = (next >> 32) as u32;
+        self.fraction = next as u32;
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

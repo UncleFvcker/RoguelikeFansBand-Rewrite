@@ -406,7 +406,7 @@ impl Game {
                 amount += self.rng.bounded(5) as u32 + 1;
             }
             let pool = self.resources.get_mut("demo.resource.mana").unwrap();
-            pool.current = (pool.current + amount).min(pool.maximum);
+            pool.recover(amount);
             let chance = match self.items[index].curse {
                 Some(Curse::Permanent) => 0,
                 Some(Curse::Heavy) => 7,
@@ -788,15 +788,15 @@ impl Game {
             .sum();
         let cost = (sum << 32) / 3 + ((spells.len() as u64 - 1) << 32);
         let p = self.resources.get_mut("demo.resource.mana").unwrap();
-        let available = ((u64::from(p.current) << 32) + u64::from(self.hex.mana_fraction))
-            .min(u64::from(p.maximum) << 32);
+        let available =
+            ((u64::from(p.current) << 32) + u64::from(p.fraction)).min(u64::from(p.maximum) << 32);
         if available < cost {
             self.stop_hex(None);
             return Ok(());
         }
         let remaining = available - cost;
         p.current = (remaining >> 32) as u32;
-        self.hex.mana_fraction = remaining as u32;
+        p.fraction = remaining as u32;
         self.hex.interrupted = false;
         self.refresh_player_resource_maxima();
         for (spell, a) in spells {

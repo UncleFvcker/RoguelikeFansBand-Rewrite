@@ -5,9 +5,10 @@ import type { CameraMode, ZoomLevel } from "./camera.ts";
 import { parseBindings, type KeyBinding } from "./command-recording.ts";
 import type { BehaviorPreferencesDto, MogaminatorPreferencesDto, OperationOptionsDto, TravelOptionsDto } from "./protocol";
 
-import { DEFAULT_DISPLAY, validDisplay, type DisplayPreferences } from "./display-preferences.ts";
+import { DEFAULT_DISPLAY, DEFAULT_HUD_DISPLAY, HUD_DISPLAY_FIELDS, validDisplay, type DisplayPreferences } from "./display-preferences.ts";
 
 import { defaultVisuals, validVisuals, type VisualPreferences } from "./visual-preferences.ts";
+import { emptyHotbar, validHotbar, type HotbarBinding } from "./hotbar.ts";
 
 export interface Preferences {
   visuals: VisualPreferences;
@@ -19,6 +20,7 @@ export interface Preferences {
   cameraMode: CameraMode;
   zoom: ZoomLevel;
   keyBindings: KeyBinding[];
+  hotbar: (HotbarBinding | null)[];
   travel: TravelOptionsDto;
   operations: OperationOptionsDto;
   mogaminator: MogaminatorPreferencesDto;
@@ -32,7 +34,7 @@ export interface PreferenceStorage {
 export function defaultPreferences(): Preferences {
   // Inert bootstrap/test values. Runtime defaults, including rule sources, come from Core.
   return { visuals: defaultVisuals(), display: { ...DEFAULT_DISPLAY }, formatVersion: 5, locale: "zh-CN", inputPreset: "original", tilesetPreset: "ascii", cameraMode: "player-centered", zoom: 1, keyBindings: [],
-    travel: { alwaysPickup: false, autoDetectTraps: false, autoMapArea: false, disturbTrapDetect: true },
+    hotbar: emptyHotbar(), travel: { alwaysPickup: false, autoDetectTraps: false, autoMapArea: false, disturbTrapDetect: true },
     operations: { runStops: { stairs: true, openDoors: false, knownTreasure: false }, cutCorners: false,
       travelIgnoreItems: true, defaultTarget: "old-then-nearest", targetPets: false, easyOpen: true, easyDisarm: true, autoRepeat: true },
     mogaminator: { enabled: false, leaveDestroyedItems: false, autoGetMode: "off", zhCnSource: "", enUsSource: "" } };
@@ -40,11 +42,18 @@ export function defaultPreferences(): Preferences {
 export function behaviorPreferences(p: Preferences): BehaviorPreferencesDto { return { locale: p.locale, travel: p.travel, operations: p.operations, mogaminator: p.mogaminator }; }
 export function parsePreferences(text: string): Preferences {
   const p = JSON.parse(text);
+  if (p && typeof p === "object" && !Object.hasOwn(p, "hotbar")) p.hotbar = emptyHotbar();
+  // Released global settings predate HUD visibility. Default only these newly added fields.
+  if (p?.display && typeof p.display === "object" && !Array.isArray(p.display)) {
+    for (const field of HUD_DISPLAY_FIELDS) {
+      if (!Object.hasOwn(p.display, field)) p.display[field] = DEFAULT_HUD_DISPLAY[field];
+    }
+  }
   // Additive visual preference: retain existing version-5 settings and explicit overrides.
   if (p?.visuals && typeof p.visuals === "object" && !Array.isArray(p.visuals) && !Object.hasOwn(p.visuals, "uniqueEffect")) {
     p.visuals.uniqueEffect = "flowing";
   }
-  if (!p || typeof p !== "object" || Object.keys(p).sort().join() !== "cameraMode,display,formatVersion,inputPreset,keyBindings,locale,mogaminator,operations,tilesetPreset,travel,visuals,zoom" ||
+  if (!p || typeof p !== "object" || Object.keys(p).sort().join() !== "cameraMode,display,formatVersion,hotbar,inputPreset,keyBindings,locale,mogaminator,operations,tilesetPreset,travel,visuals,zoom" || !validHotbar(p.hotbar) ||
       p.formatVersion !== 5 || !validVisuals(p.visuals) || !validDisplay(p.display) || !["zh-CN", "en-US"].includes(p.locale) ||
       !["original", "roguelike"].includes(p.inputPreset) ||
       !["ascii", "image"].includes(p.tilesetPreset) || !["player-centered", "full-map"].includes(p.cameraMode) ||

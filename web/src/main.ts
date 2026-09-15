@@ -2,6 +2,7 @@
 import { HighScorePanel, confirmCharacterEnd } from "./high-scores";
 
 import "./styles.css";
+import { Hotbar, itemHotbarBinding } from "./hotbar";
 
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
@@ -100,6 +101,8 @@ const playerUiLayout = new PlayerUiLayout({
   document,
   window,
   localization,
+  onAbilityKey: event => statusPanel.handleAbilityKey(event),
+  onAbilityOpen: () => statusPanel.resetAbilitySelection(),
 });
 const itemCurseSeverityName = createItemCurseSeverityName(localization);
 const {
@@ -212,6 +215,7 @@ const settingsPanel = new SettingsPanel({
     messagePanel.render();
     combatSummaryPanel.localize();
     magicEaterPanel.render();
+    hotbar.render();
   },
   onBehaviorChange: async (p) => {
     if (await gameSession.dispatch({ type: "configure-preferences", preferences: behaviorPreferences(p) }) !== "applied") throw new Error("preferences-apply-failed");
@@ -281,6 +285,7 @@ function refreshBusyControls(): void {
   magicEaterPanel.render();
   renderTravelOptions();
   statusPanel.updateAbilityActions();
+  hotbar.render();
 }
 
 function promptMogaminatorQuery(mogaminator: MogaminatorDto): void {
@@ -443,6 +448,11 @@ function handleCommandShortcut(command: CommandShortcut, count?: number): void {
   inventoryPanel.openCommand(command as ItemShortcut, count);
 }
 const inventoryPanel = new InventoryPanel({
+  bindHotbar: item => {
+    const binding = itemHotbarBinding(item);
+    if (binding) hotbar.choose(binding);
+    else window.alert(localization.format("hotbar-item-unsupported"));
+  },
   dom: appDom,
   state: appState,
   localization,
@@ -527,6 +537,7 @@ const spellRealmsPanel = new SpellRealmsPanel({
   afterPrompt: () => playerUiLayout.open("ability"),
 });
 const statusPanel = new StatusPanel({
+  bindHotbar: id => hotbar.choose({ type: "ability", id }),
   dom: appDom,
   state: appState,
   localization,
@@ -550,6 +561,19 @@ const statusPanel = new StatusPanel({
   },
   renderTargeting: () => inputController.render(),
   refreshInventoryActions: () => inventoryPanel.updateActions(),
+});
+const hotbar = new Hotbar({
+  document, window, state: appState, localization, preferences, itemName: visibleItemName,
+  cast: id => {
+    const ability = appState.status?.player.abilities?.find(ability => ability.id === id);
+    if (ability?.targetSpec.modes.some(mode => mode === "town" || mode === "element")) playerUiLayout.open("ability");
+    statusPanel.useHotbarAbility(id);
+  },
+  use: (action, ids) => inventoryPanel.openCommand(action, undefined, ids),
+  commandNumberInputActive: () => inputController.commandNumberInputActive,
+  blocked: () => appState.busy || appState.commandBlocked || appState.worldMap || !!appState.targeting ||
+    !!appState.terrainInteractionMode || !!inputController.continuousAction || !!document.querySelector("dialog[open]"),
+  error: showError,
 });
 const shopPanel = new ShopPanel({
   document,
@@ -711,6 +735,7 @@ monsterProbePanel.install();
 mogaminatorEditor.install();
 journeyResult.install();
 playerUiLayout.install();
+hotbar.install();
 saveButton.addEventListener("click", () => void nativeSavePanel.saveFromShortcut());
 document.getElementById("save-as-button")!.addEventListener("click", () => void nativeSavePanel.saveFromShortcut(
   () => window.prompt(localization.format("shortcut-save-name"), appState.status?.player.name ?? ""), undefined, true));
@@ -735,6 +760,7 @@ window.addEventListener("beforeunload", () => {
   inputController.dispose();
   journeyResult.dispose();
   playerUiLayout.dispose();
+  hotbar.dispose();
   sessionShell.dispose();
   titleBackground.dispose();
   renderer.destroy();
@@ -859,6 +885,7 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   statusPanel.render(snapshot);
   refreshSaveControls();
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
+  hotbar.render();
   shopPanel.render(snapshot);
   homePanel.render(snapshot);
   taskServicePanel.render(snapshot);
@@ -946,6 +973,7 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   mogaminatorEditor?.render(snapshot.mogaminator);
   promptMogaminatorQuery(snapshot.mogaminator);
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
+  hotbar.render();
   shopPanel.render(snapshot);
   homePanel.render(snapshot);
   taskServicePanel.render(snapshot);

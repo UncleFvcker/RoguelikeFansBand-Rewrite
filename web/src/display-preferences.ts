@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: MPL-2.0
 // Presentation only: never injected into Core behavior, saves, or replays.
+export const DEFAULT_HUD_DISPLAY = {
+  showCharacterInfo: true,
+  showSidebar: true,
+  showFooter: true,
+  showNearby: true,
+  showMessages: true,
+  showMapActions: true,
+  showCombatSummary: true,
+  showDungeonInfo: true,
+  showShortcutBar: true,
+};
+export const HUD_DISPLAY_FIELDS = Object.keys(DEFAULT_HUD_DISPLAY) as (keyof typeof DEFAULT_HUD_DISPLAY)[];
 export const DEFAULT_DISPLAY = {
+  ...DEFAULT_HUD_DISPLAY,
   highlightPlayer: false,
   targetPath: false,
   unsafeGrids: false,

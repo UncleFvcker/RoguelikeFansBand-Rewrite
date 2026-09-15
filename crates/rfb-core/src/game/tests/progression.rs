@@ -2694,10 +2694,9 @@ fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
     choose_human_talent_if_pending(&mut game);
 
     let previous_attribute_max_hp = game.effective_player_max_hp();
-    let previous_attribute_resources = game.player_resource_maxima();
     game.progress.attributes = game.progress.attribute_potentials;
     game.progress.maximum_attributes = game.progress.attribute_potentials;
-    game.refresh_after_attribute_change(previous_attribute_max_hp, &previous_attribute_resources);
+    game.refresh_after_attribute_change(previous_attribute_max_hp);
     for mutation_id in [
         "rfb.mutation.hyper-str",
         "rfb.mutation.br-fire",
@@ -2790,7 +2789,9 @@ fn new_life_is_one_seeded_transaction_with_locked_mutation_protection() {
     for (resource_id, (previous_current, previous_maximum)) in previous_resource_currents {
         let pool = &game.resources[&resource_id];
         let expected_current = u32::try_from(
-            u64::from(previous_current) * u64::from(pool.maximum) / u64::from(previous_maximum),
+            (u64::from(previous_current) * 100 / u64::from(previous_maximum))
+                * u64::from(pool.maximum)
+                / 100,
         )
         .expect("resource scaling must fit u32");
         assert_eq!(pool.current, expected_current);
@@ -4008,8 +4009,9 @@ fn attribute_increase_command_commits_growth_without_rng_or_world_progression() 
     assert_eq!(
         resource_after.current,
         u32::try_from(
-            u64::from(resource_before.current) * u64::from(resource_after.maximum)
-                / u64::from(resource_before.maximum)
+            (u64::from(resource_before.current) * 100 / u64::from(resource_before.maximum))
+                * u64::from(resource_after.maximum)
+                / 100
         )
         .expect("scaled resource value should fit u32")
     );

@@ -99,13 +99,13 @@ test("HUD location distinguishes the world map, towns, wilderness and content du
 
 test("ability shortcuts focus casting rather than learning and powers use their projected source", () => {
   let focused;
-  const control = name => ({ focus() { focused = name; }, scrollIntoView() {} });
+  const control = name => ({ dataset: {}, focus() { focused = name; }, scrollIntoView() {} });
   const learnedCast = control("learned-cast"), powerCast = control("power-cast"), study = control("study");
-  const row = (id, cast) => ({ dataset: { abilityId: id }, ...control(id), querySelector: selector => selector === ".ability-cast-action:not(:disabled)" ? cast : study });
+  const row = (id, cast) => ({ ...control(id), dataset: { abilityId: id }, querySelector: selector => selector === ".ability-cast-action:not(:disabled)" ? cast : study });
   const rows = [row("spell", learnedCast), row("power", powerCast)];
   const state = new AppState();
   state.status = { player: { abilities: [{ id: "spell", source: "learned" }, { id: "power", source: "race" }] } };
-  const panel = new StatusPanel({ state, dom: { abilityList: { querySelectorAll: () => rows, querySelector: () => study } } });
+  const panel = new StatusPanel({ state, localization: { format: key => key }, dom: { abilityList: { querySelectorAll: () => rows, querySelector: () => study } } });
   panel.focusCommand("cast"); assert.equal(focused, "learned-cast");
   panel.focusCommand("power"); assert.equal(focused, "power-cast");
   panel.focusCommand("study"); assert.equal(focused, "study");
@@ -115,13 +115,13 @@ test("ability shortcuts focus casting rather than learning and powers use their 
 test("book shortcuts pass canonical item commands then focus only the chosen book's abilities", async () => {
   const state = new AppState(), choices = [];
   let focused;
-  const control = id => ({ focus() { focused = id; }, scrollIntoView() {} });
-  const rows = ["a", "b"].map(id => ({ dataset: { abilityId: id }, ...control(id), querySelector: () => control(`${id}-action`) }));
+  const control = id => ({ dataset: {}, focus() { focused = id; }, scrollIntoView() {} });
+  const rows = ["a", "b"].map(id => ({ ...control(id), dataset: { abilityId: id }, querySelector: () => control(`${id}-action`) }));
   state.status = { player: { abilities: [
     { id: "a", source: "learned", bookItemId: "book-a", canStudy: true },
     { id: "b", source: "learned", bookItemId: "book-b", canStudy: true },
   ] } };
-  const panel = new StatusPanel({ state, dom: { abilityList: { querySelectorAll: selector => selector === "[data-ability-id]" ? rows : [] } },
+  const panel = new StatusPanel({ state, dom: { abilityList: { querySelector: () => null, querySelectorAll: selector => selector === "[data-ability-id]" ? rows : [] } },
     selectItemTarget: (_excluded, choose, ids, command) => choices.push({ choose, ids, command }), confirmItemChoice: () => true,
   });
   for (const command of ["study", "browse", "cast"]) {
@@ -132,6 +132,31 @@ test("book shortcuts pass canonical item commands then focus only the chosen boo
     await choice.choose("book-b");
     assert.equal(focused, command === "browse" ? "b" : "b-action");
   }
+});
+
+test("spell letters select the displayed page, inspect uppercase and retain disabled casting gates", () => {
+  const calls = [], focused = [];
+  const abilities = Array.from({ length: 27 }, (_, index) => ({ id: `spell-${index}`, source: "learned", canCast: index !== 1 }));
+  const rows = abilities.map(ability => {
+    const name = { dataset: {} };
+    const cast = { disabled: !ability.canCast, click: () => calls.push(ability.id), focus() {}, scrollIntoView() {} };
+    return { dataset: { abilityId: ability.id }, hidden: false, focus: () => focused.push(ability.id), scrollIntoView() {},
+      querySelector: selector => selector === ".ability-name" ? name : selector.startsWith(".ability-cast-action") ?
+        selector.includes(":not(:disabled)") && cast.disabled ? null : cast : null };
+  });
+  const state = new AppState(); state.mode = "playing"; state.status = { player: { abilities } };
+  const list = { querySelectorAll: selector => selector === "[data-ability-id]" ? rows : [],
+    querySelector: selector => rows.find(row => selector === `[data-ability-key="${row.dataset.abilityKey}"]`) ?? null };
+  const panel = new StatusPanel({ state, dom: { abilityList: list } });
+  panel.focusCommand("cast");
+  const press = key => panel.handleAbilityKey({ key, preventDefault() {}, stopImmediatePropagation() {} });
+  assert.equal(rows[26].hidden, true);
+  press("A"); assert.deepEqual(calls, []);
+  press("a"); press("b"); assert.deepEqual(calls, ["spell-0"]);
+  press("PageDown"); assert.equal(rows[26].dataset.abilityKey, "a"); assert.equal(rows[0].hidden, true);
+  press("a"); assert.deepEqual(calls, ["spell-0", "spell-26"]);
+  state.busy = true; press("a"); assert.equal(calls.length, 2);
+  state.busy = false; panel.focusCommand("browse"); press("a"); assert.equal(calls.length, 2);
 });
 
 test("rest button uses the shared cancellable entry", () => {

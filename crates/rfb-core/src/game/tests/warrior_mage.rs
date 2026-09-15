@@ -125,15 +125,9 @@ fn growth_uses_intelligence_eighty_four_capacity_and_normal_mana_recovery() {
     game.progress.attributes.intelligence = 3;
     game.refresh_player_ability_state();
     assert!(game.resources[MANA].maximum < maximum);
-    let resource = game.content.resource(MANA).unwrap();
-    assert_eq!(
-        game.player_resource_recovery_change(MANA, false),
-        i64::from(resource.wait_recovery_amount)
-    );
-    assert_eq!(
-        game.player_resource_recovery_change(MANA, true),
-        i64::from(resource.rest_recovery_amount)
-    );
+    let maximum = i64::from(game.resources[MANA].maximum);
+    assert_eq!(game.mana_recovery_per_cycle(false), maximum * 197 + 524);
+    assert_eq!(game.mana_recovery_per_cycle(true), maximum * 394 + 524);
     let restored = Game::from_save(game.to_save(), game.behavior_preferences()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
     assert_eq!(restored.rng, game.rng);

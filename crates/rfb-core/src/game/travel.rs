@@ -23,7 +23,7 @@ const DIRECTIONS: [Direction; 8] = [
 impl Game {
     fn automatic_movement_hostile_exists(&self) -> bool {
         if self.auto_explore.is_some() {
-            self.auto_explore_hostile_in_sight()
+            self.hostile_in_sight()
         } else {
             self.visible_hostile_exists()
         }

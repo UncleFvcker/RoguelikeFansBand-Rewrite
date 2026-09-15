@@ -528,7 +528,7 @@ impl Game {
             && damage > 0
             && let Some(mana) = self.resources.get_mut("demo.resource.mana")
         {
-            mana.current = (mana.current + u32::from(damage)).min(mana.maximum);
+            mana.recover(u32::from(damage));
         }
         let mut branch = ability.clone();
         branch.spell_power_bonus = 0;

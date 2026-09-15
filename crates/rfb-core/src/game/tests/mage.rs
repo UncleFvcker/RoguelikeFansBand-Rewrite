@@ -273,10 +273,15 @@ fn actual_experience_growth_preserves_mana_skills_and_level_twenty_five_power() 
         .unwrap();
     assert_eq!(power.failure_percent, 11);
     game.resources.get_mut(MANA).unwrap().current = 0;
-    let recovery = game.player_resource_recovery_amount(MANA, false);
-    assert!(recovery >= 2);
-    game.recover_player_resources(false, &mut Vec::new());
-    assert_eq!(game.resources[MANA].current, recovery);
+    let recovery = i64::from(game.resources[MANA].maximum) * 394 + 524;
+    assert_eq!(game.mana_recovery_per_cycle(false), recovery);
+    game.world_tick = 10;
+    game.process_mana_regeneration(false, &mut Vec::new());
+    assert_eq!(game.resources[MANA].current, (recovery / 65536) as u32);
+    assert_eq!(
+        game.resources[MANA].fraction,
+        ((recovery % 65536) as u32) << 16
+    );
 }
 
 #[test]

@@ -132,7 +132,7 @@ function exportedBinding(binding: KeyBinding): string | undefined {
 export function exportPrf(p: Preferences, catalog: readonly EditableVisualDto[]): { text: string; omitted: string[] } {
   const lines = ["# RFB Rewrite supported preference subset (UTF-8)"], omitted = [
     "locale", "zoom", "tilesetPreset", "visuals.theme", "display.hpWarningPercent", "display.manaWarningPercent",
-    "mogaminator.zhCnSource", "mogaminator.enUsSource",
+    "mogaminator.zhCnSource", "mogaminator.enUsSource", "hotbar",
   ];
   const bool = (name: string, value: boolean) => lines.push(`${value ? "Y" : "X"}:${name}`);
   for (const [name, path] of Object.entries(BOOLS)) bool(name, boolValue(p, path));

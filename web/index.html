@@ -162,7 +162,11 @@
         <div id="hud-identity-host" class="hud-identity-host"></div>
         <div id="hud-vitals-host" class="hud-vitals-host"></div>
         <div id="hud-menu-host" class="hud-menu-host">
-          <details class="hud-menu">
+          <div class="status-turn-row">
+            <button id="hud-toggle-header" class="hud-section-toggle" type="button" aria-controls="hud-identity-host hud-vitals-host" aria-expanded="true" data-l10n-aria-label="hud-hide-header">▴</button>
+            <span class="turn-indicator"><span data-l10n-id="status-turn"></span> <strong id="turn-value">0</strong></span>
+          </div>
+          <details id="hud-menu" class="hud-menu">
             <summary data-l10n-id="hud-menu-title"></summary>
             <div id="hud-menu-content" class="hud-menu-content">
               <div class="header-actions">
@@ -205,16 +209,15 @@
       </section>
 
       <main class="game-layout">
+        <button id="hud-toggle-sidebar" class="hud-section-toggle" type="button" aria-controls="player-sidebar" aria-expanded="true" data-l10n-aria-label="hud-hide-sidebar">▸</button>
         <div class="play-column">
+        <button id="hud-toggle-footer" class="hud-section-toggle" type="button" aria-controls="map-actions context-summary dungeon-strip shortcut-bar" aria-expanded="true" data-l10n-aria-label="hud-hide-footer">▾</button>
         <section class="map-panel" data-l10n-aria-label="map-aria-label">
-          <div class="panel-heading">
-            <span data-l10n-id="panel-map-title"></span>
-            <span id="connection-status" class="status-pill"></span>
-          </div>
+          <span id="connection-status" class="status-pill" hidden></span>
           <div id="map-host" class="map-host">
             <div id="target-cursor" class="target-cursor" aria-hidden="true" hidden></div>
           </div>
-          <div class="input-toolbar">
+          <div id="map-actions" class="input-toolbar">
             <details class="map-intelligence-menu">
               <summary data-l10n-id="cfg-menu"></summary>
               <button type="button" data-config-record="input-config" data-l10n-id="cfg-input-config"></button>
@@ -288,7 +291,7 @@
           </div>
         </section>
 
-        <section class="context-panel" aria-labelledby="context-effects-title combat-context-title">
+        <section id="context-summary" class="context-panel" aria-labelledby="context-effects-title combat-context-title">
           <div class="context-effects" aria-labelledby="context-effects-title">
             <div class="context-heading">
               <span id="context-effects-title" data-l10n-id="status-effects"></span>
@@ -308,22 +311,33 @@
             </div>
         </section>
 
-        <section class="support-drawer" aria-labelledby="dungeon-info-title">
+        <section id="dungeon-strip" class="support-drawer" aria-labelledby="dungeon-info-title">
           <div id="support-panel-host" class="support-panel-host"></div>
         </section>
 
-        <section class="shortcut-bar" aria-labelledby="shortcut-bar-title">
+        <section id="shortcut-bar" class="shortcut-bar" aria-labelledby="shortcut-bar-title">
           <div class="shortcut-bar-heading">
             <span id="shortcut-bar-title" class="shortcut-bar-title" data-l10n-id="shortcut-bar-title"></span>
-            <span class="shortcut-bar-status" data-l10n-id="shortcut-bar-not-connected"></span>
+            <div class="hotbar-pages">
+              <button type="button" data-hotbar-page="0" aria-pressed="true">1</button>
+              <button type="button" data-hotbar-page="1" aria-pressed="false">2</button>
+              <button type="button" data-hotbar-page="2" aria-pressed="false">3</button>
+              <button type="button" data-hotbar-page="3" aria-pressed="false">4</button>
+              <button type="button" data-hotbar-page="4" aria-pressed="false">5</button>
+              <button type="button" data-hotbar-page="5" aria-pressed="false">6</button>
+            </div>
           </div>
-          <div class="shortcut-bar-slots" aria-hidden="true">
-            <span class="shortcut-slot" data-shortcut-slot="1"></span>
-            <span class="shortcut-slot" data-shortcut-slot="2"></span>
-            <span class="shortcut-slot" data-shortcut-slot="3"></span>
-            <span class="shortcut-slot" data-shortcut-slot="4"></span>
-            <span class="shortcut-slot" data-shortcut-slot="5"></span>
-            <span class="shortcut-slot" data-shortcut-slot="6"></span>
+          <div class="shortcut-bar-slots">
+            <button type="button" class="shortcut-slot" data-shortcut-slot="1">1</button>
+            <button type="button" class="shortcut-slot" data-shortcut-slot="2">2</button>
+            <button type="button" class="shortcut-slot" data-shortcut-slot="3">3</button>
+            <button type="button" class="shortcut-slot" data-shortcut-slot="4">4</button>
+            <button type="button" class="shortcut-slot" data-shortcut-slot="5">5</button>
+            <button type="button" class="shortcut-slot" data-shortcut-slot="6">6</button>
+            <button type="button" class="shortcut-slot" data-shortcut-slot="7">7</button>
+            <button type="button" class="shortcut-slot" data-shortcut-slot="8">8</button>
+            <button type="button" class="shortcut-slot" data-shortcut-slot="9">9</button>
+            <button type="button" class="shortcut-slot" data-shortcut-slot="10">0</button>
           </div>
         </section>
         </div>
@@ -334,9 +348,6 @@
             <button id="intel-message-tab" type="button" aria-controls="message-panel" aria-pressed="false" data-l10n-id="panel-message-title"></button>
           </div>
           <section id="status-panel" class="status-panel player-status-panel">
-            <div class="status-turn-row">
-              <span class="turn-indicator"><span data-l10n-id="status-turn"></span> <strong id="turn-value">0</strong></span>
-            </div>
             <div id="health-meter" class="health-meter" data-health-state="healthy">
               <div class="health-meter-label">
                 <span data-l10n-id="status-health"></span>
@@ -371,10 +382,12 @@
             </div>
             <dl class="status-grid player-identity-grid">
               <div class="player-identity-line"><dd id="progression-identity-value">--</dd></div>
-              <div class="hud-location-row"><dd id="hud-location-value">--</dd></div>
-              <div><dt data-l10n-id="progression-level"></dt><dd id="progression-level-value">--</dd></div>
+              <div class="hud-location-row" hidden><dd id="hud-location-value">--</dd></div>
+              <div class="hud-level-row">
+                <dt data-l10n-id="progression-level"></dt><dd id="progression-level-value">--</dd>
+                <dd class="hud-experience-cell"><progress id="hud-experience" class="hud-experience" max="1000" value="0" tabindex="0" data-l10n-aria-label="progression-experience" hidden></progress></dd>
+              </div>
             </dl>
-            <progress id="hud-experience" class="hud-experience" max="1000" value="0" tabindex="0" data-l10n-aria-label="progression-experience" hidden></progress>
           </section>
           <ul id="hud-attribute-list" class="hud-attribute-list" aria-live="polite"></ul>
 
@@ -401,9 +414,7 @@
           <div id="message-panel-host" class="message-panel-host"></div>
 
           <section id="dungeon-info-panel" class="status-panel dungeon-info-panel" aria-labelledby="dungeon-info-title">
-            <div class="panel-heading">
-              <span id="dungeon-info-title" data-l10n-id="panel-journey-title"></span>
-            </div>
+            <span id="dungeon-info-title" class="visually-hidden" data-l10n-id="panel-journey-title"></span>
             <dl class="dungeon-info-grid">
               <div>
                 <dt data-l10n-id="journey-current-dungeon-label"></dt>
@@ -884,6 +895,7 @@
           <nav class="preferences-navigation" data-l10n-aria-label="preferences-title">
             <button id="preferences-general" type="button" data-settings-page="general" data-l10n-id="settings-interface-eyebrow"></button>
             <button id="preferences-behavior" type="button" data-settings-page="behavior" data-l10n-id="settings-gameplay-title"></button>
+            <button id="preferences-autopick" type="button" data-settings-page="autopick" data-l10n-id="mogaminator-title"></button>
             <button id="preferences-display" type="button" data-settings-page="display" data-l10n-id="preferences-display"></button>
             <button id="preferences-glyphs" type="button" data-settings-page="glyphs" data-l10n-id="visual-glyphs"></button>
             <button id="preferences-colors" type="button" data-settings-page="colors" data-l10n-id="visual-colors"></button>
@@ -894,7 +906,13 @@
             <section class="settings-section" data-settings-panel="general">
               <p data-l10n-id="preferences-description"></p>
               <div id="gameplay-settings-host" class="settings-grid gameplay-settings-host"></div>
-              <div class="session-form-actions"><button id="preferences-keys" type="button" data-preference-row data-l10n-id="cfg-keys"></button><button id="preferences-mogaminator" type="button" data-preference-row data-l10n-id="preferences-mogaminator"></button></div>
+              <div class="session-form-actions"><button id="preferences-keys" type="button" data-preference-row data-l10n-id="cfg-keys"></button></div>
+            </section>
+            <section class="settings-section" data-settings-panel="autopick" hidden>
+              <h3 data-l10n-id="mogaminator-title"></h3>
+              <p data-l10n-id="preferences-mogaminator-help"></p>
+              <p id="preferences-mogaminator-unavailable" data-l10n-id="preferences-mogaminator-unavailable"></p>
+              <div class="session-form-actions"><button id="preferences-mogaminator" type="button" data-l10n-id="preferences-mogaminator" aria-describedby="preferences-mogaminator-unavailable"></button></div>
             </section>
             <section class="settings-section settings-grid" data-settings-panel="behavior" hidden>
 <fieldset id="travel-options">
@@ -930,6 +948,19 @@
             </fieldset>
                       </section>
             <section class="settings-section" data-settings-panel="display" hidden>
+              <fieldset id="hud-display-options">
+                <legend data-l10n-id="preferences-hud-title"></legend>
+                <p data-l10n-id="preferences-hud-help"></p>
+                <label data-preference-row><input id="display-showCharacterInfo" type="checkbox"><span data-l10n-id="display-showCharacterInfo"></span></label>
+                <label data-preference-row><input id="display-showSidebar" type="checkbox"><span data-l10n-id="display-showSidebar"></span></label>
+                <label data-preference-row><input id="display-showNearby" type="checkbox"><span data-l10n-id="display-showNearby"></span></label>
+                <label data-preference-row><input id="display-showMessages" type="checkbox"><span data-l10n-id="display-showMessages"></span></label>
+                <label data-preference-row><input id="display-showFooter" type="checkbox"><span data-l10n-id="display-showFooter"></span></label>
+                <label data-preference-row><input id="display-showMapActions" type="checkbox"><span data-l10n-id="display-showMapActions"></span></label>
+                <label data-preference-row><input id="display-showCombatSummary" type="checkbox"><span data-l10n-id="display-showCombatSummary"></span></label>
+                <label data-preference-row><input id="display-showDungeonInfo" type="checkbox"><span data-l10n-id="display-showDungeonInfo"></span></label>
+                <label data-preference-row><input id="display-showShortcutBar" type="checkbox"><span data-l10n-id="display-showShortcutBar"></span></label>
+              </fieldset>
 <fieldset id="display-options"><legend data-l10n-id="preferences-display"></legend>
               <p data-l10n-id="preferences-display-help"></p>
               <label data-preference-row><input id="display-highlightPlayer" type="checkbox"><span data-l10n-id="display-highlightPlayer"></span></label>

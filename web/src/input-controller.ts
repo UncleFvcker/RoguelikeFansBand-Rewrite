@@ -108,6 +108,7 @@ export class InputController {
   #rememberedTarget: { target: TargetSelection; floorId: string } | undefined;
   #continuousAction: ContinuousAction | undefined;
   #heldMovement: { key: KeyboardEvent; direction: Direction } | undefined;
+  #restDialog: HTMLDialogElement | undefined;
 
   constructor(options: {
     state: AppState;
@@ -263,6 +264,7 @@ export class InputController {
     this.#mapDisplay.reset();
     this.#rememberedTarget = undefined;
     this.#sessionGeneration++;
+    this.#restDialog?.close();
     this.#glyphPromptPending = false;
     const action = this.#continuousAction;
     if (action) { action.cancelled = true; action.resume?.(); }
@@ -328,10 +330,10 @@ export class InputController {
 
   async chooseRestMode(count?: number): Promise<void> {
     if (this.#state.busy || this.#state.commandBlocked || this.#state.worldMap || !this.#state.status ||
-        this.#state.targeting || this.#state.terrainInteractionMode || this.continuousAction) return;
+        this.#state.targeting || this.#state.terrainInteractionMode || this.continuousAction || this.#restDialog) return;
     if (count !== undefined) { await this.restUntilRecovered(count); return; }
     const generation = this.#sessionGeneration;
-    const input = this.#window.prompt(this.#localization.format("message-rest-mode-prompt"), "&");
+    const input = await this.#chooseRestInput();
     if (input === null || generation !== this.#sessionGeneration) return;
     const command = parseRestInput(input);
     if (!command) {
@@ -339,6 +341,52 @@ export class InputController {
       return;
     }
     await this.#rest(command);
+  }
+
+  #chooseRestInput(): Promise<string | null> {
+    const document = this.#window.document;
+    const dialog = document.createElement("dialog");
+    this.#restDialog = dialog;
+    dialog.className = "item-target-dialog";
+    dialog.setAttribute("aria-label", this.#localization.format("action-resource-rest"));
+    const form = document.createElement("form");
+    form.method = "dialog";
+    const label = document.createElement("label");
+    label.textContent = this.#localization.format("message-rest-mode-prompt");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = "&";
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    label.append(input);
+    const actions = document.createElement("div");
+    actions.className = "item-target-actions";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.textContent = this.#localization.format("action-dialog-cancel");
+    cancel.addEventListener("click", () => dialog.close());
+    const confirm = document.createElement("button");
+    confirm.type = "submit";
+    confirm.textContent = this.#localization.format("action-resource-rest");
+    actions.append(cancel, confirm);
+    form.append(label, actions);
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      dialog.close("confirm");
+    });
+    dialog.append(form);
+    document.body.append(dialog);
+    return new Promise(resolve => {
+      // The close event runs after the confirmation input has finished dispatching.
+      // A native prompt can deliver focus/input events after rest has already started.
+      dialog.addEventListener("close", () => {
+        dialog.remove();
+        this.#restDialog = undefined;
+        resolve(dialog.returnValue === "confirm" ? input.value : null);
+      }, { once: true });
+      dialog.showModal();
+      input.select();
+    });
   }
 
   async #rest(command: RestCommand): Promise<void> {
@@ -1428,6 +1476,10 @@ export class InputController {
     return this.#continuousAction?.kind ?? (this.#state.status?.player.fishingDirection ? "fishing" : undefined);
   }
 
+  get commandNumberInputActive(): boolean {
+    return this.#countInput !== undefined || this.#literalCommand;
+  }
+
   async stopContinuousAction(): Promise<void> {
     this.#heldMovement = undefined;
     this.#countInput = undefined;
@@ -1491,7 +1543,12 @@ export class InputController {
   };
 
   readonly #interruptContinuousKey = (event: KeyboardEvent): void => {
-    if (event.defaultPrevented || event.isComposing || (event.repeat && (this.continuousAction === "run" || this.continuousAction === "auto-explore" || this.continuousAction === "repeat" || this.continuousAction === "macro"))) return;
+    if (event.defaultPrevented || event.isComposing) return;
+    if (event.repeat && this.continuousAction === "rest") {
+      event.preventDefault(); // Held confirmation keys must not activate the restored button focus.
+      return;
+    }
+    if (event.repeat && (this.continuousAction === "run" || this.continuousAction === "auto-explore" || this.continuousAction === "repeat" || this.continuousAction === "macro")) return;
     const shortcut = commandShortcut(event, this.#getInputPreset());
     if (this.continuousAction && (shortcut === "save" || shortcut === "save-exit")) {
       event.preventDefault(); event.stopImmediatePropagation(); this.#onShortcut(shortcut); return;

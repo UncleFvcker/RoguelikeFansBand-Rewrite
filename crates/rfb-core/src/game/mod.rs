@@ -147,6 +147,7 @@ mod preferences;
 // M2 deliberately establishes this core transaction boundary before any item
 // effect is allowed to call it; Polymorph remains blocked until its own batch.
 mod discovery;
+mod mana;
 mod map_intelligence;
 #[allow(dead_code)]
 mod mutations;
@@ -247,7 +248,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 150;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 151;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const MAX_REST_TURNS: u16 = 9_999;
@@ -1515,7 +1516,6 @@ impl Game {
                     ..
                 }
             );
-        let recover_after_wait = matches!(&action, GameAction::Wait | GameAction::Stay);
         let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
         let mut turn_advance = u32::from(
             magic_absorption_advances_world != Some(false)
@@ -2894,7 +2894,6 @@ impl Game {
                     self.continue_after_duelist_choice(
                         rfb_protocol::DuelistContinuationDto::PlayerAction {
                             energy_cost: action_cost,
-                            recover_after_wait,
                             pet_neglect_allowed,
                             visible_auras_before: visible_monster_auras_before_action
                                 .iter()
@@ -2915,12 +2914,10 @@ impl Game {
                     )?;
                     if self.pending_duelist.is_some() {
                         self.continue_after_duelist_choice(
-                            rfb_protocol::DuelistContinuationDto::PlayerWorld {
-                                recover_after_wait,
-                            },
+                            rfb_protocol::DuelistContinuationDto::PlayerWorld {},
                         );
                     } else {
-                        self.finish_duelist_player_world(recover_after_wait, &mut events);
+                        self.finish_duelist_player_world(&mut events);
                     }
                 }
             }

@@ -13,7 +13,7 @@ export type DuelistPromptDto = { "type": "law-escape" } | { "type": "burglary-es
 
 export type DuelistChoiceDto = { "type": "confirm", accepted: boolean, } | { "type": "challenge", entityId: string | null, };
 
-export type DuelistContinuationDto = { "type": "chaos-reward", level: number, } | { "type": "melee", impactItemId: string, } | { "type": "charge", abilityId: string, targetEntityId: string, floorId: string, succeeded: boolean, } | { "type": "class-cast", resolution: AbilityCastResolutionDto, hitPointCost: number, } | { "type": "melee-teleport", abilityId: string, targetEntityId: string, targetKindId: string, floorId: string, playerFrom: Position, candidates: Array<Position>, } | { "type": "adjacent-melee", directions: Array<Direction>, floorId: string, } | { "type": "monster-teleport", sourceEntityId: string, abilityId: string, blocked: boolean, } | { "type": "monster-cast", resolution: MonsterAbilityCastResolutionDto, playerHpBefore: number, } | { "type": "monster-world", sourceEntityId: string, remainingActions: number, floorId: string, surroundReservations: Array<Position>, visibleAurasBefore: Array<string>, } | { "type": "monster-pulse", remainingEntityIds: Array<string>, floorId: string, surroundReservations: Array<Position>, visibleAurasBefore: Array<string>, petNeglectAllowed: boolean, } | { "type": "world-tick", resting: boolean, localFloorActive: boolean, petNeglectAllowed: boolean, } | { "type": "player-action", energyCost: number, recoverAfterWait: boolean, petNeglectAllowed: boolean, visibleAurasBefore: Array<string>, } | { "type": "player-world", recoverAfterWait: boolean, } | { "type": "rest-recovery", completedTurns: number, };
+export type DuelistContinuationDto = { "type": "chaos-reward", level: number, } | { "type": "melee", impactItemId: string, } | { "type": "charge", abilityId: string, targetEntityId: string, floorId: string, succeeded: boolean, } | { "type": "class-cast", resolution: AbilityCastResolutionDto, hitPointCost: number, } | { "type": "melee-teleport", abilityId: string, targetEntityId: string, targetKindId: string, floorId: string, playerFrom: Position, candidates: Array<Position>, } | { "type": "adjacent-melee", directions: Array<Direction>, floorId: string, } | { "type": "monster-teleport", sourceEntityId: string, abilityId: string, blocked: boolean, } | { "type": "monster-cast", resolution: MonsterAbilityCastResolutionDto, playerHpBefore: number, } | { "type": "monster-world", sourceEntityId: string, remainingActions: number, floorId: string, surroundReservations: Array<Position>, visibleAurasBefore: Array<string>, } | { "type": "monster-pulse", remainingEntityIds: Array<string>, floorId: string, surroundReservations: Array<Position>, visibleAurasBefore: Array<string>, petNeglectAllowed: boolean, } | { "type": "world-tick", resting: boolean, localFloorActive: boolean, petNeglectAllowed: boolean, } | { "type": "player-action", energyCost: number, petNeglectAllowed: boolean, visibleAurasBefore: Array<string>, } | { "type": "player-world", } | { "type": "rest-recovery", completedTurns: number, };
 
 export type DuelistCommandCompletionDto = { turnAdvance: number, worldTickBefore: number, niceEntityIds: Array<string>, refreshVisibility: boolean, actorDeaths: Array<DuelistActorDeathDto>, pickedUpKindIds: Array<string>, enteredFloorIds: Array<string>, };
 
@@ -210,13 +210,17 @@ export type TargetModeDto = "direction" | "position" | "entity" | "item" | "elem
 
 export type TargetSpecDto = { modes: Array<TargetModeDto>, range: number, requiresLineOfEffect: boolean, };
 
-export type ResourcePoolDto = { id: string, nameKey: string, current: number, maximum: number, waitRecoveryAmount: number, restRecoveryAmount: number, };
+export type ResourcePoolDto = { id: string, nameKey: string, current: number, maximum: number,
+/**
+ * Signed natural mana change per 10 world ticks, in units of 2^-16.
+ */
+normalRecoveryPer65536: bigint, restRecoveryPer65536: bigint, restActionRecovery: number, restRecoveryTarget: number, };
 
-export type MusicStateDto = { spell: number | null, beats: number, interrupted: boolean, halfMana: boolean, };
+export type MusicStateDto = { spell: number | null, beats: number, interrupted: boolean, };
 
-export type HexStateDto = { active: number, interrupted: boolean, manaFraction: number, revengeKind: number, revengeTicks: number, revengeDamage: number, revengeCast: AbilityCastResolutionDto | null, };
+export type HexStateDto = { active: number, interrupted: boolean, revengeKind: number, revengeTicks: number, revengeDamage: number, revengeCast: AbilityCastResolutionDto | null, };
 
-export type SamuraiStateDto = { manaDecayFraction: number, posture: number, counter: boolean, sutemi: boolean, };
+export type SamuraiStateDto = { posture: number, counter: boolean, sutemi: boolean, };
 
 export type AbilityLearningDto = { learnedCount: number, capacity: number, remainingSlots: number, studyMode: AbilityStudyModeDto, realms?: SpellRealmsDto | null, };
 

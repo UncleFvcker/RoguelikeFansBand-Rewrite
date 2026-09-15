@@ -338,8 +338,14 @@ impl Game {
                     name_key: definition.name_key.clone(),
                     current: pool.current,
                     maximum: pool.maximum,
-                    wait_recovery_amount: self.player_resource_recovery_amount(id, false),
-                    rest_recovery_amount: self.player_resource_recovery_amount(id, true),
+                    normal_recovery_per_65536: self.mana_recovery_per_cycle(false),
+                    rest_recovery_per_65536: self.mana_recovery_per_cycle(true),
+                    rest_action_recovery: self.rest_action_mana_recovery(),
+                    rest_recovery_target: if self.player_is_samurai() {
+                        Self::samurai_mana_limit(pool.maximum, self.progress.level)
+                    } else {
+                        pool.maximum
+                    },
                 }
             })
             .collect()

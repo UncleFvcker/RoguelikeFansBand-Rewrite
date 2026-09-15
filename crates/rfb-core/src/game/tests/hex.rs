@@ -161,7 +161,7 @@ fn hex_concurrent_upkeep_stop_dispel_and_mana_fraction_resume() {
     let before = g.resources["demo.resource.mana"].current;
     pulse(&mut g);
     assert!(g.resources["demo.resource.mana"].current < before);
-    assert!(g.hex.mana_fraction > 0);
+    assert!(g.resources["demo.resource.mana"].fraction > 0);
     g.interrupt_hex();
     assert!(!g.hexing(8));
     let mut loaded = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
@@ -182,7 +182,7 @@ fn hex_concurrent_upkeep_stop_dispel_and_mana_fraction_resume() {
     assert!(!g.hexing(8));
     assert!(g.hexing(2));
     g.resources.get_mut("demo.resource.mana").unwrap().current = 0;
-    g.hex.mana_fraction = 0;
+    g.resources.get_mut("demo.resource.mana").unwrap().fraction = 0;
     pulse(&mut g);
     assert_eq!(g.hex.active, 0);
 }

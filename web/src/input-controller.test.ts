@@ -429,15 +429,17 @@ test("R selects fixed, resource-only or complete rest and n retains the selectio
     ["&", "rest", 9999], ["10000", "rest-for-turns", 9999]]) {
     for (const preset of ["original", "roguelike"]) {
       const h = continuousHarness("local", undefined, preset);
-      const prompts = [];
-      h.window.prompt = (message, value) => { prompts.push([message, value]); return input; };
       h.emit("keydown", { key: "R" }); await flushCommands();
-      assert.deepEqual(prompts, [["message-rest-mode-prompt", "&"]]);
+      assert.equal(h.requests.length, 0, "opening the rest dialog does not advance time");
+      const dialog = h.document.body.children[0];
+      assert.equal(dialog.children[0].children[0].textContent, "message-rest-mode-prompt");
+      assert.equal(dialog.children[0].children[0].children[0].value, "&");
+      h.confirmRest(input); await flushCommands();
       assert.deepEqual(h.requests[0].command, { type, turns: 1 });
       const stop = h.controller.stopContinuousAction(); await h.finish(); await stop;
       assert.deepEqual(h.session.lastCommand, { type, turns });
       h.emit("keydown", { key: preset === "original" ? "n" : "X" }); await flushCommands();
-      assert.equal(prompts.length, 1, "repeating rest does not ask again");
+      assert.equal(h.document.body.children.length, 0, "repeating rest does not ask again");
       assert.deepEqual(h.requests[1].command, { type, turns: 1 });
       const repeatStop = h.controller.stopContinuousAction(); await h.finish(); await repeatStop;
       h.controller.dispose();
@@ -449,8 +451,8 @@ test("rest input cancellation, invalid values and counts never leak into another
   installElementIdentities(t);
   for (const input of [null, "", "0", "000", "-2", "2.5", "3x", "**"]) {
     const h = continuousHarness("local", undefined, "original");
-    h.window.prompt = () => input;
-    h.emit("keydown", { key: "R" }); await flushCommands();
+    h.emit("keydown", { key: "R" });
+    h.confirmRest(input); await flushCommands();
     assert.equal(h.requests.length, 0);
     assert.equal(h.timers.size, 0);
     assert.equal(h.controller.continuousAction, undefined);
@@ -460,14 +462,15 @@ test("rest input cancellation, invalid values and counts never leak into another
     h.controller.dispose();
   }
   const h = continuousHarness("local", undefined, "original");
-  h.window.prompt = () => { throw new Error("an explicit prefix does not ask for a mode"); };
   for (const key of ["0", "3", "R"]) h.emit("keydown", { key });
   await flushCommands();
+  assert.equal(h.document.body.children.length, 0, "an explicit prefix does not ask for a mode");
   for (let i = 0; i < 3; i++) { await h.finish(); await h.tick(); }
   assert.equal(h.requests.length, 3);
   assert.equal(h.controller.continuousAction, undefined);
-  h.window.prompt = () => { h.controller.resetSession(); return "*"; };
-  h.emit("keydown", { key: "R" }); await flushCommands();
+  h.emit("keydown", { key: "R" });
+  h.confirmRest("*");
+  h.controller.resetSession(); await flushCommands();
   assert.equal(h.requests.length, 3, "a replaced session cannot start an old prompt result");
   h.controller.dispose();
 });
@@ -1226,7 +1229,24 @@ function continuousHarness(kind = "local", result, preset = "roguelike", options
   const listeners = [];
   const timers = new Map();
   let timerId = 0;
-  const document = { hidden: false, querySelector: () => null,
+  class DialogElement extends EventTarget {
+    children = [];
+    open = false;
+    returnValue = "";
+    append(...children) { this.children.push(...children); for (const child of children) child.parent = this; }
+    setAttribute() {}
+    select() {}
+    showModal() { this.open = true; }
+    close(value = this.returnValue) {
+      if (!this.open) return;
+      this.open = false; this.returnValue = value;
+      queueMicrotask(() => this.dispatchEvent(new Event("close")));
+    }
+    remove() { this.parent.children = this.parent.children.filter(child => child !== this); }
+  }
+  const document = { hidden: false, body: new DialogElement(),
+    createElement: () => new DialogElement(),
+    querySelector: () => document.body.children.find(dialog => dialog.open) ?? null,
     addEventListener: (type, fn) => listeners.push({ type, fn }),
     removeEventListener: (type, fn) => { const i = listeners.findIndex(l => l.type === type && l.fn === fn); if (i >= 0) listeners.splice(i, 1); },
   };
@@ -1280,6 +1300,13 @@ function continuousHarness(kind = "local", result, preset = "roguelike", options
     return event;
   }
   return { state, controller, session, requests, errors, messages, changes, shortcuts, chestChoices, timers, window, document, mapHost, emit, exploreButton, unknownButton, searchButton,
+    confirmRest(value = "&") {
+      const dialog = document.body.children[0];
+      if (value === null) { dialog.close(); return; }
+      const form = dialog.children[0];
+      form.children[0].children[0].value = value;
+      form.dispatchEvent(new Event("submit", { cancelable: true }));
+    },
     start() {
       if (kind === "world") emit("keydown", { key: preset === "roguelike" ? "(" : "J" });
       else if (kind === "rest") void controller.restUntilRecovered();
@@ -1412,6 +1439,58 @@ test("continuous actions stop on refused, failed and choice-requiring dispatches
   assert.equal(h.controller.continuousAction, undefined);
   assert.equal(h.requests.length, 2);
   assert.equal(h.timers.size, 0); h.controller.dispose();
+});
+
+test("holding R does not cancel rest, but a fresh key press still interrupts", async t => {
+  installElementIdentities(t);
+  const h = continuousHarness("rest");
+  h.emit("keydown", { key: "R", code: "KeyR", shiftKey: true });
+  h.confirmRest();
+  await flushCommands();
+  assert.deepEqual(h.requests[0].command, { type: "rest", turns: 1 });
+  assert.equal(h.emit("keydown", { key: "R", code: "KeyR", shiftKey: true, repeat: true }).stopped, false);
+  await h.finish();
+  h.emit("keydown", { key: "R", code: "KeyR", shiftKey: true, repeat: true });
+  assert.equal(h.controller.continuousAction, "rest");
+  await h.tick();
+  assert.equal(h.requests.length, 2);
+  assert.equal(h.emit("keydown", { key: "Escape" }).stopped, true);
+  await h.finish();
+  await h.controller.stopContinuousAction();
+  assert.equal(h.controller.continuousAction, undefined);
+  assert.equal(h.requests.length, 2);
+  h.controller.dispose();
+});
+
+test("rest confirmation finishes before automation starts; fresh input and real blur still stop it", async t => {
+  installElementIdentities(t);
+  for (const stop of ["Enter", "blur"]) {
+    const h = continuousHarness("rest");
+    h.window.prompt = () => { throw new Error("rest must not open a native focus-changing prompt"); };
+    h.emit("keydown", { key: "R" });
+    await h.controller.chooseRestMode();
+    assert.equal(h.document.body.children.length, 1, "only one rest dialog can be open");
+    h.emit("keydown", { key: "Enter" });
+    assert.deepEqual(h.shortcuts, [], "dialog Enter must not open the command menu");
+    h.confirmRest();
+    h.emit("click"); // Confirmation click propagation precedes the queued dialog close event.
+    assert.equal(h.controller.continuousAction, undefined);
+    await flushCommands();
+    assert.equal(h.document.body.children.length, 0);
+    assert.deepEqual(h.requests[0].command, { type: "rest", turns: 1 });
+    const heldEnter = h.emit("keydown", { key: "Enter", repeat: true, target: new HTMLButtonElement() });
+    assert.equal(heldEnter.defaultPrevented, true, "held Enter must not click the restored focused button");
+    await h.finish(); await h.tick();
+    assert.equal(h.requests.length, 2);
+    assert.equal(h.messages.includes("message-continuous-action-stopped"), false);
+    if (stop === "blur") h.emit("blur");
+    else h.emit("keydown", { key: "Enter" });
+    await h.finish(); await h.controller.stopContinuousAction();
+    assert.equal(h.controller.continuousAction, undefined);
+    assert.equal(h.requests.length, 2);
+    assert.equal(h.messages.filter(key => key === "message-continuous-action-stopped").length, 1);
+    h.controller.dispose();
+  }
 });
 
 test("rest continues only for a completed turn-limit receipt and never renews its budget", async () => {
@@ -1807,6 +1886,7 @@ test("RFB command presets distinguish actions, directions and original command e
   assert.deepEqual(original.requests[0].command, { type: "move", direction: "east" });
   await original.finish();
   original.emit("keydown", { key: "R" }); await flushCommands();
+  original.confirmRest(); await flushCommands();
   assert.equal(original.requests[1].command.type, "rest");
   original.emit("keydown", { key: "q" }); await original.finish();
   await original.controller.stopContinuousAction();

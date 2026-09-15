@@ -1344,10 +1344,7 @@ impl Game {
             && let Some(rank @ 1..=4) = book.rank
             && let Some(mana) = self.resources.get_mut("demo.resource.mana")
         {
-            mana.current = mana
-                .current
-                .saturating_add([10, 25, 100, 666][usize::from(rank - 1)])
-                .min(mana.maximum);
+            mana.recover([10, 25, 100, 666][usize::from(rank - 1)]);
         }
         if quantity == self.items[index].quantity {
             let removed = self.items.remove(index);

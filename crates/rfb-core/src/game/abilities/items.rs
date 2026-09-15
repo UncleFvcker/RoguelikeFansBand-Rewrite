@@ -84,6 +84,7 @@ impl Game {
         self.identify_item_instance("e2e.craft.dagger", ItemIdentificationRequest::new(true));
         for pool in self.resources.values_mut() {
             pool.current = pool.maximum;
+            pool.fraction = 0;
         }
         self.debug_set_ability_casts_succeed(true);
         Ok(())
@@ -1275,7 +1276,7 @@ impl Game {
             && let Some(resource_id) = resource_id.as_deref()
             && let Some(pool) = self.resources.get_mut(resource_id)
         {
-            pool.current = pool.current.saturating_add(drained).min(pool.maximum);
+            pool.recover(drained);
         }
         let resource_after = resource_id
             .as_deref()

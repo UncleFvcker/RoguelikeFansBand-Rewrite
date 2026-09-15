@@ -41,14 +41,6 @@ impl Game {
                 == state.visited_frontiers.len()
     }
 
-    pub(super) fn auto_explore_hostile_in_sight(&self) -> bool {
-        self.entities.iter().any(|entity| {
-            entity.hp > 0
-                && !self.actor_is_player_side(entity)
-                && self.entity_is_visually_visible_to_player(entity)
-        })
-    }
-
     fn auto_explore_unavailable_reason(&self) -> Option<&'static str> {
         if self.map_scale != MapScaleDto::Local {
             Some("game-auto-explore-local-only")
@@ -69,7 +61,7 @@ impl Game {
             || self.pending_race_mutation_choice().is_some()
         {
             Some("game-auto-explore-pending-choice")
-        } else if self.auto_explore_hostile_in_sight() {
+        } else if self.hostile_in_sight() {
             Some("game-auto-explore-enemy-in-sight")
         } else {
             None

@@ -64,72 +64,16 @@ impl Game {
 
     pub(super) fn pet_upkeep_dto(&self) -> rfb_protocol::PetUpkeepDto {
         let upkeep = self.pet_upkeep();
-        let mana_current = self.pet_mana_pool().map_or(0, |pool| pool.current);
+        let mana_empty = self
+            .pet_mana_pool()
+            .is_none_or(|pool| pool.current == 0 && pool.fraction == 0);
         rfb_protocol::PetUpkeepDto {
             controlled_pets: upkeep.controlled_pets,
             total_levels: upkeep.total_levels,
             upkeep_percent: upkeep.percent,
             unsafe_warning: upkeep.unsafe_warning(),
-            dismissal_required: upkeep.percent > 100 && mana_current == 0,
+            dismissal_required: upkeep.percent > 100 && mana_empty,
         }
-    }
-
-    pub(super) fn player_resource_recovery_change(&self, id: &str, resting: bool) -> i64 {
-        if self.player_is_rage_mage() && id == "demo.resource.mana" {
-            return 0;
-        }
-        let Some(definition) = self.content.resource(id) else {
-            return 0;
-        };
-        let base = if resting {
-            definition.rest_recovery_amount
-        } else {
-            definition.wait_recovery_amount
-        };
-        let Some(profile) = self
-            .casting_profile()
-            .filter(|profile| profile.resource_id == id)
-        else {
-            return i64::from(base);
-        };
-        let pets = self.pet_upkeep();
-        let upkeep = pets.percent;
-        if upkeep <= 100 && self.music.spell.is_some() {
-            return 0;
-        }
-        if upkeep <= 100 {
-            let recovery_percent = if self
-                .player_equipment_passives()
-                .contains(&EquipmentPassive::ManaRegeneration)
-            {
-                profile.resource_recovery_percent.max(200)
-            } else {
-                profile.resource_recovery_percent
-            };
-            let class_recovery = base.saturating_mul(u32::from(recovery_percent)) / 100;
-            return i64::from(
-                class_recovery.saturating_mul(u32::from(100_u16.saturating_sub(upkeep))) / 100
-                    + if resting
-                        && pets.controlled_pets == 0
-                        && self.player_is_mindcrafter()
-                        && self.progress.level >= 15
-                    {
-                        super::player_abilities::clear_mind_recovery_amount(self.progress.level)
-                    } else {
-                        0
-                    },
-            );
-        }
-
-        // RFB deliberately uses normal regeneration rather than boosted rest
-        // regeneration for negative upkeep. Rewrite resources are integral, so
-        // round a non-zero loss up to keep every over-100% upkeep observable.
-        let loss_percent = u32::from(upkeep - 100);
-        let loss = definition
-            .wait_recovery_amount
-            .saturating_mul(loss_percent)
-            .div_ceil(100);
-        -i64::from(loss)
     }
 
     pub(super) fn dismiss_controlled_pets(
@@ -153,35 +97,6 @@ impl Game {
             dismissed = dismissed.saturating_add(1);
         }
         dismissed
-    }
-
-    pub(super) fn apply_pet_upkeep_mana_loss(&mut self, events: &mut Vec<DomainEvent>) {
-        let Some(profile) = self.casting_profile() else {
-            return;
-        };
-        let resource_id = profile.resource_id.clone();
-        let change = self.player_resource_recovery_change(&resource_id, false);
-        if change >= 0 {
-            return;
-        }
-        let upkeep_percent = self.pet_upkeep().percent;
-        let Some(pool) = self.resources.get_mut(&resource_id) else {
-            return;
-        };
-        let before = pool.current;
-        pool.current = pool
-            .current
-            .saturating_sub(u32::try_from(-change).unwrap_or(u32::MAX));
-        if pool.current < before {
-            events.push(DomainEvent::PetUpkeepManaLost {
-                resource_id,
-                amount: before - pool.current,
-                upkeep_percent,
-            });
-        }
-        if self.pet_upkeep_dto().dismissal_required {
-            events.push(DomainEvent::PetUpkeepDismissalRequired { upkeep_percent });
-        }
     }
 
     pub(super) fn resolve_neglected_pet(

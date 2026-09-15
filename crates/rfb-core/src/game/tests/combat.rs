@@ -895,6 +895,7 @@ fn melee_resource_drain_shares_gate_exhaustion_and_actual_healing_rules() {
                 game.resources.insert(
                     "test.resource.mana".to_owned(),
                     ResourcePool {
+                        fraction: 0,
                         current,
                         maximum: current,
                     },

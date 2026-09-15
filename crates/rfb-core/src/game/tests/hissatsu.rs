@@ -126,8 +126,15 @@ fn hissatsu_supercharge_survives_recovery_and_save_but_rejects_excess() {
     let mut g = samurai();
     let pool = g.resources["demo.resource.mana"];
     assert!(pool.current > pool.maximum);
-    g.recover_player_resources(false, &mut Vec::new());
-    assert_eq!(g.resources["demo.resource.mana"].current, pool.current);
+    g.world_tick = 10;
+    g.process_mana_regeneration(false, &mut Vec::new());
+    let expected =
+        (u64::from(pool.current) << 32) - ((u64::from(pool.maximum) * 32 * 197 + 524) << 16);
+    assert_eq!(
+        g.resources["demo.resource.mana"].current,
+        (expected >> 32) as u32
+    );
+    assert_eq!(g.resources["demo.resource.mana"].fraction, expected as u32);
     let restored = Game::from_save(g.to_save(), g.behavior_preferences()).unwrap();
     assert_eq!(g.state_hash(), restored.state_hash());
     let mut save = g.to_save();

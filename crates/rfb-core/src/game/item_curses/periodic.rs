@@ -438,9 +438,9 @@ impl Game {
         let attribute = attributes[self.rng.bounded(6) as usize];
         let amount = 12 + ego::randint1(&mut self.rng, 6) as u8;
         let hp = self.effective_player_max_hp();
-        let resources = self.player_resource_maxima();
+
         apply_permanent_attribute_drain(&mut self.progress, attribute, amount, &mut self.rng);
-        self.refresh_after_attribute_change(hp, &resources);
+        self.refresh_after_attribute_change(hp);
     }
 
     fn curse_disenchant_equipment(&mut self) {

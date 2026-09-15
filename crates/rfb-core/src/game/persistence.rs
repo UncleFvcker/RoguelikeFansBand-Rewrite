@@ -1935,6 +1935,7 @@ impl Game {
             .iter()
             .map(|(id, pool)| ResourcePoolSaveDto {
                 id: id.clone(),
+                fraction: pool.fraction,
                 current: pool.current,
                 maximum: pool.maximum,
             })

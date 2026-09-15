@@ -331,7 +331,7 @@ impl Game {
                 let amount = (self.roll_psychic_dice(5, result.damage) / 4) as u32;
                 if let Some(mana) = self.resources.get_mut("demo.resource.mana") {
                     let before = mana.current;
-                    mana.current = mana.current.saturating_add(amount).min(mana.maximum);
+                    mana.recover(amount);
                     events.push(DomainEvent::ResourceRecovered {
                         resolution: ResourceRecoveryResolutionDto {
                             resource_id: "demo.resource.mana".to_owned(),

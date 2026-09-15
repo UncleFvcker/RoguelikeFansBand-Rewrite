@@ -4,7 +4,7 @@
   "id": "demo.resource.mana",
   "nameKey": "resource-demo-mana-name",
   "descriptionKey": "resource-demo-mana-description",
-  "waitRecoveryAmount": 1,
-  "restRecoveryAmount": 3,
+  "waitRecoveryAmount": 0,
+  "restRecoveryAmount": 0,
   "tags": ["casting", "mana"]
 }

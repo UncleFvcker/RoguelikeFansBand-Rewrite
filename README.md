@@ -6,7 +6,7 @@
 
 ## 下载与运行
 
-当前版本：**[v0.0.2](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.2)** · [下载 Windows x64 便携版 ZIP](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/download/v0.0.2/RoguelikeFansBand-Rewrite_0.0.2_windows-x64-portable.zip) · [所有发布版本](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases)
+当前版本：**[v0.0.3](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.3)** · [下载 Windows x64 便携版 ZIP](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/download/v0.0.3/RoguelikeFansBand-Rewrite_0.0.3_windows-x64-portable.zip) · [所有发布版本](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases)
 
 1. 下载 ZIP，完整解压到可写目录。
 2. 运行 `rfb-tauri.exe`，在标题页新建角色或继续游戏。
@@ -15,6 +15,8 @@
 便携包仅包含 `rfb-tauri.exe` 和 `LICENSES/`，不提供 NSIS 安装包。游戏内容、界面与内置配色随 EXE 嵌入，无需安装 Rust、Node.js 或启动开发服务器；Windows 运行环境需要 WebView2。
 
 角色存档保存在 EXE 旁的 `userdata/saves/`，关联角色档案保存在 `userdata/profile/`。备份或搬迁游戏时，请连同整个 `userdata/` 一起复制。全局偏好独立保存在 `%LOCALAPPDATA%\io.github.unclefvcker.rfb-rewrite\preferences.json`。具体操作见[游戏内存档](docs/builtin-save-system.md)。
+
+0.0.3 的角色存档格式已变更，不兼容 0.0.2 开发存档。请保留旧版目录与 `userdata/`，在新版目录中新建角色。
 
 ## 现在可以做什么
 
@@ -25,7 +27,7 @@
 - **地图与情报**：查看已知地图、记忆中的物品、怪物详情与发现档案；地形、怪物和物品按类型配色，unique 使用缓慢流动的彩虹渐变。
 - **保存与记录**：游戏内保存、另存为、读取与备份恢复，查看消息、角色成绩，并使用回放工具。
 
-v0.0.2 还改进了物品选择器与同格多物品拾取、消息堆叠、本层首领状态、目标血量、旧目标失效后的切换，以及鼠标选点。具体改动与实际检查见[发布说明](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.2)和[发布验证记录](docs/release-0.0.2-validation.md)。
+v0.0.3 新增紧凑且可隐藏的界面、六组共 60 格快捷栏、法术字母选择，并修正 R 确认休息被中断的问题。法力改为按世界时间累积小数恢复，宠物维持费和职业特殊恢复同步调整。具体改动与实际检查见[发布说明](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.3)和[发布验证记录](docs/release-0.0.3-validation.md)。
 
 当前尚未完成全部原版内容，商店布局等仍待改进。内容存在、规则实现、入口开放和实际试玩通过是不同状态；[状态快照](docs/status.md)与[后续工作](docs/next-work.md)记录各自范围。
 
@@ -35,7 +37,8 @@ v0.0.2 还改进了物品选择器与同格多物品拾取、消息堆叠、本�
 
 | 操作 | 按键或鼠标 |
 | --- | --- |
-| 八方向移动 | 数字键／小键盘方向，支持长按 |
+| 八方向移动 | 小键盘方向，支持长按 |
+| 使用快捷栏／切换组 | 主键盘 `1–9`、`0`／`Alt+1` 至 `Alt+6` |
 | 前往指定位置 | 左键点击地图地格 |
 | 自动探索 | `Z` 或“自动探索”按钮 |
 | 查看地格／怪物 | `l`，选中怪物后按 `r` 查看详情 |

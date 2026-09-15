@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.299";
+pub const PROTOCOL_VERSION: &str = "1.300";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 45;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 46;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -82,7 +82,6 @@ impl Direction {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct SamuraiStateDto {
-    pub mana_decay_fraction: u16,
     pub posture: u8,
     pub counter: bool,
     pub sutemi: bool,
@@ -244,13 +243,10 @@ pub enum DuelistContinuationDto {
     },
     PlayerAction {
         energy_cost: i32,
-        recover_after_wait: bool,
         pet_neglect_allowed: bool,
         visible_auras_before: Vec<String>,
     },
-    PlayerWorld {
-        recover_after_wait: bool,
-    },
+    PlayerWorld {},
     RestRecovery {
         completed_turns: u16,
     },
@@ -1450,7 +1446,6 @@ pub struct MusicStateDto {
     pub spell: Option<u8>,
     pub beats: u8,
     pub interrupted: bool,
-    pub half_mana: bool,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -1459,7 +1454,6 @@ pub struct MusicStateDto {
 pub struct HexStateDto {
     pub active: u32,
     pub interrupted: bool,
-    pub mana_fraction: u32,
     pub revenge_kind: u8,
     pub revenge_ticks: u8,
     pub revenge_damage: u32,
@@ -1474,10 +1468,11 @@ pub struct ResourcePoolDto {
     pub name_key: String,
     pub current: u32,
     pub maximum: u32,
-    #[serde(default)]
-    pub wait_recovery_amount: u32,
-    #[serde(default)]
-    pub rest_recovery_amount: u32,
+    /// Signed natural mana change per 10 world ticks, in units of 2^-16.
+    pub normal_recovery_per_65536: i64,
+    pub rest_recovery_per_65536: i64,
+    pub rest_action_recovery: u32,
+    pub rest_recovery_target: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -6262,6 +6257,7 @@ pub struct AbilityProgressSaveDto {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ResourcePoolSaveDto {
     pub id: String,
+    pub fraction: u32,
     pub current: u32,
     pub maximum: u32,
 }

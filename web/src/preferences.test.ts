@@ -3,6 +3,32 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { PreferencesClient, defaultPreferences, migratePreferences, parsePreferences, behaviorPreferences } from "./preferences.ts";
+import { DEFAULT_HUD_DISPLAY, HUD_DISPLAY_FIELDS } from "./display-preferences.ts";
+
+test("older global display preferences default HUD sections without masking invalid values", () => {
+  const p = defaultPreferences();
+  for (const field of HUD_DISPLAY_FIELDS) delete p.display[field];
+  const loaded = parsePreferences(JSON.stringify(p));
+  for (const field of HUD_DISPLAY_FIELDS) assert.equal(loaded.display[field], DEFAULT_HUD_DISPLAY[field]);
+  p.display.showMessages = false;
+  assert.equal(parsePreferences(JSON.stringify(p)).display.showMessages, false);
+  p.display.showMessages = "false";
+  assert.throws(() => parsePreferences(JSON.stringify(p)), /preferences-invalid/);
+});
+
+test("hotbar bindings round-trip globally, default only when absent and reject malformed slots", () => {
+  const p = defaultPreferences();
+  const behavior = behaviorPreferences(p);
+  delete p.hotbar;
+  assert.deepEqual(parsePreferences(JSON.stringify(p)).hotbar, Array(60).fill(null));
+  p.hotbar = Array(60).fill(null);
+  p.hotbar[59] = { type: "ability", id: "demo.ability.heal" };
+  assert.deepEqual(parsePreferences(JSON.stringify(p)), p);
+  assert.deepEqual(behaviorPreferences(p), behavior);
+  for (const hotbar of [null, [], Array(59).fill(null), [{ type: "ability", id: "" }, ...Array(59).fill(null)]]) {
+    assert.throws(() => parsePreferences(JSON.stringify({ ...p, hotbar })), /preferences-invalid/);
+  }
+});
 
 test("display options round-trip globally and never enter behavior context", () => {
   const p = defaultPreferences(), before = structuredClone(behaviorPreferences(p));

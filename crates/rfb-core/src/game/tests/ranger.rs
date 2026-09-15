@@ -266,11 +266,8 @@ fn first_nature_spell_awards_ranger_experience_once() {
         .clone();
     let spell = "demo.ability.nature-detect-creatures";
     assert_eq!(game.study_random_player_ability(&book).unwrap(), spell);
-    // Level-up raises the maximum without filling the new mana pool.
-    for _ in 0..8 {
-        game.recover_player_resources(false, &mut Vec::new());
-    }
-    assert_eq!(game.resources[MANA].current, 8);
+    // This test concerns first-cast experience, not the time needed to regenerate.
+    game.resources.get_mut(MANA).unwrap().recover(u32::MAX);
     game.debug_ability_casts_succeed = true;
     let before = game.progress.experience;
     for _ in 0..2 {

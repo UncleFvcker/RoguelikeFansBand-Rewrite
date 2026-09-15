@@ -181,10 +181,7 @@ fn rage_damage_fuels_mana_actual_spell_damage_sustains_it_and_idle_drains_it() {
         g.resources["demo.resource.mana"].current,
         before.saturating_sub(before / 8 + 6)
     );
-    assert_eq!(
-        g.player_resource_recovery_change("demo.resource.mana", true),
-        0
-    );
+    assert_eq!(g.mana_recovery_per_cycle(true), 0);
     g.player.hp = hp;
     g.resources.get_mut("demo.resource.mana").unwrap().current = 0;
     let mut poison = monster_combat::melee_status(STATUS_POISON, 10, "test.poison").status;

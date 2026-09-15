@@ -359,11 +359,11 @@ impl Game {
             }
             101..=110 => {
                 let previous = self.effective_player_max_hp();
-                let resources = self.player_resource_maxima();
+
                 let base = self.progress.hp_progression[0];
                 self.progress.hp_progression =
                     CharacterProgress::roll_hp_progression(base, &mut self.rng);
-                self.refresh_after_attribute_change(previous, &resources);
+                self.refresh_after_attribute_change(previous);
                 self.lose_all_unlocked_mutations(events);
             }
             111..=119 => {

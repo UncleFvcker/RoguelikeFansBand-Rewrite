@@ -1862,8 +1862,7 @@ mod tests {
     fn armor_mana_regeneration_doubles_normal_recovery_without_stacking_with_high_mage() {
         for build in ["demo.build.paladin-death", "demo.build.high-mage-arcane"] {
             let mut game = Game::new_with_build(7, build).unwrap();
-            let id = game.casting_profile().unwrap().resource_id.clone();
-            let before = game.player_resource_recovery_change(&id, true);
+            let before = game.mana_recovery_per_cycle(true);
             let class_rate = game.casting_profile().unwrap().resource_recovery_percent;
             equip_ego(&mut game, 126, |result| {
                 result.rolled_affixes.iter().any(|rolled| {
@@ -1873,13 +1872,13 @@ mod tests {
                         .contains(&EquipmentPassive::ManaRegeneration)
                 })
             });
-            let after = game.player_resource_recovery_change(&id, true);
+            let after = game.mana_recovery_per_cycle(true);
             assert_eq!(
                 after,
                 if class_rate >= 200 {
                     before
                 } else {
-                    before * 2
+                    (before - 524) * 2 + 524
                 }
             );
         }
