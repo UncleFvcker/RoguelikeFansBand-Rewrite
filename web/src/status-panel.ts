@@ -242,9 +242,10 @@ export function renderHudExperience(meter: HTMLProgressElement, progress: Player
   meter.hidden = !progress;
   if (!progress) return;
   const next = progress.experienceForNextLevel;
-  // The projection exposes cumulative XP thresholds, not this level's starting XP.
-  meter.value = next == null ? 1000 : next > 0n
-    ? Math.max(0, Math.min(1000, Number(BigInt(progress.experience) * 1000n / BigInt(next)))) : 0;
+  const start = BigInt(progress.experienceForCurrentLevel);
+  const span = next == null ? 0n : BigInt(next) - start;
+  meter.value = next == null ? 1000 : span > 0n
+    ? Math.max(0, Math.min(1000, Number((BigInt(progress.experience) - start) * 1000n / span))) : 0;
   const description = needed ? localization.format("display-experience-needed", { amount: experienceNeeded(progress, localization) }) : localization.format("hud-experience-detail", {
     experience: String(progress.experience),
     next: next == null ? localization.format("character-no-next-level") : String(next),

@@ -25,6 +25,125 @@ fn floor_dagger(game: &mut Game, position: Position) {
 }
 
 #[test]
+fn auto_attack_selects_visible_hostiles_and_uses_known_routes() {
+    let mut game = arena();
+    game.terrain.fill("demo.terrain.wall".into());
+    for y in 30..=34 {
+        for x in 93..=99 {
+            replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    game.explored.fill(true);
+    game.push_generated_actor("far".into(), "demo.actor.newt", Position { x: 98, y: 32 });
+    game.push_generated_actor(
+        "near".into(),
+        "demo.actor.war-bear",
+        Position { x: 95, y: 33 },
+    );
+    game.reveal_current_visibility();
+    assert_eq!(
+        game.auto_attack_step(),
+        Ok(GameAction::AttackAdjacent {
+            direction: Direction::South
+        })
+    );
+    game.entities[1].friendly = true;
+    assert_eq!(
+        game.auto_attack_step(),
+        Ok(GameAction::Move {
+            direction: Direction::East,
+            flip_pickup: false
+        })
+    );
+    // A visible target behind a transparent obstacle must be approached around it.
+    replace_terrain(
+        &mut game,
+        Position { x: 96, y: 32 },
+        "demo.terrain.glass-wall",
+    );
+    assert!(matches!(
+        game.auto_attack_step(),
+        Ok(GameAction::Move {
+            direction: Direction::NorthEast | Direction::SouthEast,
+            ..
+        })
+    ));
+    // Unknown routes cannot be used, even when the target itself can be seen.
+    game.explored.fill(false);
+    assert_eq!(game.auto_attack_step(), Err("game-auto-attack-no-route"));
+    game.entities[0].hp = 0;
+    assert_eq!(game.auto_attack_step(), Err("game-auto-attack-no-enemy"));
+    game.entities[0].hp = 20;
+    replace_terrain(&mut game, Position { x: 96, y: 32 }, "demo.terrain.wall");
+    game.player.statuses.push(
+        crate::game::monster_combat::melee_status("rfb.status.telepathy", 100, "test.esp").status,
+    );
+    assert!(game.entity_is_visible_by_telepathy(&game.entities[0]));
+    assert_eq!(game.auto_attack_step(), Err("game-auto-attack-no-enemy"));
+}
+
+#[test]
+fn auto_attack_is_free_without_a_target_and_stops_after_one_melee_action() {
+    let mut game = arena();
+    let before = (
+        game.turn,
+        game.world_tick,
+        game.player.position,
+        game.rng.clone(),
+    );
+    let unavailable = dispatch_next(&mut game, GameCommand::AutoAttack);
+    assert_eq!(
+        (
+            game.turn,
+            game.world_tick,
+            game.player.position,
+            game.rng.clone()
+        ),
+        before
+    );
+    assert!(!unavailable.command_repeatable);
+    assert!(
+        unavailable
+            .events
+            .iter()
+            .any(|event| event.message_key == "game-auto-attack-no-enemy")
+    );
+    game.push_generated_actor(
+        "enemy".into(),
+        "demo.actor.war-bear",
+        Position { x: 98, y: 32 },
+    );
+    game.entities[0].energy_need = 10_000;
+    game.reveal_current_visibility();
+    let approached = dispatch_next(&mut game, GameCommand::AutoAttack);
+    assert_eq!(game.player.position, Position { x: 96, y: 32 });
+    assert!(
+        approached.command_repeatable,
+        "a visible enemy must not immediately stop pursuit"
+    );
+    game.player.position = Position { x: 97, y: 32 };
+    game.reveal_current_visibility();
+    let mut manual = game.clone();
+    let auto = dispatch_next(&mut game, GameCommand::AutoAttack);
+    dispatch_next(
+        &mut manual,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(
+        game.state_hash(),
+        manual.state_hash(),
+        "same combat and turn settlement as a manual melee action"
+    );
+    assert!(!auto.command_repeatable);
+    assert!(auto.events.iter().any(|event| matches!(
+        event.kind.as_str(),
+        "combat.hit" | "combat.miss" | "combat.slay"
+    )));
+}
+
+#[test]
 fn default_pickup_is_free_to_configure_and_round_trips() {
     let mut game = arena();
     assert!(!game.travel_options.always_pickup);

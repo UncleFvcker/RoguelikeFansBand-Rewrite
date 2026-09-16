@@ -6,6 +6,24 @@ use super::ability_scaling::{
 use super::*;
 use crate::action::RestMode;
 
+// Shared realm eligibility; active hex-stop state is checked by the live caller.
+pub(super) fn birth_class_power_matches_realm(
+    class_id: &str,
+    realm: Option<&str>,
+    ability_id: &str,
+) -> bool {
+    let good = matches!(realm, Some("life" | "crusade"));
+    match ability_id {
+        "demo.ability.paladin-holy-lance" | "demo.ability.paladin-hell-lance" => {
+            class_id == "demo.class.paladin"
+                && (ability_id == "demo.ability.paladin-holy-lance") == good
+        }
+        "demo.ability.priest-bless-weapon" => class_id == "demo.class.priest" && good,
+        "demo.ability.priest-evocation" => class_id == "demo.class.priest" && !good,
+        _ => true,
+    }
+}
+
 const SPELL_EXP_BEGINNER: u16 = 900;
 const SPELL_EXP_SKILLED: u16 = 1200;
 pub(in crate::game) const SPELL_EXP_EXPERT: u16 = 1400;
@@ -262,20 +280,12 @@ impl Game {
         if ability_id.starts_with("demo.ability.hex-stop") {
             return self.player_uses_hex() && self.content.ability(ability_id).is_some_and(|a| matches!(a.effect, AbilityEffectDefinition::StopHex { spell } if spell.is_none_or(|s| self.hex.active & (1 << s) != 0)));
         }
-        match ability_id {
-            "demo.ability.paladin-holy-lance" | "demo.ability.paladin-hell-lance" => self
-                .character_definitions()
-                .is_some_and(|(build, _, class, _)| {
-                    class.id == "demo.class.paladin"
-                        && (ability_id == "demo.ability.paladin-holy-lance")
-                            == matches!(build.first_realm_id.as_deref(), Some("life" | "crusade"))
-                }),
-            "demo.ability.priest-bless-weapon" => self.player_is_good_priest(),
-            "demo.ability.priest-evocation" => {
-                self.player_is_priest() && !self.player_is_good_priest()
-            }
-            _ => true,
-        }
+        let (class_id, realm) = self
+            .character_definitions()
+            .map_or(("", None), |(build, _, class, _)| {
+                (class.id.as_str(), build.first_realm_id.as_deref())
+            });
+        birth_class_power_matches_realm(class_id, realm, ability_id)
     }
 
     pub(super) fn priest_weapon_is_unblessed_blade(&self, item: &ItemInstance) -> bool {

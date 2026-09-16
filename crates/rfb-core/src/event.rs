@@ -907,6 +907,9 @@ pub(crate) enum DomainEvent {
     MoveBlocked,
     LocalTravelLeftDetectionArea,
     LocalTravelItemFound,
+    AutoAttackUnavailable {
+        reason: &'static str,
+    },
     PlayerMeleeBlocked,
     WildernessAmbushed,
     WildernessInterestingDiscovery,
@@ -4028,6 +4031,9 @@ impl DomainEvent {
             ),
             Self::LocalTravelItemFound => {
                 dto_without_args("travel.item-found", "game-travel-item-found")
+            }
+            Self::AutoAttackUnavailable { reason } => {
+                dto_without_args("auto-attack.stopped", reason)
             }
             Self::PlayerMeleeBlocked => {
                 dto_without_args("player.melee-blocked", "player-melee-blocked")

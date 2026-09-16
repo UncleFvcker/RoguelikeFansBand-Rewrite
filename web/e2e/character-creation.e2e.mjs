@@ -58,11 +58,13 @@ export async function runCharacterCreationScenario(driver, artifactDirectory) {
   const fill = (selector, value) => driver.execute(`const input = document.querySelector(arguments[0]); input.value = arguments[1]; input.dispatchEvent(new Event("input", { bubbles: true })); input.dispatchEvent(new Event("change", { bubbles: true })); return true;`, [selector, value]);
   const key = (selector, value) => driver.execute(`const node = document.querySelector(arguments[0]); node.focus(); node.dispatchEvent(new KeyboardEvent("keydown", { key: arguments[1], bubbles: true, cancelable: true })); return true;`, [selector, value]);
   const screenshot = async (name) => {
+    await driver.waitFor('const preview = document.querySelector(".creation-preview"); return preview && preview.dataset.state !== "loading";', "preview before screenshot");
     await new Promise(resolve => setTimeout(resolve, 150)); // Let the existing focus/selection transition settle.
     await writeFile(path.join(artifactDirectory, `creation-${name}.png`), await driver.screenshot(), "base64");
   };
   const measurements = [];
   async function checkFrame(page) {
+    await driver.waitFor('const preview = document.querySelector(".creation-preview"); return preview && preview.dataset.state !== "loading";', "preview before layout measurement");
     const layout = await driver.execute(`
       const rect = selector => { const r = document.querySelector(selector).getBoundingClientRect(); return { x:r.x, y:r.y, width:r.width, height:r.height, right:r.right, bottom:r.bottom }; };
       return { viewport: [innerWidth, innerHeight], frame: rect(".session-card"), start: rect("#session-start-game"), name: rect("#session-character-name"), visiblePages: [...document.querySelectorAll("[data-creation-panel]")].filter(p => !p.hidden).map(p => p.dataset.creationPanel), scrollWidth: document.documentElement.scrollWidth, scrollHeight: document.documentElement.scrollHeight };
@@ -124,6 +126,9 @@ export async function runCharacterCreationScenario(driver, artifactDirectory) {
   const visited = [];
   for (const id of PLAYTEST_RACE_IDS) {
     await selectCreationRace(driver, id);
+    if (!await driver.execute('return document.querySelector("#session-page-race .creation-background").open')) {
+      await click('#session-page-race .creation-background > summary');
+    }
     const selected = await driver.execute(`
       const button = document.querySelector('[data-race-id="' + arguments[0] + '"]');
       const description = document.querySelector("#session-race-description");

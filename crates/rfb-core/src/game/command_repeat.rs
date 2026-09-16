@@ -7,6 +7,7 @@ use super::*;
 pub(super) enum CommandRepeatKind {
     None,
     Move,
+    AutoAttack,
     Wait,
     Search,
     Terrain,
@@ -16,6 +17,7 @@ impl CommandRepeatKind {
     pub(super) fn for_action(action: &GameAction) -> Self {
         match action {
             GameAction::Move { .. } => Self::Move,
+            GameAction::AutoAttack => Self::AutoAttack,
             GameAction::Wait | GameAction::Stay => Self::Wait,
             GameAction::Search => Self::Search,
             GameAction::Alter { .. }
@@ -37,7 +39,7 @@ impl CommandRepeatKind {
     ) -> bool {
         if matches!(self, Self::None)
             || game.player_is_dead()
-            || game.visible_hostile_exists()
+            || (!matches!(self, Self::AutoAttack) && game.visible_hostile_exists())
             || game.player_has_status_kind(STATUS_PARALYSIS)
             || game.player_has_status_kind(STATUS_CONFUSION)
             || game.mogaminator.pending_query.is_some()
@@ -63,6 +65,12 @@ impl CommandRepeatKind {
         }
         match self {
             Self::None => false,
+            Self::AutoAttack => {
+                moved
+                    || events
+                        .iter()
+                        .any(|event| event.kind == "terrain.door-opened")
+            }
             Self::Move | Self::Wait => {
                 let at_service = game
                     .content

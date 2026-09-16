@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { GameCommand, GameSnapshot, GameUpdate } from "./protocol";
+import type { CharacterCreationPreviewDto, GameCommand, GameSnapshot, GameUpdate } from "./protocol";
 
 export interface NewSessionRequest {
   readonly seed: string;
@@ -11,6 +11,7 @@ export interface NewSessionRequest {
 }
 
 export interface CoreTransport {
+  previewCharacterCreation(buildId: string, raceId: string): Promise<CharacterCreationPreviewDto>;
   initialize(request: NewSessionRequest): Promise<GameSnapshot>;
   dispatch(command: GameCommand): Promise<GameUpdate>;
   save(): Promise<Uint8Array>;

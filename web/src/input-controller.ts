@@ -42,7 +42,7 @@ import { commandShortcut, type CommandShortcut } from "./command-shortcuts.ts";
 export type InputPreset = "original" | "roguelike";
 
 type ContinuousAction = {
-  kind: "local-travel" | "world-travel" | "auto-get" | "rest" | "fishing" | "run" | "auto-explore" | "repeat" | "macro";
+  kind: "local-travel" | "world-travel" | "auto-get" | "rest" | "fishing" | "run" | "auto-explore" | "auto-attack" | "repeat" | "macro";
   cancelled: boolean;
   done: Promise<void>;
   resume?: () => void;
@@ -54,7 +54,6 @@ type InputDom = Pick<
   | "targetCursor"
   | "traverseStairs"
   | "autoExplore"
-  | "nearestUnknownItem"
   | "searchModeToggle"
   | "targetModeToggle"
   | "lookModeToggle"
@@ -185,7 +184,6 @@ export class InputController {
     this.#dom.traverseStairs.addEventListener("click", this.#handleTraverseStairs);
     this.#dom.searchModeToggle.addEventListener("click", this.#handleSearchModeToggle);
     this.#dom.autoExplore.addEventListener("click", this.#handleAutoExplore);
-    this.#dom.nearestUnknownItem.addEventListener("click", this.#handleNearestUnknownItem);
     this.#dom.targetModeToggle.addEventListener("click", this.#handleTargetToggle);
     this.#dom.lookModeToggle.addEventListener("click", this.#handleLookToggle);
   }
@@ -206,7 +204,6 @@ export class InputController {
     this.#dom.traverseStairs.removeEventListener("click", this.#handleTraverseStairs);
     this.#dom.searchModeToggle.removeEventListener("click", this.#handleSearchModeToggle);
     this.#dom.autoExplore.removeEventListener("click", this.#handleAutoExplore);
-    this.#dom.nearestUnknownItem.removeEventListener("click", this.#handleNearestUnknownItem);
     this.#dom.targetModeToggle.removeEventListener("click", this.#handleTargetToggle);
     this.#dom.lookModeToggle.removeEventListener("click", this.#handleLookToggle);
   }
@@ -645,11 +642,11 @@ export class InputController {
     this.#dom.autoExplore.disabled = this.#state.busy || this.#state.commandBlocked ||
       this.#state.status?.mapScale !== "local" || Boolean(this.#state.targeting) ||
       Boolean(this.#state.terrainInteractionMode) || this.#ridingDirection || Boolean(this.#runDirectionPreset) || Boolean(this.#walkDirection) || Boolean(this.continuousAction);
-    this.#dom.nearestUnknownItem.disabled = this.#dom.autoExplore.disabled;
     this.#dom.searchModeToggle.disabled = this.#dom.autoExplore.disabled;
     this.#dom.searchModeToggle.setAttribute("aria-pressed", String(Boolean(this.#state.status?.player.searching)));
     this.#dom.searchModeToggle.textContent = this.#localization.format(
       this.#state.status?.player.searching ? "action-search-mode-on" : "action-search-mode-off",
+      { key: this.#getInputPreset() === "roguelike" ? "#" : "S" },
     );
     this.#dom.searchModeToggle.title = this.#localization.format("action-search-mode-help");
     this.#dom.traverseStairs.disabled =
@@ -671,6 +668,7 @@ export class InputController {
       (!targeting && this.#state.commandBlocked);
     this.#dom.lookModeToggle.textContent = this.#localization.format(
       looking ? "action-look-cancel" : "action-look-start",
+      { key: looking ? "Esc" : this.#getInputPreset() === "roguelike" ? "x" : "l" },
     );
     this.#dom.lookModeToggle.setAttribute("aria-pressed", looking ? "true" : "false");
     this.#dom.lookModeToggle.disabled = this.#state.busy || this.#state.commandBlocked;
@@ -743,7 +741,6 @@ export class InputController {
 
   readonly #handleSearchModeToggle = (): void => { void this.#dispatch({ type: "toggle-search" }); };
   readonly #handleAutoExplore = (): void => { void this.autoExplore(); };
-  readonly #handleNearestUnknownItem = (): void => { void this.travelToNearestUnknownItem(); };
 
   readonly #handleResize = (): void => {
     this.#window.requestAnimationFrame(() => this.render());
@@ -829,6 +826,9 @@ export class InputController {
     ) { this.#heldMovement = undefined; return; }
     // Focused buttons own native activation, before game shortcuts (Enter opens the command menu).
     if (event.target instanceof HTMLButtonElement && (event.key === " " || event.key === "Enter")) return;
+    // Keep native Tab navigation in controls/menus; only bare gameplay owns auto-attack.
+    if (event.key === "Tab" && (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey ||
+        (event.target instanceof HTMLElement && event.target.closest("button, a, summary, [role='tab'], [role='menu'], details[open]")))) return;
     if (event.repeat) {
       const held = this.#heldMovement;
       if (!held || this.#state.commandBlocked || this.#state.targeting || this.#state.terrainInteractionMode ||
@@ -962,6 +962,11 @@ export class InputController {
       return;
     }
     const runPreset = this.#literalCommand ? "original" : preset;
+    if (event.key === "Tab" && this.#state.mode === "playing" && this.#state.status?.mapScale === "local") {
+      event.preventDefault(); event.stopImmediatePropagation();
+      this.#commandCount = undefined; this.#literalCommand = false;
+      void this.autoAttack(); return;
+    }
     if (event.key === "*") {
       event.preventDefault(); this.#commandCount = undefined; this.#literalCommand = false;
       this.startTargetSelection(); return;
@@ -1342,6 +1347,7 @@ export class InputController {
     switch (command.type) {
       case "run": await this.run(command.direction, count ?? command.maxSteps ?? undefined); return;
       case "auto-explore": await this.autoExplore(); return;
+      case "auto-attack": await this.autoAttack(); return;
       case "rest": case "rest-for-turns": case "rest-until-resources":
         await this.#rest(count === undefined ? command : { type: "rest-for-turns", turns: count }); return;
       case "travel-local": await this.travelLocalTo(command.destination); return;
@@ -1388,6 +1394,15 @@ export class InputController {
   async autoExplore(): Promise<void> {
     if (this.#state.targeting || this.#state.terrainInteractionMode || this.#ridingDirection || this.#runDirectionPreset || this.#walkDirection) return;
     await this.#automaticMovement("auto-explore", { type: "auto-explore" });
+  }
+
+  async autoAttack(): Promise<void> {
+    if (this.#state.mode !== "playing" || this.#state.status?.mapScale !== "local") return;
+    await this.#runContinuousAction("auto-attack", async action => {
+      do {
+        if (!await this.#continuousStep(action, { type: "auto-attack" })) return;
+      } while (this.#state.status && "commandRepeatable" in this.#state.status && this.#state.status.commandRepeatable);
+    });
   }
 
   async #automaticMovement(kind: "run" | "auto-explore", start: GameCommand): Promise<void> {
@@ -1582,6 +1597,7 @@ export class InputController {
       event.preventDefault(); // Held confirmation keys must not activate the restored button focus.
       return;
     }
+    if (event.repeat && this.continuousAction === "auto-attack" && event.key === "Tab") { event.preventDefault(); return; }
     if (event.repeat && (this.continuousAction === "run" || this.continuousAction === "auto-explore" || this.continuousAction === "repeat" || this.continuousAction === "macro")) return;
     const shortcut = commandShortcut(event, this.#getInputPreset());
     if (this.continuousAction && (shortcut === "save" || shortcut === "save-exit")) {
@@ -1600,7 +1616,7 @@ export class InputController {
       if (!shortcut && !alterDirectionForKeyboardInput(event, this.#getInputPreset()) && !runDirectionForKeyboardInput(event, this.#getInputPreset()) &&
           !isRunPrefix(event.key, this.#getInputPreset()) && !commandForKeyboardInput(event, this.#getInputPreset()) &&
           !terrainInteractionModeForKey(event.key) && !terrainSearchCommandForKey(event.key) &&
-          !["0", "-", ";", "_", "]", "O", "J", "`", "Z"].includes(event.key) &&
+          !["0", "-", ";", "_", "]", "O", "J", "`", "Z", "Tab"].includes(event.key) &&
           !["x", "f", "v", "i", "m"].includes(event.key.toLowerCase()) && !isAutoGetShortcut(event) && !deviceShortcut) return;
     }
     event.preventDefault();

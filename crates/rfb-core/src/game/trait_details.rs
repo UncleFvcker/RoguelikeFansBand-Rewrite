@@ -127,13 +127,13 @@ impl Game {
                 .is_some_and(|level| self.progress.level >= level);
             sources.push(innate);
             let mut class_source = source(K::Class, &class.id);
+            class_source.status_immunities.extend(
+                super::player_stats::class_immunity_unlocks(&class.id)
+                    .iter()
+                    .filter(|(level, _)| self.progress.level >= *level)
+                    .map(|(_, status)| (*status).to_owned()),
+            );
             if self.player_is_berserker() {
-                class_source
-                    .status_immunities
-                    .extend([STATUS_FEAR.to_owned(), STATUS_PARALYSIS.to_owned()]);
-                if self.progress.level >= 35 {
-                    class_source.status_immunities.push(STATUS_STUN.to_owned());
-                }
                 class_source.reflects_bolts = self.progress.level >= 40;
             }
             class_source.passives.extend(

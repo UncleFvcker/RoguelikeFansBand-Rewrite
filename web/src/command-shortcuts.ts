@@ -31,6 +31,7 @@ export const commandMenuEntries: readonly (readonly [string, string])[] = [
   ["1", "south-west"], ["2", "south"], ["3", "south-east"], ["4", "west"], ["5", "stay"],
   ["6", "east"], ["7", "north-west"], ["8", "north"], ["9", "north-east"],
   [";", "walk"], ["-", "special-walk"], [".", "run"], ["Z", "auto-explore"], ["0", "count"],
+  ["Tab", "auto-attack"],
   ["*", "target"], ["`", "local-travel"], ["<", "connection"], ["]", "object-list"], ["_", "pickup-rules"],
   ["Ctrl+v", "map-center"], ["Ctrl+f", "floor-feeling"], ["Ctrl+s", "save"], ["Ctrl+x", "save-exit"],
   ["Ctrl+q", "tasks"], ["Ctrl+p", "messages"], ["Ctrl+g", "auto-get"],

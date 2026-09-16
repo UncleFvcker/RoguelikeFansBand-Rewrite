@@ -3,6 +3,30 @@
 use super::ability_scaling::prorated_level_value;
 use super::*;
 
+// Existing RFB berserker/mindcrafter bonuses, shared with the birth timeline.
+pub(super) fn class_passive_unlocks(class_id: &str) -> &'static [(u16, EquipmentPassive)] {
+    match class_id {
+        "demo.class.berserker" => &[
+            (1, EquipmentPassive::SustainStrength),
+            (1, EquipmentPassive::SustainDexterity),
+            (1, EquipmentPassive::SustainConstitution),
+            (40, EquipmentPassive::ReflectsBolts),
+        ],
+        "demo.class.mindcrafter" => &[
+            (20, EquipmentPassive::SustainWisdom),
+            (40, EquipmentPassive::Telepathy),
+        ],
+        _ => &[],
+    }
+}
+
+pub(super) fn class_immunity_unlocks(class_id: &str) -> &'static [(u16, &'static str)] {
+    match class_id {
+        "demo.class.berserker" => &[(1, STATUS_FEAR), (1, STATUS_PARALYSIS), (35, STATUS_STUN)],
+        _ => &[],
+    }
+}
+
 // RFB master a0d92b6378: combat.c::_blows_range and tables.c::adj_str_blow.
 const RFB_BLOW_RANGES: [(u16, u16); 38] = [
     (0, 200),
@@ -899,11 +923,13 @@ impl Game {
     /// innate immunities and every equipped item's (plus affixes').
     pub(super) fn player_status_immunities(&self) -> BTreeSet<String> {
         let mut immunities = BTreeSet::new();
-        if self.player_is_berserker() {
-            immunities.extend([STATUS_FEAR.to_owned(), STATUS_PARALYSIS.to_owned()]);
-            if self.progress.level >= 35 {
-                immunities.insert(STATUS_STUN.to_owned());
-            }
+        if let Some(build) = &self.build {
+            immunities.extend(
+                class_immunity_unlocks(&build.class_id)
+                    .iter()
+                    .filter(|(level, _)| self.progress.level >= *level)
+                    .map(|(_, status)| (*status).to_owned()),
+            );
         }
         // effects.c::set_cut/set_unwell reject these conditions for the current nonliving body.
         if self.player_is_nonliving() {
@@ -1493,25 +1519,15 @@ impl Game {
     }
 
     pub(super) fn player_class_passives(&self) -> Vec<EquipmentPassive> {
-        if self.player_is_berserker() {
-            let mut passives = vec![
-                EquipmentPassive::SustainStrength,
-                EquipmentPassive::SustainDexterity,
-                EquipmentPassive::SustainConstitution,
-            ];
-            if self.progress.level >= 40 {
-                passives.push(EquipmentPassive::ReflectsBolts);
-            }
-            return passives;
-        }
-        // RFB master a0d92b6378: mindcrafter.c::_calc_bonuses.
-        [
-            (20, EquipmentPassive::SustainWisdom),
-            (40, EquipmentPassive::Telepathy),
-        ]
-        .into_iter()
-        .filter(|(level, _)| self.player_is_mindcrafter() && self.progress.level >= *level)
-        .map(|(_, passive)| passive)
+        class_passive_unlocks(
+            self.build
+                .as_ref()
+                .map(|build| build.class_id.as_str())
+                .unwrap_or(""),
+        )
+        .iter()
+        .filter(|(level, _)| self.progress.level >= *level)
+        .map(|(_, passive)| *passive)
         .collect()
     }
 

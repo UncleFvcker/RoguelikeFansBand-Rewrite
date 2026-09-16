@@ -69,15 +69,17 @@ test("Maia choice requires a click and survives closing and rerendering", async 
   assert.equal(list.children[0].children[1].textContent, "maia-path-corrupted");
 });
 
-test("HUD experience uses exact cumulative XP, clamps the meter and labels the next threshold", () => {
+test("HUD experience measures the current level interval and retains cumulative XP labels", () => {
   const meter = { setAttribute(key, value) { this[key] = value; } };
   const localization = { format: (key, args) => args ? `${args.experience} / ${args.next}` : key };
-  for (const [experience, next, expected] of [
-    [0, 10, 0], [25, 100, 250], [25n, 100, 250], [25, 100n, 250],
-    [0n, 10n, 0], [25n, 100n, 250], [100n, 100n, 1000], [120n, 100n, 1000],
-    [9007199254740993n, 18014398509481986n, 500], [10n, null, 1000], [10n, 0n, 0],
+  for (const [experience, start, next, expected] of [
+    [0, 0, 10, 0], [25, 10, 40, 500], [25n, 10, 40, 500], [25, 10n, 40n, 500],
+    [40n, 40n, 100n, 0], [70n, 40n, 100n, 500], [100n, 40n, 100n, 1000],
+    [120n, 40n, 100n, 1000], [30n, 40n, 100n, 0],
+    [9007199254740995n, 9007199254740993n, 9007199254740997n, 500],
+    [10n, 10n, null, 1000], [10n, 10n, 10n, 0],
   ]) {
-    renderHudExperience(meter, { experience, experienceForNextLevel: next }, localization);
+    renderHudExperience(meter, { experience, experienceForCurrentLevel: start, experienceForNextLevel: next }, localization);
     assert.equal(meter.hidden, false);
     assert.equal(meter.value, expected);
     assert.equal(meter.title, `${experience} / ${next ?? 'character-no-next-level'}`);

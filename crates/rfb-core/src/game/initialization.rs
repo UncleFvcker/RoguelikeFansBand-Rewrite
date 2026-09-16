@@ -338,30 +338,8 @@ impl Game {
             build_id.or(world.player_build_id.as_deref()),
             race_id,
         )?;
-        let birth_race = build
-            .as_ref()
-            .and_then(|identity| content.race(&identity.race_id));
-        if build
-            .as_ref()
-            .is_some_and(|build| build.class_id == "demo.class.duelist")
-            && birth_race.is_some_and(|race| race.id == "rfb-legacy.race.tonberry")
-        {
-            return Err(CoreError::CharacterRaceUnavailable(
-                "rfb-legacy.race.tonberry".to_owned(),
-            ));
-        }
-        if let Some(race) = birth_race
-            && race.id == "rfb-legacy.race.centaur"
-            && build
-                .as_ref()
-                .is_some_and(|build| build.class_id == "demo.class.cavalry")
-        {
-            return Err(CoreError::CharacterRaceUnavailable(race.id.clone()));
-        }
-        if let Some(race) = birth_race
-            && !race.tags.iter().any(|tag| tag == "rfb-compatibility")
-        {
-            return Err(CoreError::CharacterRaceUnavailable(race.id.clone()));
+        if let Some(identity) = &build {
+            super::progression::validate_birth_combination(identity)?;
         }
         let starts_at_night = build
             .as_ref()

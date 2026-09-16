@@ -257,6 +257,15 @@ pub(super) fn resolve_character_build(
     }))
 }
 
+pub(super) fn validate_birth_combination(build: &CharacterBuildIdentity) -> Result<(), CoreError> {
+    if (build.class_id == "demo.class.duelist" && build.race_id == "rfb-legacy.race.tonberry")
+        || (build.class_id == "demo.class.cavalry" && build.race_id == "rfb-legacy.race.centaur")
+    {
+        return Err(CoreError::CharacterRaceUnavailable(build.race_id.clone()));
+    }
+    Ok(())
+}
+
 pub(super) fn build_definitions<'a>(
     content: &'a ContentCatalog,
     identity: &'a CharacterBuildIdentity,
@@ -369,14 +378,66 @@ fn apply_attribute_dto_modifiers(
     }
 }
 
-struct AttributeStep<'a> {
+pub(super) struct AttributeStep<'a> {
     kind: AttributeSourceKindDto,
     source_id: Option<&'a str>,
     name_key: Option<&'a str>,
-    modifiers: StatModifiersDto,
+    pub(super) modifiers: StatModifiersDto,
 }
 
-fn effective_attributes<'a>(
+pub(super) fn build_attribute_steps(
+    definitions: Option<CharacterDefinitions<'_>>,
+    level: u16,
+    headgear_excess: u16,
+) -> Vec<AttributeStep<'_>> {
+    let mut steps = Vec::new();
+    if let Some((_, race, class, personality)) = definitions {
+        for (kind, id, name, modifiers) in [
+            (
+                AttributeSourceKindDto::Race,
+                &race.id,
+                &race.name_key,
+                &race.modifiers,
+            ),
+            (
+                AttributeSourceKindDto::Class,
+                &class.id,
+                &class.name_key,
+                &class.modifiers,
+            ),
+            (
+                AttributeSourceKindDto::Personality,
+                &personality.id,
+                &personality.name_key,
+                &personality.modifiers,
+            ),
+        ] {
+            let mut modifiers = stat_modifiers_dto(modifiers);
+            if kind == AttributeSourceKindDto::Race && headgear_excess > 0 {
+                modifiers.intelligence -= i32::from(headgear_excess / 10) + 1;
+            }
+            if kind == AttributeSourceKindDto::Race && race.id == "rfb-legacy.race.ent" {
+                // RFB master a0d92b6378: races_a.c::ent_get_race.
+                let growth = [26, 41, 46]
+                    .into_iter()
+                    .map(|threshold| i32::from(level >= threshold))
+                    .sum::<i32>();
+                modifiers.strength += growth;
+                modifiers.constitution += growth;
+                modifiers.dexterity -= growth;
+            }
+            steps.push(AttributeStep {
+                kind,
+                source_id: Some(id),
+                name_key: Some(name),
+                modifiers,
+            });
+        }
+    }
+    steps
+}
+
+pub(super) fn effective_attributes<'a>(
     mut attributes: AttributeSet,
     steps: impl IntoIterator<Item = AttributeStep<'a>>,
     normal_appearance_minimum: Option<u16>,
@@ -408,7 +469,7 @@ fn effective_attributes<'a>(
     attributes
 }
 
-fn character_experience_percent(definitions: Option<CharacterDefinitions<'_>>) -> u16 {
+pub(super) fn character_experience_percent(definitions: Option<CharacterDefinitions<'_>>) -> u16 {
     definitions.map_or(100, |(_, race, class, personality)| {
         if race.id == "rfb-legacy.race.android" {
             return race.experience_percent;
@@ -806,51 +867,11 @@ impl Game {
             .iter()
             .any(|mutation| mutation.normal_appearance)
             .then(|| 8_u16.saturating_add(level.saturating_mul(2)));
-        let mut steps = Vec::new();
-        let headgear_excess = self.player_tomte_headgear_excess_weight();
-        if let Some((_, race, class, personality)) = self.character_definitions() {
-            for (kind, id, name, modifiers) in [
-                (
-                    AttributeSourceKindDto::Race,
-                    &race.id,
-                    &race.name_key,
-                    &race.modifiers,
-                ),
-                (
-                    AttributeSourceKindDto::Class,
-                    &class.id,
-                    &class.name_key,
-                    &class.modifiers,
-                ),
-                (
-                    AttributeSourceKindDto::Personality,
-                    &personality.id,
-                    &personality.name_key,
-                    &personality.modifiers,
-                ),
-            ] {
-                let mut modifiers = stat_modifiers_dto(modifiers);
-                if kind == AttributeSourceKindDto::Race && headgear_excess > 0 {
-                    modifiers.intelligence -= i32::from(headgear_excess / 10) + 1;
-                }
-                if kind == AttributeSourceKindDto::Race && race.id == "rfb-legacy.race.ent" {
-                    // RFB master a0d92b6378: races_a.c::ent_get_race.
-                    let growth = [26, 41, 46]
-                        .into_iter()
-                        .map(|threshold| i32::from(level >= threshold))
-                        .sum::<i32>();
-                    modifiers.strength += growth;
-                    modifiers.constitution += growth;
-                    modifiers.dexterity -= growth;
-                }
-                steps.push(AttributeStep {
-                    kind,
-                    source_id: Some(id),
-                    name_key: Some(name),
-                    modifiers,
-                });
-            }
-        }
+        let mut steps = build_attribute_steps(
+            self.character_definitions(),
+            level,
+            self.player_tomte_headgear_excess_weight(),
+        );
         steps.extend(active_mutations.iter().map(|mutation| AttributeStep {
             kind: AttributeSourceKindDto::Mutation,
             source_id: Some(&mutation.id),

@@ -9,7 +9,6 @@ export interface AppDom {
   readonly targetCursor: HTMLElement;
   readonly traverseStairs: HTMLButtonElement;
   readonly autoExplore: HTMLButtonElement;
-  readonly nearestUnknownItem: HTMLButtonElement;
   readonly searchModeToggle: HTMLButtonElement;
   readonly stopContinuousAction: HTMLButtonElement;
   readonly continuousActionStatus: HTMLElement;
@@ -143,7 +142,6 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     traverseStairs: element<HTMLButtonElement>(document, "traverse-stairs"),
     stopContinuousAction: element<HTMLButtonElement>(document, "stop-continuous-action"),
     autoExplore: element<HTMLButtonElement>(document, "auto-explore"),
-    nearestUnknownItem: element<HTMLButtonElement>(document, "nearest-unknown-item"),
     searchModeToggle: element<HTMLButtonElement>(document, "search-mode-toggle"),
     continuousActionStatus: element<HTMLElement>(document, "continuous-action-status"),
     targetModeToggle: element<HTMLButtonElement>(document, "target-mode-toggle"),

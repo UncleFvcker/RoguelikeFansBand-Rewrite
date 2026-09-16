@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.300";
+pub const PROTOCOL_VERSION: &str = "1.302";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 14;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 46;
 
@@ -484,6 +484,7 @@ pub enum GameCommand {
         destination: Position,
     },
     FindNearestUnknownItem,
+    AutoAttack,
     TravelUnknownItem {
         object_id: String,
         destination: Position,
@@ -2692,6 +2693,7 @@ pub struct PlayerProgressDto {
     #[serde(default)]
     pub attribute_cap: u16,
     pub attribute_index_cap: u8,
+    pub experience_for_current_level: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub experience_for_next_level: Option<u64>,
     pub pending_attribute_increases: u16,
@@ -2881,6 +2883,72 @@ pub struct PlayerBuildDto {
     pub personality_name_key: String,
     pub life_percent: u16,
     pub experience_percent: u16,
+}
+
+/// Read-only birth preview, before equipment, random mutations and temporary effects.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterCreationPreviewDto {
+    pub build: PlayerBuildDto,
+    pub attributes: Vec<CreationAttributeDto>,
+    pub skills: Vec<CreationSkillDto>,
+    /// Race/class/personality contribution, not the final maximum HP.
+    pub base_hp: i32,
+    pub casting_attribute: Option<AttributeKindDto>,
+    pub experience_note_key: Option<String>,
+    pub sources: Vec<CreationSourceDto>,
+    pub features: Vec<CreationFeatureDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CreationSourceDto {
+    pub kind: AttributeSourceKindDto,
+    pub name_key: String,
+    pub modifiers: StatModifiersDto,
+    pub life_percent: u16,
+    pub experience_percent: u16,
+    pub base_hp: i32,
+    pub skills: Vec<SkillProgressDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CreationFeatureDto {
+    pub source_name_key: String,
+    pub name_key: String,
+    /// Some imported mutation names/descriptions are source text rather than Fluent keys.
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub detail_key: Option<String>,
+    pub value: Option<i32>,
+    pub minimum_level: u16,
+    pub maximum_level: Option<u16>,
+    /// Localized condition: automatic, usable power, book study, or a choice.
+    pub acquisition_key: String,
+    pub negative: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CreationAttributeDto {
+    pub attribute: AttributeKindDto,
+    pub natural: u16,
+    pub modifier: i32,
+    pub effective: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CreationSkillDto {
+    pub skill: SkillProgressDto,
+    /// RFB birth comparison rating; not a success probability or a level-one rating.
+    pub rating_key: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -5830,6 +5898,7 @@ pub struct GameUpdate {
 #[derive(JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ProtocolSchemaV1 {
+    pub character_creation_preview: CharacterCreationPreviewDto,
     pub command: GameCommandEnvelope,
     pub snapshot: GameSnapshot,
     pub update: GameUpdate,
@@ -5919,6 +5988,11 @@ pub fn generated_typescript() -> String {
     push_declaration!(AttributeSetDto);
     push_declaration!(PlayerProgressDto);
     push_declaration!(SkillProgressDto);
+    push_declaration!(CharacterCreationPreviewDto);
+    push_declaration!(CreationAttributeDto);
+    push_declaration!(CreationSkillDto);
+    push_declaration!(CreationSourceDto);
+    push_declaration!(CreationFeatureDto);
     push_declaration!(WeaponProficiencyCategoryDto);
     push_declaration!(WeaponProficiencyGroupDto);
     push_declaration!(ProficiencyRankDto);
@@ -7319,6 +7393,7 @@ mod tests {
                 destination: Position { x: 40, y: 12 },
             },
             GameCommand::FindNearestUnknownItem,
+            GameCommand::AutoAttack,
             GameCommand::TravelUnknownItem {
                 object_id: "test.item".into(),
                 destination: Position { x: 40, y: 12 },

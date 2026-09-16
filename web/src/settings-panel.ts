@@ -151,7 +151,7 @@ export class SettingsPanel {
         this.#status.textContent = this.#o.localization.format("preferences-import-preview");
       });
     });
-    for (const page of ["general", "behavior", "autopick", "display", "glyphs", "colors", "advanced", "changes"] as const)
+    for (const page of ["general", "keyboard", "behavior", "autopick", "display", "glyphs", "colors", "advanced", "changes"] as const)
       on(this.#element("preferences-" + page), "click", () => this.#openPage(page));
     on(this.#element("preferences-prf-preview"), "click", () => {
       void this.#run(async () => this.#previewPrf(this.#element<HTMLInputElement>("preferences-command").value));
@@ -194,7 +194,7 @@ export class SettingsPanel {
       () => this.#draft.visuals, () => this.#renderPreview(), id => this.#o.renderer.visualBase(id));
     this.#visualEditor.open(page);
   }
-  #openPage(page: "general" | "behavior" | "autopick" | "display" | "glyphs" | "colors" | "advanced" | "changes"): void {
+  #openPage(page: "general" | "keyboard" | "behavior" | "autopick" | "display" | "glyphs" | "colors" | "advanced" | "changes"): void {
     this.#search.value = "";
     this.#page = page === "glyphs" || page === "colors" ? "visuals" : page;
     this.#filter();

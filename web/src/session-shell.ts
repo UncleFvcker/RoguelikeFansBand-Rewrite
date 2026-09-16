@@ -9,7 +9,8 @@ import {
   type NativeSaveSummary,
 } from "./native-save-storage.ts";
 import { nativeSaveErrorKey } from "./save-panel.ts";
-import type { GameSnapshot } from "./protocol.ts";
+import type { CharacterCreationPreviewDto, GameSnapshot } from "./protocol.ts";
+import { CreationPreview } from "./creation-preview.ts";
 import { CreationMenu, type PlaytestRaceId, type PlaytestBuildId } from "./character-creation.ts";
 export { PLAYTEST_RACE_IDS, type PlaytestRaceId, PLAYTEST_BUILD_IDS, type PlaytestBuildId } from "./character-creation.ts";
 
@@ -68,6 +69,7 @@ export class SessionShell {
   readonly #dom: SessionShellDom;
   readonly #raceMenu: CreationMenu;
   readonly #careerMenu: CreationMenu;
+  readonly #preview: CreationPreview;
   readonly #storage: SessionStorage;
   readonly #localization: Localization;
   readonly #onStart: (request: NewSessionRequest) => Promise<GameSnapshot>;
@@ -98,6 +100,7 @@ export class SessionShell {
     storage: SessionStorage;
     localization: Localization;
     onStart: (request: NewSessionRequest) => Promise<GameSnapshot>;
+    onPreview: (buildId: string, raceId: string) => Promise<CharacterCreationPreviewDto>;
     onLoad: (result: NativeLoadResult, summary: NativeSaveSummary) => Promise<void>;
     onExit: () => Promise<void>;
     onOpenSettings: () => void;
@@ -110,6 +113,7 @@ export class SessionShell {
     this.#dom = options.dom;
     this.#storage = options.storage;
     this.#localization = options.localization;
+    this.#preview = new CreationPreview(this.#dom.root.ownerDocument, this.#localization, options.onPreview);
     this.#onStart = options.onStart;
     this.#onLoad = options.onLoad;
     this.#onExit = options.onExit;
@@ -122,11 +126,15 @@ export class SessionShell {
     this.#raceMenu = new CreationMenu("race", this.#dom.racePanel, this.#localization, () => {
       this.#renderCreationSummary();
       this.#updateControls();
-    }, () => this.#showCreationPage("overview", true));
+    }, () => this.#showCreationPage("overview", true), () => {
+      if (this.#creationPage === "race") this.#renderCreationPreview();
+    });
     this.#careerMenu = new CreationMenu("career", this.#dom.careerPanel, this.#localization, () => {
       this.#renderCreationSummary();
       this.#updateControls();
-    }, () => this.#showCreationPage("overview", true));
+    }, () => this.#showCreationPage("overview", true), () => {
+      if (this.#creationPage === "career") this.#renderCreationPreview();
+    });
   }
 
   install(): void {
@@ -155,6 +163,7 @@ export class SessionShell {
   dispose(): void {
     if (!this.#installed) return;
     this.#installed = false;
+    this.#preview.reset();
     this.#dom.newGameButton.removeEventListener("click", this.#openNewGame);
     this.#dom.continueButton.removeEventListener("click", this.#continueLatest);
     this.#dom.loadGameButton.removeEventListener("click", this.#openLoad);
@@ -195,6 +204,7 @@ export class SessionShell {
   }
 
   showGame(snapshot: GameSnapshot, request?: NewSessionRequest): void {
+    this.#preview.reset();
     this.#activeSnapshot = snapshot;
     this.#activeRequest = request;
     this.#renderRunMetadata();
@@ -257,7 +267,7 @@ export class SessionShell {
       const index = pages.indexOf(this.#creationPage);
       const next = event.key === "Home" ? 0 : event.key === "End" ? 2 : (index + (event.key === "ArrowRight" ? 1 : 2)) % 3;
       this.#showCreationPage(pages[next]!, true);
-    } else if (event.key === "Enter" && this.#creationPage !== "overview" && !event.target.closest("button, select")) {
+    } else if (event.key === "Enter" && this.#creationPage !== "overview" && !event.target.closest("button, select, summary")) {
       event.preventDefault();
     } else if (event.key === "Escape" && !event.target.closest("input, select, textarea")) {
       event.preventDefault();
@@ -280,7 +290,18 @@ export class SessionShell {
     if (this.#unavailableCombination) {
       this.#dom.creationSummary.textContent += ` · ${this.#localization.format(this.#unavailableCombination)}`;
     }
+    this.#renderCreationPreview();
   };
+
+  #renderCreationPreview(): void {
+    if (this.#view !== "new-game" || this.#dom.root.hidden) return;
+    const page = this.#creationPage;
+    const buildId = page === "career" ? this.#careerMenu.previewId : this.#careerMenu.selectedId;
+    const raceId = page === "race" ? this.#raceMenu.previewId : this.#raceMenu.selectedId;
+    const host = this.#dom.newGameView.querySelector<HTMLElement>(`#session-${page}-preview`)!;
+    void this.#preview.show(host, buildId && raceId ? { buildId, raceId } : undefined,
+      { buildId: this.#careerMenu.selectedId, raceId: this.#raceMenu.selectedId });
+  }
 
   get #unavailableCombination(): string | undefined {
     if (this.#careerMenu.selectedId === "demo.build.duelist" && this.#raceMenu.selectedId === "rfb-legacy.race.tonberry") return "session-duelist-tonberry-unavailable";
@@ -474,6 +495,7 @@ export class SessionShell {
   }
 
   #showView(view: SessionView): void {
+    if (view !== "new-game") this.#preview.reset();
     this.#view = view;
     this.#titleFocusPending = view === "title";
     this.#dom.root.dataset.view = view;

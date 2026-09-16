@@ -3,11 +3,15 @@
 import { invoke } from "@tauri-apps/api/core";
 
 import type { CoreTransport, NewSessionRequest } from "./core-transport";
-import type { GameCommand, GameSnapshot, GameUpdate } from "./protocol";
+import type { CharacterCreationPreviewDto, GameCommand, GameSnapshot, GameUpdate } from "./protocol";
 
 export class TauriNativeTransport implements CoreTransport {
   #revision = 0;
   #commandSeq = 0;
+
+  previewCharacterCreation(buildId: string, raceId: string): Promise<CharacterCreationPreviewDto> {
+    return invoke<CharacterCreationPreviewDto>("preview_character_creation", { buildId, raceId });
+  }
 
   async initialize(request: NewSessionRequest): Promise<GameSnapshot> {
     const snapshot = await invoke<GameSnapshot>("initialize_game", {

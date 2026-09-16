@@ -24,7 +24,7 @@ const helpers = {
 };
 const formatter = createPresentationFormatter(localization, () => state, helpers);
 
-test("auto-exploration stop events render the actual reason in both languages", () => {
+test("automatic movement stop events render the actual reason in both languages", () => {
   const core = readFileSync(new URL("../../crates/rfb-core/src/game/auto_explore.rs", import.meta.url), "utf8");
   const keys = [...new Set(core.match(/game-auto-explore-[a-z-]+/g))];
   for (const locale of ["zh-CN", "en-US"]) {
@@ -32,6 +32,11 @@ test("auto-exploration stop events render the actual reason in both languages", 
     for (const messageKey of [...keys, "game-auto-explore-interrupted"]) {
       const text = formatter.formatEvent({ kind: "auto-explore.stopped", messageKey, args: {} });
       assert.equal(localization.hasMessage(locale, messageKey), true, messageKey);
+      assert.equal(text, localization.format(messageKey));
+      assert.ok(!text.includes(messageKey), `${locale}: ${messageKey}`);
+    }
+    for (const messageKey of ["game-auto-attack-no-enemy", "game-auto-attack-no-route", "game-auto-attack-unavailable"]) {
+      const text = formatter.formatEvent({ kind: "auto-attack.stopped", messageKey, args: {} });
       assert.equal(text, localization.format(messageKey));
       assert.ok(!text.includes(messageKey), `${locale}: ${messageKey}`);
     }

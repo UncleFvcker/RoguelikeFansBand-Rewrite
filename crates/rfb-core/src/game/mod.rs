@@ -146,6 +146,8 @@ mod museum;
 mod preferences;
 // M2 deliberately establishes this core transaction boundary before any item
 // effect is allowed to call it; Polymorph remains blocked until its own batch.
+mod creation_preview;
+mod creation_traits;
 mod discovery;
 mod mana;
 mod map_intelligence;
@@ -1227,6 +1229,16 @@ impl Game {
                 .refuel_light_unavailable_reason(target_item_id, source_item_id)
                 .is_some()
         );
+        let mut unavailable_auto_attack = false;
+        if matches!(&action, GameAction::AutoAttack) {
+            match self.auto_attack_step() {
+                Ok(step) => action = step,
+                Err(reason) => {
+                    unavailable_auto_attack = true;
+                    events.push(DomainEvent::AutoAttackUnavailable { reason });
+                }
+            }
+        }
         let ordinary_travel = matches!(&action, GameAction::TravelLocal { .. });
         let selecting_unknown_item = matches!(&action, GameAction::FindNearestUnknownItem);
         let mut unavailable_unknown_item = false;
@@ -1351,6 +1363,7 @@ impl Game {
             && !unavailable_light_refuel
             && !unavailable_world_travel
             && !unavailable_local_travel
+            && !unavailable_auto_attack
             && !unavailable_run
             && !cancelling_run
             && !unavailable_explore
@@ -1521,6 +1534,7 @@ impl Game {
             magic_absorption_advances_world != Some(false)
                 && !configuring_preferences
                 && !unavailable_local_travel
+                && !unavailable_auto_attack
                 && !unavailable_run
                 && !cancelling_run
                 && !unavailable_explore
@@ -2218,7 +2232,7 @@ impl Game {
                 Ok(target) => events.push(DomainEvent::UnknownItemTravelTarget { target }),
                 Err(reason) => events.push(DomainEvent::UnknownItemTravelUnavailable { reason }),
             },
-            GameAction::TravelUnknownItem { .. } => {}
+            GameAction::TravelUnknownItem { .. } | GameAction::AutoAttack => {}
             GameAction::Run { .. }
             | GameAction::ContinueRun
             | GameAction::CancelRun

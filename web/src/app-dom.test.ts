@@ -34,7 +34,6 @@ test("the application DOM registry is immutable and preserves stable element IDs
   assert.equal(dom.lookModeToggle.id, "look-mode-toggle");
   assert.equal(dom.traverseStairs.id, "traverse-stairs");
   assert.equal(dom.autoExplore.id, "auto-explore");
-  assert.equal(dom.nearestUnknownItem.id, "nearest-unknown-item");
   assert.equal(dom.combatContext.id, "combat-context");
   assert.equal(dom.combatSummaryList.id, "combat-summary-list");
   assert.equal(dom.healthMeterFill.id, "health-meter-fill");

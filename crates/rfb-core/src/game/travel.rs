@@ -21,6 +21,53 @@ const DIRECTIONS: [Direction; 8] = [
 ];
 
 impl Game {
+    // One step only: the caller yields between requests so pursuit remains interruptible.
+    pub(super) fn auto_attack_step(&self) -> Result<GameAction, &'static str> {
+        if self.map_scale != rfb_protocol::MapScaleDto::Local
+            || self.player_is_dead()
+            || [STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_PARALYSIS]
+                .iter()
+                .any(|status| self.player_has_status_kind(status))
+        {
+            return Err("game-auto-attack-unavailable");
+        }
+        let target = self
+            .entities
+            .iter()
+            .filter(|actor| {
+                actor.hp > 0
+                    && !self.actor_is_player_side(actor)
+                    && self.entity_is_visually_visible_to_player(actor)
+            })
+            .min_by_key(|actor| {
+                (
+                    projectile_geometry::rfb_distance(self.player.position, actor.position),
+                    &actor.id,
+                )
+            })
+            .ok_or("game-auto-attack-no-enemy")?;
+        if let Some((direction, _)) = ordered_neighbors(self.player.position, target.position)
+            .into_iter()
+            .find(|(_, next)| *next == target.position)
+        {
+            return Ok(GameAction::AttackAdjacent { direction });
+        }
+        let (costs, directions) = self.local_travel_paths(None);
+        let direction = ordered_neighbors(target.position, self.player.position)
+            .into_iter()
+            .filter_map(|(_, next)| {
+                let index = self.index(next)?;
+                Some((costs[index], directions[index]?))
+            })
+            .min_by_key(|(cost, _)| *cost)
+            .map(|(_, direction)| direction)
+            .ok_or("game-auto-attack-no-route")?;
+        Ok(self.convenient_walk_action(GameAction::Move {
+            direction,
+            flip_pickup: false,
+        }))
+    }
+
     fn automatic_movement_hostile_exists(&self) -> bool {
         if self.auto_explore.is_some() {
             self.hostile_in_sight()

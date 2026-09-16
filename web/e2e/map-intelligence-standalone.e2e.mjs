@@ -137,11 +137,11 @@ try {
   checks.push("Ctrl+F shows the Core floor feeling without spending a turn");
   await setPreferences(driver, { inputPreset: "roguelike" });
   await open("W", 8); await close();
-  await driver.execute('document.querySelector("[data-map-inquiry=map-overview]").click();return true;');
+  await open("M", 8);
   assert.equal(await driver.execute('return document.querySelector("#map-intelligence-dialog").open'), true);
   await load(await save(), initial);
   assert.equal(await driver.execute('return document.querySelector("#map-intelligence-dialog").open'), false);
-  checks.push("Rogue W, menu entry and native reload close stale inquiries");
+  checks.push("Rogue W/M and native reload close stale inquiries");
 
   const guide = "#help-knowledge-dialog";
   const guideOpen = async key => {

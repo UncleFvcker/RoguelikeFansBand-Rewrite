@@ -239,7 +239,31 @@ test("inventory child dialogs close before the page and inventory actions no lon
   assert.equal(dialog.open, false);
 });
 
-function createLayoutFixture(t) {
+test("inventory d/w/t open item commands without stealing selector or editing keys", t => {
+  const commands = [];
+  const { layout, element, window } = createLayoutFixture(t, { onInventoryCommand: command => commands.push(command) });
+  layout.open("inventory");
+  for (const key of ["d", "w", "t"]) assert.equal(press(window, key).defaultPrevented, true);
+  assert.deepEqual(commands, ["drop", "equip", "unequip"]);
+  assert.equal(element("player-page-dialog").open, true, "opening an action is not completing it");
+  element("inventory-action-dialog").open = true;
+  assert.equal(press(window, "d").defaultPrevented, false);
+  element("inventory-action-dialog").open = false;
+  for (const extra of [{ repeat: true }, { isComposing: true }, { ctrlKey: true }, { altKey: true }, { metaKey: true }, { target: new HTMLInputElement("search") }]) {
+    const { target, ...modifiers } = extra;
+    const event = Object.assign(new Event("keydown", { cancelable: true }), { key: "d", ...modifiers });
+    if (target) Object.defineProperty(event, "target", { value: target });
+    window.dispatchEvent(event);
+    assert.equal(event.defaultPrevented, false);
+  }
+  layout.open("character");
+  assert.equal(press(window, "w").defaultPrevented, false);
+  layout.closePage();
+  assert.equal(press(window, "t").defaultPrevented, false);
+  assert.equal(commands.length, 3);
+});
+
+function createLayoutFixture(t, options = {}) {
   // Only the DOM operations used by the controller; CSS sizing is not simulated here.
   class Element extends EventTarget {
     children = [];
@@ -299,7 +323,7 @@ function createLayoutFixture(t) {
     querySelector: () => [...elements.values()].find((node) => node.open && node.id !== "player-page-dialog"),
   };
   const window = new EventTarget();
-  const layout = new PlayerUiLayout({ document, window, localization: { format: (key) => key } });
+  const layout = new PlayerUiLayout({ document, window, localization: { format: (key) => key }, ...options });
   layout.initialize();
   layout.install();
   t.after(() => layout.dispose());

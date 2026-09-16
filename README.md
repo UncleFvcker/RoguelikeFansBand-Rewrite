@@ -6,7 +6,7 @@
 
 ## 下载与运行
 
-当前版本：**[v0.0.4](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.4)** · [下载 Windows x64 便携版 ZIP](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/download/v0.0.4/RoguelikeFansBand-Rewrite_0.0.4_windows-x64-portable.zip) · [所有发布版本](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases)
+当前版本：**[v0.0.5](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.5)** · [下载 Windows x64 便携版 ZIP](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/download/v0.0.5/RoguelikeFansBand-Rewrite_0.0.5_windows-x64-portable.zip) · [所有发布版本](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases)
 
 1. 下载 ZIP，完整解压到可写目录。
 2. 运行 `rfb-tauri.exe`，在标题页新建角色或继续游戏。
@@ -27,7 +27,7 @@
 - **地图与情报**：查看已知地图、记忆中的物品、怪物详情与发现档案；地形、怪物和物品按类型配色，unique 使用缓慢流动的彩虹渐变。
 - **保存与记录**：游戏内保存、另存为、读取与备份恢复，查看消息、角色成绩，并使用回放工具。
 
-v0.0.4 加入角色与镜头平滑移动、同步的逐格光照与视野过渡、近战碰撞及远程攻击动画。法术菜单改为每行 2–4 张卡片，显示已有伤害参数。近战镜头震动可在设置中关闭；保留原逐格光照，没有地图光照 shader。具体改动与实际检查见[发布说明](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.4)和[发布验证记录](docs/release-0.0.4-validation.md)。
+v0.0.5 加入创角数值、来源与成长特性预览，正常游戏中按 Tab 自动接近最近的目视敌人并近战一次。物品栏内支持 `d/w/t`，操作后保持打开；从游戏发起则返回游戏。地图操作栏已精简，帮助和知识移入菜单；设置新增独立“游戏键位”分类，经验条按当前等级区间显示进度。保留此前的平滑移动和战斗动画。具体改动与实际检查见[发布说明](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.5)和[发布验证记录](docs/release-0.0.5-validation.md)。
 
 当前尚未完成全部原版内容，商店布局等仍待改进。内容存在、规则实现、入口开放和实际试玩通过是不同状态；[状态快照](docs/status.md)与[后续工作](docs/next-work.md)记录各自范围。
 
@@ -41,6 +41,7 @@ v0.0.4 加入角色与镜头平滑移动、同步的逐格光照与视野过渡�
 | 使用快捷栏／切换组 | 主键盘 `1–9`、`0`／`Alt+1` 至 `Alt+6` |
 | 前往指定位置 | 左键点击地图地格 |
 | 自动探索 | `Z` 或“自动探索”按钮 |
+| 接近最近敌人并近战一次 | 正常游戏中按 `Tab`，仅针对目视敌人 |
 | 查看地格／怪物 | `l`，选中怪物后按 `r` 查看详情 |
 | 选择目标 | `*`，再用键盘或鼠标点击确认 |
 | 拾取 | `g`；脚下多件物品时弹出选择器 |

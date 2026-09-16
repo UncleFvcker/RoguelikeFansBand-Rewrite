@@ -153,6 +153,7 @@ export class CreationMenu {
   readonly #localization: Localization;
   readonly #onChange: () => void;
   readonly #onBack: () => void;
+  readonly #onPreview: () => void;
   readonly #kind: "race" | "career";
   readonly #catalog: readonly CreationGroup[];
   readonly #narrow: MediaQueryList;
@@ -164,7 +165,7 @@ export class CreationMenu {
   #busy = false;
   #lastFocused: HTMLElement | undefined;
 
-  constructor(kind: "race" | "career", root: HTMLElement, localization: Localization, onChange: () => void, onBack: () => void) {
+  constructor(kind: "race" | "career", root: HTMLElement, localization: Localization, onChange: () => void, onBack: () => void, onPreview: () => void) {
     this.#kind = kind;
     this.#catalog = kind === "race" ? RACE_GROUPS : CAREER_GROUPS;
     this.#selected = kind === "race" ? HUMAN : CAREER_GROUPS[0].options[0];
@@ -175,6 +176,7 @@ export class CreationMenu {
     this.#localization = localization;
     this.#onChange = onChange;
     this.#onBack = onBack;
+    this.#onPreview = onPreview;
     this.#groups = root.querySelector<HTMLElement>(`#session-${this.#kind}-groups`)!;
     this.#options = root.querySelector<HTMLElement>(`#session-${this.#kind}-options`)!;
     this.#path = root.querySelector<HTMLElement>(`#session-${this.#kind}-path`)!;
@@ -186,6 +188,7 @@ export class CreationMenu {
   }
 
   get selectedId(): string { return this.#selected.id; }
+  get previewId(): string | undefined { return "children" in this.#viewed ? undefined : this.#viewed.id; }
   get pending(): boolean { return this.#pending; }
   get selectedName(): string {
     return this.#pending
@@ -278,6 +281,7 @@ export class CreationMenu {
     }));
     this.#notes.hidden = entry.notes.length === 0;
     this.#root.querySelector<HTMLElement>(`#session-${this.#kind}-details`)!.scrollTop = 0;
+    this.#onPreview();
   }
 
   readonly #click = (event: MouseEvent): void => {

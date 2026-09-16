@@ -309,6 +309,7 @@ pub(crate) enum GameAction {
         destination: rfb_protocol::Position,
     },
     FindNearestUnknownItem,
+    AutoAttack,
     TravelUnknownItem {
         object_id: String,
         destination: rfb_protocol::Position,
@@ -397,6 +398,7 @@ impl GameAction {
             | Self::ConfigureMogaminatorPreferences { .. } => 0,
             Self::TravelLocal { .. }
             | Self::FindNearestUnknownItem
+            | Self::AutoAttack
             | Self::TravelUnknownItem { .. }
             | Self::Run { .. }
             | Self::ContinueRun
@@ -545,6 +547,7 @@ impl From<GameCommand> for GameAction {
             GameCommand::CancelAutoExplore => Self::CancelAutoExplore,
             GameCommand::TravelLocal { destination } => Self::TravelLocal { destination },
             GameCommand::FindNearestUnknownItem => Self::FindNearestUnknownItem,
+            GameCommand::AutoAttack => Self::AutoAttack,
             GameCommand::TravelUnknownItem {
                 object_id,
                 destination,

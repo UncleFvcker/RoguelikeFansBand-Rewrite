@@ -1024,10 +1024,9 @@ test("nearest unknown item travel locks one Core target and preserves keyboard m
   }
   const target = { objectId: "alpha", position: { x: 3, y: 1 } };
   const selected = update => { update.events = [{ outcome: { type: "unknown-item-travel-target", target } }]; };
-  for (const preset of ["original", "roguelike", "wasd"]) await t.test(preset, async () => {
+  for (const preset of ["original", "roguelike"]) await t.test(preset, async () => {
     const h = continuousHarness("local", undefined, preset);
-    if (preset === "wasd") h.unknownButton.listeners.get("click")();
-    else h.emit("keydown", preset === "original" ? { key: "H", shiftKey: true } : { key: "e", ctrlKey: true });
+    h.emit("keydown", preset === "original" ? { key: "H", shiftKey: true } : { key: "e", ctrlKey: true });
     await flushCommands();
     assert.deepEqual(h.requests[0].command, { type: "find-nearest-unknown-item" });
     await h.finish(selected); await h.tick();
@@ -1261,6 +1260,45 @@ test("running keys select a direction and cancel at the committed step boundary"
 });
 
 // Real controller/session dispatch with deferred Core responses and task timers.
+test("Tab approaches one step at a time until Core stops, without queuing held keys", async t => {
+  installElementIdentities(t);
+  const h = continuousHarness();
+  assert.equal(h.emit("keydown", { key: "Tab" }).defaultPrevented, true);
+  await flushCommands();
+  assert.deepEqual(h.requests[0].command, { type: "auto-attack" });
+  h.emit("keydown", { key: "Tab", repeat: true });
+  assert.equal(h.requests.length, 1);
+  await h.finish(update => { update.commandRepeatable = true; }); await h.tick();
+  assert.equal(h.requests.length, 2);
+  assert.deepEqual(h.requests[1].command, { type: "auto-attack" });
+  await h.finish(update => { update.commandRepeatable = false; }); await h.tick();
+  assert.equal(h.controller.continuousAction, undefined);
+  assert.equal(h.requests.length, 2);
+  h.controller.dispose();
+});
+
+test("Tab pursuit cancels at the current step and preserves native navigation in menus", async t => {
+  installElementIdentities(t);
+  for (const key of ["Escape", "Tab"]) {
+    const h = continuousHarness();
+    h.emit("keydown", { key: "Tab" }); await flushCommands();
+    assert.equal(h.emit("keydown", { key }).defaultPrevented, true);
+    await h.finish(update => { update.commandRepeatable = true; });
+    assert.equal(h.requests.length, 1);
+    assert.equal(h.controller.continuousAction, undefined);
+    h.controller.dispose();
+  }
+  const h = continuousHarness();
+  const control = new HTMLElement(); control.closest = () => control;
+  for (const data of [{ shiftKey: true }, { ctrlKey: true }, { target: control }, { target: new HTMLInputElement() }]) {
+    assert.equal(h.emit("keydown", { key: "Tab", ...data }).defaultPrevented, false);
+  }
+  h.state.mode = "new-game";
+  assert.equal(h.emit("keydown", { key: "Tab" }).defaultPrevented, false);
+  assert.equal(h.requests.length, 0);
+  h.controller.dispose();
+});
+
 function continuousHarness(kind = "local", result, preset = "roguelike", options = {}) {
   const state = new AppState();
   state.mode = "playing";
@@ -1312,7 +1350,6 @@ function continuousHarness(kind = "local", result, preset = "roguelike", options
     addEventListener(type, fn) { this.listeners.set(type, fn); },
     removeEventListener(type) { this.listeners.delete(type); },
   };
-  const unknownButton = { ...exploreButton, listeners: new Map() };
   const searchButton = { ...exploreButton, listeners: new Map() };
   const requests = [], errors = [], messages = [], changes = [], shortcuts = [], chestChoices = [];
   const session = new GameSession({ state,
@@ -1321,7 +1358,7 @@ function continuousHarness(kind = "local", result, preset = "roguelike", options
     refreshBusyControls() {}, showError: error => errors.push(error),
   });
   const controller = new InputController({ state, window,
-    dom: { mapHost, autoExplore: exploreButton, nearestUnknownItem: unknownButton, searchModeToggle: searchButton, traverseStairs: button, targetModeToggle: button, lookModeToggle: button },
+    dom: { mapHost, autoExplore: exploreButton, searchModeToggle: searchButton, traverseStairs: button, targetModeToggle: button, lookModeToggle: button },
     localization: { format: key => key }, getInputPreset: () => preset, getZoom: () => 1,
     dispatch: result ? async () => result : (command, repeatCommand) => session.dispatch(command, repeatCommand),
     getLastCommand: () => session.lastCommand,
@@ -1346,7 +1383,7 @@ function continuousHarness(kind = "local", result, preset = "roguelike", options
     }
     return event;
   }
-  return { state, controller, session, requests, errors, messages, changes, shortcuts, chestChoices, timers, window, document, mapHost, emit, exploreButton, unknownButton, searchButton,
+  return { state, controller, session, requests, errors, messages, changes, shortcuts, chestChoices, timers, window, document, mapHost, emit, exploreButton, searchButton,
     confirmRest(value = "&") {
       const dialog = document.body.children[0];
       if (value === null) { dialog.close(); return; }

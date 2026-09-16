@@ -57,6 +57,7 @@ export class PlayerUiLayout {
   #installed = false;
   readonly #onAbilityKey: ((event: KeyboardEvent) => boolean) | undefined;
   readonly #onAbilityOpen: (() => void) | undefined;
+  readonly #onInventoryCommand: ((command: "drop" | "equip" | "unequip") => void) | undefined;
 
   constructor(options: {
     document: Document;
@@ -64,12 +65,14 @@ export class PlayerUiLayout {
     localization: Localization;
     onAbilityKey?: (event: KeyboardEvent) => boolean;
     onAbilityOpen?: () => void;
+    onInventoryCommand?: (command: "drop" | "equip" | "unequip") => void;
   }) {
     this.#document = options.document;
     this.#window = options.window;
     this.#localization = options.localization;
     this.#onAbilityKey = options.onAbilityKey;
     this.#onAbilityOpen = options.onAbilityOpen;
+    this.#onInventoryCommand = options.onInventoryCommand;
     this.#dom = createPlayerUiDom(this.#document);
   }
 
@@ -322,6 +325,14 @@ export class PlayerUiLayout {
       return;
     }
     if (this.#document.querySelector("dialog[open]:not(#player-page-dialog)")) return;
+    if (this.#openPage === "inventory" && this.#dom.pageDialog.open && this.#onInventoryCommand) {
+      const command = event.key === "d" ? "drop" : event.key === "w" ? "equip" : event.key === "t" ? "unequip" : undefined;
+      if (command) {
+        event.preventDefault(); event.stopImmediatePropagation();
+        this.#onInventoryCommand(command);
+        return;
+      }
+    }
     if (this.#openPage === "ability" && this.#dom.pageDialog.open && this.#onAbilityKey?.(event)) return;
     const page = playerPageForShortcut(event.key);
     if (!page) return;
@@ -372,7 +383,6 @@ export class PlayerUiLayout {
 
   #moveGameplaySettings(): void {
     for (const id of [
-      "input-preset",
       "tileset-preset",
       "camera-mode",
       "zoom-level",
@@ -389,8 +399,6 @@ export class PlayerUiLayout {
         this.#dom.gameplaySettingsHost.append(label);
       }
     }
-    const controls = this.#document.getElementById("controls-help");
-    if (controls) this.#dom.gameplaySettingsHost.append(controls);
   }
 
   #moveTopHud(): void {

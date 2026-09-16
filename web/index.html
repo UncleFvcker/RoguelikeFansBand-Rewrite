@@ -73,8 +73,11 @@
               <section id="session-career-details" class="session-menu-details" aria-labelledby="session-career-detail-title" tabindex="0">
                 <p class="session-menu-viewing" data-l10n-id="session-career-viewing"></p>
                 <h3 id="session-career-detail-title" class="session-menu-detail-title"></h3>
+                <div id="session-career-preview"></div>
+                <details class="creation-background"><summary data-l10n-id="creation-background-heading"></summary>
                 <p id="session-career-description" class="session-menu-description"></p>
                 <ul id="session-career-notes" class="session-menu-notes race-effects-list" hidden></ul>
+                </details>
               </section>
             </div>
           </section>
@@ -94,8 +97,11 @@
               <section id="session-race-details" class="session-menu-details" aria-labelledby="session-race-detail-title" tabindex="0">
                 <p class="session-menu-viewing" data-l10n-id="session-race-viewing"></p>
                 <h3 id="session-race-detail-title" class="session-menu-detail-title"></h3>
+                <div id="session-race-preview"></div>
+                <details class="creation-background"><summary data-l10n-id="creation-background-heading"></summary>
                 <p id="session-race-description" class="session-menu-description"></p>
                 <ul id="session-race-notes" class="session-menu-notes race-effects-list" hidden></ul>
+                </details>
               </section>
             </div>
           </section>
@@ -111,6 +117,7 @@
             <div><dt data-l10n-id="session-career-label"></dt><dd id="session-overview-career"></dd><button type="button" data-creation-page="career" data-l10n-id="session-change-career"></button></div>
           </dl>
           </div>
+          <div id="session-overview-preview"></div>
           <section class="session-creation-world" aria-labelledby="session-world-heading">
           <h3 id="session-world-heading" data-l10n-id="session-world-heading"></h3>
           <label class="session-seed" for="session-seed">
@@ -171,6 +178,8 @@
             <div id="hud-menu-content" class="hud-menu-content">
               <div class="header-actions">
                 <button id="player-ui-settings-open" class="quiet-button" type="button" data-l10n-id="action-game-settings"></button>
+                <button type="button" data-guide="help" data-l10n-id="guide-help"></button>
+                <button type="button" data-guide="knowledge" data-l10n-id="guide-knowledge"></button>
                 <button id="replay-button" type="button" data-l10n-id="action-export-replay"></button>
                 <button id="save-button" type="button" data-l10n-id="save-game"></button>
                 <button id="save-as-button" type="button" data-l10n-id="save-as"></button>
@@ -218,44 +227,16 @@
             <div id="target-cursor" class="target-cursor" aria-hidden="true" hidden></div>
           </div>
           <div id="map-actions" class="input-toolbar">
-            <details class="map-intelligence-menu">
-              <summary data-l10n-id="cfg-menu"></summary>
-              <button type="button" data-config-record="input-config" data-l10n-id="cfg-input-config"></button>
-              <button type="button" data-config-record="command-menu" data-l10n-id="cfg-command-menu"></button>
-              <button type="button" data-config-record="notes" data-l10n-id="cfg-notes"></button>
-              <button type="button" data-config-record="screen-export" data-l10n-id="cfg-screen-export"></button>
-            </details>
             <button id="command-record-status" type="button" hidden></button>
-            <button type="button" data-guide="help" data-l10n-id="guide-help"></button>
-            <button type="button" data-guide="knowledge" data-l10n-id="guide-knowledge"></button>
-            <details class="map-intelligence-menu">
-              <summary data-l10n-id="intel-menu"></summary>
-              <button type="button" data-map-inquiry="map-overview" data-l10n-id="intel-map-overview"></button>
-              <button type="button" data-map-inquiry="map-locate" data-l10n-id="intel-map-locate"></button>
-              <button type="button" data-map-inquiry="map-center" data-l10n-id="intel-map-center"></button>
-              <button type="button" data-map-inquiry="monster-list" data-l10n-id="intel-monster-list"></button>
-              <button type="button" data-map-inquiry="symbol-query" data-l10n-id="intel-symbol-query"></button>
-              <button type="button" data-map-inquiry="floor-feeling" data-l10n-id="intel-floor-feeling"></button>
-            </details>
             <div class="target-controls">
               <button id="traverse-stairs" type="button" disabled></button>
               <button id="look-mode-toggle" type="button"></button>
               <button id="target-mode-toggle" type="button"></button>
-                    <button id="auto-explore" type="button" data-l10n-id="action-auto-explore" disabled></button>
-                    <button id="search-mode-toggle" type="button" data-l10n-id="action-search-mode-off" aria-pressed="false" disabled></button>
-                    <button id="nearest-unknown-item" type="button" data-l10n-id="action-nearest-unknown-item" disabled></button>
+              <button id="auto-explore" type="button" data-l10n-id="action-auto-explore" disabled></button>
+              <button id="search-mode-toggle" type="button" aria-pressed="false" disabled></button>
               <button id="stop-continuous-action" type="button" data-l10n-id="action-stop-continuous" hidden></button>
               <span id="continuous-action-status" role="status"></span>
             </div>
-            <label for="input-preset">
-              <span data-l10n-id="settings-input-label"></span>
-              <select id="input-preset">
-
-
-                <option value="original" data-l10n-id="input-preset-original"></option>
-                <option value="roguelike" data-l10n-id="input-preset-roguelike"></option>
-              </select>
-            </label>
             <label for="tileset-preset">
               <span data-l10n-id="settings-tileset-label"></span>
               <select id="tileset-preset">
@@ -287,7 +268,6 @@
                 <option value="zh-CN" data-l10n-id="language-name-zh-cn"></option>
               </select>
             </label>
-            <p id="controls-help" class="controls"></p>
           </div>
         </section>
 
@@ -660,25 +640,26 @@
             </div>
             <form method="dialog"><button type="submit" data-l10n-id="action-dialog-close"></button></form>
           </dialog>
-          <dialog id="inventory-action-dialog" class="inventory-operation-dialog" aria-labelledby="inventory-action-title">
-            <form id="inventory-action-form">
-              <h2 id="inventory-action-title"></h2>
-              <p id="inventory-action-item"></p>
-              <label id="inventory-quantity-field" for="inventory-drop-quantity">
-                <span data-l10n-id="inventory-drop-quantity-label"></span>
-                <input id="inventory-drop-quantity" type="number" min="1" step="1" inputmode="numeric" required />
-              </label>
-              <label id="inventory-inscription-field" for="inventory-inscription">
-                <span data-l10n-id="inventory-inscription-label"></span>
-                <input id="inventory-inscription" type="text" maxlength="120" />
-              </label>
-              <div class="inventory-operation-buttons">
-                <button id="inventory-action-cancel" type="button" data-l10n-id="action-dialog-cancel"></button>
-                <button id="inventory-action-confirm" type="submit"></button>
-              </div>
-            </form>
-          </dialog>
         </footer>
+      </dialog>
+
+      <dialog id="inventory-action-dialog" class="inventory-operation-dialog" aria-labelledby="inventory-action-title">
+        <form id="inventory-action-form">
+          <h2 id="inventory-action-title"></h2>
+          <p id="inventory-action-item"></p>
+          <label id="inventory-quantity-field" for="inventory-drop-quantity">
+            <span data-l10n-id="inventory-drop-quantity-label"></span>
+            <input id="inventory-drop-quantity" type="number" min="1" step="1" inputmode="numeric" required />
+          </label>
+          <label id="inventory-inscription-field" for="inventory-inscription">
+            <span data-l10n-id="inventory-inscription-label"></span>
+            <input id="inventory-inscription" type="text" maxlength="120" />
+          </label>
+          <div class="inventory-operation-buttons">
+            <button id="inventory-action-cancel" type="button" data-l10n-id="action-dialog-cancel"></button>
+            <button id="inventory-action-confirm" type="submit"></button>
+          </div>
+        </form>
       </dialog>
 
       <dialog id="object-list-dialog" class="player-page-dialog object-list-dialog" aria-labelledby="object-list-title">
@@ -894,6 +875,7 @@
         <div class="preferences-workspace">
           <nav class="preferences-navigation" data-l10n-aria-label="preferences-title">
             <button id="preferences-general" type="button" data-settings-page="general" data-l10n-id="settings-interface-eyebrow"></button>
+            <button id="preferences-keyboard" type="button" data-settings-page="keyboard" data-l10n-id="preferences-keyboard-title"></button>
             <button id="preferences-behavior" type="button" data-settings-page="behavior" data-l10n-id="settings-gameplay-title"></button>
             <button id="preferences-autopick" type="button" data-settings-page="autopick" data-l10n-id="mogaminator-title"></button>
             <button id="preferences-display" type="button" data-settings-page="display" data-l10n-id="preferences-display"></button>
@@ -906,6 +888,21 @@
             <section class="settings-section" data-settings-panel="general">
               <p data-l10n-id="preferences-description"></p>
               <div id="gameplay-settings-host" class="settings-grid gameplay-settings-host"></div>
+            </section>
+            <section class="settings-section" data-settings-panel="keyboard" hidden>
+              <h3 data-l10n-id="preferences-keyboard-title"></h3>
+              <div class="settings-grid">
+                <label for="input-preset" data-preference-row>
+                  <span data-l10n-id="settings-input-label"></span>
+                  <select id="input-preset">
+                    <option value="original" data-l10n-id="input-preset-original"></option>
+                    <option value="roguelike" data-l10n-id="input-preset-roguelike"></option>
+                  </select>
+                  <small data-l10n-id="preferences-help-input-preset"></small>
+                </label>
+              </div>
+              <p id="controls-help" class="controls"></p>
+              <p data-l10n-id="preferences-keyboard-help"></p>
               <div class="session-form-actions"><button id="preferences-keys" type="button" data-preference-row data-l10n-id="cfg-keys"></button></div>
             </section>
             <section class="settings-section" data-settings-panel="autopick" hidden>

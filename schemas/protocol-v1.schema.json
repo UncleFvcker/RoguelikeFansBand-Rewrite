@@ -4,6 +4,9 @@
   "description": "Schema bundle for the types crossing the CoreTransport boundary.",
   "type": "object",
   "properties": {
+    "characterCreationPreview": {
+      "$ref": "#/$defs/CharacterCreationPreviewDto"
+    },
     "command": {
       "$ref": "#/$defs/GameCommandEnvelope"
     },
@@ -15,6 +18,7 @@
     }
   },
   "required": [
+    "characterCreationPreview",
     "command",
     "snapshot",
     "update"
@@ -8789,6 +8793,68 @@
         "evilOnly"
       ]
     },
+    "CharacterCreationPreviewDto": {
+      "description": "Read-only birth preview, before equipment, random mutations and temporary effects.",
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CreationAttributeDto"
+          }
+        },
+        "baseHp": {
+          "description": "Race/class/personality contribution, not the final maximum HP.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "build": {
+          "$ref": "#/$defs/PlayerBuildDto"
+        },
+        "castingAttribute": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AttributeKindDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "experienceNoteKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CreationFeatureDto"
+          }
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CreationSkillDto"
+          }
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CreationSourceDto"
+          }
+        }
+      },
+      "required": [
+        "build",
+        "attributes",
+        "skills",
+        "baseHp",
+        "sources",
+        "features"
+      ]
+    },
     "CharacterCurseEffectDto": {
       "type": "object",
       "properties": {
@@ -9182,6 +9248,163 @@
       "required": [
         "id",
         "glyph"
+      ]
+    },
+    "CreationAttributeDto": {
+      "type": "object",
+      "properties": {
+        "attribute": {
+          "$ref": "#/$defs/AttributeKindDto"
+        },
+        "effective": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "modifier": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "natural": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "attribute",
+        "natural",
+        "modifier",
+        "effective"
+      ]
+    },
+    "CreationFeatureDto": {
+      "type": "object",
+      "properties": {
+        "acquisitionKey": {
+          "description": "Localized condition: automatic, usable power, book study, or a choice.",
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "detailKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "maximumLevel": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "minimumLevel": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "name": {
+          "description": "Some imported mutation names/descriptions are source text rather than Fluent keys.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "negative": {
+          "type": "boolean"
+        },
+        "sourceNameKey": {
+          "type": "string"
+        },
+        "value": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int32"
+        }
+      },
+      "required": [
+        "sourceNameKey",
+        "nameKey",
+        "minimumLevel",
+        "acquisitionKey",
+        "negative"
+      ]
+    },
+    "CreationSkillDto": {
+      "type": "object",
+      "properties": {
+        "ratingKey": {
+          "description": "RFB birth comparison rating; not a success probability or a level-one rating.",
+          "type": "string"
+        },
+        "skill": {
+          "$ref": "#/$defs/SkillProgressDto"
+        }
+      },
+      "required": [
+        "skill",
+        "ratingKey"
+      ]
+    },
+    "CreationSourceDto": {
+      "type": "object",
+      "properties": {
+        "baseHp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "experiencePercent": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "kind": {
+          "$ref": "#/$defs/AttributeSourceKindDto"
+        },
+        "lifePercent": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "modifiers": {
+          "$ref": "#/$defs/StatModifiersDto"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SkillProgressDto"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "nameKey",
+        "modifiers",
+        "lifePercent",
+        "experiencePercent",
+        "baseHp",
+        "skills"
       ]
     },
     "DamageDiceDto": {
@@ -11188,6 +11411,18 @@
             "type": {
               "type": "string",
               "const": "find-nearest-unknown-item"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "auto-attack"
             }
           },
           "required": [
@@ -16145,6 +16380,11 @@
           "format": "uint64",
           "minimum": 0
         },
+        "experienceForCurrentLevel": {
+          "type": "integer",
+          "format": "uint64",
+          "minimum": 0
+        },
         "experienceForNextLevel": {
           "type": [
             "integer",
@@ -16238,6 +16478,7 @@
         "experience",
         "levelCap",
         "attributeIndexCap",
+        "experienceForCurrentLevel",
         "pendingAttributeIncreases",
         "victoryLevelCapUnlocked",
         "attributes",

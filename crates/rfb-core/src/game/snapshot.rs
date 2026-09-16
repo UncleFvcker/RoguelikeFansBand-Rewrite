@@ -841,6 +841,7 @@ impl Game {
             level_cap,
             attribute_cap: CharacterProgress::attribute_cap(victory_unlocked),
             attribute_index_cap: CharacterProgress::attribute_index_cap(victory_unlocked),
+            experience_for_current_level: self.experience_required_for_level(self.progress.level),
             experience_for_next_level: (self.progress.level < level_cap)
                 .then(|| self.experience_required_for_level(self.progress.level.saturating_add(1))),
             pending_attribute_increases: self.progress.pending_attribute_increases,

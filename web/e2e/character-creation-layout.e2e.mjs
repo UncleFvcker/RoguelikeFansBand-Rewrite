@@ -139,12 +139,14 @@ export async function runCreationLayoutScenario(driver, artifactDirectory, debug
     await driver.execute('window.__creationLayoutReady = false; requestAnimationFrame(() => requestAnimationFrame(() => window.__creationLayoutReady = true)); return true;');
     await driver.waitFor('return window.__creationLayoutReady', "responsive layout settled");
   }
-  async function checkLayout(label) {
+  async function checkLayout(label, previewState = "ready") {
+    await driver.waitFor('return document.querySelector(".creation-preview")?.dataset.state === arguments[0]', "creation preview settled", 30_000, [previewState]);
     const result = await driver.execute(`
       const bounds = node => { const r = node.getBoundingClientRect(); return { x:r.x, y:r.y, right:r.right, bottom:r.bottom, width:r.width, height:r.height }; };
       const panel = [...document.querySelectorAll('[data-creation-panel]')].find(node => !node.hidden);
       const controls = [...document.querySelectorAll('.session-creation-header button, #session-creation-tabs button, .session-creation-footer button'), ...panel.querySelectorAll('.session-menu-navigation button')].filter(node => node.checkVisibility());
       const content = [...panel.querySelectorAll('.session-menu-options, .session-menu-details')].filter(node => node.checkVisibility());
+      if (panel.dataset.creationPanel === 'overview') content.push(panel);
       return { viewport:[innerWidth, innerHeight], frame:bounds(document.querySelector('.session-card')), panelHeight:panel.clientHeight, page:panel.dataset.creationPanel, content:content.map(node => ({ id:node.id, ...bounds(node), scrollWidth:node.scrollWidth, clientWidth:node.clientWidth })), controls:controls.map(node => ({ text:node.textContent, ...bounds(node) })), document:[document.documentElement.scrollWidth, document.documentElement.scrollHeight], name:bounds(document.querySelector('#session-character-name')), dpr:devicePixelRatio };
     `);
     const [width, height] = result.viewport;
@@ -163,8 +165,24 @@ export async function runCreationLayoutScenario(driver, artifactDirectory, debug
     }
     layouts.push({ label, ...result });
   }
+  async function expandPreviewDetails(label) {
+    await driver.waitFor('return document.querySelector(".creation-preview")?.dataset.state === "ready"', "details loaded");
+    const confirmed = await summary();
+    assert.equal(await driver.execute('return document.querySelectorAll(".creation-preview > table tbody tr").length'), 6);
+    for (const selector of ['.creation-sources > summary', '.creation-features-growth > summary']) {
+      if (!await driver.execute('return !!document.querySelector(arguments[0])', [selector])) continue;
+      await driver.execute('document.querySelector(arguments[0]).focus(); return true;', [selector]);
+      const wasOpen = await driver.execute('return document.querySelector(arguments[0]).parentElement.open', [selector]);
+      await keyboard.key('Enter');
+      assert.equal(await driver.execute('return document.querySelector(arguments[0]).parentElement.open', [selector]), !wasOpen, `${label}: native disclosure Enter`);
+      if (wasOpen) await keyboard.key('Enter');
+      assert.equal(await driver.execute('return document.documentElement.dataset.appMode'), 'new-game');
+      assert.equal(await summary(), confirmed, `${label}: opening details cannot confirm a candidate`);
+    }
+    await checkLayout(`${label}-expanded`);
+  }
   async function reload(locale = "zh-CN") {
-    await setPreferences(driver, { locale, inputPreset: "numpad" });
+    await setPreferences(driver, { locale, inputPreset: "original" });
     await driver.execute('window.__creationReloadPending = true;   setTimeout(() => location.reload(), 50); return true;', [locale]);
     await driver.waitFor('return !window.__creationReloadPending && document.documentElement.dataset.appMode === "title" && !document.querySelector("#session-new-game").disabled', "title after reload", 60_000);
     await driver.execute('window.__creationUiErrors = []; window.addEventListener("error", event => window.__creationUiErrors.push(event.message)); window.addEventListener("unhandledrejection", event => window.__creationUiErrors.push(String(event.reason))); return true;');
@@ -255,7 +273,11 @@ export async function runCreationLayoutScenario(driver, artifactDirectory, debug
           assert.equal(await driver.execute('return document.querySelector("#session-race-back").textContent'), locale === "zh-CN" ? "返回上一级" : "Back one level");
           assert.equal(await summary(), confirmed);
           await checkLayout(`${locale}-${width}x${height}-details-${zoom}`);
+          await expandPreviewDetails(`${locale}-${width}x${height}-race-${zoom}`);
           await screenshot(`${locale}-${width}x${height}-details-${zoom}`);
+          if (!await driver.execute('return document.querySelector("#session-page-race .creation-background").open')) {
+            await click('#session-page-race .creation-background > summary');
+          }
           await driver.execute('document.querySelector("#session-race-details").focus(); return true;');
           await keyboard.key("End");
           await driver.waitFor('const details = document.querySelector("#session-race-details"); return details.scrollTop > 0 && Math.abs(details.scrollHeight - details.clientHeight - details.scrollTop) < 2;', "last special note reachable by keyboard scrolling");
@@ -270,11 +292,41 @@ export async function runCreationLayoutScenario(driver, artifactDirectory, debug
           await click('#session-page-career [data-menu-view="details"]');
           await checkLayout(`${locale}-${width}x${height}-realm-${zoom}`);
         }
+        await expandPreviewDetails(`${locale}-${width}x${height}-career-${zoom}`);
         await screenshot(`${locale}-${width}x${height}-career-${zoom}`);
       }
       assert.deepEqual(await driver.execute('return window.__creationUiErrors'), []);
       await click("#session-new-game-back");
     }
+
+    // Preview failure is independent of creation; Enter retries without submitting the form.
+    await click("#session-new-game");
+    await driver.waitFor('return document.querySelector(".creation-preview")?.dataset.state === "ready"', "initial preview");
+    await driver.execute(`window.__creationPreviewFetch = window.fetch;
+      window.__creationPreviewFail = true; window.__creationPreviewInitializations = 0;
+      const previewUrl = window.__TAURI_INTERNALS__.convertFileSrc('preview_character_creation', 'ipc');
+      const initializeUrl = window.__TAURI_INTERNALS__.convertFileSrc('initialize_game', 'ipc');
+      window.fetch = (target, options) => {
+        if (target === initializeUrl) window.__creationPreviewInitializations++;
+        if (target === previewUrl && window.__creationPreviewFail) return Promise.resolve(new Response('preview-error-'.repeat(80), { status:400, headers:{'Content-Type':'text/plain','Tauri-Response':'error'} }));
+        return window.__creationPreviewFetch(target, options);
+      }; return true;`);
+    await selectCreationRace(driver, "demo.race.rfb-human");
+    await click('#session-page-race [data-menu-view="details"]');
+    await checkLayout("en-US-640x360-preview-error-2", "error");
+    const beforeRetry = await summary();
+    assert.equal(await driver.execute('return document.querySelectorAll(".creation-preview table").length'), 0, "failed preview cannot show stale numbers");
+    assert.equal(await driver.execute('return document.querySelector("#session-start-game").disabled'), false, "preview failure cannot invalidate confirmed choices");
+    await driver.execute('window.__creationPreviewFail = false; document.querySelector(".creation-preview > button").focus(); return true;');
+    await keyboard.key("Enter");
+    await driver.waitFor('return document.querySelector(".creation-preview")?.dataset.state === "ready"', "preview retry");
+    assert.equal(await focusIs('.creation-preview'), true);
+    assert.equal(await summary(), beforeRetry);
+    assert.equal(await driver.execute('return window.__creationPreviewInitializations'), 0);
+    assert.equal(await driver.execute('return document.documentElement.dataset.appMode'), "new-game");
+    await checkLayout("en-US-640x360-preview-recovered-2");
+    await driver.execute('window.fetch = window.__creationPreviewFetch; return true;');
+    await click("#session-new-game-back");
 
     // A long native error and a maximum-length name must leave the menu usable at 200%.
     await click("#session-new-game");

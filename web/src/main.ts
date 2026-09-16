@@ -103,6 +103,7 @@ const playerUiLayout = new PlayerUiLayout({
   localization,
   onAbilityKey: event => statusPanel.handleAbilityKey(event),
   onAbilityOpen: () => statusPanel.resetAbilitySelection(),
+  onInventoryCommand: command => inventoryPanel.openCommand(command),
 });
 const itemCurseSeverityName = createItemCurseSeverityName(localization);
 const {
@@ -446,7 +447,8 @@ function handleCommandShortcut(command: CommandShortcut, count?: number): void {
     statusPanel.focusCommand(command);
     return;
   }
-  playerUiLayout.open("inventory");
+  // Direct equipment/drop commands own only their selector; an already open inventory stays open.
+  if (command !== "drop" && command !== "equip" && command !== "unequip") playerUiLayout.open("inventory");
   inventoryPanel.openCommand(command as ItemShortcut, count);
 }
 const inventoryPanel = new InventoryPanel({
@@ -643,6 +645,7 @@ const sessionShell = new SessionShell({
   storage: nativeSaveStorage,
   localization,
   onStart: startNewSession,
+  onPreview: (buildId, raceId) => core.previewCharacterCreation(buildId, raceId),
   onLoad: async (result, summary) => {
     await preferences.load();
     await settingsPanel.apply();
@@ -723,14 +726,8 @@ shopPanel.install();
 homePanel.install();
 taskServicePanel.install();
 objectListPanel.install();
-for (const button of document.querySelectorAll<HTMLButtonElement>("[data-map-inquiry]")) {
-  button.addEventListener("click", () => handleCommandShortcut(button.dataset.mapInquiry as CommandShortcut));
-}
 for (const button of document.querySelectorAll<HTMLButtonElement>("[data-guide]")) {
   button.addEventListener("click", () => handleCommandShortcut(button.dataset.guide as "help" | "knowledge"));
-}
-for (const button of document.querySelectorAll<HTMLButtonElement>("[data-config-record]")) {
-  button.addEventListener("click", () => handleCommandShortcut(button.dataset.configRecord as CommandShortcut));
 }
 document.getElementById("command-record-status")!.addEventListener("click", () => configRecords.finishRecording());
 monsterProbePanel.install();

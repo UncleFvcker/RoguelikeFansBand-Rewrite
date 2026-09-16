@@ -680,6 +680,18 @@ fn log_event(app: &tauri::AppHandle, event: &str, detail: &str) {
 }
 
 #[tauri::command(rename_all = "camelCase")]
+async fn preview_character_creation(
+    build_id: String,
+    race_id: String,
+) -> Result<rfb_protocol::CharacterCreationPreviewDto, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        Game::preview_character_creation(&build_id, &race_id).map_err(|error| error.to_string())
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
+#[tauri::command(rename_all = "camelCase")]
 #[allow(clippy::too_many_arguments)] // Tauri injects app/state beside the creation fields.
 fn initialize_game(
     app: tauri::AppHandle,
@@ -1295,6 +1307,7 @@ pub fn run() {
             preferences::save_preferences,
             preferences::default_preferences,
             initialize_game,
+            preview_character_creation,
             refresh_museum,
             dispatch_game_command,
             list_high_scores,

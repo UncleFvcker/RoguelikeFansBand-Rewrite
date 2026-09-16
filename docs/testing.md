@@ -1,6 +1,6 @@
 # 验证与契约
 
-v0.0.2 已发布批次的回归和普通 EXE 验收见[发布验证](release-0.0.2-validation.md)。当前未发布改动为协议 1.300、payload 46、State Hash Schema 151，生成物及内容 lock 1.486.0 已同步，contract-v347 的 26 条共享契约通过。法力与休息相关验证见[法力审计](mana-system-rfb-audit.md)，当前功能与验证范围见[状态快照](status.md)。
+v0.0.2 已发布批次的回归和普通 EXE 验收见[发布验证](release-0.0.2-validation.md)。当前未发布改动为协议 1.302、payload 46、State Hash Schema 151，协议生成物及内容 lock 1.486.0 已同步，contract-v347 的 26 条共享契约通过。法力与休息相关验证见[法力审计](mana-system-rfb-audit.md)，当前功能与验证范围见[状态快照](status.md)。
 
 ## 选择范围
 

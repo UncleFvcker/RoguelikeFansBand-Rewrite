@@ -9,7 +9,7 @@ export const MAX_MACRO_STEPS = 256;
 // a multi-command macro records only complete, single actions.
 export function isMacroCommand(command: GameCommand): boolean {
   return !["end-character", "retire", "run", "auto-explore", "rest", "rest-for-turns", "rest-until-resources", "travel-local", "travel-world",
-    "travel-unknown-item", "find-nearest-unknown-item", "enter-world-map", "leave-world-map", "traverse-stairs"].includes(command.type);
+    "auto-attack", "travel-unknown-item", "find-nearest-unknown-item", "enter-world-map", "leave-world-map", "traverse-stairs"].includes(command.type);
 }
 
 export class CommandRecording {
