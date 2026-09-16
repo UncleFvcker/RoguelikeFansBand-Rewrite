@@ -13,6 +13,19 @@ import {
 import { PreferencesClient, defaultPreferences } from "./preferences.ts";
 import { ConfigRecords } from "./config-records.ts";
 
+test("melee camera shake applies from global settings only after saving", async () => {
+  const f = await fixture(); await f.panel.apply(); await f.panel.open("display");
+  assert.equal(f.state.meleeCameraShake, true);
+  const control = f.element("display-meleeCameraShake");
+  assert.equal(control.checked, true);
+  control.checked = false; control.dispatchEvent(new Event("change"));
+  assert.equal(f.state.meleeCameraShake, true, "draft does not alter the renderer");
+  f.click("preferences-save"); await f.idle();
+  assert.equal(f.client.snapshot.preferences.display.meleeCameraShake, false);
+  assert.equal(f.state.meleeCameraShake, false);
+  assert.equal(f.behaviorCalls.length, 0, "camera effects never dispatch a Core command");
+});
+
 test("advanced shortcut opens the shared settings dialog and focuses the enabled command input", async () => {
   const f = await fixture(); await f.panel.open("advanced");
   assert.equal(f.element("player-ui-settings-dialog").open, true);
@@ -250,7 +263,7 @@ async function fixture() {
   const localization = { locale: "zh-CN", setLocale(locale) { this.locale = locale; }, localizeDocument() {}, format: (key, args) => key + (args ? JSON.stringify(args) : "") };
   const panel = new SettingsPanel({ document, state, preferences: client, localization,
     dom: { languageSelect: element("language-select"), inputPresetSelect: element("input-preset"), tilesetPresetSelect: element("tileset-preset"), cameraModeSelect: element("camera-mode"), zoomSelect: element("zoom-level"), controlsHelp: element("controls-help") },
-    renderer: {}, rendererReady: () => false, beforeEdit: async () => {}, openKeys() {}, openMogaminator() { mogaminatorCalls.push(true); }, download() {},
+    renderer: { setMeleeCameraShake(enabled) { state.meleeCameraShake = enabled; } }, rendererReady: () => false, beforeEdit: async () => {}, openKeys() {}, openMogaminator() { mogaminatorCalls.push(true); }, download() {},
     renderTargeting() {}, renderLocaleDependentUi: () => applied.push(client.snapshot.revision), async onBehaviorChange(p) { behaviorCalls.push(p); }, announce() {},
   });
   panel.initialize(); panel.install();

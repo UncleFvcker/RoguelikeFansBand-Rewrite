@@ -95,6 +95,53 @@ test("held movement uses OS repeats without queueing commands after keyup", asyn
   }
 });
 
+test("held repeats wait for display capacity without queueing after release", async t => {
+  installElementIdentities(t);
+  let moving = false;
+  const h = continuousHarness("local", undefined, "original", { isPlayerMoving: () => moving });
+  const key = { key: "ArrowRight", code: "ArrowRight" };
+  h.emit("keydown", key);
+  assert.equal(h.controller.continuousMovement, false);
+  await h.finish();
+  moving = true;
+  for (let i = 0; i < 10; i++) h.emit("keydown", { ...key, repeat: true });
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.controller.continuousMovement, true);
+  moving = false;
+  h.emit("keydown", { ...key, repeat: true });
+  assert.equal(h.requests.length, 2);
+  h.emit("keyup", key);
+  await h.finish();
+  h.emit("keydown", { ...key, repeat: true });
+  assert.equal(h.requests.length, 2);
+  assert.equal(h.controller.continuousMovement, false);
+  assert.equal(h.timers.size, 0);
+  h.controller.dispose();
+});
+
+test("travel waits for the displayed step and cancels without awaiting its animation", async t => {
+  installElementIdentities(t);
+  let motion = Promise.withResolvers();
+  const h = continuousHarness("local", undefined, "original", { whenPlayerSettled: () => motion.promise });
+  h.start(); await flushCommands();
+  await h.finish();
+  assert.equal(h.state.busy, false);
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.timers.size, 0, "no next-step task while movement is visible");
+  motion.resolve(); await flushCommands();
+  motion = Promise.withResolvers();
+  await h.tick();
+  assert.equal(h.requests.length, 2);
+  await h.finish();
+  assert.equal(h.timers.size, 0);
+  await h.controller.stopContinuousAction();
+  assert.equal(h.controller.continuousAction, undefined);
+  motion.resolve(); await flushCommands();
+  assert.equal(h.requests.length, 2, "settling cancelled movement cannot send another command");
+  assert.equal(h.timers.size, 0, "settling cancelled movement cannot leave a timer");
+  h.controller.dispose();
+});
+
 test("held movement is cleared by focus, UI, session and command interruptions", async t => {
   installElementIdentities(t);
   for (const interrupt of ["blur", "hidden", "dialog", "input", "composition", "target", "query", "death", "modifier", "click", "reset", "shortcut"]) {

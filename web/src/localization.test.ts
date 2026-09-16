@@ -51,10 +51,10 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
       resource: "Mana",
       current: 10,
       maximum: 21,
-      wait: 1,
+      normal: 1,
       rest: 3,
     }),
-    "Mana: 10 / 21 · wait +1 · rest +3",
+    "Mana: 10 / 21 · per recovery cycle: normal 1, resting 3",
   );
   assert.equal(
     localization.format("ability-summary-governed", {
@@ -104,10 +104,10 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
       resource: "法力",
       current: 10,
       maximum: 21,
-      wait: 1,
+      normal: 1,
       rest: 3,
     }),
-    "法力：10 / 21 · 等待 +1 · 休息 +3",
+    "法力：10 / 21 · 每恢复周期：平时 1，休息 3",
   );
   assert.equal(
     localization.format("ability-summary-governed", {
@@ -182,10 +182,12 @@ test("front-end sources do not reintroduce high-confidence hardcoded UI text", (
     assert.doesNotMatch(source, /\baddMessage\s*\(/, `${entry.name} bypasses localized messages`);
   }
 
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8")
+    // These controls use symbolic arrows and localized accessible names.
+    .replace(/(<button\b[^>]*\bdata-l10n-aria-label="hud-hide-(?:header|sidebar|footer)"[^>]*>)[▴▸▾](<\/button>)/g, "$1$2");
   for (const match of html.matchAll(/>([^<]+)</g)) {
     const text = match[1].trim();
-    assert.match(text, /^(?:0|--)?$/, `index.html contains hardcoded text: ${text}`);
+    assert.match(text, /^(?:[0-9]+|--)?$/, `index.html contains hardcoded text: ${text}`);
   }
 });
 

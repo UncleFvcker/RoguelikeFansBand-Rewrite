@@ -106,6 +106,15 @@ pub(crate) enum BoltReflectionOutcome {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
+    // Presentation delimiters: one pair per actual flight, including misses and wall impacts.
+    ProjectileFlightStarted {
+        kind: &'static str,
+        source_id: String,
+        damage_type: Option<rfb_protocol::DamageTypeDto>,
+    },
+    ProjectileFlightFinished {
+        trace: ProjectileTrace,
+    },
     ItemSpecialMessage {
         message_key: String,
     },
@@ -1793,6 +1802,28 @@ impl DomainEvent {
             _ => None,
         };
         let mut projected = match self {
+            Self::ProjectileFlightStarted {
+                kind,
+                source_id,
+                damage_type,
+            } => {
+                let mut event = dto(
+                    "animation.projectile-start",
+                    "",
+                    [("visualKind", kind.to_owned()), ("source", source_id)],
+                );
+                if let Some(damage_type) = damage_type {
+                    let value = serde_json::to_value(damage_type).expect("damage type serializes");
+                    event.args.insert(
+                        "damageType".to_owned(),
+                        value.as_str().expect("damage type is a string").to_owned(),
+                    );
+                }
+                event
+            }
+            Self::ProjectileFlightFinished { trace } => {
+                with_trace(dto_without_args("animation.projectile-end", ""), trace)
+            }
             Self::ItemSpecialMessage { message_key } => {
                 dto_without_args("item.special", &message_key)
             }

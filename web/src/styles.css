@@ -871,12 +871,30 @@ h1 {
 }
 
 .ability-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding-bottom: 0.45rem;
-  border-bottom: 1px solid rgb(103 137 168 / 10%);
+  display: grid;
+  min-width: 0;
+  grid-template-rows: 1fr auto;
+  gap: 0.5rem;
+  padding: 0.65rem;
+  border: 1px solid var(--ui-line);
+  border-radius: 0.3rem;
+  background: var(--ui-surface);
+}
+
+#ability-panel { container: abilities / inline-size; }
+.ability-list { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+.ability-list > :not(.ability-row) { grid-column: 1 / -1; }
+.ability-row:focus-within { border-color: var(--ui-accent); }
+.ability-row[hidden], .ability-book-heading[hidden] { display: none; }
+.ability-damage { color: var(--ui-accent); font-variant-numeric: tabular-nums; font-size: 0.8rem; }
+.ability-more { color: var(--ui-muted); font-size: 0.75rem; }
+.ability-more > summary { cursor: pointer; width: fit-content; padding-block: 0.2em; }
+.ability-more[open] > summary { margin-bottom: 0.35em; }
+@container abilities (min-width: 48rem) {
+  .ability-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container abilities (min-width: 68rem) {
+  .ability-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 
 .ability-details {
@@ -4055,11 +4073,10 @@ kbd {
 #player-page-dialog :is(#ability-panel, #task-log-panel) { padding: 0.75em; }
 #player-page-dialog .ability-list { padding: 0.65em 0.85em; gap: 0.45em; }
 #player-page-dialog .ability-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 1em;
-  padding-block: 0.75em;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.4em;
+  padding: 0.55em;
+  align-items: start;
 }
 #player-page-dialog .ability-name { font-weight: 600; color: var(--ui-text); }
 #player-page-dialog .ability-book-heading {
@@ -4070,7 +4087,8 @@ kbd {
 }
 #player-page-dialog .ability-empty { padding: 1.25em 0; color: var(--ui-muted); }
 #player-page-dialog .ability-details { gap: 0.18em; overflow-wrap: anywhere; }
-#player-page-dialog .ability-actions { gap: 0.35em; flex-wrap: wrap; justify-content: flex-end; }
+#player-page-dialog .ability-actions { gap: 0.3em; flex-wrap: wrap; justify-content: flex-start; }
+#player-page-dialog :is(.ability-damage, .ability-more, .ability-more .ability-description) { font-size: var(--player-font-note); line-height: 1.4; }
 #player-page-dialog .ability-actions button { min-width: 3.5em; }
 #player-page-dialog .ability-town-target { max-width: 100%; }
 #player-page-dialog #task-log-list { overflow: visible; padding-block: 0.35em; overflow-wrap: anywhere; }

@@ -6,6 +6,7 @@ import test from "node:test";
 
 import {
   abilityAttributeAbbreviation,
+  abilityDamageSummaries,
   abilityConfirmationMessageKey,
   abilityPresentation,
   abilityStatusMessageKey,
@@ -139,9 +140,10 @@ test("spell letters select the displayed page, inspect uppercase and retain disa
   const abilities = Array.from({ length: 27 }, (_, index) => ({ id: `spell-${index}`, source: "learned", canCast: index !== 1 }));
   const rows = abilities.map(ability => {
     const name = { dataset: {} };
+    const more = { open: false };
     const cast = { disabled: !ability.canCast, click: () => calls.push(ability.id), focus() {}, scrollIntoView() {} };
-    return { dataset: { abilityId: ability.id }, hidden: false, focus: () => focused.push(ability.id), scrollIntoView() {},
-      querySelector: selector => selector === ".ability-name" ? name : selector.startsWith(".ability-cast-action") ?
+    return { more, dataset: { abilityId: ability.id }, hidden: false, focus: () => focused.push(ability.id), scrollIntoView() {},
+      querySelector: selector => selector === ".ability-more" ? more : selector === ".ability-name" ? name : selector.startsWith(".ability-cast-action") ?
         selector.includes(":not(:disabled)") && cast.disabled ? null : cast : null };
   });
   const state = new AppState(); state.mode = "playing"; state.status = { player: { abilities } };
@@ -152,11 +154,35 @@ test("spell letters select the displayed page, inspect uppercase and retain disa
   const press = key => panel.handleAbilityKey({ key, preventDefault() {}, stopImmediatePropagation() {} });
   assert.equal(rows[26].hidden, true);
   press("A"); assert.deepEqual(calls, []);
+  assert.equal(rows[0].more.open, true, "uppercase opens card details without casting");
   press("a"); press("b"); assert.deepEqual(calls, ["spell-0"]);
   press("PageDown"); assert.equal(rows[26].dataset.abilityKey, "a"); assert.equal(rows[0].hidden, true);
   press("a"); assert.deepEqual(calls, ["spell-0", "spell-26"]);
   state.busy = true; press("a"); assert.equal(calls.length, 2);
   state.busy = false; panel.focusCommand("browse"); press("a"); assert.equal(calls.length, 2);
+});
+
+test("spell cards show projected attack formulas without confusing self damage or random effects", () => {
+  const localization = { format: (key, args) => `${key} ${JSON.stringify(args)}` };
+  const bolt = { type: "damage", damageDice: 3, damageSides: 6, damageBonus: 2, damageType: "fire" };
+  const lines = abilityDamageSummaries({ effects: [
+    bolt,
+    { ...bolt, damageDice: 0, damageSides: 0, damageBonus: 50, finalDamageSpellPowerBonus: 2 },
+    { type: "breath-damage", hpPercent: 30, maxDamage: 200 },
+    { type: "curse-damage", damageDice: 0, damageSides: 0, damageBonus: 25, damageIsCurrentHpPercent: true },
+    { type: "suppress-monster-reproduction", damageDice: 1, damageSides: 3, damageBonus: 1 },
+    { type: "random-choice", branches: [{ effect: bolt }, { effect: { type: "heal", amount: 100 } }] },
+    { type: "heal", amount: 100 },
+  ] }, localization);
+  assert.equal(lines.length, 6, "healing is not presented as attack damage");
+  assert.match(lines[0], /3d6\+2/);
+  assert.match(lines[1], /^ability-damage-before-power /);
+  assert.match(lines[1], /50/);
+  assert.doesNotMatch(lines[1], /0d0/);
+  assert.match(lines[2], /^ability-damage-breath .*"percent":30,"maximum":200/);
+  assert.match(lines[3], /^ability-damage-target-hp .*25/);
+  assert.match(lines[4], /^ability-damage-self .*1d3\+1/);
+  assert.match(lines[5], /^ability-damage-random .*3d6/);
 });
 
 test("rest button uses the shared cancellable entry", () => {

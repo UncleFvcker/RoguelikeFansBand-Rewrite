@@ -67,6 +67,9 @@ test("stacked rows retain counts on translation, use the newest timestamp, and p
   const panel = new MessagePanel({ list, currentTurn: () => turn, historyLimit: 2,
     formatEvent: event => event.messageKey === "blocked" ? text : event.messageKey,
     localization: { format: () => text }, localizedArgs: () => undefined });
+  panel.addEvent({ kind: "animation.projectile-start", messageKey: "", args: {} });
+  panel.addEvent({ kind: "animation.projectile-end", messageKey: "", args: {} });
+  assert.equal(list.children.length, 0, "presentation delimiters do not create message rows");
   panel.addEvent({ kind: "move.blocked", messageKey: "blocked", revision: 1 });
   const row = list.children[0];
   turn = "49";

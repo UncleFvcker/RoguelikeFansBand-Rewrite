@@ -122,6 +122,12 @@ impl Game {
             unreachable!("player projectile damage executor requires a damage effect");
         };
         let (trace, target_index) = self.trace_projectile_path(path);
+        let flight_trace = trace.clone();
+        events.push(DomainEvent::ProjectileFlightStarted {
+            kind: "bolt",
+            source_id: ability.id.clone(),
+            damage_type: Some(DamageType::from(*damage_type).into()),
+        });
         self.resolve_projectile_terrain_effects(
             &[trace.impact],
             DamageType::from(*damage_type),
@@ -143,6 +149,9 @@ impl Game {
                 ability_id: ability.id.clone(),
                 trace,
             });
+            events.push(DomainEvent::ProjectileFlightFinished {
+                trace: flight_trace,
+            });
             return Ok(());
         };
         let raw_damage = self
@@ -156,7 +165,7 @@ impl Game {
             u64::try_from(raw_damage).expect("ability damage must be non-negative"),
         ))
         .expect("spell-powered ability damage must fit i32");
-        self.resolve_player_projectile_damage_target_with_base(
+        let result = self.resolve_player_projectile_damage_target_with_base(
             &ability.id,
             trace,
             index,
@@ -166,7 +175,11 @@ impl Game {
             events,
             changed,
             removed_entities,
-        )
+        );
+        events.push(DomainEvent::ProjectileFlightFinished {
+            trace: flight_trace,
+        });
+        result
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -182,6 +195,12 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
         let (trace, target_index) = self.trace_projectile_path(path);
+        let flight_trace = trace.clone();
+        events.push(DomainEvent::ProjectileFlightStarted {
+            kind: "bolt",
+            source_id: source_id.to_owned(),
+            damage_type: Some(damage_type.into()),
+        });
         self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);
         if affects_ground_items {
             self.resolve_ground_item_projectile_effects(
@@ -199,9 +218,12 @@ impl Game {
                 ability_id: source_id.to_owned(),
                 trace,
             });
+            events.push(DomainEvent::ProjectileFlightFinished {
+                trace: flight_trace,
+            });
             return Ok(());
         };
-        self.resolve_player_projectile_damage_target_with_base(
+        let result = self.resolve_player_projectile_damage_target_with_base(
             source_id,
             trace,
             index,
@@ -211,7 +233,11 @@ impl Game {
             events,
             changed,
             removed_entities,
-        )
+        );
+        events.push(DomainEvent::ProjectileFlightFinished {
+            trace: flight_trace,
+        });
+        result
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -806,6 +832,35 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
         let (trace, _) = self.trace_projectile_path_with_actor_policy(path, stop_at_actor);
+        // Presentation identities only; storm spells still resolve one area hit.
+        // MeteorSwarm uses PROJECT_JUMP, including the Trump program that reuses it.
+        let visual_kind = if matches!(
+            self.content
+                .ability(source_id)
+                .map(|ability| &ability.effect),
+            Some(AbilityEffectDefinition::ChaosMeteorSwarm)
+        ) {
+            "meteor"
+        } else {
+            match source_id {
+                "demo.ability.chaos-mana-storm"
+                | "demo.ability.nature-fire-storm"
+                | "demo.ability.nature-lightning-storm"
+                | "demo.ability.nature-gravity-storm"
+                | "demo.ability.mindcrafter-psycho-storm"
+                | "demo.ability.death-darkness-storm"
+                | "demo.ability.burglary-darkness-storm"
+                | "demo.ability.armageddon-hellstorm"
+                | "demo.ability.nature-natures-wrath"
+                | "demo.item.mana-storm-staff" => "storm",
+                _ => "ball",
+            }
+        };
+        events.push(DomainEvent::ProjectileFlightStarted {
+            kind: visual_kind,
+            source_id: source_id.to_owned(),
+            damage_type: Some(damage_type.into()),
+        });
         let center = trace.landing;
         let (affected_positions, targets) =
             self.area_damage_targets_for_type(center, radius, target_category, damage_type);
@@ -872,6 +927,7 @@ impl Game {
                 )?;
             }
         }
+        events.push(DomainEvent::ProjectileFlightFinished { trace });
         Ok(())
     }
 
@@ -930,6 +986,11 @@ impl Game {
     ) -> Result<(), CoreError> {
         let (trace, _) =
             self.trace_projectile_path_with_damage_policy(path, false, Some(damage_type));
+        events.push(DomainEvent::ProjectileFlightStarted {
+            kind: "beam",
+            source_id: source_id.to_owned(),
+            damage_type: Some(damage_type.into()),
+        });
         let affected_positions = trace.traversed.clone();
         self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
         self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);
@@ -975,6 +1036,7 @@ impl Game {
                 removed_entities,
             )?;
         }
+        events.push(DomainEvent::ProjectileFlightFinished { trace });
         Ok(())
     }
 
@@ -1016,6 +1078,11 @@ impl Game {
         .expect("spell-powered bolt or beam damage must fit i32");
         if beam {
             let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
+            events.push(DomainEvent::ProjectileFlightStarted {
+                kind: "beam",
+                source_id: ability.id.clone(),
+                damage_type: Some(damage_type.into()),
+            });
             let affected_positions = trace.traversed.clone();
             self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
             self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);
@@ -1061,6 +1128,7 @@ impl Game {
                     removed_entities,
                 )?;
             }
+            events.push(DomainEvent::ProjectileFlightFinished { trace });
         } else if *ball_when_not_beam {
             if let Some(landing) = ball_landing
                 && let Some(index) = path.iter().position(|position| *position == landing)
@@ -1082,11 +1150,20 @@ impl Game {
             )?;
         } else {
             let (trace, target_index) = self.trace_projectile_path_with_actor_policy(path, true);
+            let flight_trace = trace.clone();
+            events.push(DomainEvent::ProjectileFlightStarted {
+                kind: "bolt",
+                source_id: ability.id.clone(),
+                damage_type: Some(damage_type.into()),
+            });
             self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);
             let Some(index) = target_index else {
                 events.push(DomainEvent::AbilityLanded {
                     ability_id: ability.id.clone(),
                     trace,
+                });
+                events.push(DomainEvent::ProjectileFlightFinished {
+                    trace: flight_trace,
                 });
                 return Ok(());
             };
@@ -1100,6 +1177,9 @@ impl Game {
                 changed,
                 removed_entities,
             )? {
+                events.push(DomainEvent::ProjectileFlightFinished {
+                    trace: flight_trace,
+                });
                 return Ok(());
             }
             self.resolve_ability_damage_to_entity(
@@ -1112,6 +1192,9 @@ impl Game {
                 changed,
                 removed_entities,
             )?;
+            events.push(DomainEvent::ProjectileFlightFinished {
+                trace: flight_trace,
+            });
         }
         Ok(())
     }

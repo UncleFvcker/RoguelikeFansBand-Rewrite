@@ -14,6 +14,7 @@ export const DEFAULT_HUD_DISPLAY = {
 export const HUD_DISPLAY_FIELDS = Object.keys(DEFAULT_HUD_DISPLAY) as (keyof typeof DEFAULT_HUD_DISPLAY)[];
 export const DEFAULT_DISPLAY = {
   ...DEFAULT_HUD_DISPLAY,
+  meleeCameraShake: true,
   highlightPlayer: false,
   targetPath: false,
   unsafeGrids: false,

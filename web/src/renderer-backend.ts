@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { EditableVisualDto } from "./protocol";
+import type { EditableVisualDto, Position } from "./protocol";
 import type { VisualPreferences } from "./visual-preferences";
 import type { CameraTransform } from "./camera";
 import type { VisibilityState } from "./protocol";
 import type { TilesetWarning } from "./tileset-runtime";
+import type { PlayerMeleeAttack } from "./player-motion";
+import type { ProjectileFlight } from "./projectile-motion";
 
 export type CellVisibility = VisibilityState;
 
@@ -20,6 +22,8 @@ export interface RenderCell {
   terrainId: string;
   itemKindId?: string;
   actorKindId?: string;
+  actorId?: string;
+  actorPlayer?: boolean;
   actorGlyph?: string;
   actorUnique?: boolean;
   highlightPet?: boolean;
@@ -35,6 +39,8 @@ export interface BackendInitialization {
   contentGlyphs: Readonly<Record<string, string>>;
   canvasLabel: string;
   zoom?: CameraTransform["zoom"];
+  onPlayerPosition?: (position: Position) => void;
+  onCameraImpulse?: (offset: Position) => void;
 }
 
 export interface TilesetChangeResult {
@@ -60,6 +66,13 @@ export interface RendererBackend {
   initialize(options: BackendInitialization): Promise<TilesetChangeResult>;
   resize(width: number, height: number): void;
   applyCells(cells: readonly RenderCell[]): number;
+  // Includes melee recovery and projectile batches; repeated commands share this display gate.
+  readonly playerMoving: boolean;
+  whenPlayerSettled(): Promise<void>;
+  setPlayerPosition(position: Position, animate: boolean, continuous?: boolean): void;
+  playPlayerMelee(attack: PlayerMeleeAttack, target?: RenderCell): void;
+  playProjectiles(flights: readonly ProjectileFlight[]): void;
+  setMeleeCameraShake(enabled: boolean): void;
   setCameraTransform(transform: CameraTransform): void;
   setTileset(tilesetManifestUrl: string): Promise<TilesetChangeResult>;
   setVisuals(preferences: VisualPreferences, catalog: readonly EditableVisualDto[]): boolean;

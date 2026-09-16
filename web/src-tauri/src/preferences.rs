@@ -100,6 +100,8 @@ pub struct PreferenceSnapshot {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DisplayPreferences {
     #[serde(default = "default_visible")]
+    pub melee_camera_shake: bool,
+    #[serde(default = "default_visible")]
     pub show_character_info: bool,
     #[serde(default = "default_visible")]
     pub show_sidebar: bool,
@@ -141,6 +143,7 @@ fn default_visible() -> bool {
 impl Default for DisplayPreferences {
     fn default() -> Self {
         Self {
+            melee_camera_shake: true,
             show_character_info: true,
             show_sidebar: true,
             show_footer: true,
@@ -667,6 +670,24 @@ mod tests {
             json["visuals"]["uniqueEffect"] = invalid;
             assert!(serde_json::from_value::<Preferences>(json.clone()).is_err());
         }
+    }
+
+    #[test]
+    fn melee_camera_shake_preserves_opt_out_and_defaults_only_when_absent() {
+        let original = Preferences::default();
+        let mut json = serde_json::to_value(&original).unwrap();
+        json["display"]
+            .as_object_mut()
+            .unwrap()
+            .remove("meleeCameraShake");
+        let loaded = serde_json::from_value::<Preferences>(json.clone()).unwrap();
+        assert!(loaded.display.melee_camera_shake);
+        json["display"]["meleeCameraShake"] = false.into();
+        let loaded = serde_json::from_value::<Preferences>(json.clone()).unwrap();
+        assert!(!loaded.display.melee_camera_shake);
+        assert_eq!(loaded.behavior(), original.behavior());
+        json["display"]["meleeCameraShake"] = "false".into();
+        assert!(serde_json::from_value::<Preferences>(json).is_err());
     }
 
     #[test]

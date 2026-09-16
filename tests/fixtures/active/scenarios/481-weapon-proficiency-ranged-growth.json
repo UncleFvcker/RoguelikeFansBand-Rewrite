@@ -71,12 +71,49 @@
     },
     "events": [
       {
+        "kind": "animation.projectile-start",
+        "messageKey": "",
+        "args": {
+          "source": "demo.item.arrow",
+          "visualKind": "arrow"
+        }
+      },
+      {
         "kind": "combat.projectile-miss",
         "messageKey": "projectile-miss",
         "args": {
           "attackTarget": "contract.weapon-proficiency-target",
           "target": "demo.actor.adobe-golem"
         },
+        "trace": {
+          "origin": {
+            "x": 95,
+            "y": 33
+          },
+          "impact": {
+            "x": 97,
+            "y": 33
+          },
+          "landing": {
+            "x": 97,
+            "y": 33
+          },
+          "traversed": [
+            {
+              "x": 96,
+              "y": 33
+            },
+            {
+              "x": 97,
+              "y": 33
+            }
+          ]
+        }
+      },
+      {
+        "kind": "animation.projectile-end",
+        "messageKey": "",
+        "args": {},
         "trace": {
           "origin": {
             "x": 95,

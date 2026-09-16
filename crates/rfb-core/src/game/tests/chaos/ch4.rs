@@ -96,6 +96,19 @@ fn ch4_flame_mana_and_logrus_use_executed_damage_radius_and_current_hp() {
                 }
             };
             let events = cast_saved(&mut game, &id, selection);
+            if slug == "mana-storm" {
+                assert_eq!(
+                    events
+                        .iter()
+                        .filter(|event| matches!(
+                            event,
+                            DomainEvent::ProjectileFlightStarted { kind: "storm", .. }
+                        ))
+                        .count(),
+                    1,
+                    "one area resolution has one storm presentation"
+                );
+            }
             let blast = events
                 .iter()
                 .find_map(|e| match e {
@@ -141,6 +154,24 @@ fn ch4_meteor_swarm_replays_independent_centers_and_does_not_project_terrain() {
         })
         .collect();
     assert!((11..=20).contains(&blasts.len()));
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| matches!(
+                event,
+                DomainEvent::ProjectileFlightStarted { kind: "meteor", .. }
+            ))
+            .count(),
+        blasts.len(),
+        "each PROJECT_JUMP gets a direct-impact presentation"
+    );
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::ProjectileFlightFinished { .. }))
+            .count(),
+        blasts.len()
+    );
     assert!(
         blasts
             .iter()

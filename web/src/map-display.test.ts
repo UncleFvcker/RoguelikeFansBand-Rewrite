@@ -29,3 +29,24 @@ test("coverage alert fires once per crossing independently of stop policy and ig
   state.status.floorId = "b"; state.status.player.position = outside;
   assert.equal(display.render(host, state, 1), false);
 });
+
+test("camera frames reposition existing marks and the displayed player without rebuilding", () => {
+  const state = new AppState(); state.mode = "playing"; state.display.highlightPlayer = true;
+  state.status = { turn: 0, floorId: "a", mapScale: "local",
+    player: { position: { x: 3, y: 2 }, trapDetectedGrids: [] } };
+  const nodes = [];
+  const host = { dataset: { cameraX: "-4", cameraY: "-5", playerDisplayX: "2.5", playerDisplayY: "2" },
+    ownerDocument: { createElementNS: (_ns, tag) => {
+      const node = { tag, attrs: {}, classList: { add() {} },
+        setAttribute(key, value) { this.attrs[key] = value; }, replaceChildren() {} };
+      nodes.push(node); return node;
+    } }, append() {} };
+  const display = new MapDisplay(); display.render(host, state, 1);
+  const count = nodes.length;
+  host.dataset.cameraX = "-10.5"; host.dataset.playerDisplayX = "2.75";
+  display.updateCamera(host, 1.5);
+  assert.equal(nodes.length, count);
+  assert.equal(nodes.find(node => node.tag === "g").attrs.transform, "translate(-10.5 -5) scale(1.5)");
+  const player = nodes.filter(node => node.tag === "rect").at(-1);
+  assert.equal(Number(player.attrs.x), (2.75 + 0.08) * 28);
+});

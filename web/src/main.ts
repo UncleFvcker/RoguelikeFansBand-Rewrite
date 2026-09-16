@@ -227,7 +227,7 @@ const gameSession = new GameSession({
   execute: (command) => core.dispatch(command),
   applyUpdate: (update, command) => {
     const previousEntities = appState.status?.floorId === update.floorId ? appState.status.entities : [];
-    const mapResized = renderer.applyUpdate(update);
+    const mapResized = renderer.applyUpdate(update, command, inputController.continuousMovement);
     if (mapResized) {
       appState.setMapSize(update.width, update.height);
       appState.replaceCells(update.changedCells);
@@ -351,6 +351,8 @@ const inputController = new InputController({
     return true;
   },
   whenIdle: () => gameSession.whenIdle(),
+  isPlayerMoving: () => renderer.playerMoving,
+  whenPlayerSettled: () => renderer.whenPlayerSettled(),
   onShortcut: handleCommandShortcut,
   customKey: (event, execute) => configRecords.handleBinding(event, execute),
   hasCustomKey: event => configRecords.hasBinding(event),

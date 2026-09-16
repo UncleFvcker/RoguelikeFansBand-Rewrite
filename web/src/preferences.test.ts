@@ -41,6 +41,18 @@ test("display options round-trip globally and never enter behavior context", () 
   ]) assert.throws(() => parsePreferences(JSON.stringify({ ...p, display })), /preferences-invalid/);
 });
 
+test("melee shake preserves explicit opt-out and defaults only absent released settings", () => {
+  const p = defaultPreferences();
+  delete p.display.meleeCameraShake;
+  assert.equal(parsePreferences(JSON.stringify(p)).display.meleeCameraShake, true);
+  p.display.meleeCameraShake = false;
+  assert.equal(parsePreferences(JSON.stringify(p)).display.meleeCameraShake, false);
+  for (const invalid of [null, "false", 0]) {
+    p.display.meleeCameraShake = invalid;
+    assert.throws(() => parsePreferences(JSON.stringify(p)), /preferences-invalid/);
+  }
+});
+
 function memoryStorage() {
   let saved = null;
   return {

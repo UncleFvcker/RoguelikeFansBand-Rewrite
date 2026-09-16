@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
-import { defaultVisuals, type MapTheme, type VisualPreferences } from "./visual-preferences.ts";
-import type { EditableVisualDto } from "./protocol";
+import { defaultVisuals, paletteColor, type VisualPreferences } from "./visual-preferences.ts";
+import type { EditableVisualDto, Position } from "./protocol";
 
 import {
   Application,
@@ -33,6 +33,10 @@ import type {
 } from "./renderer-backend";
 import { TilesetRuntime, type RuntimeTileVisual } from "./tileset-runtime";
 import { createUniqueRainbowFilter } from "./unique-rainbow-filter";
+import { PLAYER_MELEE_MS, meleeImpact, playerMeleeOffset, playerStepPosition, playerStepProgress,
+  type PlayerMeleeAttack } from "./player-motion.ts";
+import { cellAppearance } from "./cell-appearance.ts";
+import { PROJECTILE_IMPACT_MS, projectilePosition, projectileArrival, projectileAreaFrame, projectileColor, type ProjectileFlight, type ProjectileHit } from "./projectile-motion.ts";
 
 const rgb = (color: string) => Number.parseInt(color.slice(1), 16);
 const DYNAMIC_DISPLAY_OBJECTS_PER_CELL = 7;
@@ -69,6 +73,14 @@ interface DynamicChunkView {
   cells: CellView[];
 }
 
+interface ProjectileView {
+  flight: ProjectileFlight;
+  sprite: Sprite;
+  color: number;
+  blast: { position: Position; at: number }[];
+  hits: { hit: ProjectileHit; ghost: Sprite; flash: Sprite }[];
+}
+
 export class PixiRendererBackend implements RendererBackend {
   readonly id = "pixi-layered-chunks-v3";
   #visuals = defaultVisuals();
@@ -78,6 +90,28 @@ export class PixiRendererBackend implements RendererBackend {
   readonly #terrainLayer = new Container();
   readonly #objectLayer = new Container();
   readonly #actorLayer = new Container();
+  readonly #meleeLayer = new Container();
+  readonly #meleeCorpse = cellSprite(0, 0);
+  readonly #meleeFlash = cellSprite(0, 0);
+  readonly #projectileRoot = new Container();
+  readonly #projectileLayer = new Container();
+  readonly #projectileMask = new Graphics();
+  readonly #projectileInk = new Graphics();
+  #projectileViews: ProjectileView[] = [];
+  readonly #playerLayer = new Container();
+  readonly #playerBackground = new Graphics();
+  readonly #playerSprite = cellSprite(0, 0);
+  #playerTarget: Position | undefined;
+  #playerMotion:
+    | { kind: "step"; from: Position; to: Position; startedAt: number; continuous: boolean }
+    | { kind: "melee"; position: Position; attack: PlayerMeleeAttack; startedAt: number }
+    | { kind: "projectiles"; position: Position; startedAt: number; duration: number }
+    | undefined;
+  #playerSettled: Promise<void> = Promise.resolve();
+  #resolvePlayerMotion: (() => void) | undefined;
+  #onPlayerPosition: BackendInitialization["onPlayerPosition"];
+  #onCameraImpulse: BackendInitialization["onCameraImpulse"];
+  #meleeCameraShake = true;
   readonly #visibilityLayer = new Container();
   readonly #lightingLayer = new Container();
   readonly #activeDynamicViews = new Map<number, DynamicChunkView>();
@@ -87,6 +121,8 @@ export class PixiRendererBackend implements RendererBackend {
   #layout: RenderChunkLayout | undefined;
   #chunks: TerrainChunkView[] = [];
   #renderCells: Array<RenderCell | undefined> = [];
+  readonly #cellTransitionFrom = new Map<number, RenderCell>();
+  #cellTransitionProgress = 1;
   #terrainIds: Array<string | undefined> = [];
   #tileset: TilesetRuntime | undefined;
   #contentGlyphs: Readonly<Record<string, string>> = {};
@@ -102,12 +138,48 @@ export class PixiRendererBackend implements RendererBackend {
   readonly #rainbowSprites = new Set<Sprite>();
   #motionPreference: MediaQueryList | undefined;
   #animatingRainbow = false;
+  readonly #animatePlayer = () => {
+    const motion = this.#playerMotion!;
+    const elapsed = performance.now() - motion.startedAt;
+    if (motion.kind === "projectiles") {
+      if (elapsed >= motion.duration) this.#finishPlayerMotion();
+      else this.#drawProjectiles(elapsed);
+      return;
+    }
+    if (motion.kind === "melee") {
+      if (elapsed >= PLAYER_MELEE_MS) this.#finishPlayerMotion();
+      else {
+        const offset = playerMeleeOffset(motion.attack.direction, elapsed);
+        // Local character offset only: camera, light/FOV and hit testing stay at the real tile.
+        this.#playerLayer.position.set((motion.position.x + offset.x) * MAP_CELL_SIZE,
+          (motion.position.y + offset.y) * MAP_CELL_SIZE);
+        const impact = meleeImpact(elapsed);
+        this.#meleeCorpse.alpha = impact.corpseAlpha;
+        this.#meleeFlash.alpha = 0.75 * impact.flash *
+          (motion.attack.outcome === "kill" ? impact.corpseAlpha : 1);
+        if (this.#meleeCameraShake && motion.attack.outcome !== "miss") {
+          const direction = motion.attack.direction;
+          const scale = impact.cameraPixels / Math.hypot(direction.x, direction.y);
+          this.#onCameraImpulse?.({ x: direction.x * scale, y: direction.y * scale });
+        }
+      }
+      return;
+    }
+    const progress = playerStepProgress(elapsed, motion.continuous);
+    if (progress >= 1) this.#finishPlayerMotion();
+    else {
+      this.#updateCellTransition(progress);
+      this.#placePlayer(playerStepPosition(motion.from, motion.to, elapsed, motion.continuous));
+    }
+  };
   readonly #animateRainbow = () => {
     this.#rainbowFilter!.resources.rainbow.uniforms.uPhase = (performance.now() % 8000) / 8000;
   };
-  readonly #syncRainbowAnimation = () => {
-    const moving = this.#rainbowSprites.size > 0 && this.#visuals.uniqueEffect === "flowing" &&
-      !this.#motionPreference?.matches && this.#host?.ownerDocument.visibilityState === "visible";
+  readonly #syncMapAnimation = () => {
+    const motionAllowed = !this.#motionPreference?.matches &&
+      this.#host?.ownerDocument.visibilityState === "visible";
+    if (!motionAllowed && this.#playerMotion) this.#finishPlayerMotion();
+    const moving = this.#rainbowSprites.size > 0 && this.#visuals.uniqueEffect === "flowing" && motionAllowed;
     if (moving !== this.#animatingRainbow) {
       this.#animatingRainbow = moving;
       if (moving) this.#application.ticker.add(this.#animateRainbow);
@@ -126,6 +198,8 @@ export class PixiRendererBackend implements RendererBackend {
 
   async initialize(options: BackendInitialization): Promise<TilesetChangeResult> {
     this.#host = options.host;
+    this.#onPlayerPosition = options.onPlayerPosition;
+    this.#onCameraImpulse = options.onCameraImpulse;
     this.#width = options.width;
     this.#height = options.height;
     this.#zoom = options.zoom ?? 1;
@@ -146,8 +220,8 @@ export class PixiRendererBackend implements RendererBackend {
     });
     this.#application.canvas.setAttribute("aria-label", options.canvasLabel);
     this.#motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    this.#motionPreference.addEventListener("change", this.#syncRainbowAnimation);
-    options.host.ownerDocument.addEventListener("visibilitychange", this.#syncRainbowAnimation);
+    this.#motionPreference.addEventListener("change", this.#syncMapAnimation);
+    options.host.ownerDocument.addEventListener("visibilitychange", this.#syncMapAnimation);
     options.host.replaceChildren(this.#application.canvas);
     this.#camera.scale.set(this.#zoom);
     this.#application.stage.addChild(this.#camera);
@@ -155,9 +229,21 @@ export class PixiRendererBackend implements RendererBackend {
       this.#terrainLayer,
       this.#objectLayer,
       this.#actorLayer,
+      this.#meleeLayer,
+      this.#projectileRoot,
       this.#visibilityLayer,
+      this.#playerLayer,
       this.#lightingLayer,
     );
+    this.#meleeLayer.addChild(this.#meleeCorpse, this.#meleeFlash);
+    this.#meleeCorpse.visible = this.#meleeFlash.visible = false;
+    this.#meleeFlash.blendMode = "add";
+    this.#projectileRoot.addChild(this.#projectileMask, this.#projectileLayer);
+    this.#projectileLayer.addChild(this.#projectileInk);
+    this.#projectileLayer.mask = this.#projectileMask;
+    this.#projectileRoot.visible = false;
+    this.#playerSprite.visible = false;
+    this.#playerLayer.addChild(this.#playerBackground, this.#playerSprite);
     this.#createTerrainChunks();
     return this.#tilesetResult();
   }
@@ -177,12 +263,19 @@ export class PixiRendererBackend implements RendererBackend {
       pooledDynamicChunkCount:
         this.#allocatedDynamicViews.size - this.#activeDynamicViews.size,
       cellViewCount,
-      dynamicDisplayObjectCount: cellViewCount * DYNAMIC_DISPLAY_OBJECTS_PER_CELL,
+      dynamicDisplayObjectCount: cellViewCount * DYNAMIC_DISPLAY_OBJECTS_PER_CELL + 6 +
+        this.#projectileViews.reduce((count, view) => count + 1 + view.hits.length * 2, 0),
     };
   }
 
   resize(width: number, height: number): void {
     if (width === this.#width && height === this.#height) return;
+    this.#finishPlayerMotion();
+    this.#application.ticker.remove(this.#animatePlayer);
+    this.#playerMotion = undefined;
+    this.#playerTarget = undefined;
+    this.#playerSprite.visible = false;
+    this.#playerBackground.clear();
 
     for (const view of [...this.#allocatedDynamicViews]) this.#destroyDynamicView(view);
     for (const chunk of this.#chunks) {
@@ -201,7 +294,7 @@ export class PixiRendererBackend implements RendererBackend {
     this.#visibleChunkCount = 0;
     this.#lastRebuiltTerrainChunks = 0;
     this.#createTerrainChunks();
-    this.#syncRainbowAnimation();
+    this.#syncMapAnimation();
   }
 
   setCameraTransform(transform: CameraTransform): void {
@@ -238,7 +331,19 @@ export class PixiRendererBackend implements RendererBackend {
     let applied = 0;
     for (const cell of cells) {
       if (cell.index < 0 || cell.index >= this.#renderCells.length) continue;
+      const previous = this.#renderCells[cell.index];
+      if (this.#playerMotion?.kind === "step" && previous && !this.#cellTransitionFrom.has(cell.index) &&
+          (previous.visibility !== cell.visibility || previous.light.color !== cell.light.color ||
+           previous.light.intensity !== cell.light.intensity)) {
+        this.#cellTransitionFrom.set(cell.index, previous);
+      }
       this.#renderCells[cell.index] = cell;
+      if (cell.actorPlayer && this.#tileset) {
+        const visual = cell.actorKindId ? this.#tileset.resolve(cell.actorKindId) : undefined;
+        const terrain = this.#tileset.resolve(cell.terrainId);
+        applyLayerVisual(this.#playerBackground, this.#playerSprite, 0, 0, visual,
+          terrain.background ?? rgb(this.#visuals.theme.background));
+      }
       const chunkIndex = chunkIndexForCell(
         cell.x,
         cell.y,
@@ -264,12 +369,215 @@ export class PixiRendererBackend implements RendererBackend {
     this.#forceTerrainRebuild = false;
     this.#lastRebuiltTerrainChunks = dirtyChunks.size;
     this.#totalRebuiltTerrainChunks += dirtyChunks.size;
-    this.#syncRainbowAnimation();
+    // Cell application may rebuild terrain; start timing after that work, at the old appearance.
+    if (this.#playerMotion?.kind === "step" && this.#cellTransitionProgress === 0) this.#playerMotion.startedAt = performance.now();
+    this.#syncMapAnimation();
     return applied;
+  }
+
+  get playerMoving(): boolean { return this.#playerMotion !== undefined; }
+
+  whenPlayerSettled(): Promise<void> { return this.#playerSettled; }
+
+  setPlayerPosition(position: Position, animate: boolean, continuous = false): void {
+    // Unexpected rapid manual updates finish at the actual corner, never
+    // interpolate across it. Automated actions wait for this step to settle.
+    this.#finishPlayerMotion();
+    const from = this.#playerTarget;
+    this.#playerTarget = { ...position };
+    if (animate && from && !this.#motionPreference?.matches &&
+        this.#host?.ownerDocument.visibilityState === "visible") {
+      this.#playerMotion = { kind: "step", from, to: { ...position }, startedAt: performance.now(), continuous };
+      this.#cellTransitionProgress = 0;
+      this.#playerSettled = new Promise(resolve => { this.#resolvePlayerMotion = resolve; });
+      this.#placePlayer(from);
+      this.#application.ticker.add(this.#animatePlayer);
+    } else {
+      this.#placePlayer(position);
+    }
+  }
+
+  #placePlayer(position: Position): void {
+    this.#playerLayer.position.set(position.x * MAP_CELL_SIZE, position.y * MAP_CELL_SIZE);
+    this.#onPlayerPosition?.(position);
+  }
+
+  setMeleeCameraShake(enabled: boolean): void {
+    this.#meleeCameraShake = enabled;
+    if (!enabled) this.#onCameraImpulse?.({ x: 0, y: 0 });
+  }
+
+  playPlayerMelee(attack: PlayerMeleeAttack, target?: RenderCell): void {
+    this.#finishPlayerMotion();
+    if (!this.#playerTarget || this.#motionPreference?.matches ||
+        this.#host?.ownerDocument.visibilityState !== "visible") return;
+    if (target?.actorKindId && this.#tileset) {
+      const visual = this.#tileset.resolve(target.actorKindId);
+      applyVisual(this.#meleeCorpse, visual, rgb(this.#visuals.theme.background));
+      this.#meleeCorpse.position.set(target.x * MAP_CELL_SIZE, target.y * MAP_CELL_SIZE);
+      this.#meleeCorpse.alpha = 1;
+      this.#meleeCorpse.visible = attack.outcome === "kill";
+      this.#meleeFlash.texture = visual.texture;
+      this.#meleeFlash.position.copyFrom(this.#meleeCorpse.position);
+      this.#meleeFlash.tint = 0xffffff;
+      this.#meleeFlash.alpha = 0;
+      this.#meleeFlash.visible = true;
+    }
+    this.#playerMotion = { kind: "melee", position: { ...this.#playerTarget }, attack, startedAt: performance.now() };
+    this.#playerSettled = new Promise(resolve => { this.#resolvePlayerMotion = resolve; });
+    this.#application.ticker.add(this.#animatePlayer);
+  }
+
+  playProjectiles(flights: readonly ProjectileFlight[]): void {
+    this.#finishPlayerMotion();
+    if (!flights.length || !this.#tileset || !this.#playerTarget || this.#motionPreference?.matches ||
+        this.#host?.ownerDocument.visibilityState !== "visible") return;
+    const maskCells = new Set<number>();
+    for (const flight of flights) {
+      const sprite = cellSprite(0, 0);
+      const visual = flight.kind === "throw" ? this.#tileset.resolve(flight.source)
+        : this.#tileset.resolveGlyph(flight.kind === "arrow" ? "-" : "*");
+      applyVisual(sprite, visual, rgb(this.#visuals.theme.background));
+      const color = flight.kind !== "arrow" && flight.kind !== "throw" ? rgb(paletteColor(this.#visuals,
+        `#${projectileColor(flight.damageType).toString(16).padStart(6, "0")}`))
+        : this.#tileset.resolve(flight.source).tint;
+      if (flight.kind !== "throw") sprite.tint = color;
+      sprite.anchor.set(0.5);
+      this.#projectileLayer.addChild(sprite);
+      const hits = flight.hits.filter(hit => hit.target?.actorKindId).map(hit => {
+        const target = hit.target!;
+        const ghost = cellSprite(target.x, target.y), flash = cellSprite(target.x, target.y);
+        const actor = this.#tileset!.resolve(target.actorKindId!);
+        applyVisual(ghost, actor, rgb(this.#visuals.theme.background));
+        flash.texture = actor.texture;
+        flash.tint = 0xffffff;
+        flash.blendMode = "add";
+        this.#projectileLayer.addChild(ghost, flash);
+        maskCells.add(target.index);
+        return { hit, ghost, flash };
+      });
+      const blast = flight.kind === "ball" || flight.kind === "storm" || flight.kind === "meteor" ? flight.affectedPositions
+        .filter(position => this.#renderCells[position.y * this.#width + position.x]?.visibility === "visible")
+        .map(position => ({ position, at: projectileArrival(flight, position) })) : [];
+      this.#projectileViews.push({ flight, sprite, color, hits, blast });
+      for (const position of [...flight.path, ...flight.affectedPositions]) {
+        if (position.x >= 0 && position.y >= 0 && position.x < this.#width && position.y < this.#height)
+          maskCells.add(position.y * this.#width + position.x);
+      }
+    }
+    // A hard visible-cell mask prevents tails and flashes leaking through remembered fog.
+    for (const index of maskCells) {
+      const cell = this.#renderCells[index];
+      if (cell?.visibility === "visible") this.#projectileMask
+        .rect(cell.x * MAP_CELL_SIZE, cell.y * MAP_CELL_SIZE, MAP_CELL_SIZE, MAP_CELL_SIZE);
+    }
+    this.#projectileMask.fill(0xffffff);
+    this.#projectileRoot.visible = true;
+    this.#playerMotion = { kind: "projectiles", position: { ...this.#playerTarget }, startedAt: performance.now(),
+      duration: Math.max(...flights.map(flight => flight.delay + flight.duration + PROJECTILE_IMPACT_MS)) };
+    this.#playerSettled = new Promise(resolve => { this.#resolvePlayerMotion = resolve; });
+    this.#drawProjectiles(0);
+    this.#application.ticker.add(this.#animatePlayer);
+  }
+
+  #drawProjectiles(elapsed: number): void {
+    const ink = this.#projectileInk.clear();
+    const samples = projectileAreaFrame(this.#projectileViews, elapsed);
+    const detailStride = Math.max(1, Math.ceil(samples.length / 128));
+    for (let i = 0; i < samples.length; i++) {
+      const sample = samples[i]!;
+      const x = (sample.position.x + 0.5) * MAP_CELL_SIZE, y = (sample.position.y + 0.5) * MAP_CELL_SIZE;
+      ink.circle(x, y, MAP_CELL_SIZE * sample.radius).fill({ color: sample.color, alpha: sample.alpha });
+      // Keep complete coverage; bound only decorative highlights to 128 per frame.
+      if (i % detailStride !== 0) continue;
+      if (sample.angle !== undefined) {
+        const radius = MAP_CELL_SIZE * 0.28;
+        ink.moveTo(x + Math.cos(sample.angle) * radius, y + Math.sin(sample.angle) * radius)
+          .arc(x, y, radius, sample.angle, sample.angle + Math.PI * 0.7)
+          .stroke({ color: 0xffffff, width: 1, alpha: sample.coreAlpha });
+      } else ink.circle(x, y, MAP_CELL_SIZE * 0.1).fill({ color: 0xffffff, alpha: sample.coreAlpha });
+    }
+    const shownGhosts = new Set<string>();
+    const flashes = new Map<string, { hit: ProjectileHit; age: number }>();
+    for (const { flight, hits } of this.#projectileViews) for (const { hit } of hits) {
+      const age = elapsed - flight.delay - hit.at;
+      if (age >= 0 && age < PROJECTILE_IMPACT_MS && age < (flashes.get(hit.targetId)?.age ?? Infinity))
+        flashes.set(hit.targetId, { hit, age });
+    }
+    for (const { flight, sprite, color, hits } of this.#projectileViews) {
+      const time = elapsed - flight.delay;
+      sprite.visible = flight.kind !== "beam" && time >= 0 && time < flight.travelDuration;
+      if (sprite.visible) {
+        const head = projectilePosition(flight, time), tail = projectilePosition(flight, time - 16);
+        sprite.position.set((head.position.x + 0.5) * MAP_CELL_SIZE, (head.position.y + 0.5) * MAP_CELL_SIZE);
+        sprite.rotation = flight.kind === "arrow" ? head.angle : 0;
+        if (flight.kind === "meteor") sprite.y -= (1 - time / flight.travelDuration) * MAP_CELL_SIZE * 0.4;
+        else ink.moveTo((tail.position.x + 0.5) * MAP_CELL_SIZE, (tail.position.y + 0.5) * MAP_CELL_SIZE)
+          .lineTo(sprite.x, sprite.y).stroke({ color, width: flight.kind === "bolt" ? 2 : 1, alpha: 0.4 });
+      }
+      if (flight.kind === "beam" && time >= 0 && time < flight.duration + PROJECTILE_IMPACT_MS) {
+        const head = projectilePosition(flight, time).position;
+        const fade = 1 - Math.max(0, time - flight.duration) / PROJECTILE_IMPACT_MS;
+        // Retain the revealed polyline: this is a beam, not a moving bolt head.
+        const revealed = flight.path.filter(position => projectileArrival(flight, position) <= time);
+        for (const stroke of [{ color, width: 7, alpha: 0.3 }, { color, width: 3, alpha: 0.8 },
+          { color: 0xffffff, width: 1, alpha: 0.9 }]) {
+          const origin = flight.path[0]!;
+          ink.moveTo((origin.x + 0.5) * MAP_CELL_SIZE, (origin.y + 0.5) * MAP_CELL_SIZE);
+          for (const position of revealed.slice(1)) ink.lineTo((position.x + 0.5) * MAP_CELL_SIZE, (position.y + 0.5) * MAP_CELL_SIZE);
+          ink.lineTo((head.x + 0.5) * MAP_CELL_SIZE, (head.y + 0.5) * MAP_CELL_SIZE)
+            .stroke({ ...stroke, alpha: stroke.alpha * fade });
+        }
+      }
+      const impactAge = time - flight.duration;
+      if (flight.wallImpact && impactAge >= 0 && impactAge < PROJECTILE_IMPACT_MS) {
+        const position = flight.path.at(-1)!;
+        const fade = 1 - impactAge / PROJECTILE_IMPACT_MS;
+        ink.circle((position.x + 0.5) * MAP_CELL_SIZE, (position.y + 0.5) * MAP_CELL_SIZE, 2 + 3 * (1 - fade))
+          .stroke({ color, width: 1, alpha: fade * 0.6 });
+      }
+      for (const { hit, ghost, flash } of hits) {
+        const age = time - hit.at;
+        const fade = 1 - Math.max(0, Math.min(1, age / PROJECTILE_IMPACT_MS));
+        ghost.visible = hit.outcome === "kill" && fade > 0 && !shownGhosts.has(hit.targetId);
+        if (ghost.visible) shownGhosts.add(hit.targetId);
+        ghost.alpha = fade;
+        flash.visible = flashes.get(hit.targetId)?.hit === hit;
+        flash.alpha = fade * 0.75;
+        if (flash.visible) ink.circle((hit.position.x + 0.5) * MAP_CELL_SIZE,
+          (hit.position.y + 0.5) * MAP_CELL_SIZE, 2 + 6 * (1 - fade))
+          .stroke({ color, width: 1, alpha: fade * 0.6 });
+      }
+    }
+  }
+
+  #finishPlayerMotion(): void {
+    const motion = this.#playerMotion;
+    if (!motion) return;
+    this.#playerMotion = undefined;
+    this.#application.ticker.remove(this.#animatePlayer);
+    this.#updateCellTransition(1);
+    this.#cellTransitionFrom.clear();
+    this.#meleeCorpse.visible = this.#meleeFlash.visible = false;
+    if (motion.kind === "projectiles") {
+      for (const view of this.#projectileViews) {
+        view.sprite.destroy();
+        for (const hit of view.hits) { hit.ghost.destroy(); hit.flash.destroy(); }
+      }
+      this.#projectileViews = [];
+      this.#projectileInk.clear();
+      this.#projectileMask.clear();
+      this.#projectileRoot.visible = false;
+    }
+    if (motion.kind === "melee") this.#onCameraImpulse?.({ x: 0, y: 0 });
+    this.#placePlayer(motion.kind === "step" ? motion.to : motion.position);
+    this.#resolvePlayerMotion?.();
+    this.#resolvePlayerMotion = undefined;
   }
 
   async setTileset(tilesetManifestUrl: string): Promise<TilesetChangeResult> {
     const replacement = await TilesetRuntime.load(tilesetManifestUrl, this.#contentGlyphs);
+    this.#finishPlayerMotion();
     const previous = this.#tileset;
     replacement.setVisuals(this.#visuals, this.#visualCatalog);
     this.#tileset = replacement;
@@ -282,6 +590,7 @@ export class PixiRendererBackend implements RendererBackend {
     this.#visuals = preferences; this.#visualCatalog = catalog;
     const changed = this.#tileset?.setVisuals(preferences, catalog) ?? false;
     if (changed) {
+      this.#finishPlayerMotion();
       this.#forceTerrainRebuild = true;
       this.#application.renderer.background.color = rgb(preferences.theme.background);
     }
@@ -307,9 +616,15 @@ export class PixiRendererBackend implements RendererBackend {
   }
 
   destroy(): void {
-    this.#host?.ownerDocument.removeEventListener("visibilitychange", this.#syncRainbowAnimation);
-    this.#motionPreference?.removeEventListener("change", this.#syncRainbowAnimation);
+    this.#finishPlayerMotion();
+    this.#host?.ownerDocument.removeEventListener("visibilitychange", this.#syncMapAnimation);
+    this.#motionPreference?.removeEventListener("change", this.#syncMapAnimation);
     this.#application.ticker?.remove(this.#animateRainbow);
+    this.#application.ticker?.remove(this.#animatePlayer);
+    this.#playerMotion = undefined;
+    this.#playerTarget = undefined;
+    this.#onPlayerPosition = undefined;
+    this.#onCameraImpulse = undefined;
     for (const view of [...this.#allocatedDynamicViews]) this.#destroyDynamicView(view);
     for (const chunk of this.#chunks) chunk.terrainTexture?.destroy(true);
     this.#tileset?.destroy();
@@ -472,7 +787,7 @@ export class PixiRendererBackend implements RendererBackend {
   ): void {
     const terrain = tileset.resolve(cell.terrainId);
     const item = cell.itemKindId ? tileset.resolve(cell.itemKindId) : undefined;
-    const actor = cell.actorGlyph
+    const actor = cell.actorPlayer ? undefined : cell.actorGlyph
       ? tileset.resolveGlyph(cell.actorGlyph)
       : cell.actorKindId
         ? tileset.resolve(cell.actorKindId)
@@ -502,8 +817,33 @@ export class PixiRendererBackend implements RendererBackend {
       this.#rainbowSprites.add(view.actorSymbol);
       view.actorSymbol.tint = 0xffffff;
     } else this.#clearRainbow(view.actorSymbol);
-    drawVisibility(view.visibilityMask, localX, localY, cell, this.#visuals.theme);
-    drawLighting(view.lightColor, view.darkness, localX, localY, cell, this.#visuals.theme);
+    this.#drawCellAppearance(view, cell, localX, localY);
+  }
+
+  #drawCellAppearance(view: CellView, cell: RenderCell, localX: number, localY: number): void {
+    const from = this.#cellTransitionFrom.get(cell.index) ?? cell;
+    const appearance = cellAppearance(from, cell, this.#visuals.theme, this.#cellTransitionProgress);
+    drawOverlay(view.visibilityMask, localX, localY, appearance.fog);
+    drawOverlay(view.lightColor, localX, localY, appearance.tint);
+    drawOverlay(view.darkness, localX, localY, appearance.darkness);
+    view.actorBackground.alpha = view.actorSymbol.alpha = appearance.actorAlpha;
+    view.itemBackground.alpha = view.itemSymbol.alpha = appearance.itemAlpha;
+  }
+
+  #updateCellTransition(progress: number): void {
+    this.#cellTransitionProgress = progress;
+    const layout = this.#layout;
+    if (!layout) return;
+    // Update only changed masks in active chunks, never terrain textures or actor visuals.
+    for (const index of this.#cellTransitionFrom.keys()) {
+      const cell = this.#renderCells[index]!;
+      const chunkIndex = chunkIndexForCell(cell.x, cell.y, layout.chunksAcross, this.#terrainChunkSize);
+      const view = this.#activeDynamicViews.get(chunkIndex);
+      if (!view) continue;
+      const descriptor = this.#chunks[chunkIndex]!.descriptor;
+      const localX = cell.x - descriptor.cellX, localY = cell.y - descriptor.cellY;
+      this.#drawCellAppearance(view.cells[localY * view.cellWidth + localX]!, cell, localX, localY);
+    }
   }
 
   #clearRainbow(sprite: Sprite): void {
@@ -563,7 +903,7 @@ export class PixiRendererBackend implements RendererBackend {
       this.#assignDynamicView(chunkIndex);
     }
     this.#trimDynamicViewPools();
-    this.#syncRainbowAnimation();
+    this.#syncMapAnimation();
   }
 
   #tilesetResult(): TilesetChangeResult {
@@ -657,46 +997,15 @@ function drawBackground(
     .fill(color);
 }
 
-function drawVisibility(
+function drawOverlay(
   graphics: Graphics,
   cellX: number,
   cellY: number,
-  cell: RenderCell,
-  theme: MapTheme,
+  overlay: { color: number; alpha: number },
 ): void {
   graphics.clear();
-  if (cell.visibility === "visible") return;
-  const color = cell.visibility === "remembered" ? rgb(theme.memoryColor) : rgb(theme.hiddenColor);
-  const alpha = cell.visibility === "remembered" ? theme.memoryOpacity : 1;
+  if (overlay.alpha === 0) return;
   graphics
     .rect(cellX * MAP_CELL_SIZE, cellY * MAP_CELL_SIZE, MAP_CELL_SIZE, MAP_CELL_SIZE)
-    .fill({ color, alpha });
-}
-
-function drawLighting(
-  lightColor: Graphics,
-  darkness: Graphics,
-  cellX: number,
-  cellY: number,
-  cell: RenderCell,
-  theme: MapTheme,
-): void {
-  lightColor.clear();
-  darkness.clear();
-  if (cell.visibility !== "visible") return;
-  const x = cellX * MAP_CELL_SIZE;
-  const y = cellY * MAP_CELL_SIZE;
-  const intensity = Math.max(0, Math.min(1, cell.light.intensity));
-  const colorAlpha = Math.max(0, intensity - 0.5) * theme.lightTintOpacity;
-  if (colorAlpha > 0) {
-    lightColor
-      .rect(x, y, MAP_CELL_SIZE, MAP_CELL_SIZE)
-      .fill({ color: cell.light.color, alpha: colorAlpha });
-  }
-  const darknessAlpha = (1 - intensity) * theme.darknessOpacity;
-  if (darknessAlpha > 0) {
-    darkness
-      .rect(x, y, MAP_CELL_SIZE, MAP_CELL_SIZE)
-      .fill({ color: 0x000000, alpha: darknessAlpha });
-  }
+    .fill(overlay);
 }

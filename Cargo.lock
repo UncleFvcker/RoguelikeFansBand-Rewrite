@@ -2668,7 +2668,7 @@ dependencies = [
 
 [[package]]
 name = "rfb-content"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "rmp-serde",
  "schemars 1.2.1",
@@ -2680,7 +2680,7 @@ dependencies = [
 
 [[package]]
 name = "rfb-contract"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "rfb-content",
  "rfb-core",
@@ -2695,7 +2695,7 @@ dependencies = [
 
 [[package]]
 name = "rfb-core"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "rfb-content",
  "rfb-localization",
@@ -2710,7 +2710,7 @@ dependencies = [
 
 [[package]]
 name = "rfb-legacy-import"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "rfb-content",
  "serde",
@@ -2721,7 +2721,7 @@ dependencies = [
 
 [[package]]
 name = "rfb-legacy-probe"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "serde",
  "serde_json",
@@ -2731,7 +2731,7 @@ dependencies = [
 
 [[package]]
 name = "rfb-localization"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "fluent-bundle",
  "rfb-content",
@@ -2741,7 +2741,7 @@ dependencies = [
 
 [[package]]
 name = "rfb-protocol"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "rmp-serde",
  "schemars 1.2.1",
@@ -2753,7 +2753,7 @@ dependencies = [
 
 [[package]]
 name = "rfb-replay"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "rfb-core",
  "rfb-protocol",
@@ -2766,7 +2766,7 @@ dependencies = [
 
 [[package]]
 name = "rfb-save"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "rfb-protocol",
  "serde_json",
@@ -2776,7 +2776,7 @@ dependencies = [
 
 [[package]]
 name = "rfb-tauri"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "rfb-core",
  "rfb-protocol",

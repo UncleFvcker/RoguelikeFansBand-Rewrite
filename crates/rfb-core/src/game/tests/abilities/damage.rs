@@ -5,6 +5,117 @@ use crate::event::BoltReflectionOutcome;
 use crate::game::projectile_geometry::rfb_area_damage;
 
 #[test]
+fn empty_bolt_flights_have_separate_visual_boundaries_without_rng_draws() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    game.player.position = Position { x: 2, y: 2 };
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let mut ability = game
+        .content
+        .ability("rfb-legacy.ability.bolt-physical-1d4")
+        .unwrap()
+        .clone();
+    ability.effect = AbilityEffectDefinition::Damage {
+        damage_dice: 0,
+        damage_sides: 0,
+        damage_bonus: 1,
+        damage_type: ActorDamageType::Fire,
+    };
+    ability.affects_ground_items = false;
+    let before = game.rng_draw_counter();
+    let mut events = Vec::new();
+    for _ in 0..2 {
+        game.resolve_player_projectile_damage_effect(
+            &ability,
+            vec![Position { x: 3, y: 2 }, Position { x: 4, y: 2 }],
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap();
+    }
+    assert_eq!(game.rng_draw_counter(), before);
+    let events = crate::event::project_events(events);
+    let visual: Vec<_> = events
+        .iter()
+        .filter(|event| event.kind.starts_with("animation."))
+        .collect();
+    assert_eq!(visual.len(), 4);
+    for flight in visual.chunks_exact(2) {
+        assert_eq!(flight[0].kind, "animation.projectile-start");
+        assert_eq!(flight[0].args["damageType"], "fire");
+        assert_eq!(flight[1].kind, "animation.projectile-end");
+        assert_eq!(
+            flight[1].trace.as_ref().unwrap().impact,
+            Position { x: 4, y: 2 }
+        );
+    }
+}
+
+#[test]
+fn area_and_beam_visual_boundaries_keep_core_geometry_without_extra_rng() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    game.player.position = Position { x: 2, y: 2 };
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let wall = Position { x: 5, y: 2 };
+    replace_terrain(&mut game, wall, "demo.terrain.wall");
+    let path = vec![Position { x: 3, y: 2 }, Position { x: 4, y: 2 }, wall];
+    let before = game.rng_draw_counter();
+    let mut events = Vec::new();
+    game.resolve_player_area_damage_with_base(
+        "test.ball",
+        path.clone(),
+        false,
+        DamageType::Fire,
+        2,
+        None,
+        10,
+        false,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .unwrap();
+    game.resolve_player_beam_damage_with_base(
+        "test.beam",
+        path,
+        DamageType::Fire,
+        10,
+        false,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .unwrap();
+    assert_eq!(game.rng_draw_counter(), before);
+    let events = crate::event::project_events(events);
+    assert_eq!(events.len(), 6);
+    assert_eq!(events[0].args["visualKind"], "ball");
+    assert_eq!(events[3].args["visualKind"], "beam");
+    let Some(GameEventOutcomeDto::AbilityAreaDamage { resolution }) = &events[1].outcome else {
+        panic!("area geometry must remain inside the ball boundaries");
+    };
+    assert_eq!(resolution.center, Position { x: 4, y: 2 });
+    assert!(
+        !resolution
+            .affected_positions
+            .contains(&Position { x: 6, y: 2 })
+    );
+    let Some(GameEventOutcomeDto::AbilityBeamDamage { resolution }) = &events[4].outcome else {
+        panic!("beam geometry must remain inside the beam boundaries");
+    };
+    assert_eq!(
+        resolution.affected_positions,
+        vec![Position { x: 3, y: 2 }, Position { x: 4, y: 2 }]
+    );
+    for end in [&events[2], &events[5]] {
+        assert_eq!(end.kind, "animation.projectile-end");
+        assert_eq!(end.trace.as_ref().unwrap().impact, wall);
+    }
+}
+
+#[test]
 fn damage_bonus_adds_flat_amount_to_monster_cast_damage() {
     let mut game = Game::new(0);
     clear_monsters(&mut game);
@@ -563,6 +674,14 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
         &mut Vec::new(),
     )
     .expect("beam should resolve");
+    assert!(matches!(
+        beam_events.first(),
+        Some(DomainEvent::ProjectileFlightStarted { kind: "beam", .. })
+    ));
+    assert!(matches!(
+        beam_events.last(),
+        Some(DomainEvent::ProjectileFlightFinished { .. })
+    ));
     assert!(beam.entities.iter().all(|actor| actor.hp < initial_hp));
     assert!(!beam.items.iter().any(|item| item.id == "test.item.near"));
     assert!(!beam.items.iter().any(|item| item.id == "test.item.far"));

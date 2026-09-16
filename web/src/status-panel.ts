@@ -37,6 +37,44 @@ import { equippedLightText } from "./shop-panel.ts";
 import { selectJourneyDungeonStatus } from "./journey-guidance.ts";
 import { renderCharacterTraitsDetails } from "./character-traits-panel.ts";
 
+// Format the core's projected damage; do not reproduce level, spell-power or
+// target-resistance calculations in the UI.
+export function abilityDamageSummaries(ability: Pick<AbilityDto, "effects">, localization: Pick<Localization, "format">): string[] {
+  return ability.effects.flatMap(effect => {
+    if (effect.type === "sequence") return abilityDamageSummaries(effect, localization);
+    if (effect.type === "random-choice") {
+      const outcomes = [...new Set(effect.branches.flatMap(branch =>
+        abilityDamageSummaries({ effects: [branch.effect] }, localization)))];
+      return outcomes.length ? [localization.format("ability-damage-random", { outcomes: outcomes.join(" / ") })] : [];
+    }
+    let formula: string;
+    if ("damageDice" in effect) {
+      const bonus = "damageBonus" in effect ? effect.damageBonus : 0;
+      formula = effect.damageDice > 0 && effect.damageSides > 0
+        ? `${effect.damageDice}d${effect.damageSides}${bonus ? `+${bonus}` : ""}` : String(bonus);
+      if (effect.type === "curse-damage" && effect.damageIsCurrentHpPercent) {
+        return [localization.format("ability-damage-target-hp", { formula })];
+      }
+      if (effect.type === "suppress-monster-reproduction") return [localization.format("ability-damage-self", { formula })];
+      if (effect.type === "stardust") formula = localization.format("ability-damage-projectiles", { formula, count: effect.count });
+      if (effect.type === "drain-life" && effect.repeat > 1) formula = localization.format("ability-damage-repeated", { formula, count: effect.repeat });
+    } else if (effect.type === "breath-damage") {
+      return [localization.format("ability-damage-breath", { percent: effect.hpPercent, maximum: effect.maxDamage })];
+    } else if ("damage" in effect && typeof effect.damage === "number") {
+      formula = String(effect.damage);
+      if (effect.type === "wrath-of-god") formula = localization.format("ability-damage-bursts", {
+        formula, minimum: effect.minimumCount, maximum: effect.maximumCount,
+      });
+    } else if (effect.type === "divine-intervention") {
+      return [localization.format("ability-damage-divine", { adjacent: effect.adjacentDamage, visible: effect.visibleDamage })];
+    } else return [];
+    const element = "damageType" in effect ? localization.format(`damage-type-${effect.damageType}-name`) : "";
+    const summary = localization.format(element ? "ability-damage-element" : "ability-damage-summary", { formula, element });
+    return ["finalDamageSpellPowerBonus" in effect && effect.finalDamageSpellPowerBonus
+      ? localization.format("ability-damage-before-power", { damage: summary }) : summary];
+  });
+}
+
 type CharacterOverviewDom = Pick<AppDom,
   | "progressionExperienceValue"
   | "progressionPersonalityValue"
@@ -1475,6 +1513,10 @@ export class StatusPanel {
       const row = this.#dom.abilityList.querySelector<HTMLElement>(`[data-ability-key="${event.key.toLowerCase()}"]`);
       if (!row) return false;
       row.focus(); row.scrollIntoView({ block: "nearest" });
+      if (event.key !== event.key.toLowerCase() || this.#letterCommand === "browse") {
+        const disclosure = row.querySelector<HTMLDetailsElement>(".ability-more");
+        if (disclosure) disclosure.open = true;
+      }
       if (event.key === event.key.toLowerCase() && this.#letterCommand !== "browse" && !this.#state.busy && !this.#state.commandBlocked && !this.#state.worldMap) {
         const selector = this.#letterCommand === "study" ? '[data-ability-action="study"]' : ".ability-cast-action";
         row.querySelector<HTMLButtonElement>(`${selector}:not(:disabled)`)?.click();
@@ -1657,16 +1699,37 @@ export class StatusPanel {
     const status = document.createElement("span");
     status.className = "ability-status";
     status.textContent = this.#localization.format(abilityStatusMessageKey(ability));
-    details.append(name, description, summary);
+    const compact = document.createElement("span");
+    compact.className = "ability-summary";
+    compact.textContent = this.#localization.format(usesHp ? "ability-card-summary-hp" : "ability-card-summary", {
+      level: ability.minimumLevel, cost: usesHp ? ability.hitPointCost : ability.resourceCost, failure: ability.failurePercent,
+    });
+    details.append(name, compact);
+    for (const text of abilityDamageSummaries(ability, this.#localization)) {
+      const damage = document.createElement("span");
+      damage.className = "ability-damage";
+      damage.textContent = text;
+      damage.title = this.#localization.format("ability-damage-help");
+      details.append(damage);
+    }
+    if (!ability.canCast) details.append(status);
+    const more = document.createElement("details");
+    more.className = "ability-more";
+    const toggle = document.createElement("summary");
+    toggle.textContent = this.#localization.format("ability-card-details");
+    const expanded = document.createElement("div");
+    expanded.className = "ability-details";
+    expanded.append(description, summary);
     if (ability.effects.some(effect => effect.type === "duelist-challenge")) {
       const help = document.createElement("span");
       help.className = "ability-status";
       help.textContent = this.#localization.format("duelist-auto-challenge-help");
-      details.append(help);
+      expanded.append(help);
     }
-    if (ability.source === "learned") details.append(proficiency);
-    details.append(status);
-    this.#appendAbilityDetails(details, ability);
+    if (ability.source === "learned") expanded.append(proficiency);
+    this.#appendAbilityDetails(expanded, ability);
+    more.append(toggle, expanded);
+    details.append(more);
     const actions = document.createElement("div");
     actions.className = "ability-actions";
     const restudy = ability.learned && this.#state.status?.player.abilityLearning?.realms != null;

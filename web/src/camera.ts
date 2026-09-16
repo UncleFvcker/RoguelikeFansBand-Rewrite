@@ -101,7 +101,7 @@ export function isZoomLevel(value: number): value is ZoomLevel {
 function axisOffset(focus: number, worldSize: number, viewportSize: number): number {
   if (viewportSize >= worldSize) return Math.round((viewportSize - worldSize) / 2);
   const ideal = viewportSize / 2 - focus;
-  return Math.round(Math.max(viewportSize - worldSize, Math.min(0, ideal)));
+  return Math.max(viewportSize - worldSize, Math.min(0, ideal));
 }
 
 function axisScroll(
@@ -119,9 +119,9 @@ function axisScroll(
   const visibleStart = scroll + margin;
   const visibleEnd = scroll + viewportSize - margin;
   const focusEnd = focusStart + focusSize;
-  if (focusStart < visibleStart) return Math.max(0, Math.round(focusStart - margin));
+  if (focusStart < visibleStart) return Math.max(0, focusStart - margin);
   if (focusEnd > visibleEnd) {
-    return Math.min(maximumScroll, Math.round(focusEnd + margin - viewportSize));
+    return Math.min(maximumScroll, focusEnd + margin - viewportSize);
   }
   return scroll;
 }

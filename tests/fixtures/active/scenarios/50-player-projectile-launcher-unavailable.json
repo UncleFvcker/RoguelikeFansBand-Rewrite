@@ -37,8 +37,101 @@
     },
     "events": [
       {
+        "kind": "animation.projectile-start",
+        "messageKey": "",
+        "args": {
+          "source": "demo.item.arrow",
+          "visualKind": "arrow"
+        }
+      },
+      {
         "kind": "combat.projectile-landed",
         "messageKey": "projectile-landed",
+        "args": {},
+        "trace": {
+          "origin": {
+            "x": 99,
+            "y": 33
+          },
+          "impact": {
+            "x": 115,
+            "y": 33
+          },
+          "landing": {
+            "x": 115,
+            "y": 33
+          },
+          "traversed": [
+            {
+              "x": 100,
+              "y": 33
+            },
+            {
+              "x": 101,
+              "y": 33
+            },
+            {
+              "x": 102,
+              "y": 33
+            },
+            {
+              "x": 103,
+              "y": 33
+            },
+            {
+              "x": 104,
+              "y": 33
+            },
+            {
+              "x": 105,
+              "y": 33
+            },
+            {
+              "x": 106,
+              "y": 33
+            },
+            {
+              "x": 107,
+              "y": 33
+            },
+            {
+              "x": 108,
+              "y": 33
+            },
+            {
+              "x": 109,
+              "y": 33
+            },
+            {
+              "x": 110,
+              "y": 33
+            },
+            {
+              "x": 111,
+              "y": 33
+            },
+            {
+              "x": 112,
+              "y": 33
+            },
+            {
+              "x": 113,
+              "y": 33
+            },
+            {
+              "x": 114,
+              "y": 33
+            },
+            {
+              "x": 115,
+              "y": 33
+            }
+          ]
+        }
+      },
+      {
+        "kind": "animation.projectile-end",
+        "messageKey": "",
         "args": {},
         "trace": {
           "origin": {

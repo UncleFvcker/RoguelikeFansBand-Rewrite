@@ -120,6 +120,11 @@ export class RenderWorld {
     return cells;
   }
 
+  cellAt(position: Position): RenderCell | undefined {
+    const index = this.#index(position);
+    return index === undefined ? undefined : this.#composeCell(index)[0];
+  }
+
   #syncEntityKinds(
     player: PlayerDto,
     entities: EntityDto[],
@@ -219,6 +224,7 @@ export class RenderWorld {
           : {}),
         ...((occupantsVisible || (cell.actorId && this.#fuzzyEntityGlyphs.has(cell.actorId))) && cell.actorId && this.#entityKinds.has(cell.actorId)
           ? {
+              actorId: cell.actorId,
               actorKindId:
                 cell.actorId === this.#playerId
                   ? (this.#entityKinds.get(cell.actorId) ?? cell.actorId)
@@ -228,6 +234,7 @@ export class RenderWorld {
                       index,
                       13,
                     ),
+              ...(cell.actorId === this.#playerId ? { actorPlayer: true } : {}),
               ...(!this.#hallucinating && this.#fuzzyEntityGlyphs.has(cell.actorId)
                 ? { actorGlyph: this.#fuzzyEntityGlyphs.get(cell.actorId) }
                 : {}),

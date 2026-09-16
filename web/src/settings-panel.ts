@@ -19,6 +19,7 @@ export const TILESET_MANIFESTS: Readonly<Record<TilesetPreset, string>> = {
 };
 type SettingsDom = Pick<AppDom, "inputPresetSelect" | "tilesetPresetSelect" | "cameraModeSelect" | "zoomSelect" | "controlsHelp" | "languageSelect">;
 interface SettingsRenderer {
+  setMeleeCameraShake(enabled: boolean): void;
   setTileset(manifestUrl: string): Promise<{ id: string; warnings: readonly TilesetWarning[] }>;
   setCameraMode(mode: CameraMode): void;
   setZoom(zoom: ZoomLevel): void;
@@ -252,6 +253,7 @@ export class SettingsPanel {
     const p = this.#o.preferences.snapshot?.preferences;
     if (!p) return;
     this.#o.state.display = { ...p.display };
+    this.#o.renderer.setMeleeCameraShake(p.display.meleeCameraShake);
     for (const field of HUD_DISPLAY_FIELDS) this.#element("app").dataset[field] = String(p.display[field]);
     this.#o.state.visuals = structuredClone(p.visuals);
     this.#o.localization.setLocale(p.locale);

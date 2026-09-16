@@ -6,7 +6,7 @@
 
 ## 下载与运行
 
-当前版本：**[v0.0.3](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.3)** · [下载 Windows x64 便携版 ZIP](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/download/v0.0.3/RoguelikeFansBand-Rewrite_0.0.3_windows-x64-portable.zip) · [所有发布版本](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases)
+当前版本：**[v0.0.4](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.4)** · [下载 Windows x64 便携版 ZIP](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/download/v0.0.4/RoguelikeFansBand-Rewrite_0.0.4_windows-x64-portable.zip) · [所有发布版本](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases)
 
 1. 下载 ZIP，完整解压到可写目录。
 2. 运行 `rfb-tauri.exe`，在标题页新建角色或继续游戏。
@@ -27,7 +27,7 @@
 - **地图与情报**：查看已知地图、记忆中的物品、怪物详情与发现档案；地形、怪物和物品按类型配色，unique 使用缓慢流动的彩虹渐变。
 - **保存与记录**：游戏内保存、另存为、读取与备份恢复，查看消息、角色成绩，并使用回放工具。
 
-v0.0.3 新增紧凑且可隐藏的界面、六组共 60 格快捷栏、法术字母选择，并修正 R 确认休息被中断的问题。法力改为按世界时间累积小数恢复，宠物维持费和职业特殊恢复同步调整。具体改动与实际检查见[发布说明](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.3)和[发布验证记录](docs/release-0.0.3-validation.md)。
+v0.0.4 加入角色与镜头平滑移动、同步的逐格光照与视野过渡、近战碰撞及远程攻击动画。法术菜单改为每行 2–4 张卡片，显示已有伤害参数。近战镜头震动可在设置中关闭；保留原逐格光照，没有地图光照 shader。具体改动与实际检查见[发布说明](https://github.com/UncleFvcker/RoguelikeFansBand-Rewrite/releases/tag/v0.0.4)和[发布验证记录](docs/release-0.0.4-validation.md)。
 
 当前尚未完成全部原版内容，商店布局等仍待改进。内容存在、规则实现、入口开放和实际试玩通过是不同状态；[状态快照](docs/status.md)与[后续工作](docs/next-work.md)记录各自范围。
 

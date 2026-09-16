@@ -27,15 +27,22 @@ export function knownAimPath(origin: Position, target: Position, range: number,
 
 export class MapDisplay {
   #overlay: SVGSVGElement | undefined;
+  #marks: SVGGElement | undefined;
+  #playerMark: SVGRectElement | undefined;
+  #renderedZoom = 1;
   #previous: { floor: string; position: string; covered: boolean; turn: number } | undefined;
 
   reset(): void {
     this.#previous = undefined;
     this.#overlay?.remove();
     this.#overlay = undefined;
+    this.#marks = undefined;
+    this.#playerMark = undefined;
   }
 
   render(host: HTMLElement, state: AppState, zoom: number): boolean {
+    this.#marks = undefined;
+    this.#playerMark = undefined;
     const status = state.status;
     if (!status || state.mode !== "playing" || state.worldMap) {
       this.#previous = undefined;
@@ -62,12 +69,12 @@ export class MapDisplay {
       host.append(this.#overlay);
     }
     const size = MAP_CELL_SIZE * zoom;
-    const cameraX = Number(host.dataset.cameraX ?? 0), cameraY = Number(host.dataset.cameraY ?? 0);
+    this.#renderedZoom = zoom;
     const marks: SVGRectElement[] = [];
     const rect = (p: Position, color: string, inset: number, opacity: number) => {
       const mark = host.ownerDocument.createElementNS(ns, "rect");
-      mark.setAttribute("x", String(cameraX + (p.x + inset) * size));
-      mark.setAttribute("y", String(cameraY + (p.y + inset) * size));
+      mark.setAttribute("x", String((p.x + inset) * size));
+      mark.setAttribute("y", String((p.y + inset) * size));
       mark.setAttribute("width", String(size * (1 - 2 * inset)));
       mark.setAttribute("height", String(size * (1 - 2 * inset)));
       mark.setAttribute("fill", "none");
@@ -75,6 +82,7 @@ export class MapDisplay {
       mark.setAttribute("stroke-width", "2");
       mark.setAttribute("opacity", String(opacity));
       marks.push(mark);
+      return mark;
     };
     const known = (p: Position) => {
       const visibility = state.cellVisibility.get(key(p));
@@ -90,8 +98,21 @@ export class MapDisplay {
       for (const p of knownAimPath(targeting.origin, targeting.cursor, targeting.spec.range, known,
         p => state.cellAt(p)?.knownProjectilePassage === true)) rect(p, state.visuals.theme.path, 0.3, 0.9);
     }
-    if (state.display.highlightPlayer) rect(status.player.position, state.visuals.theme.player, 0.08, 1);
-    this.#overlay.replaceChildren(...marks);
+    if (state.display.highlightPlayer) this.#playerMark = rect(status.player.position, state.visuals.theme.player, 0.08, 1);
+    this.#marks = host.ownerDocument.createElementNS(ns, "g");
+    this.#marks.replaceChildren(...marks);
+    this.#overlay.replaceChildren(this.#marks);
+    this.updateCamera(host, zoom);
     return leftCoverage;
+  }
+
+  // Animation frames move existing marks; do not rebuild paths/coverage or emit alerts.
+  updateCamera(host: HTMLElement, zoom: number): void {
+    const x = Number(host.dataset.cameraX ?? 0), y = Number(host.dataset.cameraY ?? 0);
+    this.#marks?.setAttribute("transform", `translate(${x} ${y}) scale(${zoom / this.#renderedZoom})`);
+    if (this.#playerMark && host.dataset.playerDisplayX !== undefined && host.dataset.playerDisplayY !== undefined) {
+      this.#playerMark.setAttribute("x", String((Number(host.dataset.playerDisplayX) + 0.08) * MAP_CELL_SIZE * this.#renderedZoom));
+      this.#playerMark.setAttribute("y", String((Number(host.dataset.playerDisplayY) + 0.08) * MAP_CELL_SIZE * this.#renderedZoom));
+    }
   }
 }

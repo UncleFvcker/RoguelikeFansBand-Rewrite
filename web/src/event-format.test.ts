@@ -62,7 +62,7 @@ test("pet event names are event-time text, including after evolution or dismissa
 test("Sorcery monster detection describes creatures without exposing the category ID", () => {
   for (const locale of ["en-US", "zh-CN"]) {
     localization.setLocale(locale);
-    const text = formatter.formatEvent({ messageKey: "ability-detect", args: { ability: "demo.ability.sorcery-detect-monsters", category: "normal-monster", count: "3" } });
+    const text = formatter.formatEvent({ kind: "ability.detect", messageKey: "ability-detect", args: { target: "demo.ability.sorcery-detect-monsters", category: "normal-monster", count: "3" } });
     assert.ok(text.includes("3"));
     assert.ok(!text.includes("normal-monster"));
     assert.ok(!text.includes("地形"));
@@ -89,7 +89,7 @@ test("Vice light speed has a localized name in the status panel and events", () 
 test("equipment regeneration includes the actual healed amount in both languages", () => {
   for (const locale of ["en-US", "zh-CN"]) {
     localization.setLocale(locale);
-    assert.equal(formatter.formatEvent({ messageKey: "equipment-regenerated", args: { amount: "2" } }),
+    assert.equal(formatter.formatEvent({ kind: "equipment.regenerated", messageKey: "equipment-regenerated", args: { amount: "2" } }),
       localization.format("equipment-regenerated", { amount: "2" }));
   }
 });
@@ -103,7 +103,7 @@ test("equipment activation logs resolve the projected item without exposing unkn
     assert.equal(projected.contentName(`rfb.item-activation.${item.id}`), name);
     assert.equal(projected.contentName(item.activation.profileId), name);
     for (const result of ["success", "failure"]) {
-      assert.equal(projected.formatEvent({ messageKey: `skill-check-device-${result}`, args: { target: item.kindId } }),
+      assert.equal(projected.formatEvent({ kind: `skill.device-${result}`, messageKey: `skill-check-device-${result}`, args: { target: item.kindId } }),
         localization.format(`message-skill-check-device-${result}`, { target: name }));
     }
     item.displayNameKey = "item-unknown-name";

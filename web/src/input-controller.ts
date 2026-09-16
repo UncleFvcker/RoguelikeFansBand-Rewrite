@@ -74,6 +74,8 @@ export class InputController {
   readonly #getLastCommand: () => GameCommand | undefined;
   readonly #confirmRepeat: (command: GameCommand) => boolean;
   readonly #whenIdle: () => Promise<void>;
+  readonly #isPlayerMoving: () => boolean;
+  readonly #whenPlayerSettled: () => Promise<void>;
   readonly #onShortcut: (shortcut: CommandShortcut, count?: number) => void;
   readonly #customKey: (event: KeyboardEvent, execute: (key: KeyboardEventInit) => void) => boolean;
   readonly #hasCustomKey: (event: KeyboardEvent) => boolean;
@@ -107,7 +109,7 @@ export class InputController {
   #localTravelObjectId: string | undefined;
   #rememberedTarget: { target: TargetSelection; floorId: string } | undefined;
   #continuousAction: ContinuousAction | undefined;
-  #heldMovement: { key: KeyboardEvent; direction: Direction } | undefined;
+  #heldMovement: { key: KeyboardEvent; direction: Direction; repeating?: boolean } | undefined;
   #restDialog: HTMLDialogElement | undefined;
 
   constructor(options: {
@@ -121,6 +123,8 @@ export class InputController {
     getLastCommand?: () => GameCommand | undefined;
     confirmRepeat?: (command: GameCommand) => boolean;
     whenIdle: () => Promise<void>;
+    isPlayerMoving?: () => boolean;
+    whenPlayerSettled?: () => Promise<void>;
     onShortcut?: (shortcut: CommandShortcut, count?: number) => void;
     customKey?: (event: KeyboardEvent, execute: (key: KeyboardEventInit) => void) => boolean;
     hasCustomKey?: (event: KeyboardEvent) => boolean;
@@ -149,6 +153,8 @@ export class InputController {
     this.#getLastCommand = options.getLastCommand ?? (() => undefined);
     this.#confirmRepeat = options.confirmRepeat ?? (() => false);
     this.#whenIdle = options.whenIdle;
+    this.#isPlayerMoving = options.isPlayerMoving ?? (() => false);
+    this.#whenPlayerSettled = options.whenPlayerSettled ?? (() => Promise.resolve());
     this.#onShortcut = options.onShortcut ?? (() => {});
     this.#customKey = options.customKey ?? (() => false);
     this.#hasCustomKey = options.hasCustomKey ?? (() => false);
@@ -174,7 +180,7 @@ export class InputController {
     this.#window.addEventListener("blur", this.#stopOnBlur);
     this.#window.document.addEventListener("visibilitychange", this.#stopWhenHidden);
     this.#window.addEventListener("resize", this.#handleResize);
-    this.#dom.mapHost.addEventListener("map-camera-change", this.#handleResize);
+    this.#dom.mapHost.addEventListener("map-camera-change", this.#handleCameraChange);
     this.#dom.mapHost.addEventListener("click", this.#handleMapClick);
     this.#dom.traverseStairs.addEventListener("click", this.#handleTraverseStairs);
     this.#dom.searchModeToggle.addEventListener("click", this.#handleSearchModeToggle);
@@ -195,7 +201,7 @@ export class InputController {
     this.#window.removeEventListener("blur", this.#stopOnBlur);
     this.#window.document.removeEventListener("visibilitychange", this.#stopWhenHidden);
     this.#window.removeEventListener("resize", this.#handleResize);
-    this.#dom.mapHost.removeEventListener("map-camera-change", this.#handleResize);
+    this.#dom.mapHost.removeEventListener("map-camera-change", this.#handleCameraChange);
     this.#dom.mapHost.removeEventListener("click", this.#handleMapClick);
     this.#dom.traverseStairs.removeEventListener("click", this.#handleTraverseStairs);
     this.#dom.searchModeToggle.removeEventListener("click", this.#handleSearchModeToggle);
@@ -683,13 +689,7 @@ export class InputController {
     }
 
     const { origin, cursor, spec } = this.#state.targeting;
-    const cameraX = Number(this.#dom.mapHost.dataset.cameraX ?? 0);
-    const cameraY = Number(this.#dom.mapHost.dataset.cameraY ?? 0);
-    const renderedCellSize = MAP_CELL_SIZE * this.#getZoom();
-    this.#dom.targetCursor.style.left = `${cameraX + cursor.x * renderedCellSize}px`;
-    this.#dom.targetCursor.style.top = `${cameraY + cursor.y * renderedCellSize}px`;
-    this.#dom.targetCursor.style.width = `${renderedCellSize}px`;
-    this.#dom.targetCursor.style.height = `${renderedCellSize}px`;
+    this.#positionTargetCursor();
     this.#dom.mapHost.dataset.targetX = String(cursor.x);
     this.#dom.mapHost.dataset.targetY = String(cursor.y);
     this.#dom.targetModeStatus.textContent =
@@ -748,6 +748,23 @@ export class InputController {
   readonly #handleResize = (): void => {
     this.#window.requestAnimationFrame(() => this.render());
   };
+
+  readonly #handleCameraChange = (): void => {
+    this.#mapDisplay.updateCamera(this.#dom.mapHost, this.#getZoom());
+    this.#positionTargetCursor();
+  };
+
+  #positionTargetCursor(): void {
+    const cursor = this.#state.targeting?.cursor;
+    if (!cursor) return;
+    const cameraX = Number(this.#dom.mapHost.dataset.cameraX ?? 0);
+    const cameraY = Number(this.#dom.mapHost.dataset.cameraY ?? 0);
+    const size = MAP_CELL_SIZE * this.#getZoom();
+    this.#dom.targetCursor.style.left = `${cameraX + cursor.x * size}px`;
+    this.#dom.targetCursor.style.top = `${cameraY + cursor.y * size}px`;
+    this.#dom.targetCursor.style.width = `${size}px`;
+    this.#dom.targetCursor.style.height = `${size}px`;
+  }
 
   readonly #handleMapClick = (event: MouseEvent): void => {
     const status = this.#state.status;
@@ -824,8 +841,9 @@ export class InputController {
         return;
       }
       event.preventDefault(); event.stopImmediatePropagation();
-      // Use only OS key-repeat events. Busy commands are dropped, never queued.
-      if (!this.#state.busy) void this.#dispatch({ type: "move", direction: held.direction });
+      // OS repeats never queue behind either core work or a displayed step.
+      held.repeating = true;
+      if (!this.#state.busy && !this.#isPlayerMoving()) void this.#dispatch({ type: "move", direction: held.direction });
       return;
     }
     const preset = forcedPreset ?? (this.#literalCommand ? "original" : this.#getInputPreset());
@@ -1521,6 +1539,10 @@ export class InputController {
     await action.done;
   }
 
+  get continuousMovement(): boolean {
+    return Boolean(this.#heldMovement?.repeating || (this.#continuousAction && !this.#continuousAction.cancelled));
+  }
+
   async #continuousStep(action: ContinuousAction, command: GameCommand, repeatCommand: GameCommand | false = command): Promise<boolean> {
     if (action.cancelled || this.#state.commandBlocked) return false;
     if (await this.#dispatch(command, repeatCommand) !== "applied" || action.cancelled || this.#state.commandBlocked ||
@@ -1530,10 +1552,22 @@ export class InputController {
   }
 
   #pauseContinuousAction(action: ContinuousAction): Promise<void> {
-    // Yield a task between commands so native input can stop the next step.
+    // At most one displayed step. Cancellation wakes this wait immediately;
+    // even a non-moving command yields a task so native input can stop the loop.
     return new Promise<void>(resolve => {
-      const timer = this.#window.setTimeout(() => { action.resume = undefined; resolve(); }, action.kind === "fishing" ? 10 : 0);
-      action.resume = () => { this.#window.clearTimeout(timer); action.resume = undefined; resolve(); };
+      let finished = false;
+      let timer: number | undefined;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        if (timer !== undefined) this.#window.clearTimeout(timer);
+        action.resume = undefined;
+        resolve();
+      };
+      action.resume = finish;
+      this.#whenPlayerSettled().then(() => {
+        if (!finished) timer = this.#window.setTimeout(finish, action.kind === "fishing" ? 10 : 0);
+      });
     });
   }
 

@@ -855,6 +855,11 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<ProjectileShotOutcome, CoreError> {
+        events.push(DomainEvent::ProjectileFlightStarted {
+            kind: "arrow",
+            source_id: ammunition.kind_id.clone(),
+            damage_type: None,
+        });
         let origin = self.player.position;
         let mut active_concentration = concentration;
         let mut penetrations = 0;
@@ -990,6 +995,9 @@ impl Game {
                 trace: trace.clone(),
             });
         }
+        events.push(DomainEvent::ProjectileFlightFinished {
+            trace: trace.clone(),
+        });
         Ok(ProjectileShotOutcome {
             trace,
             hit_body: collided || broke_wall,
@@ -1763,6 +1771,12 @@ impl Game {
             .expect("direction targeting must always produce a path");
         let (trace, target_index) = self.trace_projectile_path(path);
         let landing = trace.landing;
+        let flight_trace = trace.clone();
+        events.push(DomainEvent::ProjectileFlightStarted {
+            kind: "throw",
+            source_id: source_kind_id.clone(),
+            damage_type: None,
+        });
         let (comes_back, caught) = if boomerang {
             let chance = (if return_chance > 0 { return_chance } else { 20 })
                 + self.player_dexterity_to_hit()
@@ -1962,6 +1976,9 @@ impl Game {
                 trace,
             });
         }
+        events.push(DomainEvent::ProjectileFlightFinished {
+            trace: flight_trace,
+        });
         self.finish_item_throw(
             thrown,
             landing,

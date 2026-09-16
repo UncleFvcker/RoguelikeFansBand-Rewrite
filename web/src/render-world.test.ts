@@ -91,6 +91,7 @@ test("render world keeps item and actor layers separate", () => {
   assert.equal(cells[0].terrainId, "demo.terrain.floor");
   assert.equal(cells[0].itemKindId, "demo.item.ration-of-food");
   assert.equal(cells[0].actorKindId, "demo.actor.explorer");
+  assert.equal(cells[0].actorPlayer, true);
 });
 
 test("fuzzy telepathy keeps the monster glyph without exposing its kind", () => {
@@ -176,11 +177,14 @@ test("remembered cells retain known items while hiding ordinary actors; hidden c
   ])[0];
   assert.equal(remembered.itemKindId, "demo.item.ration-of-food");
   assert.equal(remembered.actorKindId, undefined);
+  assert.equal(world.cellAt({ x: 0, y: 0 }).actorId, undefined);
   const hidden = world.applyVisibilityDelta([
     { position: { x: 0, y: 0 }, visibility: "hidden" },
   ])[0];
   assert.equal(hidden.itemKindId, undefined);
   assert.equal(hidden.actorKindId, undefined);
+  assert.equal(hidden.actorPlayer, undefined);
+  assert.equal(world.cellAt({ x: 0, y: 0 }).actorId, undefined);
 });
 
 test("remembered item removal and gold stacks follow authoritative updates and snapshots", () => {

@@ -308,6 +308,20 @@ fn c3_piercing_stops_on_miss_or_wall_and_caps_five_penetrations_without_forced_b
             &mut Vec::new(),
         )
         .unwrap();
+        assert_eq!(
+            events
+                .iter()
+                .filter(|event| matches!(event, DomainEvent::ProjectileFlightStarted { .. }))
+                .count(),
+            1
+        );
+        assert_eq!(
+            events
+                .iter()
+                .filter(|event| matches!(event, DomainEvent::ProjectileFlightFinished { .. }))
+                .count(),
+            1
+        );
         events
     };
     let seed = (0..1000)

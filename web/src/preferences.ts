@@ -45,6 +45,7 @@ export function parsePreferences(text: string): Preferences {
   if (p && typeof p === "object" && !Object.hasOwn(p, "hotbar")) p.hotbar = emptyHotbar();
   // Released global settings predate HUD visibility. Default only these newly added fields.
   if (p?.display && typeof p.display === "object" && !Array.isArray(p.display)) {
+    if (!Object.hasOwn(p.display, "meleeCameraShake")) p.display.meleeCameraShake = DEFAULT_DISPLAY.meleeCameraShake;
     for (const field of HUD_DISPLAY_FIELDS) {
       if (!Object.hasOwn(p.display, field)) p.display[field] = DEFAULT_HUD_DISPLAY[field];
     }
